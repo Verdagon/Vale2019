@@ -1,0 +1,61 @@
+package net.verdagon.radonc
+
+import net.verdagon.radonc.parser.{FinalP, VariabilityP}
+import net.verdagon.radonc.scout._
+import net.verdagon.radonc.templar._
+import net.verdagon.radonc.templar.types.{Bool2, Coord, Int2, Share}
+import net.verdagon.von.VonInt
+import org.scalatest.{FunSuite, Matchers}
+
+class BlockTests extends FunSuite with Matchers {
+  test("Empty block") {
+    val compile = new Compilation(
+      """
+        |fn main() {
+        |  block {
+        |  }
+        |  = 3;
+        |}
+      """.stripMargin)
+    val scoutput = compile.getScoutput()
+    val main = scoutput.implementedFunctions.find(_.name == "main").get
+    main.body match { case CodeBody1(BodySE(_,BlockSE(_,List(BlockSE(_,_), _)))) => }
+
+    compile.evalForReferend(Vector()) shouldEqual VonInt(3)
+  }
+  test("Simple block with a variable") {
+    val compile = new Compilation(
+      """
+        |fn main() {
+        |  block {
+        |    let y = 6;
+        |  }
+        |  = 3;
+        |}
+      """.stripMargin)
+    val scoutput = compile.getScoutput()
+    val main = scoutput.implementedFunctions.find(_.name == "main").get
+    val block = main.body match { case CodeBody1(BodySE(_,BlockSE(_,List(b @ BlockSE(_,_), _)))) => b }
+    vassert(block.locals.size == 1)
+    block.locals.head match {
+      case LocalVariable1("y", FinalP, NotUsed, NotUsed, NotUsed, NotUsed, NotUsed, NotUsed) =>
+    }
+
+    compile.evalForReferend(Vector()) shouldEqual VonInt(3)
+  }
+  test("Simple block with a variable, another variable outside with same name") {
+    val compile = new Compilation(
+      """
+        |fn main() {
+        |  block {
+        |    let y = 6;
+        |  }
+        |  let y = 3;
+        |  = y;
+        |}
+      """.stripMargin)
+    val scoutput = compile.getScoutput()
+
+    compile.evalForReferend(Vector()) shouldEqual VonInt(3)
+  }
+}
