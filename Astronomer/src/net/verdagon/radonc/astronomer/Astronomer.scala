@@ -40,6 +40,18 @@ case class Environment(
   }
 }
 
+case class AstroutsBox(var astrouts: Astrouts) {
+  def getImpl(codeLocation: CodeLocation) = {
+    astrouts.impls.get(codeLocation)
+  }
+  def getStruct(codeLocation: CodeLocation) = {
+    astrouts.structs.get(codeLocation)
+  }
+  def getInterface(codeLocation: CodeLocation) = {
+    astrouts.interfaces.get(codeLocation)
+  }
+}
+
 case class Astrouts(
   structs: Map[CodeLocation, StructA],
   interfaces: Map[CodeLocation, InterfaceA],
@@ -57,14 +69,10 @@ object Astronomer {
       "IFunction1" -> TemplateTypeSR(List(MutabilityTypeSR, CoordTypeSR, CoordTypeSR), KindTypeSR),
       "__Array" -> TemplateTypeSR(List(MutabilityTypeSR, CoordTypeSR), KindTypeSR))
 
-  def translateStructs(astrouts0: Astrouts, env: Environment, structsS: List[StructS]): (Astrouts, List[StructA]) = {
+  def translateStructs(astrouts: AstroutsBox, env: Environment, structsS: List[StructS]): List[StructA] = {
     structsS match {
-      case Nil => (astrouts0, Nil)
-      case headS :: tailS => {
-        val (astrouts1, headA) = translateStruct(astrouts0, env, headS)
-        val (astrouts2, tailA) = translateStructs(astrouts1, env, tailS)
-        (astrouts2, headA :: tailA)
-      }
+      case Nil => Nil
+      case headS :: tailS => translateStruct(astrouts, env, headS) :: translateStructs(astrouts, env, tailS)
     }
   }
 
@@ -84,57 +92,32 @@ object Astronomer {
     }
   }
 
-  def lookupStructType(astrouts0: Astrouts, env: Environment, structS: StructS):
-  (Astrouts, ITemplataType) = {
+  def lookupStructType(astrouts: AstroutsBox, env: Environment, structS: StructS): ITemplataType = {
     structS.maybePredictedType match {
       case Some(predictedType) => {
-        (astrouts0, translateRuneType(predictedType))
+        translateRuneType(predictedType)
       }
       case None => {
-        val (astrouts1, structA) = translateStruct(astrouts0, env, structS)
-        (astrouts1, structA.tyype)
+        val structA = translateStruct(astrouts, env, structS)
+        structA.tyype
       }
     }
   }
 
-  def lookupStructTypes(astrouts0: Astrouts, env: Environment, structsS: List[StructS]):
-  (Astrouts, List[ITemplataType]) = {
-    structsS match {
-      case Nil => (astrouts0, Nil)
-      case headS :: tailS => {
-        val (astrouts1, headA) = lookupStructType(astrouts0, env, headS)
-        val (astrouts2, tailA) = lookupStructTypes(astrouts1, env, tailS)
-        (astrouts2, headA :: tailA)
-      }
-    }
-  }
-
-  def lookupInterfaceType(astrouts0: Astrouts, env: Environment, interfaceS: InterfaceS):
-  (Astrouts, ITemplataType) = {
+  def lookupInterfaceType(astrouts: AstroutsBox, env: Environment, interfaceS: InterfaceS):
+  ITemplataType = {
     interfaceS.maybePredictedType match {
       case Some(predictedType) => {
-        (astrouts0, translateRuneType(predictedType))
+        translateRuneType(predictedType)
       }
       case None => {
-        val (astrouts1, interfaceA) = translateInterface(astrouts0, env, interfaceS)
-        (astrouts1, interfaceA.tyype)
+        val interfaceA = translateInterface(astrouts, env, interfaceS)
+        interfaceA.tyype
       }
     }
   }
 
-  def lookupInterfaceTypes(astrouts0: Astrouts, env: Environment, interfacesS: List[InterfaceS]):
-  (Astrouts, List[ITemplataType]) = {
-    interfacesS match {
-      case Nil => (astrouts0, Nil)
-      case headS :: tailS => {
-        val (astrouts1, headA) = lookupInterfaceType(astrouts0, env, headS)
-        val (astrouts2, tailA) = lookupInterfaceTypes(astrouts1, env, tailS)
-        (astrouts2, headA :: tailA)
-      }
-    }
-  }
-
-  def lookupType(astrouts0: Astrouts, env: Environment, name: String): (Astrouts, ITemplataType) = {
+  def lookupType(astrouts: AstroutsBox, env: Environment, name: String): ITemplataType = {
     // When the scout comes across a lambda, it doesn't put the e.g. __Closure:main:lam1 struct into
     // the environment or anything, it lets templar to do that (because templar knows the actual types).
     // However, this means that when the lambda function gets to the astronomer, the astronomer doesn't
@@ -142,7 +125,7 @@ object Astronomer {
     // TODO: Make it so names aren't strings, but instead sealed traits and case classes.
     // Or, figure out something else to avoid this oddity here.
     if (name.startsWith(FunctionScout.CLOSURE_STRUCT_NAME)) {
-      return (astrouts0, KindTemplataType)
+      return KindTemplataType
     }
 
     val (primitivesS, structsS, interfacesS, maybeRuneTypeS) = env.lookup(name)
@@ -156,51 +139,52 @@ object Astronomer {
 
     if (primitivesS.nonEmpty) {
       vassert(primitivesS.size == 1)
-      (astrouts0, translateRuneType(primitivesS.get))
+      translateRuneType(primitivesS.get)
     } else if (maybeRuneTypeS.nonEmpty) {
-      (astrouts0, maybeRuneTypeS.get)
+      maybeRuneTypeS.get
     } else if (structsS.nonEmpty) {
-      val (astrouts1, types) = lookupStructTypes(astrouts0, env, structsS)
+      val types = structsS.map(lookupStructType(astrouts, env, _))
       if (types.toSet.size > 1) {
         vfail("'" + name + "' has multiple types: " + types.toSet)
       }
       val tyype = types.head
-      (astrouts1, tyype)
+      tyype
     } else if (interfacesS.nonEmpty) {
-      val (astrouts1, types) = lookupInterfaceTypes(astrouts0, env, interfacesS)
+      val types = interfacesS.map(lookupInterfaceType(astrouts, env, _))
       if (types.toSet.size > 1) {
         vfail("'" + name + "' has multiple types: " + types.toSet)
       }
       val tyype = types.head
-      (astrouts1, tyype)
+      tyype
     } else vfail()
   }
 
-  def makeRuleTyper(): RuleTyperEvaluator[Environment, Astrouts] = {
-    new RuleTyperEvaluator[Environment, Astrouts](
-      new IRuleTyperEvaluatorDelegate[Environment, Astrouts] {
-        override def lookupType(state: Astrouts, env: Environment, name: String): (Astrouts, ITemplataType) = {
-          Astronomer.lookupType(state, env, name)
+  def makeRuleTyper(): RuleTyperEvaluator[Environment, AstroutsBox] = {
+    new RuleTyperEvaluator[Environment, AstroutsBox](
+      new IRuleTyperEvaluatorDelegate[Environment, AstroutsBox] {
+        override def lookupType(state: AstroutsBox, env: Environment, name: String): (AstroutsBox, ITemplataType) = {
+          val tyype = Astronomer.lookupType(state, env, name)
+          (state, tyype)
         }
       })
   }
 
-  def translateStruct(astrouts0: Astrouts, env: Environment, structS: StructS): (Astrouts, StructA) = {
+  def translateStruct(astrouts: AstroutsBox, env: Environment, structS: StructS): StructA = {
     val StructS(struct1Id, namespace, name, mutability, maybePredictedMutability, identifyingRunes, allRunes, predictedTypeByRune, isTemplate, rules, members) = structS
 
     // predictedTypeByRune is used by the rule typer delegate to short-circuit infinite recursion
     // in types like List, see RTMHTPS.
     val (_) = predictedTypeByRune
 
-    astrouts0.structs.get(struct1Id) match {
-      case Some(existingStructA) => return (astrouts0, existingStructA)
+    astrouts.getStruct(struct1Id) match {
+      case Some(existingStructA) => return existingStructA
       case _ =>
     }
 
-    val (astrouts2, conclusions, rulesA) =
-      makeRuleTyper().solve(astrouts0, env, rules, List(), Some(allRunes)) match {
+    val (conclusions, rulesA) =
+      makeRuleTyper().solve(astrouts, env, rules, List(), Some(allRunes)) match {
         case (_, rtsf @ RuleTyperSolveFailure(_, _, _)) => vfail(rtsf.toString)
-        case (astrouts1, RuleTyperSolveSuccess(c, r)) => (astrouts1, c, r)
+        case (_, RuleTyperSolveSuccess(c, r)) => (c, r)
       }
 
     val tyype =
@@ -215,38 +199,25 @@ object Astronomer {
         case StructMemberS(name, variablility, typeRune) => StructMemberA(name, variablility, typeRune)
       })
 
-    val structA =
-      StructA(struct1Id, namespace, name, mutability, maybePredictedMutability, tyype, identifyingRunes, conclusions.typeByRune, rulesA, membersA)
-    (astrouts2, structA)
+    StructA(struct1Id, namespace, name, mutability, maybePredictedMutability, tyype, identifyingRunes, conclusions.typeByRune, rulesA, membersA)
   }
 
-  def translateInterfaces(astrouts0: Astrouts, env: Environment, interfacesS: List[InterfaceS]): (Astrouts, List[InterfaceA]) = {
-    interfacesS match {
-      case Nil => (astrouts0, Nil)
-      case headS :: tailS => {
-        val (astrouts1, headA) = translateInterface(astrouts0, env, headS)
-        val (astrouts2, tailA) = translateInterfaces(astrouts1, env, tailS)
-        (astrouts2, headA :: tailA)
-      }
-    }
-  }
-
-  def translateInterface(astrouts0: Astrouts, env: Environment, interfaceS: InterfaceS): (Astrouts, InterfaceA) = {
+  def translateInterface(astrouts: AstroutsBox, env: Environment, interfaceS: InterfaceS): InterfaceA = {
     val InterfaceS(interface1Id, namespace, name, mutability, maybePredictedMutability, identifyingRunes, allRunes, predictedTypeByRune, isTemplate, rules) = interfaceS
 
     // predictedTypeByRune is used by the rule typer delegate to short-circuit infinite recursion
     // in types like List, see RTMHTPS.
     val (_) = predictedTypeByRune
 
-    astrouts0.interfaces.get(interface1Id) match {
-      case Some(existingInterfaceA) => return (astrouts0, existingInterfaceA)
+    astrouts.getInterface(interface1Id) match {
+      case Some(existingInterfaceA) => return existingInterfaceA
       case _ =>
     }
 
-    val (astrouts2, conclusions, rulesA) =
-      makeRuleTyper().solve(astrouts0, env, rules, List(), Some(allRunes)) match {
+    val (conclusions, rulesA) =
+      makeRuleTyper().solve(astrouts, env, rules, List(), Some(allRunes)) match {
         case (_, rtsf @ RuleTyperSolveFailure(_, _, _)) => vfail(rtsf.toString)
-        case (astrouts1, RuleTyperSolveSuccess(c, r)) => (astrouts1, c, r)
+        case (_, RuleTyperSolveSuccess(c, r)) => (c, r)
       }
 
     val tyype =
@@ -267,46 +238,33 @@ object Astronomer {
         identifyingRunes,
         conclusions.typeByRune,
         rulesA)
-    (astrouts2, interfaceA)
+    interfaceA
   }
 
-  def translateImpl(astrouts0: Astrouts, env: Environment, implS: ImplS): (Astrouts, ImplA) = {
+  def translateImpl(astrouts: AstroutsBox, env: Environment, implS: ImplS): ImplA = {
     val ImplS(codeLocation, rules, allRunes, isTemplate, structKindRune, interfaceKindRune) = implS
 
-    astrouts0.impls.get(codeLocation) match {
-      case Some(existingImplA) => return (astrouts0, existingImplA)
+    astrouts.getImpl(codeLocation) match {
+      case Some(existingImplA) => return existingImplA
       case _ =>
     }
 
-    val (astrouts2, conclusions, rulesA) =
-      makeRuleTyper().solve(astrouts0, env, rules, List(), Some(allRunes)) match {
+    val (conclusions, rulesA) =
+      makeRuleTyper().solve(astrouts, env, rules, List(), Some(allRunes)) match {
         case (_, rtsf @ RuleTyperSolveFailure(_, _, _)) => vfail(rtsf.toString)
-        case (astrouts1, RuleTyperSolveSuccess(c, r)) => (astrouts1, c, r)
+        case (_, RuleTyperSolveSuccess(c, r)) => (c, r)
       }
 
-    val implA =
-      ImplA(codeLocation, rulesA, conclusions.typeByRune, structKindRune, interfaceKindRune)
-    (astrouts2, implA)
+    ImplA(codeLocation, rulesA, conclusions.typeByRune, structKindRune, interfaceKindRune)
   }
 
-  def translateImpls(astrouts0: Astrouts, env: Environment, implS: List[ImplS]): (Astrouts, List[ImplA]) = {
-    implS match {
-      case Nil => (astrouts0, Nil)
-      case headS :: tailS => {
-        val (astrouts1, headA) = translateImpl(astrouts0, env, headS)
-        val (astrouts2, tailA) = translateImpls(astrouts1, env, tailS)
-        (astrouts2, headA :: tailA)
-      }
-    }
-  }
-
-  def translateFunction(astrouts0: Astrouts, env: Environment, functionS: FunctionS): (Astrouts, FunctionA) = {
+  def translateFunction(astrouts: AstroutsBox, env: Environment, functionS: FunctionS): FunctionA = {
     val FunctionS(codeLocation, name, namespace, lambdaNumber, isUserFunction, identifyingRunes, allRunes, maybePredictedType, paramsS, maybeRetCoordRune, isTemplate, templateRules, bodyS) = functionS
 
-    val (astrouts2, conclusions, rulesA) =
-      makeRuleTyper().solve(astrouts0, env, templateRules, List(), Some(allRunes)) match {
+    val (conclusions, rulesA) =
+      makeRuleTyper().solve(astrouts, env, templateRules, List(), Some(allRunes)) match {
         case (_, rtsf @ RuleTyperSolveFailure(_, _, _)) => vfail(rtsf.toString)
-        case (astrouts1, RuleTyperSolveSuccess(c, r)) => (astrouts1, c, r)
+        case (_, RuleTyperSolveSuccess(c, r)) => (c, r)
       }
 
     val tyype =
@@ -318,36 +276,23 @@ object Astronomer {
 
     val innerEnv = env.addRunes(conclusions.typeByRune)
 
-    val (astrouts3, bodyA) = translateBody(astrouts2, innerEnv, bodyS)
+    val bodyA = translateBody(astrouts, innerEnv, bodyS)
 
-    val functionA =
-      FunctionA(
-        codeLocation,
-        name, namespace, lambdaNumber, isUserFunction,
-        tyype,
-        identifyingRunes, conclusions.typeByRune, paramsS, maybeRetCoordRune, rulesA, bodyA)
-    (astrouts3, functionA)
+    FunctionA(
+      codeLocation,
+      name, namespace, lambdaNumber, isUserFunction,
+      tyype,
+      identifyingRunes, conclusions.typeByRune, paramsS, maybeRetCoordRune, rulesA, bodyA)
   }
 
-  def translateBody(astrouts0: Astrouts, env: Environment, body: IBody1): (Astrouts, IBodyA) = {
+  def translateBody(astrouts: AstroutsBox, env: Environment, body: IBody1): IBodyA = {
     body match {
-      case ExternBody1 => (astrouts0, ExternBodyA)
-      case AbstractBody1 => (astrouts0, AbstractBodyA)
-      case GeneratedBody1(generatorId) => (astrouts0, GeneratedBodyA(generatorId))
+      case ExternBody1 => ExternBodyA
+      case AbstractBody1 => AbstractBodyA
+      case GeneratedBody1(generatorId) => GeneratedBodyA(generatorId)
       case CodeBody1(BodySE(closuredNames, blockS)) => {
-        val (astrouts10, blockA) = ExpressionAstronomer.translateBlock(env, astrouts0, blockS)
-        (astrouts10, CodeBodyA(BodyAE(closuredNames, blockA)))
-      }
-    }
-  }
-
-  def translateFunctions(astrouts0: Astrouts, env: Environment, functionsS: List[FunctionS]): (Astrouts, List[FunctionA]) = {
-    functionsS match {
-      case Nil => (astrouts0, Nil)
-      case headS :: tailS => {
-        val (astrouts1, headA) = translateFunction(astrouts0, env, headS)
-        val (astrouts2, tailA) = translateFunctions(astrouts1, env, tailS)
-        (astrouts2, headA :: tailA)
+        val blockA = ExpressionAstronomer.translateBlock(env, astrouts, blockS)
+        CodeBodyA(BodyAE(closuredNames, blockA))
       }
     }
   }
@@ -359,19 +304,19 @@ object Astronomer {
   ProgramA = {
     val ProgramS(structsS, interfacesS, implsS, functionsS) = programS
 
-    val astrouts0 = Astrouts(Map(), Map(), Map(), Map())
+    val astrouts = AstroutsBox(Astrouts(Map(), Map(), Map(), Map()))
 
     val env = Environment(None, primitives, structsS, interfacesS, implsS, functionsS, Map())
 
-    val (astrouts1, structsA) = translateStructs(astrouts0, env, structsS)
+    val structsA = structsS.map(translateStruct(astrouts, env, _))
 
-    val (astrouts2, interfacesA) = translateInterfaces(astrouts1, env, interfacesS)
+    val interfacesA = interfacesS.map(translateInterface(astrouts, env, _))
 
-    val (astrouts3, implsA) = translateImpls(astrouts2, env, implsS)
+    val implsA = implsS.map(translateImpl(astrouts, env, _))
 
-    val (astrouts4, functionsA) = translateFunctions(astrouts3, env, functionsS)
+    val functionsA = functionsS.map(translateFunction(astrouts, env, _))
 
-    val (_) = astrouts4
+    val (_) = astrouts
 
     ProgramA(structsA, interfacesA, implsA, functionsA ++ suppliedFunctions)
   }
