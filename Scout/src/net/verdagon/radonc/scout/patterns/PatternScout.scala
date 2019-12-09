@@ -262,7 +262,7 @@ object PatternScout {
       case Nil => Nil
       case headTemplexP :: tailTemplexesP => {
         val (headTemplexS, _) = translatePatternTemplex(initialRulesAndRunes, rulesS, headTemplexP, maybeRuneSuggestion)
-        val (tailTemplexesS) = translatePatternTemplexes(initialRulesAndRunes, rulesS, tailTemplexesP, maybeRuneSuggestion)
+        val tailTemplexesS = translatePatternTemplexes(initialRulesAndRunes, rulesS, tailTemplexesP, maybeRuneSuggestion)
         headTemplexS :: tailTemplexesS
       }
     }

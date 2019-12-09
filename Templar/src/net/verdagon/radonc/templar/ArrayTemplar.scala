@@ -11,47 +11,47 @@ import net.verdagon.radonc.templar.templata._
 
 object ArrayTemplar {
 
-  def makeArraySequenceType(env: IEnvironment, temputs0: Temputs, mutability: Mutability, size: Int, type2: Coord):
-  (Temputs, ArraySequenceT2) = {
+  def makeArraySequenceType(env: IEnvironment, temputs: TemputsBox, mutability: Mutability, size: Int, type2: Coord):
+  (ArraySequenceT2) = {
 //    val tupleMutability =
-//      StructTemplarCore.getCompoundTypeMutability(temputs0, List(type2))
-    val tupleMutability = Templar.getMutability(temputs0, type2.referend)
+//      StructTemplarCore.getCompoundTypeMutability(temputs, List(type2))
+    val tupleMutability = Templar.getMutability(temputs, type2.referend)
     val rawArrayT2 = RawArrayT2(type2, tupleMutability)
 
-    temputs0.arraySequenceTypes.get(size, rawArrayT2) match {
-      case Some(arraySequenceT2) => (temputs0, arraySequenceT2)
+    temputs.arraySequenceTypes.get(size, rawArrayT2) match {
+      case Some(arraySequenceT2) => (arraySequenceT2)
       case None => {
         val arraySeqType = ArraySequenceT2(size, rawArrayT2)
         val arraySequenceRefType2 =
           Coord(
             if (tupleMutability == Mutable) Own else Share,
             arraySeqType)
-        val (temputs1, _) =
+        val _ =
           DestructorTemplar.getArrayDestructor(
             env,
-            temputs0,
+            temputs,
             arraySequenceRefType2)
-        (temputs1, arraySeqType)
+        (arraySeqType)
       }
     }
   }
 
-  def makeUnknownSizeArrayType(env: IEnvironment, temputs0: Temputs, type2: Coord, arrayMutability: Mutability):
-  (Temputs, UnknownSizeArrayT2) = {
+  def makeUnknownSizeArrayType(env: IEnvironment, temputs: TemputsBox, type2: Coord, arrayMutability: Mutability):
+  (UnknownSizeArrayT2) = {
     val rawArrayT2 = RawArrayT2(type2, arrayMutability)
 
-    temputs0.unknownSizeArrayTypes.get(rawArrayT2) match {
-      case Some(arraySequenceT2) => (temputs0, arraySequenceT2)
+    temputs.unknownSizeArrayTypes.get(rawArrayT2) match {
+      case Some(arraySequenceT2) => (arraySequenceT2)
       case None => {
         val runtimeArrayType = UnknownSizeArrayT2(rawArrayT2)
         val runtimeArrayRefType2 =
           Coord(
             if (arrayMutability == Mutable) Own else Share,
             runtimeArrayType)
-        val (temputs1, _) =
+        val _ =
           DestructorTemplar.getArrayDestructor(
-            env, temputs0, runtimeArrayRefType2)
-        (temputs1, runtimeArrayType)
+            env, temputs, runtimeArrayRefType2)
+        (runtimeArrayType)
       }
     }
   }

@@ -39,3 +39,21 @@ case class Inferences(
   }
 }
 
+case class InferencesBox(var inferences: Inferences) {
+  def templatasByRune: Map[String, ITemplata] = inferences.templatasByRune
+  def possibilitiesByRune: Map[String, List[ITemplata]] = inferences.possibilitiesByRune
+
+  def addConclusion(rune: String, templata: ITemplata): Unit = {
+    inferences = inferences.addConclusion(rune, templata)
+  }
+  def addPossibilities(rune: String, possibilities: List[ITemplata]): Unit = {
+    inferences = inferences.addPossibilities(rune, possibilities)
+  }
+  // Returns an Inferences without this rune, and gives all the possibilities for that rune
+  def pop(rune: String): List[ITemplata] = {
+    val (newInferences, result) = inferences.pop(rune)
+    inferences = newInferences
+    result
+  }
+}
+

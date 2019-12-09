@@ -22,8 +22,8 @@ case class SimpleEnvironment(entries: Map[String, List[ITemplataType]]) {
 }
 
 class FakeRuleTyperEvaluatorDelegate extends IRuleTyperEvaluatorDelegate[SimpleEnvironment, FakeState] {
-  override def lookupType(state0: FakeState, env: SimpleEnvironment, name: String): (FakeState, ITemplataType) = {
-    (state0, env.lookupType(name))
+  override def lookupType(state: FakeState, env: SimpleEnvironment, name: String): (ITemplataType) = {
+    (env.lookupType(name))
   }
 }
 
@@ -44,8 +44,8 @@ class RuleTyperTests extends FunSuite with Matchers {
   def makeCannedRuleTyper(): RuleTyperEvaluator[SimpleEnvironment, FakeState] = {
     new RuleTyperEvaluator[SimpleEnvironment, FakeState](
       new FakeRuleTyperEvaluatorDelegate() {
-        override def lookupType(state0: FakeState, env: SimpleEnvironment, name: String): (FakeState, ITemplataType) = {
-          (state0, env.lookupType(name))
+        override def lookupType(state: FakeState, env: SimpleEnvironment, name: String): (ITemplataType) = {
+          (env.lookupType(name))
         }
       })
   }
@@ -64,7 +64,7 @@ class RuleTyperTests extends FunSuite with Matchers {
   }
 
   test("Borrow becomes share if kind is immutable") {
-    val (_, RuleTyperSolveSuccess(conclusions, _)) =
+    val (conclusions, RuleTyperSolveSuccess(_)) =
       makeCannedRuleTyper()
         .solve(
           FakeState(),
@@ -79,7 +79,7 @@ class RuleTyperTests extends FunSuite with Matchers {
   }
 
   test("Can infer coord rune from an incoming kind") {
-    val (_, RuleTyperSolveSuccess(conclusions, _)) =
+    val (conclusions, RuleTyperSolveSuccess(_)) =
       makeCannedRuleTyper()
         .solve(
           FakeState(),
@@ -105,7 +105,7 @@ class RuleTyperTests extends FunSuite with Matchers {
   }
 
   test("Can explicitly coerce from kind to coord") {
-    val (_, RuleTyperSolveSuccess(conclusions, _)) =
+    val (conclusions, RuleTyperSolveSuccess(_)) =
       makeCannedRuleTyper()
         .solve(
           FakeState(),
@@ -118,7 +118,7 @@ class RuleTyperTests extends FunSuite with Matchers {
   }
 
   test("Can explicitly coerce from kind to coord 2") {
-    val (_, RuleTyperSolveSuccess(conclusions, _)) =
+    val (conclusions, RuleTyperSolveSuccess(_)) =
       makeCannedRuleTyper()
         .solve(
           FakeState(),
@@ -133,7 +133,7 @@ class RuleTyperTests extends FunSuite with Matchers {
   }
 
   test("Can match KindTemplataType against StructEnvEntry / StructTemplata") {
-    val (_, RuleTyperSolveSuccess(conclusions, _)) =
+    val (conclusions, RuleTyperSolveSuccess(_)) =
       makeCannedRuleTyper()
         .solve(
           FakeState(),
@@ -147,7 +147,7 @@ class RuleTyperTests extends FunSuite with Matchers {
   }
 
   test("Can infer from simple rules") {
-    val (_, RuleTyperSolveSuccess(conclusions, _)) =
+    val (conclusions, RuleTyperSolveSuccess(_)) =
       makeCannedRuleTyper()
         .solve(
           FakeState(),
@@ -162,7 +162,7 @@ class RuleTyperTests extends FunSuite with Matchers {
   }
 
   test("Can infer type from interface template param") {
-    val (_, RuleTyperSolveSuccess(conclusions, _)) =
+    val (conclusions, RuleTyperSolveSuccess(_)) =
       makeCannedRuleTyper()
         .solve(
           FakeState(),
@@ -179,7 +179,7 @@ class RuleTyperTests extends FunSuite with Matchers {
   }
 
   test("Can infer templata from CallST") {
-    val (_, RuleTyperSolveSuccess(conclusions, _)) =
+    val (conclusions, RuleTyperSolveSuccess(_)) =
       makeCannedRuleTyper()
         .solve(
           FakeState(),
@@ -195,7 +195,7 @@ class RuleTyperTests extends FunSuite with Matchers {
   }
 
   test("Can conjure an owning coord from a borrow coord") {
-    val (_, RuleTyperSolveSuccess(conclusions, _)) =
+    val (conclusions, RuleTyperSolveSuccess(_)) =
       makeCannedRuleTyper()
         .solve(
           FakeState(),
@@ -213,7 +213,7 @@ class RuleTyperTests extends FunSuite with Matchers {
   }
 
   test("Rune 0 upcasts to right type, simple") {
-    val (_, RuleTyperSolveSuccess(conclusions, _)) =
+    val (conclusions, RuleTyperSolveSuccess(_)) =
       makeCannedRuleTyper()
         .solve(
           FakeState(),
@@ -228,7 +228,7 @@ class RuleTyperTests extends FunSuite with Matchers {
   }
 
   test("Rune 0 upcasts to right type templated") {
-    val (_, RuleTyperSolveSuccess(conclusions, _)) =
+    val (conclusions, RuleTyperSolveSuccess(_)) =
       makeCannedRuleTyper()
         .solve(
           FakeState(),
@@ -256,9 +256,9 @@ class RuleTyperTests extends FunSuite with Matchers {
       List(AtomSP(Some(CaptureP("this",FinalP)),None,"T",None))
 
     // Test that it does match a pack
-    val (_, RuleTyperSolveSuccess(conclusionsA, _)) =
+    val (conclusions, RuleTyperSolveSuccess(_)) =
       makeCannedRuleTyper().solve(FakeState(), makeCannedEnvironment(), rules, atoms, None)
-    vassert(conclusionsA.typeByRune("T") == CoordTemplataType)
+    vassert(conclusions.typeByRune("T") == CoordTemplataType)
   }
 
   test("Tests passThroughIfInterface") {
@@ -278,9 +278,9 @@ class RuleTyperTests extends FunSuite with Matchers {
       List(AtomSP(Some(CaptureP("this",FinalP)),None,"T",None))
 
     // Test that it does match an interface
-    val (_, RuleTyperSolveSuccess(conclusionsD, _)) =
+    val (conclusions, RuleTyperSolveSuccess(_)) =
       makeCannedRuleTyper().solve(FakeState(), makeCannedEnvironment(), rules, atoms, None)
-    vassert(conclusionsD.typeByRune("T") == CoordTemplataType)
+    vassert(conclusions.typeByRune("T") == CoordTemplataType)
   }
 
 
@@ -299,8 +299,8 @@ class RuleTyperTests extends FunSuite with Matchers {
     val atoms =
       List(AtomSP(Some(CaptureP("this",FinalP)),None,"T",None))
 
-    val (_, RuleTyperSolveSuccess(conclusionsD, _)) = makeCannedRuleTyper().solve(FakeState(), makeCannedEnvironment(), rules, atoms,None)
-    vassert(conclusionsD.typeByRune("T") == CoordTemplataType)
+    val (conclusions, RuleTyperSolveSuccess(_)) = makeCannedRuleTyper().solve(FakeState(), makeCannedEnvironment(), rules, atoms,None)
+    vassert(conclusions.typeByRune("T") == CoordTemplataType)
   }
 
   test("Test coercing template call result") {
@@ -317,10 +317,10 @@ class RuleTyperTests extends FunSuite with Matchers {
     val atoms =
       List(AtomSP(Some(CaptureP("this",FinalP)),None,"T",None))
 
-    val (_, RuleTyperSolveSuccess(conclusionsD, _)) =
+    val (conclusions, RuleTyperSolveSuccess(_)) =
       makeCannedRuleTyper().solve(FakeState(), makeCannedEnvironment(), rules, atoms, None)
 
-    conclusionsD.typeByRune("__ParamRune_0") shouldEqual CoordTemplataType
+    conclusions.typeByRune("__ParamRune_0") shouldEqual CoordTemplataType
   }
 
   test("Test ownershipped") {
@@ -337,9 +337,9 @@ class RuleTyperTests extends FunSuite with Matchers {
     val atoms =
       List(AtomSP(Some(CaptureP("this",FinalP)),None,"T",None))
 
-    val (_, RuleTyperSolveSuccess(conclusionsD, _)) =
+    val (conclusions, RuleTyperSolveSuccess(_)) =
       makeCannedRuleTyper().solve(FakeState(), makeCannedEnvironment(), rules, atoms, None)
-    conclusionsD.typeByRune("__ParamRune_0") shouldEqual CoordTemplataType
+    conclusions.typeByRune("__ParamRune_0") shouldEqual CoordTemplataType
   }
 
 
@@ -352,9 +352,9 @@ class RuleTyperTests extends FunSuite with Matchers {
     val atoms =
       List(AtomSP(Some(CaptureP("this",FinalP)),None,"T",None))
 
-    val (_, RuleTyperSolveSuccess(conclusionsD, _)) =
+    val (conclusions, RuleTyperSolveSuccess(_)) =
       makeCannedRuleTyper().solve(FakeState(), makeCannedEnvironment(), rules, atoms, None)
-    conclusionsD.typeByRune("__Par0") shouldEqual CoordTemplataType
+    conclusions.typeByRune("__Par0") shouldEqual CoordTemplataType
   }
 
   test("Matching a CoordTemplataType onto a CallAT") {
@@ -363,18 +363,18 @@ class RuleTyperTests extends FunSuite with Matchers {
         TypedSR(Some("__ParamRune_0"),CoordTypeSR),
         EqualsSR(TemplexSR(RuneST("__ParamRune_0")),TemplexSR(CallST(NameST("MutTStruct"),List(RuneST("T"))))))
 
-    val (_, RuleTyperSolveSuccess(conclusionsD, _)) =
+    val (conclusions, RuleTyperSolveSuccess(_)) =
       makeCannedRuleTyper().solve(
         FakeState(),
         makeCannedEnvironment(),
         rules,
         List(AtomSP(Some(CaptureP("x",FinalP)),Some(AbstractSP),"__ParamRune_0",None)),
         None)
-    conclusionsD.typeByRune("__ParamRune_0") shouldEqual CoordTemplataType
+    conclusions.typeByRune("__ParamRune_0") shouldEqual CoordTemplataType
   }
 
   test("Test destructuring") {
-    val (_, RuleTyperSolveSuccess(conclusionsD, _)) =
+    val (conclusions, RuleTyperSolveSuccess(_)) =
       makeCannedRuleTyper().solve(
         FakeState(),
         makeCannedEnvironment(),
@@ -391,13 +391,13 @@ class RuleTyperTests extends FunSuite with Matchers {
                 Some(AtomSP(Some(CaptureP("x",FinalP)),None,"__Let0__Mem_0",None)),
                 Some(AtomSP(Some(CaptureP("y",FinalP)),None,"__Let0__Mem_1",None)))))),
         Some(Set("__Let0__Mem_0", "__Let0__Mem_1", "__Let0_")))
-    conclusionsD.typeByRune("__Let0_") shouldEqual CoordTemplataType
-    conclusionsD.typeByRune("__Let0__Mem_0") shouldEqual CoordTemplataType
-    conclusionsD.typeByRune("__Let0__Mem_1") shouldEqual CoordTemplataType
+    conclusions.typeByRune("__Let0_") shouldEqual CoordTemplataType
+    conclusions.typeByRune("__Let0__Mem_0") shouldEqual CoordTemplataType
+    conclusions.typeByRune("__Let0__Mem_1") shouldEqual CoordTemplataType
   }
 
   test("Test array sequence") {
-    val (_, RuleTyperSolveSuccess(conclusionsD, _)) =
+    val (conclusions, RuleTyperSolveSuccess(_)) =
       makeCannedRuleTyper().solve(
         FakeState(),
         makeCannedEnvironment(),
@@ -408,11 +408,11 @@ class RuleTyperTests extends FunSuite with Matchers {
             TemplexSR(RepeaterSequenceST(MutabilityST(MutableP), IntST(5),OwnershippedST(ShareP,NameST("Int")))))),
         List(),
         None)
-    conclusionsD.typeByRune("__ParamRune_0") shouldEqual CoordTemplataType
+    conclusions.typeByRune("__ParamRune_0") shouldEqual CoordTemplataType
   }
 
   test("Test array") {
-    val (_, RuleTyperSolveSuccess(conclusionsD, _)) =
+    val (conclusions, RuleTyperSolveSuccess(_)) =
       makeCannedRuleTyper().solve(
         FakeState(),
         makeCannedEnvironment(),
@@ -425,12 +425,12 @@ class RuleTyperTests extends FunSuite with Matchers {
             TemplexSR(CallST(NameST("__Array"),List(RuneST("M"), RuneST("T")))))),
         List(),
         None)
-    conclusionsD.typeByRune("M") shouldEqual MutabilityTemplataType
-    conclusionsD.typeByRune("T") shouldEqual CoordTemplataType
+    conclusions.typeByRune("M") shouldEqual MutabilityTemplataType
+    conclusions.typeByRune("T") shouldEqual CoordTemplataType
   }
 
   test("Test evaluating isa") {
-    val (_, RuleTyperSolveSuccess(conclusions, _)) =
+    val (conclusions, RuleTyperSolveSuccess(_)) =
       makeCannedRuleTyper()
         .solve(
           FakeState(),

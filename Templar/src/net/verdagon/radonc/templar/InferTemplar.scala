@@ -15,19 +15,19 @@ import scala.collection.immutable.List
 object InferTemplar {
   private def solve(
     env: IEnvironment,
-    state0: Temputs,
-    rules0: List[IRulexAR],
+    state: TemputsBox,
+    rules: List[IRulexAR],
     typeByRune: Map[String, ITemplataType],
     directInputs: Map[String, ITemplata],
     paramAtoms: List[AtomSP],
     maybeParamInputs: Option[List[ParamFilter]],
     checkAllRunesPresent: Boolean,
-  ): (Temputs, IInferSolveResult) = {
+  ): (IInferSolveResult) = {
     Inferer.solve(
       makeEvaluateDelegate(),
       env,
-      state0,
-      rules0,
+      state,
+      rules,
       typeByRune,
       directInputs,
       paramAtoms,
@@ -35,17 +35,17 @@ object InferTemplar {
       checkAllRunesPresent)
   }
 
-  private def makeEvaluateDelegate(): IInfererDelegate[IEnvironment, Temputs] = {
-    new IInfererDelegate[IEnvironment, Temputs] {
+  private def makeEvaluateDelegate(): IInfererDelegate[IEnvironment, TemputsBox] = {
+    new IInfererDelegate[IEnvironment, TemputsBox] {
       override def evaluateType(
         env: IEnvironment,
-        temputs0: Temputs,
+        temputs: TemputsBox,
         type1: ITemplexA
-      ): (Temputs, ITemplata) = {
-        TemplataTemplar.evaluateTemplex(env, temputs0, type1)
+      ): (ITemplata) = {
+        TemplataTemplar.evaluateTemplex(env, temputs, type1)
       }
 
-      override def lookupMemberTypes(state0: Temputs, kind: Kind, expectedNumMembers: Int): Option[List[Coord]] = {
+      override def lookupMemberTypes(state: TemputsBox, kind: Kind, expectedNumMembers: Int): Option[List[Coord]] = {
         val underlyingStructRef2 =
           kind match {
             case sr @ StructRef2(_) => sr
@@ -53,13 +53,13 @@ object InferTemplar {
             case PackT2(_, underlyingStruct) => underlyingStruct
             case _ => return None
           }
-        val structDef2 = state0.lookupStruct(underlyingStructRef2)
+        val structDef2 = state.lookupStruct(underlyingStructRef2)
         val structMemberTypes = structDef2.members.map(_.tyype.reference)
         Some(structMemberTypes)
       }
 
-      override def getMutability(state0: Temputs, kind: Kind): Mutability = {
-        Templar.getMutability(state0, kind)
+      override def getMutability(state: TemputsBox, kind: Kind): Mutability = {
+        Templar.getMutability(state, kind)
       }
 
       override def lookupTemplata(env: IEnvironment, name: String): ITemplata = {
@@ -72,44 +72,44 @@ object InferTemplar {
         }
       }
 
-      override def getPackKind(env: IEnvironment, state0: Temputs, members: List[Coord]): (Temputs, PackT2, Mutability) = {
-        PackTemplar.makePackType(env.globalEnv, state0, members)
+      override def getPackKind(env: IEnvironment, state: TemputsBox, members: List[Coord]): (PackT2, Mutability) = {
+        PackTemplar.makePackType(env.globalEnv, state, members)
       }
 
-      override def getArraySequenceKind(env: IEnvironment, state0: Temputs, mutability: Mutability, size: Int, element: Coord): (Temputs, ArraySequenceT2) = {
-        ArrayTemplar.makeArraySequenceType(env, state0, mutability, size, element)
+      override def getArraySequenceKind(env: IEnvironment, state: TemputsBox, mutability: Mutability, size: Int, element: Coord): (ArraySequenceT2) = {
+        ArrayTemplar.makeArraySequenceType(env, state, mutability, size, element)
       }
 
       override def evaluateInterfaceTemplata(
-        state0: Temputs,
+        state: TemputsBox,
         templata: InterfaceTemplata,
         templateArgs: List[ITemplata]):
-      (Temputs, Kind) = {
-        StructTemplar.getInterfaceRef(state0, templata, templateArgs)
+      (Kind) = {
+        StructTemplar.getInterfaceRef(state, templata, templateArgs)
       }
 
       override def evaluateStructTemplata(
-        state0: Temputs,
+        state: TemputsBox,
         templata: StructTemplata,
         templateArgs: List[ITemplata]):
-      (Temputs, Kind) = {
-        StructTemplar.getStructRef(state0, templata, templateArgs)
+      (Kind) = {
+        StructTemplar.getStructRef(state, templata, templateArgs)
       }
 
-      override def getAncestorInterfaceDistance(temputs0: Temputs, descendantCitizenRef: CitizenRef2, ancestorInterfaceRef: InterfaceRef2):
-      (Temputs, Option[Int]) = {
-        ImplTemplar.getAncestorInterfaceDistance(temputs0, descendantCitizenRef, ancestorInterfaceRef)
+      override def getAncestorInterfaceDistance(temputs: TemputsBox, descendantCitizenRef: CitizenRef2, ancestorInterfaceRef: InterfaceRef2):
+      (Option[Int]) = {
+        ImplTemplar.getAncestorInterfaceDistance(temputs, descendantCitizenRef, ancestorInterfaceRef)
       }
 
-      override def getAncestorInterfaces(temputs0: Temputs, descendantCitizenRef: CitizenRef2): (Temputs, Set[InterfaceRef2]) = {
-        ImplTemplar.getAncestorInterfaces(temputs0, descendantCitizenRef)
+      override def getAncestorInterfaces(temputs: TemputsBox, descendantCitizenRef: CitizenRef2): (Set[InterfaceRef2]) = {
+        ImplTemplar.getAncestorInterfaces(temputs, descendantCitizenRef)
       }
 
-      override def getMemberCoords(state: Temputs, structRef: StructRef2): List[Coord] = {
+      override def getMemberCoords(state: TemputsBox, structRef: StructRef2): List[Coord] = {
         StructTemplar.getMemberCoords(state, structRef)
       }
 
-      override def citizenIsFromTemplate(state: Temputs, citizen: CitizenRef2, template: ITemplata): (Temputs, Boolean) = {
+      override def citizenIsFromTemplate(state: TemputsBox, citizen: CitizenRef2, template: ITemplata): (Boolean) = {
         StructTemplar.citizenIsFromTemplate(state, citizen, template)
       }
 
@@ -133,15 +133,15 @@ object InferTemplar {
   //   (a: #1, b: #2) #3 { ...}
   def inferOrdinaryRules(
     env0: IEnvironment,
-    temputs0: Temputs,
+    temputs: TemputsBox,
     rules: List[IRulexAR],
     typeByRune: Map[String, ITemplataType]
-  ): (Temputs, Map[String, ITemplata]) = {
-    solve(env0, temputs0, rules, typeByRune, Map(), List(), None, true) match {
-      case (temputs1, InferSolveSuccess(inferences)) => {
-        (temputs1, inferences.templatasByRune)
+  ): (Map[String, ITemplata]) = {
+    solve(env0, temputs, rules, typeByRune, Map(), List(), None, true) match {
+      case (InferSolveSuccess(inferences)) => {
+        (inferences.templatasByRune)
       }
-      case (_, isf @ InferSolveFailure(_, _, _, _, _, _)) => {
+      case (isf @ InferSolveFailure(_, _, _, _, _, _)) => {
         vfail("Conflict in determining ordinary rules' runes: " + isf)
       }
     }
@@ -149,21 +149,21 @@ object InferTemplar {
 
   def inferFromExplicitTemplateArgs(
     env0: IEnvironment,
-    temputs0: Temputs,
+    temputs: TemputsBox,
     identifyingRunes: List[String],
     rules: List[IRulexAR],
     typeByRune: Map[String, ITemplataType],
     patterns1: List[AtomSP],
     maybeRetRune: Option[String],
     explicits: List[ITemplata],
-  ): (Temputs, IInferSolveResult) = {
+  ): (IInferSolveResult) = {
     if (identifyingRunes.size != explicits.size) {
       vfail("Wrong number of template args!")
     }
 
     solve(
       env0,
-      temputs0,
+      temputs,
       rules,
       typeByRune,
       identifyingRunes.zip(explicits).toMap,
@@ -174,7 +174,7 @@ object InferTemplar {
 
   def inferFromArgCoords(
     env0: IEnvironment,
-    temputs0: Temputs,
+    temputs: TemputsBox,
     identifyingRunes: List[String],
     rules: List[IRulexAR],
     typeByRune: Map[String, ITemplataType],
@@ -182,11 +182,11 @@ object InferTemplar {
     maybeRetRune: Option[String],
     alreadySpecifiedTemplateArgs: List[ITemplata],
     patternInputCoords: List[ParamFilter]
-  ): (Temputs, IInferSolveResult) = {
+  ): (IInferSolveResult) = {
 
     solve(
       env0,
-      temputs0,
+      temputs,
       rules,
       typeByRune,
       // Note: this two things we're zipping are of different length, that's fine.

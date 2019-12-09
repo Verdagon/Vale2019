@@ -162,9 +162,9 @@ object Astronomer {
   def makeRuleTyper(): RuleTyperEvaluator[Environment, AstroutsBox] = {
     new RuleTyperEvaluator[Environment, AstroutsBox](
       new IRuleTyperEvaluatorDelegate[Environment, AstroutsBox] {
-        override def lookupType(state: AstroutsBox, env: Environment, name: String): (AstroutsBox, ITemplataType) = {
+        override def lookupType(state: AstroutsBox, env: Environment, name: String): (ITemplataType) = {
           val tyype = Astronomer.lookupType(state, env, name)
-          (state, tyype)
+          (tyype)
         }
       })
   }
@@ -174,7 +174,7 @@ object Astronomer {
 
     // predictedTypeByRune is used by the rule typer delegate to short-circuit infinite recursion
     // in types like List, see RTMHTPS.
-    val (_) = predictedTypeByRune
+    val _ = predictedTypeByRune
 
     astrouts.getStruct(struct1Id) match {
       case Some(existingStructA) => return existingStructA
@@ -184,7 +184,7 @@ object Astronomer {
     val (conclusions, rulesA) =
       makeRuleTyper().solve(astrouts, env, rules, List(), Some(allRunes)) match {
         case (_, rtsf @ RuleTyperSolveFailure(_, _, _)) => vfail(rtsf.toString)
-        case (_, RuleTyperSolveSuccess(c, r)) => (c, r)
+        case (c, RuleTyperSolveSuccess(r)) => (c, r)
       }
 
     val tyype =
@@ -207,7 +207,7 @@ object Astronomer {
 
     // predictedTypeByRune is used by the rule typer delegate to short-circuit infinite recursion
     // in types like List, see RTMHTPS.
-    val (_) = predictedTypeByRune
+    val _ = predictedTypeByRune
 
     astrouts.getInterface(interface1Id) match {
       case Some(existingInterfaceA) => return existingInterfaceA
@@ -217,7 +217,7 @@ object Astronomer {
     val (conclusions, rulesA) =
       makeRuleTyper().solve(astrouts, env, rules, List(), Some(allRunes)) match {
         case (_, rtsf @ RuleTyperSolveFailure(_, _, _)) => vfail(rtsf.toString)
-        case (_, RuleTyperSolveSuccess(c, r)) => (c, r)
+        case (c, RuleTyperSolveSuccess(r)) => (c, r)
       }
 
     val tyype =
@@ -252,7 +252,7 @@ object Astronomer {
     val (conclusions, rulesA) =
       makeRuleTyper().solve(astrouts, env, rules, List(), Some(allRunes)) match {
         case (_, rtsf @ RuleTyperSolveFailure(_, _, _)) => vfail(rtsf.toString)
-        case (_, RuleTyperSolveSuccess(c, r)) => (c, r)
+        case (c, RuleTyperSolveSuccess(r)) => (c, r)
       }
 
     ImplA(codeLocation, rulesA, conclusions.typeByRune, structKindRune, interfaceKindRune)
@@ -264,7 +264,7 @@ object Astronomer {
     val (conclusions, rulesA) =
       makeRuleTyper().solve(astrouts, env, templateRules, List(), Some(allRunes)) match {
         case (_, rtsf @ RuleTyperSolveFailure(_, _, _)) => vfail(rtsf.toString)
-        case (_, RuleTyperSolveSuccess(c, r)) => (c, r)
+        case (c, RuleTyperSolveSuccess(r)) => (c, r)
       }
 
     val tyype =
@@ -316,7 +316,7 @@ object Astronomer {
 
     val functionsA = functionsS.map(translateFunction(astrouts, env, _))
 
-    val (_) = astrouts
+    val _ = astrouts
 
     ProgramA(structsA, interfacesA, implsA, functionsA ++ suppliedFunctions)
   }

@@ -13,58 +13,58 @@ import net.verdagon.radonc.scout._
 
 object TypeTemplar {
 
-  def evaluateAndReferencifyType(env: IEnvironment, temputs0: Temputs, type1: ITemplexA, ownershipIfMutable: Ownership):
-  (Temputs, Coord) = {
-    val (temputs1, typeTemplata) = TemplataTemplar.evaluateTemplex(env, temputs0, type1)
+  def evaluateAndReferencifyType(env: IEnvironment, temputs: TemputsBox, type1: ITemplexA, ownershipIfMutable: Ownership):
+  (Coord) = {
+    val typeTemplata = TemplataTemplar.evaluateTemplex(env, temputs, type1)
     typeTemplata match {
       case st @ StructTemplata(_, _) => {
-        val (temputs1, structRef) =
-          StructTemplar.getStructRef(temputs0, st, List())
-        (temputs1, TemplataTemplar.pointifyReferend(temputs1, structRef, ownershipIfMutable))
+        val structRef =
+          StructTemplar.getStructRef(temputs, st, List())
+        (TemplataTemplar.pointifyReferend(temputs, structRef, ownershipIfMutable))
       }
       case st @ InterfaceTemplata(_, _) => {
-        val (temputs1, interfaceRef) =
-          StructTemplar.getInterfaceRef(temputs0, st, List())
-        (temputs1, TemplataTemplar.pointifyReferend(temputs1, interfaceRef, ownershipIfMutable))
+        val interfaceRef =
+          StructTemplar.getInterfaceRef(temputs, st, List())
+        (TemplataTemplar.pointifyReferend(temputs, interfaceRef, ownershipIfMutable))
       }
-      case CoordTemplata(r) => (temputs1, r)
+      case CoordTemplata(r) => (r)
       case KindTemplata(referend) => {
-        (temputs1, TemplataTemplar.pointifyReferend(temputs1, referend, ownershipIfMutable))
+        (TemplataTemplar.pointifyReferend(temputs, referend, ownershipIfMutable))
       }
     }
   }
 
   def convertExprs(
       env: IEnvironment,
-      temputs0: Temputs,
+      temputs: TemputsBox,
       sourceExprs: List[ReferenceExpression2],
       targetPointerTypes: List[Coord]):
-  (Temputs, List[ReferenceExpression2]) = {
+  (List[ReferenceExpression2]) = {
     if (sourceExprs.size != targetPointerTypes.size) {
       vfail("num exprs mismatch, source:\n" + sourceExprs + "\ntarget:\n" + targetPointerTypes)
     }
-    (sourceExprs zip targetPointerTypes).foldLeft((temputs0, List[ReferenceExpression2]()))({
-      case ((temputs1, previousRefExprs), (sourceExpr, targetPointerType)) => {
-        val (temputs2, refExpr) =
-          convert(env, temputs1, sourceExpr, targetPointerType)
-        (temputs2, previousRefExprs :+ refExpr)
+    (sourceExprs zip targetPointerTypes).foldLeft((List[ReferenceExpression2]()))({
+      case ((previousRefExprs), (sourceExpr, targetPointerType)) => {
+        val refExpr =
+          convert(env, temputs, sourceExpr, targetPointerType)
+        (previousRefExprs :+ refExpr)
       }
     })
   }
 
   def convert(
       env: IEnvironment,
-      temputs0: Temputs,
+      temputs: TemputsBox,
       sourceExpr: ReferenceExpression2,
       targetPointerType: Coord):
-  (Temputs, ReferenceExpression2) = {
+  (ReferenceExpression2) = {
     val sourcePointerType = sourceExpr.resultRegister.reference
 
     val Coord(targetOwnership, targetType) = targetPointerType;
     val Coord(sourceOwnership, sourceType) = sourcePointerType;
 
     if (sourceType == Never2()) {
-      return (temputs0, TemplarReinterpret2(sourceExpr, targetPointerType))
+      return (TemplarReinterpret2(sourceExpr, targetPointerType))
     }
 
     val sourceExprDecayedOwnershipped =
@@ -87,18 +87,18 @@ object TypeTemplar {
         }
       }
 
-    val (temputs1, sourceExprDecayedOwnershippedConverted) =
+    val sourceExprDecayedOwnershippedConverted =
       if (sourceType == targetType) {
-        (temputs0, sourceExprDecayedOwnershipped)
+        (sourceExprDecayedOwnershipped)
       } else {
         (sourceType, targetType) match {
           case (s @ StructRef2(_), i : InterfaceRef2) => {
-            StructTemplar.convert(env.globalEnv, temputs0, sourceExprDecayedOwnershipped, s, i)
+            StructTemplar.convert(env.globalEnv, temputs, sourceExprDecayedOwnershipped, s, i)
           }
           case _ => vfail()
         }
       };
 
-    (temputs1, sourceExprDecayedOwnershippedConverted)
+    (sourceExprDecayedOwnershippedConverted)
   }
 }

@@ -26,7 +26,7 @@ package object infer {
     inner: List[IConflictCause]
   ) extends IInferSolveResult with IConflictCause
   case class InferSolveSuccess(
-    inferences: Inferences,
+    inferences: Inferences
   ) extends IInferSolveResult
 
 
@@ -40,8 +40,6 @@ package object infer {
     cause: List[IConflictCause]
   ) extends IInferEvaluateResult[T] with IConflictCause
   case class InferEvaluateUnknown[T](
-    inferences: Inferences,
-
     // Whether we've satisfied every rule in this subtree.
     // This can be false for example if we have rule like `Moo = (Bork like ISomething:#T)`
     // when we don't know #T yet, but we do know the result of the
@@ -50,7 +48,6 @@ package object infer {
     deeplySatisfied: Boolean,
   ) extends IInferEvaluateResult[T]
   case class InferEvaluateSuccess[T](
-    inferences: Inferences,
     templata: T,
 
     // Whether we've satisfied every rule in this subtree.
@@ -77,8 +74,6 @@ package object infer {
     }
   }
   case class InferMatchSuccess(
-    inferences: Inferences,
-
     // Whether we've satisfied every rule in this subtree.
     // This can be false for example if we have rule like `Moo = (Bork like ISomething:#T)`
     // when we don't know #T yet, but we do know the result of the

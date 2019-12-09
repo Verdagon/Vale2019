@@ -139,7 +139,7 @@ object StructHammer {
 
         // We don't actually care about the given variability, because even if it's final, we still need
         // the box to contain a varying reference, see VCBAAF.
-        val (_) = conceptualVariability
+        val _ = conceptualVariability
         val actualVariability = Varying
 
         val member3 = StructMember3(BOX_MEMBER_NAME, actualVariability, type3)

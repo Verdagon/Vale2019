@@ -12,36 +12,36 @@ object DestructorTemplar {
 
   def getCitizenDestructor(
       env: IEnvironment,
-      temputs0: Temputs,
+      temputs: TemputsBox,
       type2: Coord):
-  (Temputs, Prototype2) = {
+  (Prototype2) = {
     type2.referend match {
       case PackT2(_, _) | StructRef2(_) => {// | OrdinaryClosure2(_, _, _) | TemplatedClosure2(_, _, _) => {
         OverloadTemplar.scoutExpectedFunctionForPrototype(
             env,
-            temputs0,
+            temputs,
             CallTemplar.DESTRUCTOR_NAME,
             List(),
             List(ParamFilter(type2, None)),
             true)  match {
-          case (_, seff @ ScoutExpectedFunctionFailure(_, _, _, _, _)) => {
+          case (seff @ ScoutExpectedFunctionFailure(_, _, _, _, _)) => {
             vfail("Couldn't find concrete destructor!\n" + seff.toString)
           }
-          case (temputs1, ScoutExpectedFunctionSuccess(p)) => (temputs1, p)
+          case (ScoutExpectedFunctionSuccess(p)) => (p)
         }
       }
       case InterfaceRef2(_) => {
         OverloadTemplar.scoutExpectedFunctionForPrototype(
           env,
-          temputs0,
+          temputs,
           CallTemplar.INTERFACE_DESTRUCTOR_NAME,
           List(),
           List(ParamFilter(type2, None)),
           true) match {
-          case (_, seff @ ScoutExpectedFunctionFailure(_, _, _, _, _)) => {
+          case (seff @ ScoutExpectedFunctionFailure(_, _, _, _, _)) => {
             vfail("Couldn't find interface destructor!\n" + seff.toString)
           }
-          case (temputs1, ScoutExpectedFunctionSuccess(p)) => (temputs1, p)
+          case (ScoutExpectedFunctionSuccess(p)) => (p)
         }
       }
     }
@@ -49,21 +49,21 @@ object DestructorTemplar {
 
   def getArrayDestructor(
     env: IEnvironment,
-    temputs0: Temputs,
+    temputs: TemputsBox,
     type2: Coord):
-  (Temputs, Prototype2) = {
+  (Prototype2) = {
     type2.referend match { case ArraySequenceT2(_, _) | UnknownSizeArrayT2(_) => }
     OverloadTemplar.scoutExpectedFunctionForPrototype(
       env,
-      temputs0,
+      temputs,
       CallTemplar.DESTRUCTOR_NAME,
       List(),
       List(ParamFilter(type2, None)),
       true) match {
-      case (_, seff @ ScoutExpectedFunctionFailure(_, _, _, _, _)) => {
+      case (seff @ ScoutExpectedFunctionFailure(_, _, _, _, _)) => {
         vfail("Couldn't find array destructor!\n" + seff.toString)
       }
-      case (temputs1, ScoutExpectedFunctionSuccess(p)) => (temputs1, p)
+      case (ScoutExpectedFunctionSuccess(p)) => (p)
     }
   }
 
@@ -74,35 +74,34 @@ object DestructorTemplar {
   // - Unborrow. This is a no op.
   private def getDropFunction(
       env: IEnvironment,
-      temputs0: Temputs,
+      temputs: TemputsBox,
       type2: Coord):
-  (Temputs, Prototype2) = {
+  (Prototype2) = {
     OverloadTemplar.scoutExpectedFunctionForPrototype(
       env,
-      temputs0,
+      temputs,
       CallTemplar.DROP_FUNCTION_NAME,
       List(),
       List(ParamFilter(type2, None)),
       true) match {
-      case (_, seff @ ScoutExpectedFunctionFailure(_, _, _, _, _)) => {
+      case (seff @ ScoutExpectedFunctionFailure(_, _, _, _, _)) => {
         vfail("Couldn't find drop function!\n" + seff.toString)
       }
-      case (temputs1, ScoutExpectedFunctionSuccess(p)) => (temputs1, p)
+      case (ScoutExpectedFunctionSuccess(p)) => (p)
     }
   }
 
   def generateDropFunction(
     innerEnv: FunctionEnvironment,
-    temputsA: Temputs,
+    temputs: TemputsBox,
     originFunction1: FunctionA,
     type2: Coord):
-  (Temputs, FunctionHeader2) = {
+  (FunctionHeader2) = {
     val fateA = innerEnv
-
-    val (temputsB, fateB, dropExpr2) =
+    val (fateB, dropExpr2) =
       DestructorTemplar.drop(
         fateA,
-        temputsA,
+        temputs,
         ArgLookup2(0, type2))
     val header =
       FunctionHeader2(
@@ -114,20 +113,18 @@ object DestructorTemplar {
         Coord(Raw, Void2()),
         Some(originFunction1))
     val function2 = Function2(header, List(), Block2(List(dropExpr2)))
-    val temputsC =
-      temputsB
-        .declareFunctionReturnType(header.toSignature, Coord(Raw, Void2()))
-        .addFunction(function2)
-    vassert(temputsC.exactDeclaredSignatureExists(innerEnv.fullName, header.paramTypes))
-    (temputsC, header)
+    temputs.declareFunctionReturnType(header.toSignature, Coord(Raw, Void2()))
+    temputs.addFunction(function2)
+    vassert(temputs.exactDeclaredSignatureExists(innerEnv.fullName, header.paramTypes))
+    (header)
   }
 
   def drop(
       fate0: FunctionEnvironment,
-      temputs0: Temputs,
+      temputs: TemputsBox,
       undestructedExpr2: ReferenceExpression2):
-  (Temputs, FunctionEnvironment, ReferenceExpression2) = {
-    val (temputsX, fateX, resultExpr2) =
+  (FunctionEnvironment, ReferenceExpression2) = {
+    val (fateX, resultExpr2) =
       undestructedExpr2.resultRegister.reference match {
         case Coord(Raw, _) => {
           undestructedExpr2.resultRegister.reference.referend match {
@@ -137,109 +134,109 @@ object DestructorTemplar {
               vfail("wat")
             }
           }
-          (temputs0, fate0, undestructedExpr2)
+          (fate0, undestructedExpr2)
         }
         case r @ Coord(Own, referend) => {
-          val (temputs1, destructorPrototype) =
+          val destructorPrototype =
             referend match {
               case PackT2(_, understructRef) => {
-                getCitizenDestructor(fate0, temputs0, Coord(Own, understructRef))
+                getCitizenDestructor(fate0, temputs, Coord(Own, understructRef))
               }
               case StructRef2(_) | InterfaceRef2(_) => {
-                getCitizenDestructor(fate0, temputs0, r)
+                getCitizenDestructor(fate0, temputs, r)
               }
               case ArraySequenceT2(_, _) | UnknownSizeArrayT2(_) => {
-                getArrayDestructor(fate0, temputs0, r)
+                getArrayDestructor(fate0, temputs, r)
               }
             }
-          val (temputs2, fate2, destructExpr2) =
+          val (fate2, destructExpr2) =
             CallTemplar.evaluatePrefixCall(
-              temputs1,
+              temputs,
               fate0,
               FunctionLookup2(destructorPrototype),
               List(),
               undestructedExpr2)
           vassert(destructExpr2.resultRegister.reference.referend == Void2())
-          (temputs2, fate2, destructExpr2)
+          (fate2, destructExpr2)
         }
-        case Coord(Borrow, _) => (temputs0, fate0, Discard2(undestructedExpr2))
+        case Coord(Borrow, _) => (fate0, Discard2(undestructedExpr2))
         case Coord(Share, _) => {
           val destroySharedCitizen =
-            (temputs0: Temputs, Coord: Coord) => {
-              val (temputs1, destructorHeader) =
-                getCitizenDestructor(fate0, temputs0, Coord)
+            (temputs: TemputsBox, Coord: Coord) => {
+              val destructorHeader =
+                getCitizenDestructor(fate0, temputs, Coord)
               // We just needed to ensure it's in the temputs, so that the backend can use it
               // for when reference counts drop to zero.
               // If/when we have a GC backend, we can skip generating share destructors.
               val _ = destructorHeader
-              (temputs1, Discard2(undestructedExpr2))
+              (Discard2(undestructedExpr2))
             };
           val destroySharedArray =
-            (temputs0: Temputs, Coord: Coord) => {
-              val (temputs1, destructorHeader) =
-                getArrayDestructor(fate0, temputs0, Coord)
+            (temputs: TemputsBox, Coord: Coord) => {
+              val destructorHeader =
+                getArrayDestructor(fate0, temputs, Coord)
               // We just needed to ensure it's in the temputs, so that the backend can use it
               // for when reference counts drop to zero.
               // If/when we have a GC backend, we can skip generating share destructors.
               val _ = destructorHeader
-              (temputs1, Discard2(undestructedExpr2))
+              (Discard2(undestructedExpr2))
             };
 
 
-          val (temputs2, unshareExpr2) =
+          val unshareExpr2 =
             undestructedExpr2.resultRegister.reference.referend match {
               case Int2() | Str2() | Bool2() | Float2() => {
-                (temputs0, Discard2(undestructedExpr2))
+                (Discard2(undestructedExpr2))
               }
               case as @ ArraySequenceT2(_, _) => {
                 val underarrayReference2 = Coord(undestructedExpr2.resultRegister.reference.ownership, as)
-                destroySharedArray(temputs0, underarrayReference2)
+                destroySharedArray(temputs, underarrayReference2)
               }
               case as @ UnknownSizeArrayT2(_) => {
                 val underarrayReference2 = Coord(undestructedExpr2.resultRegister.reference.ownership, as)
-                destroySharedArray(temputs0, underarrayReference2)
+                destroySharedArray(temputs, underarrayReference2)
               }
               case OverloadSet(overloadSetEnv, name, voidStructRef) => {
                 val understructReference2 = undestructedExpr2.resultRegister.reference.copy(referend = voidStructRef)
-                destroySharedCitizen(temputs0, understructReference2)
+                destroySharedCitizen(temputs, understructReference2)
               }
               case PackT2(_, understruct2) => {
                 val understructReference2 = undestructedExpr2.resultRegister.reference.copy(referend = understruct2)
-                destroySharedCitizen(temputs0, understructReference2)
+                destroySharedCitizen(temputs, understructReference2)
               }
 //              case OrdinaryClosure2(_, sr, _) => {
 //                val understructReference2 = undestructedExpr2.resultRegister.reference.copy(referend = sr)
-//                destroySharedCitizen(temputs0, understructReference2)
+//                destroySharedCitizen(temputs, understructReference2)
 //              }
 //              case TemplatedClosure2(_, sr, _) => {
 //                val understructReference2 = undestructedExpr2.resultRegister.reference.copy(referend = sr)
-//                destroySharedCitizen(temputs0, understructReference2)
+//                destroySharedCitizen(temputs, understructReference2)
 //              }
               case StructRef2(_) | InterfaceRef2(_) => {
-                destroySharedCitizen(temputs0, undestructedExpr2.resultRegister.reference)
+                destroySharedCitizen(temputs, undestructedExpr2.resultRegister.reference)
               }
             }
-          (temputs2, fate0, unshareExpr2)
+          (fate0, unshareExpr2)
         }
       }
     vassert(
       resultExpr2.resultRegister.reference == Coord(Raw, Void2()) ||
       resultExpr2.resultRegister.reference == Coord(Raw, Never2()))
-    (temputsX, fateX, resultExpr2)
+    (fateX, resultExpr2)
   }
 
   def generateStructDestructor(
       innerEnv: FunctionEnvironment,
-      temputs0: Temputs,
+      temputs: TemputsBox,
       originFunction1: FunctionA,
       params2: List[Parameter2],
       structRef: StructRef2):
-  (Temputs, FunctionHeader2) = {
+  (FunctionHeader2) = {
     val fate0 = innerEnv
 
     val destructorFullName = innerEnv.fullName
 
-    val structDef = temputs0.lookupStruct(structRef)
+    val structDef = temputs.lookupStruct(structRef)
     val structOwnership = if (structDef.mutability == Mutable) Own else Share
     val structBorrowOwnership = if (structDef.mutability == Mutable) Borrow else Share
     val structType = Coord(structOwnership, structDef.getRef)
@@ -252,8 +249,8 @@ object DestructorTemplar {
         params2,
         Coord(Raw, Void2()),
         Some(originFunction1));
-    val temputs1 =
-      temputs0
+
+      temputs
           .declareFunctionReturnType(header.toSignature, header.returnType)
 
     val structArgument = ArgLookup2(0, structType)
@@ -270,12 +267,12 @@ object DestructorTemplar {
       })
 
     val destroyedUnletStruct = Destructure2(structArgument, structRef, memberLocalVariables)
-    val (temputs4, fate4, destructMemberExprs) =
-      memberLocalVariables.foldLeft((temputs1, fate0, List[ReferenceExpression2]()))({
-        case ((temputs2, fate2, previousDestructMemberExprs), variable) => {
-          val (temputs3, fate3, destructMemberExpr) =
-            drop(fate2, temputs2, Unlet2(variable))
-          (temputs3, fate3, previousDestructMemberExprs :+ destructMemberExpr)
+    val (fate4, destructMemberExprs) =
+      memberLocalVariables.foldLeft((fate0, List[ReferenceExpression2]()))({
+        case ((fate2, previousDestructMemberExprs), variable) => {
+          val (fate3, destructMemberExpr) =
+            drop(fate2, temputs, Unlet2(variable))
+          (fate3, previousDestructMemberExprs :+ destructMemberExpr)
         }
       })
 
@@ -288,17 +285,17 @@ object DestructorTemplar {
         header,
         memberLocalVariables,
         Block2(List(destroyedUnletStruct) ++ destructMemberExprs :+ voidLiteral))
-    val temputs5 = temputs4.addFunction(function2)
-    (temputs5, function2.header)
+    temputs.addFunction(function2)
+    (function2.header)
   }
 
   def generateArraySequenceDestructor(
     env: IEnvironment,
-    temputs0: Temputs,
+    temputs: TemputsBox,
     maybeOriginFunction1: Option[FunctionA],
     sequenceRefType2: Coord,
     sequence: ArraySequenceT2):
-  (Temputs, FunctionHeader2) = {
+  (FunctionHeader2) = {
     val templatas = List(CoordTemplata(sequenceRefType2))
     val destructorFullName = FullName2(List(NamePart2("destructor", Some(templatas))))
 
@@ -306,7 +303,7 @@ object DestructorTemplar {
     val arrayBorrowOwnership = if (sequence.array.mutability == Mutable) Borrow else Share
     val arrayRefType = Coord(arrayOwnership, sequence)
 
-    val (temputs1, elementDropFunctionPrototype) = getDropFunction(env, temputs0, sequence.array.memberType)
+    val elementDropFunctionPrototype = getDropFunction(env, temputs, sequence.array.memberType)
 
     val function2 =
       Function2(
@@ -326,28 +323,27 @@ object DestructorTemplar {
               FunctionPointerCall2(
                 FunctionLookup2(elementDropFunctionPrototype),
                 List(Placeholder2(sequence.array.memberType)))))))
-    val temputs2 =
-      temputs1
-          .declareFunctionReturnType(function2.header.toSignature, function2.header.returnType)
-          .addFunction(function2)
-    (temputs2, function2.header)
+
+      temputs.declareFunctionReturnType(function2.header.toSignature, function2.header.returnType)
+      temputs.addFunction(function2)
+    (function2.header)
   }
 
   def generateUnknownSizeArrayDestructor(
       env: IEnvironment,
-      temputs0: Temputs,
+      temputs: TemputsBox,
       maybeOriginFunction1: Option[FunctionA],
       arrayRefType2: Coord,
       array: UnknownSizeArrayT2):
-  (Temputs, FunctionHeader2) = {
+  (FunctionHeader2) = {
     val templatas = List(CoordTemplata(arrayRefType2))
     val destructorFullName = FullName2(List(NamePart2("destructor", Some(templatas))))
 
     val arrayOwnership = if (array.array.mutability == Mutable) Own else Share
     val arrayBorrowOwnership = if (array.array.mutability == Mutable) Borrow else Share
 
-    val (temputs1, elementDropFunctionPrototype) =
-      getDropFunction(env, temputs0, array.array.memberType)
+    val elementDropFunctionPrototype =
+      getDropFunction(env, temputs, array.array.memberType)
 
     val function2 =
       Function2(
@@ -367,10 +363,9 @@ object DestructorTemplar {
               FunctionPointerCall2(
                 FunctionLookup2(elementDropFunctionPrototype),
                 List(Placeholder2(array.array.memberType)))))))
-    val temputs2 =
-      temputs1
-          .declareFunctionReturnType(function2.header.toSignature, function2.header.returnType)
-          .addFunction(function2)
-    (temputs2, function2.header)
+
+      temputs.declareFunctionReturnType(function2.header.toSignature, function2.header.returnType)
+      temputs.addFunction(function2)
+    (function2.header)
   }
 }

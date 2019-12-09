@@ -71,11 +71,11 @@ object BuiltInFunctions {
           new IFunctionGenerator {
             override def generate(
               env: FunctionEnvironment,
-              temputs: Temputs,
+              temputs: TemputsBox,
               maybeOriginFunction1: Option[FunctionA],
               paramCoords: List[Parameter2],
               maybeReturnType2: Option[Coord]):
-            (Temputs, FunctionHeader2) = {
+            (FunctionHeader2) = {
               // Even though below we treat packs, closures, and structs the same, they're
               // still disambiguated by the template arguments.
               paramCoords.map(_.tyype) match {
@@ -151,11 +151,11 @@ object BuiltInFunctions {
         new IFunctionGenerator {
           override def generate(
             innerEnv: FunctionEnvironment,
-            temputs: Temputs,
+            temputs: TemputsBox,
             maybeOriginFunction1: Option[FunctionA],
             params: List[Parameter2],
             maybeReturnType2: Option[Coord]):
-          (Temputs, FunctionHeader2) = {
+          (FunctionHeader2) = {
             // Even though below we treat packs, closures, and structs the same, they're
             // still disambiguated by the template arguments.
             val Some(returnType2) = maybeReturnType2
@@ -216,11 +216,11 @@ object BuiltInFunctions {
           new IFunctionGenerator {
             override def generate(
               innerEnv: FunctionEnvironment,
-              temputs: Temputs,
+              temputs: TemputsBox,
               maybeOriginFunction1: Option[FunctionA],
               params: List[Parameter2],
               maybeReturnType2: Option[Coord]):
-            (Temputs, FunctionHeader2) = {
+            (FunctionHeader2) = {
               // There are multiple idestructor overrides for a given struct, which can
               // confuse us.
               // They all override different interfaces, but that's not factored into the
@@ -282,11 +282,11 @@ object BuiltInFunctions {
           new IFunctionGenerator {
             override def generate(
               innerEnv: FunctionEnvironment,
-              temputs: Temputs,
+              temputs: TemputsBox,
               maybeOriginFunction1: Option[FunctionA],
               params: List[Parameter2],
               maybeReturnType2: Option[Coord]):
-            (Temputs, FunctionHeader2) = {
+            (FunctionHeader2) = {
               vassert(maybeReturnType2 == Some(Coord(Raw, Void2())))
               val List(CoordTemplata(ref2)) = innerEnv.fullName.steps.last.templateArgs.get
               val List(Parameter2("x", None, paramType2)) = params

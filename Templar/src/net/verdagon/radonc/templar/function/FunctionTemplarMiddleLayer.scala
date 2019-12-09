@@ -22,9 +22,9 @@ object FunctionTemplarMiddleLayer {
   // - either no closured vars, or they were already added to the env.
   def predictOrdinaryFunctionBanner(
     innerEnv: FunctionEnvironment,
-    temputs0: Temputs,
+    temputs: TemputsBox,
     function1: FunctionA):
-  (Temputs, FunctionBanner2) = {
+  (FunctionBanner2) = {
 
     // Check preconditions
     function1.typeByRune.keySet.foreach(templateParam => {
@@ -35,27 +35,27 @@ object FunctionTemplarMiddleLayer {
       case _ =>
     }
 
-    val (temputs1, params2) = assembleFunctionParams(innerEnv, temputs0, function1.params)
+    val params2 = assembleFunctionParams(innerEnv, temputs, function1.params)
     val banner = FunctionBanner2(Some(function1), innerEnv.fullName, params2)
-    (temputs1, banner)
+    (banner)
   }
 
   private def evaluateMaybeVirtuality(
       env: IEnvironment,
-      temputs0: Temputs,
+      temputs: TemputsBox,
       maybeVirtuality1: Option[VirtualitySP]):
-  (Temputs, Option[Virtuality2]) = {
+  (Option[Virtuality2]) = {
     maybeVirtuality1 match {
-      case None => (temputs0, None)
-      case Some(AbstractSP) => (temputs0, Some(Abstract2))
+      case None => (None)
+      case Some(AbstractSP) => (Some(Abstract2))
       case Some(OverrideSP(interfaceRune)) => {
         env.getNearestTemplataWithName(interfaceRune, Set(TemplataLookupContext)) match {
           case None => vcurious()
-          case Some(KindTemplata(ir @ InterfaceRef2(_))) => (temputs0, Some(Override2(ir)))
+          case Some(KindTemplata(ir @ InterfaceRef2(_))) => (Some(Override2(ir)))
           case Some(it @ InterfaceTemplata(_, _)) => {
-            val (temputs1, ir) =
-              StructTemplar.getInterfaceRef(temputs0, it, List())
-            (temputs1, Some(Override2(ir)))
+            val ir =
+              StructTemplar.getInterfaceRef(temputs, it, List())
+            (Some(Override2(ir)))
           }
         }
       }
@@ -68,41 +68,41 @@ object FunctionTemplarMiddleLayer {
   // - either no closured vars, or they were already added to the env.
   def getOrEvaluateFunctionForBanner(
     innerEnv: FunctionEnvironment,
-    temputs0: Temputs,
+    temputs: TemputsBox,
     function1: FunctionA):
-  (Temputs, FunctionBanner2) = {
+  (FunctionBanner2) = {
 
     // Check preconditions
     function1.typeByRune.keySet.foreach(templateParam => {
       vassert(innerEnv.getNearestTemplataWithName(templateParam, Set(TemplataLookupContext, ExpressionLookupContext)).nonEmpty);
     })
 
-    val (temputs1, params2) = assembleFunctionParams(innerEnv, temputs0, function1.params)
+    val params2 = assembleFunctionParams(innerEnv, temputs, function1.params)
     val banner = FunctionBanner2(Some(function1), innerEnv.fullName, params2)
 
     // Now we want to add its Function2 into the temputs.
-    if (temputs0.exactDeclaredSignatureExists(banner.toSignature)) {
+    if (temputs.exactDeclaredSignatureExists(banner.toSignature)) {
       // Someone else is already working on it (or has finished), so
       // just return.
-      (temputs1, banner)
+      (banner)
     } else {
       val signature = banner.toSignature
-      val temputs2 = temputs1.declareFunctionSignature(signature, Some(innerEnv))
-      val (temputs3, params2) = assembleFunctionParams(innerEnv, temputs2, function1.params)
-      val (temputs4, header) =
-        FunctionTemplarCore.evaluateFunctionForHeader(innerEnv, temputs3, function1, params2)
+      temputs.declareFunctionSignature(signature, Some(innerEnv))
+      val params2 = assembleFunctionParams(innerEnv, temputs, function1.params)
+      val header =
+        FunctionTemplarCore.evaluateFunctionForHeader(innerEnv, temputs, function1, params2)
       if (header.toBanner != banner) {
         val bannerFromHeader = header.toBanner
         vfail("wut\n" + bannerFromHeader + "\n" + banner)
       }
 
-      val temputs5 =
-        VirtualTemplar.evaluateParent(innerEnv, temputs4, header)
 
-      val temputs6 =
-        VirtualTemplar.evaluateOverrides(innerEnv, temputs5, header)
+        VirtualTemplar.evaluateParent(innerEnv, temputs, header)
 
-      (temputs6, header.toBanner)
+
+        VirtualTemplar.evaluateOverrides(innerEnv, temputs, header)
+
+      (header.toBanner)
     }
   }
 
@@ -112,9 +112,9 @@ object FunctionTemplarMiddleLayer {
   // - either no closured vars, or they were already added to the env.
   def getOrEvaluateFunctionForHeader(
     innerEnv: FunctionEnvironment,
-    temputs0: Temputs,
+    temputs: TemputsBox,
     function1: FunctionA):
-  (Temputs, FunctionHeader2) = {
+  (FunctionHeader2) = {
 
     // Check preconditions
     function1.typeByRune.keySet.foreach(templateParam => {
@@ -123,18 +123,18 @@ object FunctionTemplarMiddleLayer {
 
     val paramTypes2 = evaluateFunctionParamTypes(innerEnv, function1.params);
     val needleSignature = Signature2(innerEnv.fullName, paramTypes2)
-    temputs0.lookupFunction(needleSignature) match {
+    temputs.lookupFunction(needleSignature) match {
       case Some(Function2(header, _, _)) => {
-        (temputs0, header)
+        (header)
       }
       case None => {
-        val temputs1 = temputs0.declareFunctionSignature(needleSignature, Some(innerEnv))
-        val (temputs2, params2) = assembleFunctionParams(innerEnv, temputs1, function1.params)
-        val (temputs3, header) =
+        temputs.declareFunctionSignature(needleSignature, Some(innerEnv))
+        val params2 = assembleFunctionParams(innerEnv, temputs, function1.params)
+        val header =
           FunctionTemplarCore.evaluateFunctionForHeader(
-            innerEnv, temputs2, function1, params2)
+            innerEnv, temputs, function1, params2)
         vassert(header.toSignature == needleSignature)
-        (temputs3, header)
+        (header)
       }
     }
   }
@@ -148,9 +148,9 @@ object FunctionTemplarMiddleLayer {
   // - either no closured vars, or they were already added to the env.
   def getOrEvaluateFunctionForPrototype(
     innerEnv: FunctionEnvironment,
-    temputs0: Temputs,
+    temputs: TemputsBox,
     function1: FunctionA):
-  (Temputs, Prototype2) = {
+  (Prototype2) = {
 
     // Check preconditions
     function1.typeByRune.keySet.foreach(templateParam => {
@@ -159,28 +159,28 @@ object FunctionTemplarMiddleLayer {
 
     val paramTypes2 = evaluateFunctionParamTypes(innerEnv, function1.params)
     val needleSignature = Signature2(innerEnv.fullName, paramTypes2)
-    temputs0.returnTypesBySignature.get(needleSignature) match {
+    temputs.returnTypesBySignature.get(needleSignature) match {
       case Some(returnType2) => {
-        (temputs0, Prototype2(innerEnv.fullName, FunctionT2(paramTypes2, returnType2)))
+        (Prototype2(innerEnv.fullName, FunctionT2(paramTypes2, returnType2)))
       }
       case None => {
-        if (temputs0.exactDeclaredSignatureExists(needleSignature)) {
+        if (temputs.exactDeclaredSignatureExists(needleSignature)) {
           vfail("Need return type for " + needleSignature + ", cycle found")
         }
-        val temputs1 = temputs0.declareFunctionSignature(needleSignature, Some(innerEnv))
-        val (temputs2, params2) = assembleFunctionParams(innerEnv, temputs1, function1.params)
-        val (temputs3, header) =
+        temputs.declareFunctionSignature(needleSignature, Some(innerEnv))
+        val params2 = assembleFunctionParams(innerEnv, temputs, function1.params)
+        val header =
           FunctionTemplarCore.evaluateFunctionForHeader(
-            innerEnv, temputs2, function1, params2)
+            innerEnv, temputs, function1, params2)
 
-        val temputs5 =
-          VirtualTemplar.evaluateParent(innerEnv, temputs3, header)
 
-        val temputs6 =
-          VirtualTemplar.evaluateOverrides(innerEnv, temputs5, header)
+          VirtualTemplar.evaluateParent(innerEnv, temputs, header)
+
+
+          VirtualTemplar.evaluateOverrides(innerEnv, temputs, header)
 
         vassert(header.toSignature == needleSignature)
-        (temputs6, header.toPrototype)
+        (header.toPrototype)
       }
     }
   }
@@ -199,22 +199,22 @@ object FunctionTemplarMiddleLayer {
 
   def assembleFunctionParams(
     env: IEnvironment,
-    temputs0: Temputs,
+    temputs: TemputsBox,
     params1: List[ParameterS]):
-  (Temputs, List[Parameter2]) = {
-    params1.foldLeft((temputs0, List[Parameter2]()))({
-      case ((temputs1, previousParams2), param1) => {
+  (List[Parameter2]) = {
+    params1.foldLeft((List[Parameter2]()))({
+      case ((previousParams2), param1) => {
         val CoordTemplata(coord) = env.getNearestTemplataWithName(param1.pattern.coordRune, Set(TemplataLookupContext)).get
-        val (temputs2, maybeVirtuality) =
-          evaluateMaybeVirtuality(env, temputs1, param1.pattern.virtuality)
-        (temputs2, previousParams2 :+ Parameter2(param1.name.name, maybeVirtuality, coord))
+        val maybeVirtuality =
+          evaluateMaybeVirtuality(env, temputs, param1.pattern.virtuality)
+        (previousParams2 :+ Parameter2(param1.name.name, maybeVirtuality, coord))
       }
     })
   }
 
 //  def makeImplDestructor(
 //    env: IEnvironment,
-//    temputs0: Temputs,
+//    temputs: TemputsBox,
 //    structDef2: StructDefinition2,
 //    interfaceRef2: InterfaceRef2):
 //  Temputs = {
@@ -227,18 +227,18 @@ object FunctionTemplarMiddleLayer {
 //        CallTemplar.INTERFACE_DESTRUCTOR_NAME,
 //        List(CoercedFinalTemplateArg2(ReferenceTemplata(interfaceType2))),
 //        List(structType2))
-//    val temputs1 = temputs0.declareFunctionSignature(signature2)
+//    temputs.declareFunctionSignature(signature2)
 //
-//    val (temputs3, header) =
+//    val header =
 //      FunctionTemplarCore.makeImplDestructor(
-//        env, temputs1, structDef2, interfaceRef2)
+//        env, temputs, structDef2, interfaceRef2)
 //
-//    val temputs5 =
-//      VirtualTemplar.evaluateParent(env, temputs3, header)
 //
-//    val temputs6 =
-//      VirtualTemplar.evaluateOverrides(env, temputs5, header)
+//      VirtualTemplar.evaluateParent(env, temputs, header)
 //
-//    temputs6
+//
+//      VirtualTemplar.evaluateOverrides(env, temputs, header)
+//
+//    temputs
 //  }
 }

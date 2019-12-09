@@ -103,7 +103,7 @@ object ExpressionScout {
         val (lookup, declarations) =
           magickedName match {
             case "_" => {
-              val (magicParamIndex) = fate.nextMagicParamNumber()
+              val magicParamIndex = fate.nextMagicParamNumber()
               val paramIndex = stackFrame.numExplicitParams + magicParamIndex
               val lookup = LocalLookupResult(Scout.unnamedParamNamePrefix + paramIndex)
               val declaration =
@@ -182,7 +182,7 @@ object ExpressionScout {
       case LetPE(templateRules, patternPE, exprPE) => {
         val (declarations, expr1, selfUses, childUses) =
           scoutExpressionAndCoerce(tlfName, fate, stackFrame, exprPE, borrowIfLookupResult = false);
-        val (patternId) = fate.nextLetNumber()
+        val patternId = fate.nextLetNumber()
         val rulesS = RuleStateBox(RuleState(List()))
         val patternS =
           PatternScout.translatePattern(

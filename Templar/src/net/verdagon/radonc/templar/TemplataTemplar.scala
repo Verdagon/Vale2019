@@ -14,76 +14,76 @@ import scala.collection.immutable.{List, Map, Set}
 object TemplataTemplar {
 
   def getTypeDistance(
-    temputs0: Temputs,
+    temputs: TemputsBox,
     sourcePointerType: Coord,
     targetPointerType: Coord):
-  (Temputs, Option[TypeDistance]) = {
-    makeInner().getTypeDistance(temputs0,sourcePointerType, targetPointerType)
+  (Option[TypeDistance]) = {
+    makeInner().getTypeDistance(temputs,sourcePointerType, targetPointerType)
   }
 
   def evaluateTemplex(
     env: IEnvironment,
-    temputs: Temputs,
+    temputs: TemputsBox,
     templex: ITemplexA
-  ): (Temputs, ITemplata) = {
+  ): (ITemplata) = {
     makeInner().evaluateTemplex(env, temputs, templex)
   }
 
-  def evaluateTemplexes(env: IEnvironment, temputs0: Temputs, templexes: List[ITemplexA]):
-  (Temputs, List[ITemplata]) = {
-    makeInner().evaluateTemplexes(env, temputs0, templexes)
+  def evaluateTemplexes(env: IEnvironment, temputs: TemputsBox, templexes: List[ITemplexA]):
+  (List[ITemplata]) = {
+    makeInner().evaluateTemplexes(env, temputs, templexes)
   }
 
   def pointifyReferend(
-    temputs0: Temputs,
+    temputs: TemputsBox,
     referend: Kind,
     ownershipIfMutable: Ownership):
   Coord = {
-    makeInner().pointifyReferend(temputs0, referend, ownershipIfMutable)
+    makeInner().pointifyReferend(temputs, referend, ownershipIfMutable)
   }
 
   def isTypeConvertible(
-    temputs0: Temputs,
+    temputs: TemputsBox,
     sourcePointerType: Coord,
     targetPointerType: Coord):
-  (Temputs, Boolean) = {
-    makeInner().isTypeConvertible(temputs0, sourcePointerType, targetPointerType)
+  (Boolean) = {
+    makeInner().isTypeConvertible(temputs, sourcePointerType, targetPointerType)
   }
 
   def isTypeTriviallyConvertible(
-    temputs0: Temputs,
+    temputs: TemputsBox,
     sourcePointerType: Coord,
     targetPointerType: Coord):
-  (Temputs, Boolean) = {
-    makeInner().isTypeTriviallyConvertible(temputs0, sourcePointerType, targetPointerType)
+  (Boolean) = {
+    makeInner().isTypeTriviallyConvertible(temputs, sourcePointerType, targetPointerType)
   }
 
 //
 //  def lookupTemplata(
 //    env: IEnvironment,
-//    temputs0: Temputs,
+//    temputs: TemputsBox,
 //    name: String
-//  ): (Temputs, Option[ITemplata]) = {
+//  ): (Option[ITemplata]) = {
 //    env match {
 //      case IEnvironment(globalEnv, _, _, _, templatas) => {
 //        templatas.get(name) match {
-//          case Some(templata) => (temputs0, Some(templata))
+//          case Some(templata) => (Some(templata))
 //          case None => {
-//            lookupTemplataFromGlobalEnv(globalEnv, temputs0, name)
+//            lookupTemplataFromGlobalEnv(globalEnv, temputs, name)
 //          }
 //        }
 //      }
 //      case globalEnv @ IEnvironment(_, _, _, _, _, _, _, _, _) => {
-//        lookupTemplataFromGlobalEnv(globalEnv, temputs0, name)
+//        lookupTemplataFromGlobalEnv(globalEnv, temputs, name)
 //      }
 //    }
 //  }
 //
 //  private def lookupTemplataFromGlobalEnv(
 //    env: IEnvironment,
-//    temputs0: Temputs,
+//    temputs: TemputsBox,
 //    name: String
-//  ): (Temputs, Option[ITemplata]) = {
+//  ): (Option[ITemplata]) = {
 //    val IEnvironment(
 //      ordinaryStructBanners,
 //      ordinaryInterfaceBanners,
@@ -96,43 +96,43 @@ object TemplataTemplar {
 //      templatas) = env
 //
 //    templatas.get(name) match {
-//      case Some(templata) => return (temputs0, Some(templata))
+//      case Some(templata) => return (Some(templata))
 //      case None =>
 //    }
 //    ordinaryStructBanners.get(name) match {
 //      case Some(osb) => {
-//        val (temputs1, structRef) =
-//          StructTemplar.getStructRef(env.globalEnv, temputs0, osb)
-//        return (temputs1, Some(ReferendTemplata(structRef)))
+//        val structRef =
+//          StructTemplar.getStructRef(env.globalEnv, temputs, osb)
+//        return (Some(ReferendTemplata(structRef)))
 //      }
 //      case None =>
 //    }
 //    ordinaryInterfaceBanners.get(name) match {
 //      case Some(oib) => {
-//        val (temputs1, structRef) =
-//          StructTemplar.getInterfaceRef(env.globalEnv, temputs0, oib)
-//        return (temputs1, Some(ReferendTemplata(structRef)))
+//        val structRef =
+//          StructTemplar.getInterfaceRef(env.globalEnv, temputs, oib)
+//        return (Some(ReferendTemplata(structRef)))
 //      }
 //      case None =>
 //    }
 //    templatedStructBanners.get(name) match {
 //      case Some(osb) => {
-//        return (temputs0, Some(StructTerryTemplata(StructTerry(None, name, List()))))
+//        return (Some(StructTerryTemplata(StructTerry(None, name, List()))))
 //      }
 //      case None =>
 //    }
 //    templatedInterfaceBanners.get(name) match {
 //      case Some(osb) => {
-//        return (temputs0, Some(InterfaceTerryTemplata(InterfaceTerry(None, name, List()))))
+//        return (Some(InterfaceTerryTemplata(InterfaceTerry(None, name, List()))))
 //      }
 //      case None =>
 //    }
-//    return (temputs0, None)
+//    return (None)
 //  }
 
-  def makeInner(): TemplataTemplarInner[IEnvironment, Temputs] = {
-    new TemplataTemplarInner[IEnvironment, Temputs](
-      new ITemplataTemplarInnerDelegate[IEnvironment, Temputs] {
+  def makeInner(): TemplataTemplarInner[IEnvironment, TemputsBox] = {
+    new TemplataTemplarInner[IEnvironment, TemputsBox](
+      new ITemplataTemplarInnerDelegate[IEnvironment, TemputsBox] {
         override def lookupTemplata(env: IEnvironment, name: String): ITemplata = {
           // Changed this from AnythingLookupContext to TemplataLookupContext
           // because this is called from StructTemplar to figure out its members.
@@ -140,23 +140,23 @@ object TemplataTemplar {
           vassertSome(env.getNearestTemplataWithName(name, Set(TemplataLookupContext)))
         }
 
-        override def getMutability(temputs: Temputs, kind: Kind): Mutability = {
+        override def getMutability(temputs: TemputsBox, kind: Kind): Mutability = {
           Templar.getMutability(temputs, kind)
         }
 
-        override def getPackKind(env: IEnvironment, temputs0: Temputs, types2: List[Coord]):
-        (Temputs, PackT2, Mutability) = {
-          PackTemplar.makePackType(env.globalEnv, temputs0, types2)
+        override def getPackKind(env: IEnvironment, temputs: TemputsBox, types2: List[Coord]):
+        (PackT2, Mutability) = {
+          PackTemplar.makePackType(env.globalEnv, temputs, types2)
         }
 
-        override def evaluateInterfaceTemplata(state0: Temputs, templata: InterfaceTemplata, templateArgs: List[ITemplata]):
-        (Temputs, Kind) = {
-          StructTemplar.getInterfaceRef(state0, templata, templateArgs)
+        override def evaluateInterfaceTemplata(state: TemputsBox, templata: InterfaceTemplata, templateArgs: List[ITemplata]):
+        (Kind) = {
+          StructTemplar.getInterfaceRef(state, templata, templateArgs)
         }
 
-        override def evaluateStructTemplata(state0: Temputs, templata: StructTemplata, templateArgs: List[ITemplata]):
-        (Temputs, Kind) = {
-          StructTemplar.getStructRef(state0, templata, templateArgs)
+        override def evaluateStructTemplata(state: TemputsBox, templata: StructTemplata, templateArgs: List[ITemplata]):
+        (Kind) = {
+          StructTemplar.getStructRef(state, templata, templateArgs)
         }
 
         //val elementCoord =
@@ -165,23 +165,23 @@ object TemplataTemplar {
         //    // todo: coerce referend into reference here... or somehow reuse all the machinery we have for
         //    // regular templates?
         //  }
-        //val elementMutability = Templar.getMutability(state0, elementCoord.referend)
+        //val elementMutability = Templar.getMutability(state, elementCoord.referend)
         //if (arrayMutability == Immutable && elementMutability == Mutable) {
         //  throw new Exception("Can't have an immutable array of mutables")
         //}
         //val arrayType = UnknownSizeArrayT2(RawArrayT2(elementCoord, arrayMutability))
-        //(state0, ReferendTemplata(arrayType))
+        //(state, ReferendTemplata(arrayType))
 
         override def getAncestorInterfaceDistance(
-          temputs0: Temputs,
+          temputs: TemputsBox,
           descendantCitizenRef: CitizenRef2,
           ancestorInterfaceRef: InterfaceRef2):
-        (Temputs, Option[Int]) = {
-          ImplTemplar.getAncestorInterfaceDistance(temputs0, descendantCitizenRef, ancestorInterfaceRef)
+        (Option[Int]) = {
+          ImplTemplar.getAncestorInterfaceDistance(temputs, descendantCitizenRef, ancestorInterfaceRef)
         }
 
-        override def getArraySequenceKind(env: IEnvironment, state0: Temputs, mutability: Mutability, size: Int, element: Coord): (Temputs, ArraySequenceT2) = {
-          ArrayTemplar.makeArraySequenceType(env, state0, mutability, size, element)
+        override def getArraySequenceKind(env: IEnvironment, state: TemputsBox, mutability: Mutability, size: Int, element: Coord): (ArraySequenceT2) = {
+          ArrayTemplar.makeArraySequenceType(env, state, mutability, size, element)
         }
 
         override def getInterfaceTemplataType(it: InterfaceTemplata): ITemplataType = {

@@ -125,7 +125,9 @@ object Templar {
         }
       })
 
-    val temputs0 =
+
+    val temputs =
+      TemputsBox(
       Temputs(
         functionGeneratorByName2,
         Set(),
@@ -142,51 +144,40 @@ object Templar {
         List(),
         Map(),
         Map(),
-        Map())
+        Map()))
 
-    val (temputs1, emptyPackStructRef) =
-      StructTemplar.addBuiltInStructs(env11, temputs0)
+    val emptyPackStructRef = StructTemplar.addBuiltInStructs(env11, temputs)
 
-    val temputs2 =
-      structsA.foldLeft(temputs1)({
-        case (temputs1b, structS @ StructA(_, _, _, _, _, _, _, _, _, _)) => {
+      structsA.foreach({
+        case (structS @ StructA(_, _, _, _, _, _, _, _, _, _)) => {
           if (structS.isTemplate) {
             // Do nothing, it's a template
-            temputs1b
+
           } else {
-            val (temputs1c, _) =
-              StructTemplar.getStructRef(env11, temputs1b, structS, List())
-            temputs1c
+            val _ = StructTemplar.getStructRef(env11, temputs, structS, List())
           }
         }
       })
 
-    val temputs3 =
-      interfacesA.foldLeft(temputs2)({
-        case (temputs2b, interfaceS @ InterfaceA(_, _, _, _, _, _, _, _, _)) => {
+      interfacesA.foreach({
+        case (interfaceS @ InterfaceA(_, _, _, _, _, _, _, _, _)) => {
           if (interfaceS.isTemplate) {
             // Do nothing, it's a template
-            temputs2b
           } else {
-            val (temputs2c, _) =
-              StructTemplar.getInterfaceRef(env11, temputs2b, interfaceS, List())
-            temputs2c
+            val _ = StructTemplar.getInterfaceRef(env11, temputs, interfaceS, List())
           }
         }
       })
 
-    val temputs10 = temputs3
-
-
-//    val temputs15 =
-//      envExternFunctionMembers.values.foldLeft(temputs10)({
-//        case (temputs11, headers) => {
-//          headers.foldLeft(temputs11)({
-//            case (temputs12, header) => {
-//              val temputs13 = temputs12.declareFunctionSignature(header.toSignature, None)
-//              val (temputs14, _) =
+//
+//      envExternFunctionMembers.values.foldLeft(temputs)({
+//        case (headers) => {
+//          headers.foldLeft(temputs)({
+//            case (header) => {
+//              temputs.declareFunctionSignature(header.toSignature, None)
+//              val _ =
 //                FunctionTemplarCore.makeExternFunction(
-//                  temputs13,
+//                  temputs,
 //                  header.toBanner.humanName,
 //                  header.isUserFunction,
 //                  header.templateArgs,
@@ -194,83 +185,76 @@ object Templar {
 //                  header.returnType,
 //                  None)
 //
-//              vassert(temputs13.exactDeclaredSignatureExists(header.toBanner.humanName, header.toBanner.templateArgs, header.toBanner.paramTypes))
+//              vassert(temputs.exactDeclaredSignatureExists(header.toBanner.humanName, header.toBanner.templateArgs, header.toBanner.paramTypes))
 //
-//              temputs14
+//              temputs
 //            }
 //          })
 //        }
 //      })
-    val temputs15 = temputs10
 
-    val temputs16 =
-      functions1.foldLeft(temputs15)({
-        case (temputs14, functionS) => {
+      functions1.foreach({
+        case (functionS) => {
           if (functionS.isTemplate) {
             // Do nothing, it's a template
-            temputs14
           } else {
-            val (temputs15, _) =
+            val _ =
               FunctionTemplar.evaluateOrdinaryFunctionFromNonCallForPrototype(
-                temputs14, FunctionTemplata(env11, functionS))
-            temputs15
+                temputs, FunctionTemplata(env11, functionS))
           }
         }
       })
 
-    val temputs17 = stampNeededOverridesUntilSettled(env11, temputs16)
+    stampNeededOverridesUntilSettled(env11, temputs)
 
     val result =
       CompleteProgram2(
-        temputs17.getAllInterfaces().toList,
-        temputs17.getAllStructs().toList,
-        temputs17.impls,
+        temputs.getAllInterfaces().toList,
+        temputs.getAllStructs().toList,
+        temputs.impls,
         emptyPackStructRef,
-        temputs17.getAllFunctions())
+        temputs.getAllFunctions())
 
     result
   }
 
-  def stampNeededOverridesUntilSettled(env: NamespaceEnvironment, temputs0: Temputs): Temputs = {
-    val neededOverrides = EdgeTemplar.assembleEdges(temputs0.functions, temputs0.getAllInterfaces(), temputs0.impls)
+  def stampNeededOverridesUntilSettled(env: NamespaceEnvironment, temputs: TemputsBox): Unit = {
+    val neededOverrides = EdgeTemplar.assembleEdges(temputs.functions, temputs.getAllInterfaces(), temputs.impls)
 
     if (neededOverrides.isEmpty) {
-      return temputs0
+      return temputs
     }
 
     // right now we're just assuming global env, but it might not be there...
     // perhaps look in the struct's env and the function's env? cant think of where else to look.
     println("which envs do we look in?")
 
-    val temputs3 =
-      neededOverrides.foldLeft(temputs0)({
-        case (temputs1, neededOverride) => {
-          val temputs2 =
+      neededOverrides.foreach({
+        case (neededOverride) => {
             OverloadTemplar.scoutExpectedFunctionForPrototype(
               env,
-              temputs1,
+              temputs,
               neededOverride.name,
               List(), // No explicitly specified ones. It has to be findable just by param filters.
               neededOverride.paramFilters,
               true) match {
-            case (_, seff @ ScoutExpectedFunctionFailure(_, _, _, _, _)) => {
+            case (seff @ ScoutExpectedFunctionFailure(_, _, _, _, _)) => {
               vfail("Couldn't find function for vtable!\n" + seff.toString)
             }
-            case (temputs1b, ScoutExpectedFunctionSuccess(_)) => temputs1b
+            case (ScoutExpectedFunctionSuccess(_)) =>
           }
-          temputs2
         }
       })
 
-    stampNeededOverridesUntilSettled(env, temputs3)
+    stampNeededOverridesUntilSettled(env, temputs)
   }
 
-  def getMutabilities(temputs0: Temputs, concreteValues2: List[Kind]):
+  def getMutabilities(temputs: TemputsBox, concreteValues2: List[Kind]):
   List[Mutability] = {
-    concreteValues2.map(concreteValue2 => getMutability(temputs0, concreteValue2))
+    concreteValues2.map(concreteValue2 => getMutability(temputs, concreteValue2))
   }
 
-  def getMutability(temputs0: Temputs, concreteValue2: Kind):
+  def getMutability(temputs: TemputsBox, concreteValue2: Kind):
   Mutability = {
     concreteValue2 match {
       case Never2() => Immutable
@@ -282,9 +266,9 @@ object Templar {
       case FunctionT2(_, _) => Immutable
       case UnknownSizeArrayT2(RawArrayT2(_, mutability)) => mutability
       case ArraySequenceT2(_, RawArrayT2(_, mutability)) => mutability
-      case sr @ StructRef2(_) => temputs0.lookupMutability(sr)
-      case ir @ InterfaceRef2(_) => temputs0.lookupMutability(ir)
-      case PackT2(_, sr) => temputs0.lookupMutability(sr)
+      case sr @ StructRef2(_) => temputs.lookupMutability(sr)
+      case ir @ InterfaceRef2(_) => temputs.lookupMutability(ir)
+      case PackT2(_, sr) => temputs.lookupMutability(sr)
       case OverloadSet(_, _, _) => {
         // Just like FunctionT2
         Immutable

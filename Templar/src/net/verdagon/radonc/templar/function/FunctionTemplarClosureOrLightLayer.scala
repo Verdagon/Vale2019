@@ -23,9 +23,9 @@ object FunctionTemplarClosureOrLightLayer {
   // its env. We just want its banner, we don't want to evaluate it.
   def predictOrdinaryLightFunctionBanner(
     outerEnv: FunctionEnvironment,
-    temputs0: Temputs,
+    temputs: TemputsBox,
     function1: FunctionA):
-  (Temputs, FunctionBanner2) = {
+  (FunctionBanner2) = {
     function1.body match {
       case CodeBodyA(body1) => vassert(body1.closuredNames.isEmpty)
       case _ =>
@@ -33,16 +33,16 @@ object FunctionTemplarClosureOrLightLayer {
     vassert(!function1.isTemplate)
     FunctionTemplarOrdinaryOrTemplatedLayer.predictOrdinaryFunctionBanner(
       outerEnv,
-      temputs0,
+      temputs,
       function1)
   }
 
 
   def evaluateOrdinaryLightFunctionFromNonCallForBanner(
       outerEnv: FunctionEnvironment,
-      temputs0: Temputs,
+      temputs: TemputsBox,
       function1: FunctionA):
-  (Temputs, FunctionBanner2) = {
+  (FunctionBanner2) = {
     function1.body match {
       case CodeBodyA(body1) => vassert(body1.closuredNames.isEmpty)
       case _ =>
@@ -50,21 +50,21 @@ object FunctionTemplarClosureOrLightLayer {
     vassert(!function1.isTemplate)
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateOrdinaryFunctionFromNonCallForBanner(
       outerEnv,
-      temputs0,
+      temputs,
       function1)
   }
 
   def evaluateTemplatedClosureFunctionFromCallForBanner(
       outerEnv: FunctionEnvironment,
-      temputs0: Temputs,
+      temputs: TemputsBox,
       closureStructRef: StructRef2,
       functionS: FunctionA,
     alreadySpecifiedTemplateArgs: List[ITemplata],
       argTypes2: List[ParamFilter]):
-  (Temputs, IEvaluateFunctionResult[FunctionBanner2]) = {
+  (IEvaluateFunctionResult[FunctionBanner2]) = {
     val containingFunctionLambdaNumber = functionS.lambdaNumber
 
-    val closureStructDef = temputs0.lookupStruct(closureStructRef);
+    val closureStructDef = temputs.lookupStruct(closureStructRef);
 
     val nearEnv =
       outerEnv.addVariables(
@@ -89,20 +89,20 @@ object FunctionTemplarClosureOrLightLayer {
         .addEntry(closureStructRef.fullName.steps.last.humanName, TemplataEnvEntry(KindTemplata(closureStructRef)))
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateTemplatedFunctionFromCallForBanner(
-      nearEnv, temputs0, functionS, alreadySpecifiedTemplateArgs, argTypes2)
+      nearEnv, temputs, functionS, alreadySpecifiedTemplateArgs, argTypes2)
   }
 
   def evaluateTemplatedClosureFunctionFromCallForPrototype(
     outerEnv: FunctionEnvironment,
-    temputs0: Temputs,
+    temputs: TemputsBox,
     closureStructRef: StructRef2,
     functionS: FunctionA,
     alreadySpecifiedTemplateArgs: List[ITemplata],
     argTypes2: List[ParamFilter]):
-  (Temputs, IEvaluateFunctionResult[Prototype2]) = {
+  (IEvaluateFunctionResult[Prototype2]) = {
     val containingFunctionLambdaNumber = functionS.lambdaNumber
 
-    val closureStructDef = temputs0.lookupStruct(closureStructRef);
+    val closureStructDef = temputs.lookupStruct(closureStructRef);
 
     val nearEnv =
       outerEnv.addVariables(
@@ -127,50 +127,50 @@ object FunctionTemplarClosureOrLightLayer {
         .addEntry(closureStructRef.fullName.steps.last.humanName, TemplataEnvEntry(KindTemplata(closureStructRef)))
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateTemplatedFunctionFromCallForPrototype(
-      nearEnv, temputs0, functionS, alreadySpecifiedTemplateArgs, argTypes2)
+      nearEnv, temputs, functionS, alreadySpecifiedTemplateArgs, argTypes2)
   }
 
   def evaluateTemplatedLightFunctionFromNonCallForHeader(
       ourEnv: FunctionEnvironment,
-      temputs0: Temputs,
+      temputs: TemputsBox,
       functionS: FunctionA,
       explicitTemplateArgs: List[ITemplata]):
-  (Temputs, FunctionHeader2) = {
+  (FunctionHeader2) = {
     vassert(functionS.identifyingRunes.size == explicitTemplateArgs.size);
     functionS.body match {
       case CodeBodyA(body1) => vassert(body1.closuredNames.isEmpty)
     }
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateTemplatedFunctionFromNonCallForHeader(
-      ourEnv, temputs0, functionS)
+      ourEnv, temputs, functionS)
   }
 
   def evaluateTemplatedLightFunctionFromCallForPrototype2(
       ourEnv: FunctionEnvironment,
-      temputs0: Temputs,
+      temputs: TemputsBox,
       functionS: FunctionA,
       explicitTemplateArgs: List[ITemplata],
       args: List[ParamFilter]):
-  (Temputs, IEvaluateFunctionResult[Prototype2]) = {
+  (IEvaluateFunctionResult[Prototype2]) = {
     functionS.body match {
       case CodeBodyA(body1) => vassert(body1.closuredNames.isEmpty)
       case _ =>
     }
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateTemplatedFunctionFromCallForPrototype(
-      ourEnv, temputs0, functionS, explicitTemplateArgs, args)
+      ourEnv, temputs, functionS, explicitTemplateArgs, args)
   }
 
   def evaluateOrdinaryLightFunctionFromNonCallForHeader(
       outerEnv: FunctionEnvironment,
-      temputs0: Temputs,
+      temputs: TemputsBox,
       function1: FunctionA):
-  (Temputs, FunctionHeader2) = {
+  (FunctionHeader2) = {
     // This should only be called with a non-templated function
     vassert(!function1.isTemplate)
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateOrdinaryFunctionFromNonCallForHeader(
-      outerEnv, temputs0, function1)
+      outerEnv, temputs, function1)
   }
 
   // We would want only the prototype instead of the entire header if, for example,
@@ -178,26 +178,26 @@ object FunctionTemplarClosureOrLightLayer {
   // fn main():Int{main()}
   def evaluateOrdinaryLightFunctionFromNonCallForPrototype(
     outerEnv: FunctionEnvironment,
-    temputs0: Temputs,
+    temputs: TemputsBox,
     function1: FunctionA):
-  (Temputs, Prototype2) = {
+  (Prototype2) = {
     // This should only be called with a non-templated function
     vassert(!function1.isTemplate)
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateOrdinaryFunctionFromNonCallForPrototype(
-      outerEnv, temputs0, function1)
+      outerEnv, temputs, function1)
   }
 
   def evaluateOrdinaryClosureFunctionFromNonCallForBanner(
     outerEnv: FunctionEnvironment,
-    temputs0: Temputs,
+    temputs: TemputsBox,
     closureStructRef: StructRef2,
     function1: FunctionA):
-  (Temputs, FunctionBanner2) = {
+  (FunctionBanner2) = {
     // This should only be called with a non-templated function
     vassert(!function1.isTemplate)
 
-    val closureStructDef = temputs0.lookupStruct(closureStructRef);
+    val closureStructDef = temputs.lookupStruct(closureStructRef);
 
     val nearEnv =
       outerEnv.addVariables(
@@ -218,19 +218,19 @@ object FunctionTemplarClosureOrLightLayer {
         TemplataEnvEntry(KindTemplata(closureStructRef)))
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateOrdinaryFunctionFromNonCallForBanner(
-      nearEnv, temputs0, function1)
+      nearEnv, temputs, function1)
   }
 
   def evaluateOrdinaryClosureFunctionFromNonCallForHeader(
       outerEnv: FunctionEnvironment,
-      temputs0: Temputs,
+      temputs: TemputsBox,
       closureStructRef: StructRef2,
       function1: FunctionA):
-  (Temputs, FunctionHeader2) = {
+  (FunctionHeader2) = {
     // This should only be called with a non-templated function
     vassert(!function1.isTemplate)
 
-    val closureStructDef = temputs0.lookupStruct(closureStructRef);
+    val closureStructDef = temputs.lookupStruct(closureStructRef);
 
     val nearEnv =
       outerEnv.addVariables(
@@ -251,7 +251,7 @@ object FunctionTemplarClosureOrLightLayer {
         TemplataEnvEntry(KindTemplata(closureStructRef)))
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateOrdinaryFunctionFromNonCallForHeader(
-      nearEnv, temputs0, function1)
+      nearEnv, temputs, function1)
   }
 
   // This is called while we're trying to figure out what function1s to call when there
@@ -259,34 +259,34 @@ object FunctionTemplarClosureOrLightLayer {
   // This assumes it met any type bound restrictions (or, will; not implemented yet)
   def evaluateTemplatedLightBannerFromCall(
       functionOuterEnv: FunctionEnvironment,
-      temputs0: Temputs,
+      temputs: TemputsBox,
       function: FunctionA,
       explicitTemplateArgs: List[ITemplata],
       args: List[ParamFilter]):
-  (Temputs, IEvaluateFunctionResult[FunctionBanner2]) = {
+  (IEvaluateFunctionResult[FunctionBanner2]) = {
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateTemplatedLightBannerFromCall(
-        functionOuterEnv, temputs0, function, explicitTemplateArgs, args)
+        functionOuterEnv, temputs, function, explicitTemplateArgs, args)
   }
 
   def evaluateTemplatedFunctionFromCallForBanner(
       outerEnv: FunctionEnvironment,
-      temputs0: Temputs,
+      temputs: TemputsBox,
       functionS: FunctionA,
       alreadySpecifiedTemplateArgs: List[ITemplata],
       paramFilters: List[ParamFilter]):
-  (Temputs, IEvaluateFunctionResult[FunctionBanner2]) = {
+  (IEvaluateFunctionResult[FunctionBanner2]) = {
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateTemplatedFunctionFromCallForBanner(
-        outerEnv, temputs0, functionS,
+        outerEnv, temputs, functionS,
         alreadySpecifiedTemplateArgs,
         paramFilters)
   }
 
   def scanOrdinaryInterfaceMember(
     env1: FunctionEnvironment,
-    temputs0: Temputs,
+    temputs: TemputsBox,
     interfaceExplicitTemplateArgs: List[ITemplata],
     prototype1: FunctionA):
-  (Temputs, FunctionHeader2) = {
-    FunctionTemplarOrdinaryOrTemplatedLayer.scanOrdinaryInterfaceMember(env1, temputs0, interfaceExplicitTemplateArgs, prototype1)
+  (FunctionHeader2) = {
+    FunctionTemplarOrdinaryOrTemplatedLayer.scanOrdinaryInterfaceMember(env1, temputs, interfaceExplicitTemplateArgs, prototype1)
   }
 }

@@ -14,7 +14,7 @@ class VirtualTests extends FunSuite with Matchers {
 //        |fn doThing(i: virtual I) {4}
 //        |fn main() {3}
 //      """.stripMargin)
-//    val temputs = compile.getTemputs()
+//    compile.getTemputs()
 //
 //    vassert(temputs.getAllUserFunctions.size == 2)
 //    vassert(temputs.lookupFunction("main").header.returnType == Coord(Share, Int2()))
@@ -32,7 +32,7 @@ class VirtualTests extends FunSuite with Matchers {
 //        |fn doThing(i: virtual I) {4}
 //        |fn main() {3}
 //      """.stripMargin)
-//    val temputs = compile.getTemputs()
+//    compile.getTemputs()
 //
 //    vassert(temputs.getAllUserFunctions.size == 3) // including constructor
 //    vassert(temputs.lookupFunction("main").header.returnType == Coord(Share, Int2()))
@@ -51,7 +51,7 @@ class VirtualTests extends FunSuite with Matchers {
 //        |fn doThing(s: &S for I) {4}
 //        |fn main() {3}
 //      """.stripMargin)
-//    val temputs = compile.getTemputs()
+//    compile.getTemputs()
 //
 //    vassert(temputs.getAllUserFunctions.size == 3) // including constructor
 //    vassert(temputs.lookupFunction("main").header.returnType == Coord(Share, Int2()))
@@ -79,7 +79,7 @@ class VirtualTests extends FunSuite with Matchers {
 //        |fn doThing(s: S2 for I) {6}
 //        |fn main() {3}
 //      """.stripMargin)
-//    val temputs = compile.getTemputs()
+//    compile.getTemputs()
 //
 //    vassert(temputs.functionFamiliesByRootBanner.size == 1)
 //    vassert(temputs.functionFamiliesByRootBanner.head._2.memberSignaturesByVirtualRoots.size == 3)
@@ -99,7 +99,7 @@ class VirtualTests extends FunSuite with Matchers {
 //        |fn main() {3}
 //      """.stripMargin)
 //    vfail("what would this test become in the new world order")
-//    val temputs = compile.getTemputs()
+//    compile.getTemputs()
 //
 //    vassert(temputs.lookupInterface(InterfaceRef2("I2", List())).superInterfaces.nonEmpty)
 //
@@ -127,7 +127,7 @@ class VirtualTests extends FunSuite with Matchers {
 //        |fn main() {3}
 //      """.stripMargin)
 //    vfail("what would this test become in the new world order")
-//    val temputs = compile.getTemputs()
+//    compile.getTemputs()
 //
 //    vassert(temputs.lookupInterface(InterfaceRef2("I2", List())).superInterfaces.nonEmpty)
 //
@@ -177,7 +177,7 @@ class VirtualTests extends FunSuite with Matchers {
 //        |}
 //      """.stripMargin)
 //    vfail("what would this test be testing")
-//    val temputs = compile.getTemputs()
+//    compile.getTemputs()
 //
 //    vassert(temputs.functionFamiliesByRootBanner.size == 1)
 //    val family = temputs.functionFamiliesByRootBanner.head._2;
@@ -215,7 +215,7 @@ class VirtualTests extends FunSuite with Matchers {
 //        |  dance(SA:Int());
 //        |}
 //      """.stripMargin)
-//    val temputs = compile.getTemputs()
+//    compile.getTemputs()
 //
 //    vassert(temputs.functionFamiliesByRootBanner.size == 1)
 //    val family = temputs.functionFamiliesByRootBanner.head._2;
@@ -255,7 +255,7 @@ class VirtualTests extends FunSuite with Matchers {
 //        |  doThing(x);
 //        |}
 //      """.stripMargin)
-//    val temputs = compile.getTemputs()
+//    compile.getTemputs()
 //
 //    println(temputs.functionFamiliesByRootBanner.size)
 //    temputs.functionFamiliesByRootBanner.foreach(println)
@@ -328,7 +328,7 @@ class VirtualTests extends FunSuite with Matchers {
 //        |  doThing(x);
 //        |}
 //      """.stripMargin)
-//    val temputs = compile.getTemputs()
+//    compile.getTemputs()
 //
 //    println(temputs.functionFamiliesByRootBanner.size)
 //    temputs.functionFamiliesByRootBanner.foreach(println)
@@ -368,7 +368,7 @@ class VirtualTests extends FunSuite with Matchers {
 //        |  doThing(x);
 //        |}
 //      """.stripMargin)
-//    val temputs = compile.getTemputs()
+//    compile.getTemputs()
 //
 //    vassert(temputs.functionFamiliesByRootBanner.size == 3)
 //    // See the next test, which does the same thing but with override.
@@ -397,7 +397,7 @@ class VirtualTests extends FunSuite with Matchers {
 //        |}
 //      """.stripMargin)
 //    vfail("what would this test become in the new world order")
-//    val temputs = compile.getTemputs()
+//    compile.getTemputs()
 //
 //    vassert(temputs.functionFamiliesByRootBanner.size == 2)
 //
@@ -448,7 +448,7 @@ class VirtualTests extends FunSuite with Matchers {
 //        |  doThing(y);
 //        |}
 //      """.stripMargin)
-//    val temputs = compile.getTemputs()
+//    compile.getTemputs()
 //
 //    println(temputs.functionFamiliesByRootBanner);
 //    vassert(temputs.functionFamiliesByRootBanner.size == 2)
@@ -471,7 +471,7 @@ class VirtualTests extends FunSuite with Matchers {
 //        |  doThing(y);
 //        |}
 //      """.stripMargin)
-//    val temputs = compile.getTemputs()
+//    compile.getTemputs()
 //
 //    val doThingFamilyRootForI =
 //      temputs.functionFamiliesByRootBanner.keys.collect({

@@ -11,7 +11,7 @@ class PatternTests extends FunSuite with Matchers {
   // To get something like this to work would be rather involved.
   //test("Test matching a single-member pack") {
   //  val compile = new Compilation("fn main() { let [x] = (4); = x; }")
-  //  val temputs = compile.getTemputs()
+  //  compile.getTemputs()
   //  val main = temputs.lookupFunction("main")
   //  main.header.returnType shouldEqual Coord(Share, Int2())
   //  compile.evalForReferend(Vector()) shouldEqual VonInt(4)

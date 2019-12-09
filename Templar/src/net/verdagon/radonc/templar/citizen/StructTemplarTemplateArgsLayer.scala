@@ -16,15 +16,15 @@ object StructTemplarTemplateArgsLayer {
 
   def getStructRef(
     env: NamespaceEnvironment,
-    temputs0: Temputs,
+    temputs: TemputsBox,
     structS: StructA,
     templateArgs: List[ITemplata]):
-  (Temputs, StructRef2) = {
+  (StructRef2) = {
     val fullName = FullName2(env.fullName.steps :+ NamePart2(structS.name, Some(templateArgs)))
 
-    temputs0.structDeclared(fullName) match {
+    temputs.structDeclared(fullName) match {
       case Some(structRef2) => {
-        (temputs0, structRef2)
+        (structRef2)
       }
       case None => {
         // not sure if this is okay or not, do we allow this?
@@ -32,18 +32,18 @@ object StructTemplarTemplateArgsLayer {
           vfail("wat?")
         }
         val temporaryStructRef = StructRef2(fullName)
-        val temputs1 = temputs0.declareStruct(temporaryStructRef)
+        temputs.declareStruct(temporaryStructRef)
 
-        val temputs2 =
+
           structS.maybePredictedMutability match {
-            case None => temputs1
-            case Some(predictedMutability) => temputs1.declareStructMutability(temporaryStructRef, Conversions.evaluateMutability(predictedMutability))
+            case None => temputs
+            case Some(predictedMutability) => temputs.declareStructMutability(temporaryStructRef, Conversions.evaluateMutability(predictedMutability))
           }
 
-        val (temputs3, result) =
+        val result =
           InferTemplar.inferFromExplicitTemplateArgs(
             env,
-            temputs2,
+            temputs,
             structS.identifyingRunes,
             structS.rules,
             structS.typeByRune,
@@ -59,28 +59,28 @@ object StructTemplarTemplateArgsLayer {
             case InferSolveSuccess(i) => i
           }
 
-        val temputs4 =
+
           structS.maybePredictedMutability match {
-            case None => temputs3.declareStructMutability(temporaryStructRef, Conversions.evaluateMutability(structS.mutability))
-            case Some(_) => temputs3
+            case None => temputs.declareStructMutability(temporaryStructRef, Conversions.evaluateMutability(structS.mutability))
+            case Some(_) => temputs
           }
 
-        StructTemplarMiddle.getStructRef(env, temputs4, structS, inferences.templatasByRune)
+        StructTemplarMiddle.getStructRef(env, temputs, structS, inferences.templatasByRune)
       }
     }
   }
 
   def getInterfaceRef(
     env: NamespaceEnvironment,
-    temputs0: Temputs,
+    temputs: TemputsBox,
     interfaceS: InterfaceA,
     templateArgs: List[ITemplata]):
-  (Temputs, InterfaceRef2) = {
+  (InterfaceRef2) = {
     val fullName = FullName2(env.fullName.steps :+ NamePart2(interfaceS.name, Some(templateArgs)))
 
-    temputs0.interfaceDeclared(fullName) match {
+    temputs.interfaceDeclared(fullName) match {
       case Some(interfaceRef2) => {
-        (temputs0, interfaceRef2)
+        (interfaceRef2)
       }
       case None => {
         // not sure if this is okay or not, do we allow this?
@@ -88,18 +88,18 @@ object StructTemplarTemplateArgsLayer {
           vfail("wat?")
         }
         val temporaryInterfaceRef = InterfaceRef2(fullName)
-        val temputs1 = temputs0.declareInterface(temporaryInterfaceRef)
+        temputs.declareInterface(temporaryInterfaceRef)
 
-        val temputs2 =
+
           interfaceS.maybePredictedMutability match {
-            case None => temputs1
-            case Some(predictedMutability) => temputs1.declareInterfaceMutability(temporaryInterfaceRef, Conversions.evaluateMutability(predictedMutability))
+            case None => temputs
+            case Some(predictedMutability) => temputs.declareInterfaceMutability(temporaryInterfaceRef, Conversions.evaluateMutability(predictedMutability))
           }
 
-        val (temputs3, result) =
+        val result =
           InferTemplar.inferFromExplicitTemplateArgs(
             env,
-            temputs2,
+            temputs,
             interfaceS.identifyingRunes,
             interfaceS.rules,
             interfaceS.typeByRune,
@@ -114,13 +114,13 @@ object StructTemplarTemplateArgsLayer {
             case InferSolveSuccess(i) => i
           }
 
-        val temputs4 =
+
           interfaceS.maybePredictedMutability match {
-            case None => temputs3.declareInterfaceMutability(temporaryInterfaceRef, Conversions.evaluateMutability(interfaceS.mutability))
-            case Some(_) => temputs3
+            case None => temputs.declareInterfaceMutability(temporaryInterfaceRef, Conversions.evaluateMutability(interfaceS.mutability))
+            case Some(_) => temputs
           }
 
-        StructTemplarMiddle.getInterfaceRef(env, temputs4, interfaceS, inferences.templatasByRune)
+        StructTemplarMiddle.getInterfaceRef(env, temputs, interfaceS, inferences.templatasByRune)
       }
     }
   }
@@ -128,17 +128,17 @@ object StructTemplarTemplateArgsLayer {
   // Makes a struct to back a closure
   def makeClosureUnderstruct(
     env: IEnvironment,
-    temputs0: Temputs,
+    temputs: TemputsBox,
     functionS: FunctionA,
     functionFullName: FullName2,
     members: List[StructMember2]):
-  (Temputs, StructRef2, Mutability, FunctionTemplata) = {
-    StructTemplarMiddle.makeClosureUnderstruct(env, temputs0, functionS, functionFullName, members)
+  (StructRef2, Mutability, FunctionTemplata) = {
+    StructTemplarMiddle.makeClosureUnderstruct(env, temputs, functionS, functionFullName, members)
   }
 
   // Makes a struct to back a pack or tuple
-  def makeSeqOrPackUnderstruct(env: NamespaceEnvironment, temputs0: Temputs, memberTypes2: List[Coord], prefix: String):
-  (Temputs, StructRef2, Mutability) = {
-    StructTemplarMiddle.makeSeqOrPackUnderstruct(env, temputs0, memberTypes2, prefix)
+  def makeSeqOrPackUnderstruct(env: NamespaceEnvironment, temputs: TemputsBox, memberTypes2: List[Coord], prefix: String):
+  (StructRef2, Mutability) = {
+    StructTemplarMiddle.makeSeqOrPackUnderstruct(env, temputs, memberTypes2, prefix)
   }
 }

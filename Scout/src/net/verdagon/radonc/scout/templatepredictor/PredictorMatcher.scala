@@ -2,90 +2,59 @@ package net.verdagon.radonc.scout.templatepredictor
 
 import net.verdagon.radonc._
 import net.verdagon.radonc.scout._
-import net.verdagon.radonc.scout.predictor.Conclusions
+import net.verdagon.radonc.scout.predictor.ConclusionsBox
 import net.verdagon.radonc.scout.rules._
 
 object PredictorMatcher {
-  def matchAgainstTemplexesSR(
-    conclusions0: Conclusions,
-    templexes: List[ITemplexS]):
-  Conclusions = {
-    templexes.foldLeft(conclusions0)({
-      case (conclusions1, templex) => matchAgainstTemplexSR(conclusions1, templex)
-    })
-  }
-
   def matchAgainstTemplexSR(
-      conclusions0: Conclusions,
+      conclusions: ConclusionsBox,
       rule: ITemplexS):
-  Conclusions = {
+  Unit = {
     rule match {
-      case AnonymousRuneST() => conclusions0
-      case IntST(_) => conclusions0
-      case BoolST(_) => conclusions0
-      case MutabilityST(_) => conclusions0
-      case PermissionST(_) => conclusions0
-      case LocationST(_) => conclusions0
-      case OwnershipST(_) => conclusions0
-      case VariabilityST(_) => conclusions0
-      case NameST(_) => conclusions0
-      case RuneST(rune) => conclusions0.markRuneValueKnowable(rune)
+      case AnonymousRuneST() =>
+      case IntST(_) =>
+      case BoolST(_) =>
+      case MutabilityST(_) =>
+      case PermissionST(_) =>
+      case LocationST(_) =>
+      case OwnershipST(_) =>
+      case VariabilityST(_) =>
+      case NameST(_) =>
+      case RuneST(rune) => conclusions.markRuneValueKnowable(rune)
       case CallST(template, args) => {
-        val conclusions1 = matchAgainstTemplexSR(conclusions0, template)
-        val conclusions2 = matchAgainstTemplexesSR(conclusions1, args)
-        conclusions2
+        matchAgainstTemplexSR(conclusions, template)
+        args.foreach(matchAgainstTemplexSR(conclusions, _))
       }
-      case OwnershippedST(_, inner) => matchAgainstTemplexSR(conclusions0, inner)
+      case OwnershippedST(_, inner) => matchAgainstTemplexSR(conclusions, inner)
       case RepeaterSequenceST(mutabilityRule, sizeRule,elementRule) => {
-        val conclusions1 = matchAgainstTemplexSR(conclusions0, mutabilityRule)
-        val conclusions2 = matchAgainstTemplexSR(conclusions1, sizeRule)
-        val conclusions3 = matchAgainstTemplexSR(conclusions2, elementRule)
-        conclusions3
+        matchAgainstTemplexSR(conclusions, mutabilityRule)
+        matchAgainstTemplexSR(conclusions, sizeRule)
+        matchAgainstTemplexSR(conclusions, elementRule)
       }
       case _ => vimpl()
     }
   }
 
-  def matchAgainstRulexesSR(
-    conclusions0: Conclusions,
-    rules: List[IRulexSR]):
-  Conclusions = {
-    rules.foldLeft(conclusions0)({
-      case (conclusions1, rule) => matchAgainstRulexSR(conclusions1, rule)
-    })
-  }
-
-  def matchAgainstRulexSR(
-    
-    conclusions0: Conclusions,
-    irule: IRulexSR):
-  Conclusions = {
+  def matchAgainstRulexSR(conclusions: ConclusionsBox, irule: IRulexSR): Unit = {
     irule match {
-      case rule @ EqualsSR(_, _) => matchAgainstEqualsSR(conclusions0, rule)
-      case rule @ OrSR(_) => matchAgainstOrSR(conclusions0, rule)
-      case rule @ ComponentsSR(_, _) => matchAgainstComponentsSR(conclusions0, rule)
-      case rule @ TypedSR(_, _) => matchAgainstTypedSR(conclusions0, rule)
-      case TemplexSR(itemplexST) => matchAgainstTemplexSR(conclusions0, itemplexST)
-      case rule @ CallSR(_, _) => matchAgainstCallSR(conclusions0, rule)
+      case rule @ EqualsSR(_, _) => matchAgainstEqualsSR(conclusions, rule)
+      case rule @ OrSR(_) => matchAgainstOrSR(conclusions, rule)
+      case rule @ ComponentsSR(_, _) => matchAgainstComponentsSR(conclusions, rule)
+      case rule @ TypedSR(_, _) => matchAgainstTypedSR(conclusions, rule)
+      case TemplexSR(itemplexST) => matchAgainstTemplexSR(conclusions, itemplexST)
+      case rule @ CallSR(_, _) => matchAgainstCallSR(conclusions, rule)
     }
   }
 
-  def matchAgainstTypedSR(
-    
-    conclusions0: Conclusions,
-    rule: TypedSR):
-  Conclusions = {
+  def matchAgainstTypedSR(conclusions: ConclusionsBox, rule: TypedSR): Unit = {
     val TypedSR(maybeRune, _) = rule
     maybeRune match {
-      case None => conclusions0
-      case Some(rune) => conclusions0.markRuneValueKnowable(rune)
+      case None =>
+      case Some(rune) => conclusions.markRuneValueKnowable(rune)
     }
   }
 
-  def matchAgainstCallSR(
-    conclusions0: Conclusions,
-    rule: CallSR):
-  Conclusions = {
+  def matchAgainstCallSR(conclusions: ConclusionsBox, rule: CallSR): Unit = {
     val CallSR(_, argRules) = rule
 
     // We don't do anything with the argRules; we don't evaluate or match them here, see MDMIA.
@@ -93,34 +62,21 @@ object PredictorMatcher {
 
     // We could check that the types are good, but we already do that in the evaluate layer.
     // So... nothing to do here!
-    (conclusions0)
   }
 
-  def matchAgainstComponentsSR(
-    conclusions0: Conclusions,
-    rule: ComponentsSR):
-  Conclusions = {
+  def matchAgainstComponentsSR(conclusions: ConclusionsBox, rule: ComponentsSR): Unit = {
     val ComponentsSR(container, components) = rule
-    val conclusions2 = matchAgainstTypedSR(conclusions0, container)
-    val conclusions4 = matchAgainstRulexesSR(conclusions2, components)
-    conclusions4
+    matchAgainstTypedSR(conclusions, container)
+    components.foreach(matchAgainstRulexSR(conclusions, _))
   }
 
-  def matchAgainstEqualsSR(
-    conclusions0: Conclusions,
-    rule: EqualsSR):
-  Conclusions = {
+  def matchAgainstEqualsSR(conclusions: ConclusionsBox, rule: EqualsSR): Unit = {
     val EqualsSR(left, right) = rule
-    val conclusions1 = matchAgainstRulexSR(conclusions0, left)
-    val conclusions2 = matchAgainstRulexSR(conclusions1, right)
-    conclusions2
+    matchAgainstRulexSR(conclusions, left)
+    matchAgainstRulexSR(conclusions, right)
   }
 
-  def matchAgainstOrSR(
-    conclusions0: Conclusions,
-    rule: OrSR):
-  Conclusions = {
+  def matchAgainstOrSR(conclusions: ConclusionsBox, rule: OrSR): Unit = {
     // Do nothing... information doesn't flow downwards into Ors
-    conclusions0
   }
 }

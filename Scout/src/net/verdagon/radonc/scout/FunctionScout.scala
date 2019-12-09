@@ -94,19 +94,20 @@ object FunctionScout {
 
   def fillTemplex(paramIndex: Int, originalTemplex: ITemplexPPT): ITemplexPPT = {
     val anonymousRuneIndex0 = 0
-    val (_, filledTemplex) =
-      PatternPUtils.traverseTemplex(
-        paramIndex,
+    val paramIndexBox0 = IntBox(0)
+    val filledTemplex =
+      PatternPUtils.traverseTemplex[IntBox, Int](
+        paramIndexBox0,
         anonymousRuneIndex0,
         originalTemplex,
-        (paramIndex: Int, anonymousRuneIndex0: Int, templex: ITemplexPPT) => {
+        (paramIndexBox: IntBox, anonymousRuneIndex0: Int, templex: ITemplexPPT) => {
           templex match {
             case AnonymousRunePPT() => {
-              val newTemplex = RunePPT(Scout.unrunedParamRunePrefix + paramIndex + "_" + anonymousRuneIndex0)
-              val anonymousRuneIndex1 = anonymousRuneIndex0 + 1
-              (anonymousRuneIndex1, newTemplex)
+              val newTemplex = RunePPT(Scout.unrunedParamRunePrefix + paramIndexBox.num + "_" + anonymousRuneIndex0)
+              paramIndexBox.num = paramIndexBox.num + 1
+              newTemplex
             }
-            case other => (anonymousRuneIndex0, other)
+            case other => other
           }
         })
     filledTemplex
@@ -141,7 +142,7 @@ object FunctionScout {
 
     val rate = RuleStateBox(RuleState(RuleScout.translateRulexes(templateRulesP)))
 
-    val (explicitParamsPatterns1) =
+    val explicitParamsPatterns1 =
       PatternScout.scoutPatterns(
         initialRulesAndRunes,
         fate,
@@ -248,7 +249,7 @@ object FunctionScout {
     val ScoutFate(numPatternsBefore, numLambdasBefore, numTypesBefore, numMagicParamsBefore, numLetsBefore) = fate.fate
     val lambdaFate = ScoutFateBox(ScoutFate(0, numLambdasBefore, numTypesBefore, 0, 0))
 
-    val (explicitParamPatterns1) =
+    val explicitParamPatterns1 =
       PatternScout.scoutPatterns(
         initialRulesAndRunes,
         lambdaFate,
@@ -476,7 +477,7 @@ object FunctionScout {
         Some("__Par"))
 
     // Theres no body, no need to keep the fate around.
-    val (_) = fate
+    val _ = fate
 
     val paramsS = patternsS.map(ParameterS)
 

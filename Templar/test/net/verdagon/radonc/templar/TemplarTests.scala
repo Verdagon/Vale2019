@@ -66,6 +66,7 @@ class TemplarTests extends FunSuite with Matchers {
       temputsCache match {
         case Some(temputs) => temputs
         case None => {
+
           val temputs =
             if (useCommonEnv) {
               Templar.runTemplar(getAstrouts())
@@ -208,7 +209,7 @@ class TemplarTests extends FunSuite with Matchers {
 
   test("Stamps an interface template via a function return") {
     val compile = new Compilation(TemplateSamples.stampingViaReturn)
-    compile.getTemputs()
+    val temputs = compile.getTemputs()
   }
 //
 //  test("Constructor is stamped even without calling") {
@@ -408,7 +409,7 @@ class TemplarTests extends FunSuite with Matchers {
         |	moo:*Int();
         |}
       """.stripMargin)
-    compile.getTemputs()
+    val temputs = compile.getTemputs()
   }
 
   test("Tests making a variable with a pattern") {
@@ -429,17 +430,17 @@ class TemplarTests extends FunSuite with Matchers {
         |	= doSomething(x);
         |}
       """.stripMargin)
-    compile.getTemputs()
+    val temputs = compile.getTemputs()
   }
 
   test("Tests a linked list") {
     val compile = new Compilation(OrdinaryLinkedList.code)
-    compile.getTemputs()
+    val temputs = compile.getTemputs()
   }
 
   test("Tests a templated linked list") {
     val compile = new Compilation(TemplatedLinkedList.code)
-    compile.getTemputs()
+    val temputs = compile.getTemputs()
   }
 
   test("Tests calling an abstract function") {
@@ -470,7 +471,7 @@ class TemplarTests extends FunSuite with Matchers {
         |}
         |fn main(a: ListNode:Int) {}
       """.stripMargin)
-    compile.getTemputs()
+    val temputs = compile.getTemputs()
   }
 
 
@@ -485,7 +486,7 @@ class TemplarTests extends FunSuite with Matchers {
         |  patternTiles: __Array:(imm, Vec2);
         |}
       """.stripMargin)
-    compile.getTemputs()
+    val temputs = compile.getTemputs()
   }
 
   test("Test array length") {
@@ -496,7 +497,7 @@ class TemplarTests extends FunSuite with Matchers {
         |  = len(&a);
         |}
       """.stripMargin)
-    compile.getTemputs()
+    val temputs = compile.getTemputs()
   }
 
   test("Test return") {
@@ -553,7 +554,7 @@ class TemplarTests extends FunSuite with Matchers {
 
   test("Test complex interface") {
     val compile = new Compilation(TemplatedInterface.code)
-    compile.getTemputs()
+    val temputs = compile.getTemputs()
   }
 
   test("Local-mut upcasts") {

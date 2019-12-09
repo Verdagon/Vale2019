@@ -15,15 +15,14 @@ import net.verdagon.radonc.{vassertSome, vcurious, vfail, vimpl}
 import scala.collection.immutable.List
 
 object StructTemplar {
-  def addBuiltInStructs(env: NamespaceEnvironment, temputs0: Temputs): (Temputs, StructRef2) = {
+  def addBuiltInStructs(env: NamespaceEnvironment, temputs: TemputsBox): (StructRef2) = {
     val structDef2 = StructDefinition2(FullName2(List(NamePart2("__Pack", Some(List())))), Immutable, List())
-    val temputs1 = temputs0.declareStruct(structDef2.getRef)
-    val temputs2 = temputs1.declareStructMutability(structDef2.getRef, Immutable)
-    val temputs3 = temputs2.declareStructEnv(structDef2.getRef, env)
-    val temputs4 = temputs3.add(structDef2)
-    val temputs5 = temputs4.declarePack(List(), structDef2.getRef)
-
-    (temputs5, structDef2.getRef)
+    temputs.declareStruct(structDef2.getRef)
+    temputs.declareStructMutability(structDef2.getRef, Immutable)
+    temputs.declareStructEnv(structDef2.getRef, env)
+    temputs.add(structDef2)
+    temputs.declarePack(List(), structDef2.getRef)
+    (structDef2.getRef)
   }
 
   def getFunctionGenerators(): Map[String, IFunctionGenerator] = {
@@ -32,11 +31,11 @@ object StructTemplar {
         new IFunctionGenerator {
           override def generate(
             env: FunctionEnvironment,
-            temputs: Temputs,
+            temputs: TemputsBox,
             originFunction: Option[FunctionA],
             paramCoords: List[Parameter2],
             maybeRetCoord: Option[Coord]):
-          (Temputs, FunctionHeader2) = {
+          (FunctionHeader2) = {
             val Some(Coord(_, structRef2 @ StructRef2(_))) = maybeRetCoord
             val structDef2 = temputs.lookupStruct(structRef2)
             FunctionTemplarCore.makeConstructor(temputs, originFunction, structDef2)
@@ -87,73 +86,73 @@ object StructTemplar {
   }
 
   def getStructRef(
-    temputs0: Temputs,
+    temputs: TemputsBox,
     structTemplata: StructTemplata,
     uncoercedTemplateArgs: List[ITemplata]):
-  (Temputs, StructRef2) = {
+  (StructRef2) = {
     StructTemplarTemplateArgsLayer.getStructRef(
-      structTemplata.env, temputs0, structTemplata.originStruct, uncoercedTemplateArgs)
+      structTemplata.env, temputs, structTemplata.originStruct, uncoercedTemplateArgs)
   }
 
   def getStructRef(
     env: NamespaceEnvironment,
-    temputs0: Temputs,
+    temputs: TemputsBox,
     struct1: StructA,
     uncoercedTemplateArgs: List[ITemplata]):
-  (Temputs, StructRef2) = {
-    StructTemplarTemplateArgsLayer.getStructRef(env, temputs0, struct1, uncoercedTemplateArgs)
+  (StructRef2) = {
+    StructTemplarTemplateArgsLayer.getStructRef(env, temputs, struct1, uncoercedTemplateArgs)
   }
 
   def getInterfaceRef(
-    temputs0: Temputs,
+    temputs: TemputsBox,
     interfaceTemplata: InterfaceTemplata,
     uncoercedTemplateArgs: List[ITemplata]):
-  (Temputs, InterfaceRef2) = {
+  (InterfaceRef2) = {
     StructTemplarTemplateArgsLayer.getInterfaceRef(
-      interfaceTemplata.env, temputs0, interfaceTemplata.originInterface, uncoercedTemplateArgs)
+      interfaceTemplata.env, temputs, interfaceTemplata.originInterface, uncoercedTemplateArgs)
   }
 
   def getInterfaceRef(
     env: NamespaceEnvironment,
-    temputs0: Temputs,
+    temputs: TemputsBox,
     interface1: InterfaceA,
     uncoercedTemplateArgs: List[ITemplata]):
-  (Temputs, InterfaceRef2) = {
-    StructTemplarTemplateArgsLayer.getInterfaceRef(env, temputs0, interface1, uncoercedTemplateArgs)
+  (InterfaceRef2) = {
+    StructTemplarTemplateArgsLayer.getInterfaceRef(env, temputs, interface1, uncoercedTemplateArgs)
   }
 
   def convert(
       env: IEnvironment,
-      temputs0: Temputs,
+      temputs: TemputsBox,
       sourceExpr: ReferenceExpression2,
       sourceStructRef: StructRef2,
       targetInterfaceRef: InterfaceRef2):
-  (Temputs, ReferenceExpression2) = {
-    ImplTemplar.isAncestor(temputs0, sourceStructRef, targetInterfaceRef) match {
-      case (temputs1, true) => (temputs1, StructToInterfaceUpcast2(sourceExpr, targetInterfaceRef))
-      case (_, false) => vfail("Can't upcast a " + sourceStructRef + " to a " + targetInterfaceRef)
+  (ReferenceExpression2) = {
+    ImplTemplar.isAncestor(temputs, sourceStructRef, targetInterfaceRef) match {
+      case (true) => (StructToInterfaceUpcast2(sourceExpr, targetInterfaceRef))
+      case (false) => vfail("Can't upcast a " + sourceStructRef + " to a " + targetInterfaceRef)
     }
   }
 
   // Makes a struct to back a closure
   def makeClosureUnderstruct(
     env: IEnvironment,
-    temputs0: Temputs,
+    temputs: TemputsBox,
     functionS: FunctionA,
     functionFullName: FullName2,
     members: List[StructMember2]):
-  (Temputs, StructRef2, Mutability, FunctionTemplata) = {
-    StructTemplarTemplateArgsLayer.makeClosureUnderstruct(env, temputs0, functionS, functionFullName, members)
+  (StructRef2, Mutability, FunctionTemplata) = {
+    StructTemplarTemplateArgsLayer.makeClosureUnderstruct(env, temputs, functionS, functionFullName, members)
   }
 
   // Makes a struct to back a pack or tuple
-  def makeSeqOrPackUnderstruct(env: NamespaceEnvironment, temputs0: Temputs, memberTypes2: List[Coord], prefix: String):
-  (Temputs, StructRef2, Mutability) = {
-    StructTemplarTemplateArgsLayer.makeSeqOrPackUnderstruct(env, temputs0, memberTypes2, prefix)
+  def makeSeqOrPackUnderstruct(env: NamespaceEnvironment, temputs: TemputsBox, memberTypes2: List[Coord], prefix: String):
+  (StructRef2, Mutability) = {
+    StructTemplarTemplateArgsLayer.makeSeqOrPackUnderstruct(env, temputs, memberTypes2, prefix)
   }
 
-  def getMemberCoords(temputs0: Temputs, structRef: StructRef2): List[Coord] = {
-    temputs0.structDefsByRef(structRef).members.map(_.tyype).map({
+  def getMemberCoords(temputs: TemputsBox, structRef: StructRef2): List[Coord] = {
+    temputs.structDefsByRef(structRef).members.map(_.tyype).map({
       case ReferenceMemberType2(coord) => coord
       case AddressMemberType2(_) => {
         // At time of writing, the only one who calls this is the inferer, who wants to know so it
@@ -164,30 +163,30 @@ object StructTemplar {
     })
   }
 
-  def citizenIsFromTemplate(temputs: Temputs, citizen: CitizenRef2, template: ITemplata): (Temputs, Boolean) = {
+  def citizenIsFromTemplate(temputs: TemputsBox, citizen: CitizenRef2, template: ITemplata): (Boolean) = {
     println("someday this is going to bite us")
     (citizen, template) match {
       case (InterfaceRef2(fullName), InterfaceTemplata(_, interfaceA)) => {
         if (interfaceA.namespace.nonEmpty || fullName.steps.size > 1) {
-          return (temputs, false)
+          return (false)
         }
         if (interfaceA.namespace.nonEmpty) {
           vimpl()
         }
         val lastStep = fullName.steps.last
-        (temputs, lastStep.humanName == interfaceA.name)
+        (lastStep.humanName == interfaceA.name)
       }
       case (StructRef2(fullName), StructTemplata(_, structA)) => {
         if (structA.namespace.size != fullName.steps.size - 1) {
-          return (temputs, false)
+          return (false)
         }
         if (structA.namespace.nonEmpty) {
           vimpl()
         }
         val lastStep = fullName.steps.last
-        (temputs, lastStep.humanName == structA.name)
+        (lastStep.humanName == structA.name)
       }
-      case _ => (temputs, false)
+      case _ => (false)
     }
   }
 }

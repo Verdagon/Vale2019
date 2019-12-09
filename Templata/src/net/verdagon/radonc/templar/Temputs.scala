@@ -68,16 +68,6 @@ case class Temputs(
   // CitizenTemputs, FunctionTemputs, etc.
 
 ) {
-//
-//  override def getAllImpls: List[Impl2] = impls
-//
-//  override def getAllExterns: Set[FunctionHeader2] = Set()
-//
-//  override def emptyPackStructRef: StructRef2 = {
-//    vassert(structDefsByRef.contains(emptyPackStructRef))
-//    emptyPackStructRef
-//  }
-
   def lookupFunction(signature2: Signature2): Option[Function2] = {
     functions.find(_.header.toSignature == signature2)
   }
@@ -450,62 +440,6 @@ case class Temputs(
       unknownSizeArrayTypes)
   }
 
-//
-//  def nextCounter(functionEnv: FunctionEnvironment): (Temputs, FunctionEnvironment, Int) = {
-//    val FunctionEnvironment(parentEnv, function, oldPath, counter, templatas, variables, moveds) = functionEnv
-//
-//    vassert(oldPath.last == counter.toString)
-//
-//    val newCounter = counter + 1
-//    val newPath = oldPath.init :+ newCounter.toString
-//
-//    val newFunctionEnv =
-//      FunctionEnvironment(
-//        parentEnv, function, newPath, newCounter, templatas, variables, moveds)
-//
-//    val newTemputs =
-//      addEnvironment(newPath, newFunctionEnv)
-//
-//    (newTemputs, newFunctionEnv, counter)
-//  }
-//
-//  def addVariable(functionEnv: FunctionEnvironment): (Temputs, FunctionEnvironment, Int) = {
-//    val FunctionEnvironment(parentEnv, function, oldPath, counter, templatas, variables, moveds) = functionEnv
-//
-//    vassert(oldPath.last == counter.toString)
-//
-//    val newCounter = counter + 1
-//    val newPath = oldPath.init :+ newCounter.toString
-//
-//    val newFunctionEnv =
-//      FunctionEnvironment(
-//        parentEnv, function, newPath, newCounter, templatas, variables, moveds)
-//
-//    val newTemputs =
-//      addEnvironment(newPath, newFunctionEnv)
-//
-//    (newTemputs, newFunctionEnv, counter)
-//  }
-//
-//  // Makes a new environment for a new function.
-//  // To update an existing environment, use updateFunctionEnvironment.
-//  def spawnNewStructEnvironment(
-//    parentEnv: IEnvironment,
-//    path: List[String],
-//    newTemplatas: Map[String, ITemplata]):
-//  (Temputs, StructEnvironment) = {
-//    vassert(!environmentByPath.contains(path))
-//
-//    val newEnvironment =
-//      StructEnvironment(
-//        parentEnv,
-//        path,
-//        newTemplatas)
-//
-//    val newTemputs = addEnvironment(path, newEnvironment)
-//    (newTemputs, newEnvironment)
-//  }
-
   def structDeclared(fullName: FullName2): Option[StructRef2] = {
     // This is the only place besides StructDefinition2 and declareStruct thats allowed to make one of these
     val structRef = StructRef2(fullName)
@@ -578,6 +512,115 @@ case class Temputs(
   def getAllInterfaces(): List[InterfaceDefinition2] = interfaceDefsByRef.values.toList
 
   def getAllFunctions(): List[Function2] = functions
+}
+
+case class TemputsBox(var temputs: Temputs) {
+  def functionGeneratorByName: Map[String, IFunctionGenerator] = temputs.functionGeneratorByName
+  def declaredSignatures: Set[Signature2] = temputs.declaredSignatures
+  def returnTypesBySignature: Map[Signature2, Coord] = temputs.returnTypesBySignature
+  def functions: List[Function2] = temputs.functions
+  def envByFunctionSignature: ListMap[Signature2, FunctionEnvironment] = temputs.envByFunctionSignature
+  def mutabilitiesByCitizenRef: Map[CitizenRef2, Mutability] = temputs.mutabilitiesByCitizenRef
+  def declaredStructs: Set[StructRef2] = temputs.declaredStructs
+  def structDefsByRef: ListMap[StructRef2, StructDefinition2] = temputs.structDefsByRef
+  def envByStructRef: Map[StructRef2, NamespaceEnvironment] = temputs.envByStructRef
+  def declaredInterfaces: Set[InterfaceRef2] = temputs.declaredInterfaces
+  def interfaceDefsByRef: ListMap[InterfaceRef2, InterfaceDefinition2] = temputs.interfaceDefsByRef
+  def envByInterfaceRef: Map[InterfaceRef2, NamespaceEnvironment] = temputs.envByInterfaceRef
+  def impls: List[Impl2] = temputs.impls
+  def packTypes: Map[List[Coord], StructRef2] = temputs.packTypes
+  def arraySequenceTypes: Map[(Int, RawArrayT2), ArraySequenceT2] = temputs.arraySequenceTypes
+  def unknownSizeArrayTypes: Map[RawArrayT2, UnknownSizeArrayT2] = temputs.unknownSizeArrayTypes
+
+  def lookupFunction(signature2: Signature2): Option[Function2] = temputs.lookupFunction(signature2)
+
+  def declareFunctionSignature(signature: Signature2, maybeEnv: Option[FunctionEnvironment]): Unit = {
+    temputs = temputs.declareFunctionSignature(signature, maybeEnv)
+  }
+
+  def declareFunctionReturnType(signature: Signature2, returnType2: Coord): Unit = {
+    temputs = temputs.declareFunctionReturnType(signature, returnType2)
+  }
+
+  def addFunction(function: Function2): Unit = {
+    temputs = temputs.addFunction(function)
+  }
+
+  // We can't declare the struct at the same time as we declare its mutability or environment,
+  // see MFDBRE.
+  def declareStruct(structRef: StructRef2): Unit = {
+    temputs = temputs.declareStruct(structRef)
+  }
+
+  def declareStructMutability(structRef: StructRef2, mutability: Mutability): Unit = {
+    temputs = temputs.declareStructMutability(structRef, mutability)
+  }
+
+  def declareStructEnv(structRef: StructRef2, env: NamespaceEnvironment): Unit = {
+    temputs = temputs.declareStructEnv(structRef, env)
+  }
+
+  def declareInterface(interfaceRef: InterfaceRef2): Unit = {
+    temputs = temputs.declareInterface(interfaceRef)
+  }
+
+  def declareInterfaceMutability(interfaceRef: InterfaceRef2, mutability: Mutability): Unit = {
+    temputs = temputs.declareInterfaceMutability(interfaceRef, mutability)
+  }
+
+  def declareInterfaceEnv(interfaceRef: InterfaceRef2, env: NamespaceEnvironment): Unit = {
+    temputs = temputs.declareInterfaceEnv(interfaceRef, env)
+  }
+
+  def declarePack(members: List[Coord], understructRef2: StructRef2): Unit = {
+    temputs = temputs.declarePack(members, understructRef2)
+  }
+
+  def add(structDef: StructDefinition2): Unit = {
+    temputs = temputs.add(structDef)
+  }
+
+  def add(interfaceDef: InterfaceDefinition2): Unit = {
+    temputs = temputs.add(interfaceDef)
+  }
+
+  def addArraySequence(size: Int, array2: ArraySequenceT2): Unit = {
+    temputs = temputs.addArraySequence(size, array2)
+  }
+
+  def addUnknownSizeArray(array2: UnknownSizeArrayT2): Unit = {
+    temputs = temputs.addUnknownSizeArray(array2)
+  }
+
+  def addImpl(structRef2: StructRef2, interfaceRef2: InterfaceRef2): Unit = {
+    temputs = temputs.addImpl(structRef2, interfaceRef2)
+  }
+
+  def structDeclared(fullName: FullName2): Option[StructRef2] = temputs.structDeclared(fullName)
+
+  def lookupMutability(citizenRef2: CitizenRef2): Mutability = temputs.lookupMutability(citizenRef2)
+
+  def lookupStruct(structRef: StructRef2): StructDefinition2 = temputs.lookupStruct(structRef)
+
+  def lookupCitizen(citizenRef: CitizenRef2): CitizenDefinition2 = temputs.lookupCitizen(citizenRef)
+
+  def interfaceDeclared(fullName: FullName2): Option[InterfaceRef2] = temputs.interfaceDeclared(fullName)
+
+  def lookupInterface(interfaceRef: InterfaceRef2): InterfaceDefinition2 = temputs.lookupInterface(interfaceRef)
+
+  def exactDeclaredSignatureExists(fullName: FullName2, paramTypes: List[Coord]): Boolean = {
+    temputs.exactDeclaredSignatureExists(fullName, paramTypes)
+  }
+
+  def exactDeclaredSignatureExists(signature: Signature2): Boolean = {
+    temputs.exactDeclaredSignatureExists(signature)
+  }
+
+  def getAllStructs(): List[StructDefinition2] = temputs.getAllStructs()
+
+  def getAllInterfaces(): List[InterfaceDefinition2] = temputs.getAllInterfaces()
+
+  def getAllFunctions(): List[Function2] = temputs.getAllFunctions()
 }
 
 case class InterfaceEdgeBlueprint(
@@ -690,10 +733,10 @@ case class Function2(
 trait IFunctionGenerator {
   def generate(
     env: FunctionEnvironment,
-    temputs: Temputs,
+    temputs: TemputsBox,
     // We might be able to move these all into the function environment... maybe....
     originFunction: Option[FunctionA],
     paramCoords: List[Parameter2],
     maybeRetCoord: Option[Coord]):
-  (Temputs, FunctionHeader2)
+  (FunctionHeader2)
 }

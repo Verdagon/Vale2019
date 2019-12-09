@@ -12,35 +12,35 @@ class InfererEquator[Env, State](
     templataTemplarInner: TemplataTemplarInner[Env, State]) {
 
   private[infer] def equals(
-    state0: State,
+    state: State,
     left: ITemplata,
     right: ITemplata,
     expectedType: ITemplataType):
-  (State, Boolean) = {
+  (Boolean) = {
 
     (left, right) match {
       case (IntegerTemplata(leftNum), IntegerTemplata(rightNum)) => {
-        (state0, leftNum == rightNum)
+        (leftNum == rightNum)
       }
       case (KindTemplata(leftKind), rightStructTemplata @ StructTemplata(_, _)) => {
-        val (state3, rightKind) =
-          templataTemplarInner.evaluateStructTemplata(state0, rightStructTemplata, List(), expectedType)
-        (state3, leftKind == rightKind)
+        val rightKind =
+          templataTemplarInner.evaluateStructTemplata(state, rightStructTemplata, List(), expectedType)
+        (leftKind == rightKind)
       }
       case (KindTemplata(leftKind), KindTemplata(rightKind)) => {
-        (state0, leftKind == rightKind)
+        (leftKind == rightKind)
       }
       case (CoordTemplata(leftCoord), CoordTemplata(rightCoord)) => {
-        (state0, leftCoord == rightCoord)
+        (leftCoord == rightCoord)
       }
       case (OwnershipTemplata(leftOwnership), OwnershipTemplata(rightOwnership)) => {
-        (state0, leftOwnership == rightOwnership)
+        (leftOwnership == rightOwnership)
       }
       case (MutabilityTemplata(leftMutability), MutabilityTemplata(rightMutability)) => {
-        (state0, leftMutability == rightMutability)
+        (leftMutability == rightMutability)
       }
       case (leftInterfaceTemplata @ InterfaceTemplata(_, _), rightInterfaceTemplata @ InterfaceTemplata(_, _)) => {
-        (state0, leftInterfaceTemplata == rightInterfaceTemplata)
+        (leftInterfaceTemplata == rightInterfaceTemplata)
       }
       case _ => vfail("make case for:\n" + left + "\n" + right)
     }

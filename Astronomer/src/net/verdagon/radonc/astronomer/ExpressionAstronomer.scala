@@ -19,7 +19,7 @@ object ExpressionAstronomer {
         val (conclusions, rulesA) =
           Astronomer.makeRuleTyper().solve(astrouts, env, rules, List(pattern), Some(allRunes)) match {
             case (_, rtsf @ RuleTyperSolveFailure(_, _, _)) => vfail(rtsf.toString)
-            case (_, RuleTyperSolveSuccess(c, r)) => (c, r)
+            case (c, RuleTyperSolveSuccess(r)) => (c, r)
           }
         val exprA = translateExpression(env, astrouts, expr)
 
@@ -37,45 +37,45 @@ object ExpressionAstronomer {
         WhileAE(conditionA, bodyA)
       }
       case ExprMutateSE(mutateeS, exprS) => {
-        val (conditionA) = translateExpression(env, astrouts, mutateeS)
-        val (bodyA) = translateExpression(env, astrouts, exprS)
+        val conditionA = translateExpression(env, astrouts, mutateeS)
+        val bodyA = translateExpression(env, astrouts, exprS)
         ExprMutateAE(conditionA, bodyA)
       }
       case GlobalMutateSE(name, exprS) => {
-        val (exprA) = translateExpression(env, astrouts, exprS)
+        val exprA = translateExpression(env, astrouts, exprS)
         GlobalMutateAE(name, exprA)
       }
       case LocalMutateSE(nameS, exprS) => {
-        val (exprA) = translateExpression(env, astrouts, exprS)
+        val exprA = translateExpression(env, astrouts, exprS)
         LocalMutateAE(nameS, exprA)
       }
       case ExpressionLendSE(innerExprS) => {
-        val (innerExprA) = translateExpression(env, astrouts, innerExprS)
+        val innerExprA = translateExpression(env, astrouts, innerExprS)
         ExpressionLendAE(innerExprA)
       }
       case ReturnSE(innerExprS) => {
-        val (innerExprA) = translateExpression(env, astrouts, innerExprS)
+        val innerExprA = translateExpression(env, astrouts, innerExprS)
         (ReturnAE(innerExprA))
       }
       case blockS @ BlockSE(_, _) => translateBlock(env, astrouts, blockS)
       case ArgLookupSE(index) => (ArgLookupAE(index))
       case CheckRefCountSE(refExprS, category, numExprS) => {
-        val (refExprA) = translateExpression(env, astrouts, refExprS)
-        val (numExprA) = translateExpression(env, astrouts, numExprS)
+        val refExprA = translateExpression(env, astrouts, refExprS)
+        val numExprA = translateExpression(env, astrouts, numExprS)
         (CheckRefCountAE(refExprA, category, numExprA))
       }
       case RepeaterBlockSE(exprS) => {
-        val (exprA) = translateExpression(env, astrouts, exprS)
+        val exprA = translateExpression(env, astrouts, exprS)
         (RepeaterBlockAE(exprA))
       }
       case RepeaterBlockIteratorSE(exprS) => {
-        val (exprA) = translateExpression(env, astrouts, exprS)
+        val exprA = translateExpression(env, astrouts, exprS)
         (RepeaterBlockIteratorAE(exprA))
       }
       case packS @ PackSE(_) => translatePack(astrouts, env, packS)
       case VoidSE() => VoidAE()
       case SequenceESE(elementsS) => {
-        val (elementsA) = elementsS.map(translateExpression(env, astrouts, _))
+        val elementsA = elementsS.map(translateExpression(env, astrouts, _))
         SequenceEAE(elementsA)
       }
       case RepeaterPackSE(exprS) => {
@@ -95,17 +95,17 @@ object ExpressionAstronomer {
         FunctionAE(functionA)
       }
       case DotSE(leftS, member, borrowContainer) => {
-        val (leftA) = translateExpression(env, astrouts, leftS)
+        val leftA = translateExpression(env, astrouts, leftS)
         DotAE(leftA, member, borrowContainer)
       }
       case DotCallSE(leftS, indexExprS) => {
-        val (leftA) = translateExpression(env, astrouts, leftS)
-        val (indexExprA) = translateExpression(env, astrouts, indexExprS)
+        val leftA = translateExpression(env, astrouts, leftS)
+        val indexExprA = translateExpression(env, astrouts, indexExprS)
         DotCallAE(leftA, indexExprA)
       }
       case FunctionCallSE(callableExprS, argsPackExprS) => {
-        val (callableExprA) = translateExpression(env, astrouts, callableExprS)
-        val (argsPackExprA) = translatePack(astrouts, env, argsPackExprS)
+        val callableExprA = translateExpression(env, astrouts, callableExprS)
+        val argsPackExprA = translatePack(astrouts, env, argsPackExprS)
         FunctionCallAE(callableExprA, argsPackExprA)
       }
       case TemplateSpecifiedLookupSE(name, templateArgsS) => {

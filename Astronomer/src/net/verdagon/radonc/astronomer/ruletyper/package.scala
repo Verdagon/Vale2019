@@ -3,6 +3,13 @@ package net.verdagon.radonc.astronomer
 import net.verdagon.radonc.vassert
 
 package object ruletyper {
+  case class ConclusionsBox(var conclusions: Conclusions) {
+    def typeByRune = conclusions.typeByRune
+    def addConclusion(rune: String, tyype: ITemplataType): Unit = {
+      conclusions = conclusions.addConclusion(rune, tyype)
+    }
+  }
+
   case class Conclusions(
       typeByRune: Map[String, ITemplataType]) {
     def addConclusion(rune: String, tyype: ITemplataType): Conclusions = {
@@ -16,12 +23,11 @@ package object ruletyper {
 
   sealed trait IRuleTyperSolveResult[T]
   case class RuleTyperSolveFailure[T](
-    conclusions: Conclusions,
+    conclusions: ConclusionsBox,
     message: String,
     inner: List[IConflictCause]
   ) extends IRuleTyperSolveResult[T] with IConflictCause
   case class RuleTyperSolveSuccess[T](
-    conclusions: Conclusions,
     types: T
   ) extends IRuleTyperSolveResult[T]
 
@@ -36,10 +42,8 @@ package object ruletyper {
     cause: Option[IConflictCause]
   ) extends IRuleTyperEvaluateResult[T] with IConflictCause
   case class RuleTyperEvaluateUnknown[T](
-    conclusions: Conclusions,
   ) extends IRuleTyperEvaluateResult[T]
   case class RuleTyperEvaluateSuccess[+T](
-    conclusions: Conclusions,
     result: T
   ) extends IRuleTyperEvaluateResult[T]
 
@@ -60,10 +64,8 @@ package object ruletyper {
     }
   }
   case class RuleTyperMatchUnknown[+T](
-    conclusions: Conclusions,
   ) extends IRuleTyperMatchResult[T]
   case class RuleTyperMatchSuccess[+T](
-    conclusions: Conclusions,
     result: T
   ) extends IRuleTyperMatchResult[T]
 }

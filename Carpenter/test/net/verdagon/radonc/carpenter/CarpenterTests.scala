@@ -10,7 +10,7 @@ class CarpenterTests extends FunSuite with Matchers {
 //        |fn doThing(i: virtual I) {4}
 //        |fn main() {3}
 //      """.stripMargin)
-//    val temputs = compile.getTemputs()
+//    compile.getTemputs()
 //    val hinputs = compile.getHinputs()
 //
 //    vassert(temputs.getAllUserFunctions.size == 2)
@@ -35,7 +35,7 @@ class CarpenterTests extends FunSuite with Matchers {
 //        |OtherStruct implements MyInterface;
 //        |fn doAThing(b: OtherStruct) { }
 //      """.stripMargin)
-//    val temputs = compile.getTemputs()
+//    compile.getTemputs()
 //    val hinputs = compile.getHinputs()
 //    vassert(temputs.functionFamiliesByRootBanner.isEmpty)
 //  }
@@ -56,7 +56,7 @@ class CarpenterTests extends FunSuite with Matchers {
 //        |OtherStruct implements MyInterface;
 //        |fn doAThing(b: OtherStruct for MyInterface):() { () }
 //      """.stripMargin)
-//    val temputs = compile.getTemputs()
+//    compile.getTemputs()
 //    val hinputs = compile.getHinputs()
 //    vassert(temputs.functionFamiliesByRootBanner.size == 1)
 //    val family = temputs.functionFamiliesByRootBanner.values.head
@@ -93,7 +93,7 @@ class CarpenterTests extends FunSuite with Matchers {
 //        |  doThing(y);
 //        |}
 //      """.stripMargin)
-//    val temputs = compile.getTemputs()
+//    compile.getTemputs()
 //    val hinputs = compile.getHinputs()
 //    // No merging should happen because MyStruct and OtherStruct are completely unrelated
 //    vassert(temputs.functionFamiliesByRootBanner.size == 4)
@@ -121,7 +121,7 @@ class CarpenterTests extends FunSuite with Matchers {
 //        |}
 //      """.stripMargin)
 //    vfail("make this test!")
-//    val temputs = compile.getTemputs()
+//    compile.getTemputs()
 //    val hinputs = compile.getHinputs()
 //    vassert(temputs.functionFamiliesByRootBanner.size == 4)
 //  }
@@ -146,7 +146,7 @@ class CarpenterTests extends FunSuite with Matchers {
 //        |  doThing(x);
 //        |}
 //      """.stripMargin)
-//    val temputs = compile.getTemputs()
+//    compile.getTemputs()
 //    val hinputs = compile.getHinputs()
 //    // same as the previous test, but all three are virtual. should still be merged.
 //    vassert(temputs.functionFamiliesByRootBanner.size == 5)
@@ -176,7 +176,7 @@ class CarpenterTests extends FunSuite with Matchers {
 //        |  doThing(x);
 //        |}
 //      """.stripMargin)
-//    val temputs = compile.getTemputs()
+//    compile.getTemputs()
 //    val hinputs = compile.getHinputs()
 //    vassert(temputs.functionFamiliesByRootBanner.size == 7)
 //    vassert(hinputs.superFamilyRootBannersByRootBanner.size == 7)
@@ -202,7 +202,7 @@ class CarpenterTests extends FunSuite with Matchers {
 //        |}
 //      """.stripMargin)
 //    val hinputs = compile.getHinputs()
-//    val temputs = compile.getTemputs()
+//    compile.getTemputs()
 //  }
 
 }

@@ -46,19 +46,19 @@ case class SimpleEnvironment(entries: Map[String, IEnvEntry]) extends IEnvironme
 }
 
 class FakeInfererEvaluatorDelegate extends IInfererEvaluatorDelegate[SimpleEnvironment, FakeState] {
-  override def getAncestorInterfaceDistance(temputs0: FakeState, descendantCitizenRef: CitizenRef2, ancestorInterfaceRef: InterfaceRef2): (FakeState, Option[Int]) = {
+  override def getAncestorInterfaceDistance(temputs: FakeState, descendantCitizenRef: CitizenRef2, ancestorInterfaceRef: InterfaceRef2): (Option[Int]) = {
     vfail()
   }
 
-  override def getAncestorInterfaces(temputs0: FakeState, descendantCitizenRef: CitizenRef2): (FakeState, Set[InterfaceRef2]) = {
+  override def getAncestorInterfaces(temputs: FakeState, descendantCitizenRef: CitizenRef2): (Set[InterfaceRef2]) = {
     vfail()
   }
 
-  override def getMutability(state0: FakeState, kind: Kind): Mutability = {
+  override def getMutability(state: FakeState, kind: Kind): Mutability = {
     InfererTestUtils.getMutability(kind)
   }
 
-  override def lookupMemberTypes(state0: FakeState, kind: Kind, expectedNumMembers: Int): Option[List[Coord]] = {
+  override def lookupMemberTypes(state: FakeState, kind: Kind, expectedNumMembers: Int): Option[List[Coord]] = {
     vfail()
   }
 
@@ -66,32 +66,32 @@ class FakeInfererEvaluatorDelegate extends IInfererEvaluatorDelegate[SimpleEnvir
     vfail()
   }
 
-  override def citizenIsFromTemplate(state: FakeState, citizen: CitizenRef2, template: ITemplata): (FakeState, Boolean) = {
+  override def citizenIsFromTemplate(state: FakeState, citizen: CitizenRef2, template: ITemplata): (Boolean) = {
     vfail()
   }
 }
 
 class FakeTemplataTemplarInnerDelegate extends ITemplataTemplarInnerDelegate[SimpleEnvironment, FakeState] {
-  override def evaluateInterfaceTemplata(state0: FakeState, templata: InterfaceTemplata, templateArgs: List[ITemplata]): (FakeState, Kind) = {
+  override def evaluateInterfaceTemplata(state: FakeState, templata: InterfaceTemplata, templateArgs: List[ITemplata]): (Kind) = {
     vfail()
   }
-  override def evaluateStructTemplata(state0: FakeState, templata: StructTemplata, templateArgs: List[ITemplata]): (FakeState, Kind) = {
+  override def evaluateStructTemplata(state: FakeState, templata: StructTemplata, templateArgs: List[ITemplata]): (Kind) = {
     vfail()
   }
-  override def getAncestorInterfaceDistance(state0: FakeState, descendantCitizenRef: CitizenRef2, ancestorInterfaceRef: InterfaceRef2): (FakeState, Option[Int]) = {
+  override def getAncestorInterfaceDistance(state: FakeState, descendantCitizenRef: CitizenRef2, ancestorInterfaceRef: InterfaceRef2): (Option[Int]) = {
     vfail()
   }
   override def getMutability(state: FakeState, kind: Kind): Mutability = {
     InfererTestUtils.getMutability(kind)
   }
-  override def getPackKind(env: SimpleEnvironment, state0: FakeState, types2: List[Coord]): (FakeState, PackT2, Mutability) = {
+  override def getPackKind(env: SimpleEnvironment, state: FakeState, types2: List[Coord]): (PackT2, Mutability) = {
     vfail()
   }
   override def lookupTemplata(env: SimpleEnvironment, name: String): ITemplata = {
     vassertSome(env.getNearestTemplataWithName(name, Set(TemplataLookupContext)))
   }
 
-  override def getArraySequenceKind(env: SimpleEnvironment, state0: FakeState, mutability: Mutability, size: Int, element: Coord): (FakeState, ArraySequenceT2) = {
+  override def getArraySequenceKind(env: SimpleEnvironment, state: FakeState, mutability: Mutability, size: Int, element: Coord): (ArraySequenceT2) = {
     vfail()
   }
 
@@ -137,27 +137,27 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
             case _ => vfail()
           }
         }
-        override def evaluateInterfaceTemplata(state0: FakeState, templata: InterfaceTemplata, templateArgs: List[ITemplata]): (FakeState, Kind) = {
+        override def evaluateInterfaceTemplata(state: FakeState, templata: InterfaceTemplata, templateArgs: List[ITemplata]): (Kind) = {
           (templata, templateArgs) match {
             case (InterfaceTemplata(_,interfaceName("MutTInterface")), List(CoordTemplata(Coord(Share, Int2())) )) => {
-              (state0, InterfaceRef2(FullName2(List(NamePart2("MutTInterface", Some(List(CoordTemplata(Coord(Share, Int2())))))))))
+              (InterfaceRef2(FullName2(List(NamePart2("MutTInterface", Some(List(CoordTemplata(Coord(Share, Int2())))))))))
             }
             case (InterfaceTemplata(_,interfaceName("MutInterface")), List()) => {
-              (state0, InterfaceRef2(FullName2(List(NamePart2("MutInterface", Some(List()))))))
+              (InterfaceRef2(FullName2(List(NamePart2("MutInterface", Some(List()))))))
             }
             case (InterfaceTemplata(_,interfaceName("ImmInterface")), List()) => {
-              (state0, InterfaceRef2(FullName2(List(NamePart2("ImmInterface", Some(List()))))))
+              (InterfaceRef2(FullName2(List(NamePart2("ImmInterface", Some(List()))))))
             }
           }
         }
 
-        override def evaluateStructTemplata(state0: FakeState, templata: StructTemplata, templateArgs: List[ITemplata]): (FakeState, Kind) = {
+        override def evaluateStructTemplata(state: FakeState, templata: StructTemplata, templateArgs: List[ITemplata]): (Kind) = {
           (templata, templateArgs) match {
             case (StructTemplata(_,structName("MutTStruct")), List(CoordTemplata(Coord(Share, Int2())) )) => {
-              (state0, StructRef2(FullName2(List(NamePart2("MutTStruct", Some(List(CoordTemplata(Coord(Share, Int2())))))))))
+              (StructRef2(FullName2(List(NamePart2("MutTStruct", Some(List(CoordTemplata(Coord(Share, Int2())))))))))
             }
             case (StructTemplata(_,structName("MutStruct")), List()) => {
-              (state0, StructRef2(FullName2(List(NamePart2("MutStruct", Some(List()))))))
+              (StructRef2(FullName2(List(NamePart2("MutStruct", Some(List()))))))
             }
           }
         }
@@ -174,27 +174,27 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
             case StructTemplata(_,structName("MutTStruct")) => TemplateTemplataType(List(CoordTemplataType), KindTemplataType)
           }
         }
-        override def getArraySequenceKind(env: SimpleEnvironment, state0: FakeState, mutability: Mutability, size: Int, element: Coord): (FakeState, ArraySequenceT2) = {
-          (state0, ArraySequenceT2(size, RawArrayT2(element, mutability)))
+        override def getArraySequenceKind(env: SimpleEnvironment, state: FakeState, mutability: Mutability, size: Int, element: Coord): (ArraySequenceT2) = {
+          (ArraySequenceT2(size, RawArrayT2(element, mutability)))
         }
       }
     val delegate =
       new FakeInfererEvaluatorDelegate() {
-        override def getAncestorInterfaces(state0: FakeState, descendantCitizenRef: CitizenRef2): (FakeState, Set[InterfaceRef2]) = {
+        override def getAncestorInterfaces(state: FakeState, descendantCitizenRef: CitizenRef2): (Set[InterfaceRef2]) = {
           descendantCitizenRef match {
-            case StructRef2(FullName2(List(NamePart2("MutTStruct",Some(List(CoordTemplata(Coord(Share, Int2())))))))) => (state0, Set(InterfaceRef2(FullName2(List(NamePart2("MutTInterface", Some(List(CoordTemplata(Coord(Share, Int2()))))))))))
-            case StructRef2(FullName2(List(NamePart2("MutStruct",Some(List()))))) => (state0, Set(InterfaceRef2(FullName2(List(NamePart2("MutInterface", Some(List())))))))
-            case InterfaceRef2(FullName2(List(NamePart2("MutInterface",Some(List()))))) => (state0, Set())
-            case StructRef2(FullName2(List(NamePart2("MutSoloStruct",Some(List()))))) => (state0, Set())
+            case StructRef2(FullName2(List(NamePart2("MutTStruct",Some(List(CoordTemplata(Coord(Share, Int2())))))))) => (Set(InterfaceRef2(FullName2(List(NamePart2("MutTInterface", Some(List(CoordTemplata(Coord(Share, Int2()))))))))))
+            case StructRef2(FullName2(List(NamePart2("MutStruct",Some(List()))))) => (Set(InterfaceRef2(FullName2(List(NamePart2("MutInterface", Some(List())))))))
+            case InterfaceRef2(FullName2(List(NamePart2("MutInterface",Some(List()))))) => (Set())
+            case StructRef2(FullName2(List(NamePart2("MutSoloStruct",Some(List()))))) => (Set())
             case _ => vfail(descendantCitizenRef.toString)
           }
         }
 
-        override def citizenIsFromTemplate(state: FakeState, citizen: CitizenRef2, template: ITemplata): (FakeState, Boolean) = {
+        override def citizenIsFromTemplate(state: FakeState, citizen: CitizenRef2, template: ITemplata): (Boolean) = {
           (citizen, template) match {
-            case (InterfaceRef2(FullName2(List(NamePart2("MutTInterface",Some(List(CoordTemplata(Coord(Share,Int2())))))))), InterfaceTemplata(_, interfaceName("MutTInterface"))) => (state, true)
-            case (StructRef2(FullName2(List(NamePart2("MutTStruct",Some(List(CoordTemplata(Coord(Share,Int2())))))))), StructTemplata(_, structName("MutTStruct"))) => (state, true)
-            case (StructRef2(FullName2(List(NamePart2("MutTStruct",Some(List(CoordTemplata(Coord(Share,Int2())))))))), InterfaceTemplata(_, interfaceName("MutTInterface"))) => (state, false)
+            case (InterfaceRef2(FullName2(List(NamePart2("MutTInterface",Some(List(CoordTemplata(Coord(Share,Int2())))))))), InterfaceTemplata(_, interfaceName("MutTInterface"))) => (true)
+            case (StructRef2(FullName2(List(NamePart2("MutTStruct",Some(List(CoordTemplata(Coord(Share,Int2())))))))), StructTemplata(_, structName("MutTStruct"))) => (true)
+            case (StructRef2(FullName2(List(NamePart2("MutTStruct",Some(List(CoordTemplata(Coord(Share,Int2())))))))), InterfaceTemplata(_, interfaceName("MutTInterface"))) => (false)
             case _ => vfail()
           }
         }
@@ -231,7 +231,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
   }
 
   test("Borrow becomes share if kind is immutable") {
-    val (_, InferSolveSuccess(inferences)) =
+    val (InferSolveSuccess(inferences)) =
       makeCannedEvaluator()
         .solve(
           makeCannedEnvironment(),
@@ -251,7 +251,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
   }
 
   test("Can infer coord rune from an incoming kind") {
-    val (_, isf @ InferSolveFailure(_, _, _,_,_, _)) =
+    val (isf @ InferSolveFailure(_, _, _,_,_, _)) =
       makeCannedEvaluator()
         .solve(
           makeCannedEnvironment(),
@@ -267,7 +267,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
   }
 
   test("Detects conflict between types") {
-    val (_, isf @ InferSolveFailure(_, _, _,_,_, _)) =
+    val (isf @ InferSolveFailure(_, _, _,_,_, _)) =
       makeCannedEvaluator()
         .solve(
           makeCannedEnvironment(),
@@ -283,7 +283,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
   }
 
   test("Can explicitly coerce from kind to coord") {
-    val (_, InferSolveSuccess(conclusions)) =
+    val (InferSolveSuccess(conclusions)) =
       makeCannedEvaluator()
         .solve(
           makeCannedEnvironment(),
@@ -302,7 +302,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
   }
 
   test("Can explicitly coerce from kind to coord 2") {
-    val (_, InferSolveSuccess(conclusions)) =
+    val (InferSolveSuccess(conclusions)) =
       makeCannedEvaluator()
         .solve(
           makeCannedEnvironment(),
@@ -320,7 +320,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
   }
 
   test("Can match KindTemplataType against StructEnvEntry / StructTemplata") {
-    val (_, InferSolveSuccess(conclusions)) =
+    val (InferSolveSuccess(conclusions)) =
       makeCannedEvaluator()
         .solve(
           makeCannedEnvironment(),
@@ -339,7 +339,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
   }
 
   test("Can infer from simple rules") {
-    val (_, InferSolveSuccess(inferences)) =
+    val (InferSolveSuccess(inferences)) =
       makeCannedEvaluator()
         .solve(
           makeCannedEnvironment(),
@@ -357,7 +357,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
   }
 
   test("Can infer templata from CallAT") {
-    val (_, InferSolveSuccess(inferences)) =
+    val (InferSolveSuccess(inferences)) =
       makeCannedEvaluator()
         .solve(
           makeCannedEnvironment(),
@@ -376,7 +376,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
   }
 
   test("Can conjure an owning coord from a borrow coord") {
-    val (_, InferSolveSuccess(inferences)) =
+    val (InferSolveSuccess(inferences)) =
       makeCannedEvaluator()
         .solve(
           makeCannedEnvironment(),
@@ -405,7 +405,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
   }
 
   test("Rune 0 upcasts to right type, simple") {
-    val (_, InferSolveSuccess(inferences)) =
+    val (InferSolveSuccess(inferences)) =
       makeCannedEvaluator()
         .solve(
           makeCannedEnvironment(),
@@ -425,7 +425,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
   }
 
   test("Rune 0 upcasts to right type templated") {
-    val (_, InferSolveSuccess(inferences)) =
+    val (InferSolveSuccess(inferences)) =
       makeCannedEvaluator()
         .solve(
           makeCannedEnvironment(),
@@ -486,22 +486,22 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
 
     // Test that it does match a pack
     val packCoord = Coord(Share,PackT2(List(),StructRef2(FullName2(List(NamePart2("__Pack",Some(List())))))))
-    val (_, InferSolveSuccess(inferencesA)) = solve(ParamFilter(packCoord,None))
+    val (InferSolveSuccess(inferencesA)) = solve(ParamFilter(packCoord,None))
     vassert(inferencesA.templatasByRune("T") == CoordTemplata(packCoord))
 
     // Test that it does match a struct
     val structCoord = Coord(Own,StructRef2(FullName2(List(NamePart2("MutStruct",Some(List()))))))
-    val (_, InferSolveSuccess(inferencesD)) = solve(ParamFilter(structCoord,None))
+    val (InferSolveSuccess(inferencesD)) = solve(ParamFilter(structCoord,None))
     vassert(inferencesD.templatasByRune("T") == CoordTemplata(structCoord))
 
     // Test that it doesn't match an int
     val intCoord = Coord(Share,Int2())
-    val (_, isfE @ InferSolveFailure(_, _,_,_, _, _)) = solve(ParamFilter(intCoord,None))
+    val (isfE @ InferSolveFailure(_, _,_,_, _, _)) = solve(ParamFilter(intCoord,None))
     vassert(isfE.toString.contains("Bad arguments to passThroughIfConcrete"))
 
     // Test that it doesn't match an interface
     val interfaceCoord = Coord(Own,InterfaceRef2(FullName2(List(NamePart2("MutInterface",Some(List()))))))
-    val (_, isfF @ InferSolveFailure(_, _, _,_,_, _)) = solve(ParamFilter(interfaceCoord,None))
+    val (isfF @ InferSolveFailure(_, _, _,_,_, _)) = solve(ParamFilter(interfaceCoord,None))
     vassert(isfF.toString.contains("Bad arguments to passThroughIfConcrete"))
   }
 
@@ -540,12 +540,12 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
 
     // Test that it does match an interface
     val interfaceCoord = Coord(Own,InterfaceRef2(FullName2(List(NamePart2("MutInterface",Some(List()))))))
-    val (_, InferSolveSuccess(inferencesD)) = solve(ParamFilter(interfaceCoord,None))
+    val (InferSolveSuccess(inferencesD)) = solve(ParamFilter(interfaceCoord,None))
     vassert(inferencesD.templatasByRune("T") == CoordTemplata(interfaceCoord))
 
     // Test that it doesn't match an int
     val intCoord = Coord(Share,Int2())
-    val (_, isfE @ InferSolveFailure(_, _, _, _,_,_)) = solve(ParamFilter(intCoord,None))
+    val (isfE @ InferSolveFailure(_, _, _, _,_,_)) = solve(ParamFilter(intCoord,None))
     vassert(isfE.toString.contains("Bad arguments to passThroughIfInterface"))
 
     // TODO: make a more accurate test that tests a struct doesn't match. Tried doing
@@ -585,22 +585,22 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
 
     // Test that it does match a struct
     val structCoord = Coord(Own,StructRef2(FullName2(List(NamePart2("MutStruct",Some(List()))))))
-    val (_, InferSolveSuccess(inferencesD)) = solve(ParamFilter(structCoord,None))
+    val (InferSolveSuccess(inferencesD)) = solve(ParamFilter(structCoord,None))
     vassert(inferencesD.templatasByRune("T") == CoordTemplata(structCoord))
 
     // Test that it doesn't match an int
     val intCoord = Coord(Share,Int2())
-    val (_, isfE @ InferSolveFailure(_, _, _,_,_, _)) = solve(ParamFilter(intCoord,None))
+    val (isfE @ InferSolveFailure(_, _, _,_,_, _)) = solve(ParamFilter(intCoord,None))
     vassert(isfE.toString.contains("Bad arguments to passThroughIfStruct"))
 
     // Test that it doesn't match an interface
     val interfaceCoord = Coord(Own,InterfaceRef2(FullName2(List(NamePart2("MutInterface",Some(List()))))))
-    val (_, isfF @ InferSolveFailure(_, _, _,_,_, _)) = solve(ParamFilter(interfaceCoord,None))
+    val (isfF @ InferSolveFailure(_, _, _,_,_, _)) = solve(ParamFilter(interfaceCoord,None))
     vassert(isfF.toString.contains("Bad arguments to passThroughIfStruct"))
 
     // Test that it doesn't match an pack
     val packCoord = Coord(Share,PackT2(List(),StructRef2(FullName2(List(NamePart2("__Pack",Some(List())))))))
-    val (_, isfG @ InferSolveFailure(_, _, _,_,_, _)) = solve(ParamFilter(packCoord,None))
+    val (isfG @ InferSolveFailure(_, _, _,_,_, _)) = solve(ParamFilter(packCoord,None))
     vassert(isfG.toString.contains("Bad arguments to passThroughIfStruct"))
   }
 
@@ -622,7 +622,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
     val atoms =
       List(AtomSP(Some(CaptureP("this",FinalP)),None,"T",None))
 
-    val (_, InferSolveSuccess(inferencesD)) =
+    val (InferSolveSuccess(inferencesD)) =
       makeCannedEvaluator().solve(
         makeCannedEnvironment(),
         FakeState(),
@@ -646,7 +646,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
     val atoms =
       List(AtomSP(Some(CaptureP("this",FinalP)),None,"T",None))
 
-    val (_, InferSolveSuccess(inferencesD)) =
+    val (InferSolveSuccess(inferencesD)) =
       makeCannedEvaluator().solve(
         makeCannedEnvironment(),
         FakeState(),
@@ -672,7 +672,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
               List(RuneAT("T", CoordTemplataType)),
               CoordTemplataType))))
 
-    val (_, InferSolveSuccess(inferencesD)) =
+    val (InferSolveSuccess(inferencesD)) =
       makeCannedEvaluator().solve(
         makeCannedEnvironment(),
         FakeState(),
@@ -687,7 +687,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
   }
 
   test("Test destructuring") {
-    val (_, InferSolveSuccess(inferencesD)) =
+    val (InferSolveSuccess(inferencesD)) =
       makeCannedEvaluator().solve(
         makeCannedEnvironment(),
         FakeState(),
@@ -721,7 +721,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
   }
 
   test("Test evaluating array sequence") {
-    val (_, InferSolveSuccess(inferencesD)) =
+    val (InferSolveSuccess(inferencesD)) =
       makeCannedEvaluator().solve(
         makeCannedEnvironment(),
         FakeState(),
@@ -740,7 +740,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
   }
 
   test("Test matching array sequence as coord") {
-    val (_, InferSolveSuccess(inferencesD)) =
+    val (InferSolveSuccess(inferencesD)) =
       makeCannedEvaluator().solve(
         makeCannedEnvironment(),
         FakeState(),
@@ -764,7 +764,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
   }
 
   test("Test matching array sequence as kind") {
-    val (_, InferSolveSuccess(inferencesD)) =
+    val (InferSolveSuccess(inferencesD)) =
       makeCannedEvaluator().solve(
         makeCannedEnvironment(),
         FakeState(),
@@ -788,7 +788,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
   }
 
   test("Test array") {
-    val (_, InferSolveSuccess(inferencesD)) =
+    val (InferSolveSuccess(inferencesD)) =
       makeCannedEvaluator().solve(
         makeCannedEnvironment(),
         FakeState(),
@@ -817,7 +817,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
   }
 
   test("Test evaluating isa") {
-    val (_, InferSolveSuccess(_)) =
+    val (InferSolveSuccess(_)) =
       makeCannedEvaluator()
         .solve(
           makeCannedEnvironment(),
@@ -832,7 +832,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
           None,
           true)
 
-    val (_, isf @ InferSolveFailure(_, _, _,_,_, _)) =
+    val (isf @ InferSolveFailure(_, _, _,_,_, _)) =
       makeCannedEvaluator()
         .solve(
           makeCannedEnvironment(),
@@ -850,7 +850,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
   }
 
   test("Test matching isa") {
-    val (_, InferSolveSuccess(_)) =
+    val (InferSolveSuccess(_)) =
       makeCannedEvaluator()
         .solve(
           makeCannedEnvironment(),
@@ -867,7 +867,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
           None,
           true)
 
-    val (_, isf @ InferSolveFailure(_, _,_,_, _, _)) =
+    val (isf @ InferSolveFailure(_, _,_,_, _, _)) =
       makeCannedEvaluator()
         .solve(
           makeCannedEnvironment(),
@@ -886,7 +886,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
 
   test("Test ownershipped") {
     def run(sourceName: String, targetOwnership: OwnershipP): IInferSolveResult = {
-      val (_, result) =
+      val result =
         makeCannedEvaluator().solve(
           makeCannedEnvironment(),
           FakeState(),
@@ -936,7 +936,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
 
   test("test matching ownershipped") {
     def run(sourceName: String, targetOwnership: OwnershipP): IInferSolveResult = {
-      val (_, result) =
+      val result =
         makeCannedEvaluator().solve(
           makeCannedEnvironment(),
           FakeState(),

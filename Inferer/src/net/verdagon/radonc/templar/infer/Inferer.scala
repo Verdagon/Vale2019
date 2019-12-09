@@ -15,49 +15,49 @@ import scala.collection.immutable.List
 trait IInfererDelegate[Env, State] {
   def evaluateType(
     env: Env,
-    state0: State,
+    state: State,
     type1: ITemplexA):
-  (State, ITemplata)
+  (ITemplata)
 
   def lookupMemberTypes(
-    state0: State,
+    state: State,
     kind: Kind,
     // This is here so that the predictor can just give us however many things
     // we expect.
     expectedNumMembers: Int
   ): Option[List[Coord]]
 
-  def getMutability(state0: State, kind: Kind): Mutability
+  def getMutability(state: State, kind: Kind): Mutability
 
   def lookupTemplata(env: Env, name: String): ITemplata
 
   def evaluateStructTemplata(
-    state0: State,
+    state: State,
     templata: StructTemplata,
     templateArgs: List[ITemplata]):
-  (State, Kind)
+  (Kind)
 
   def evaluateInterfaceTemplata(
-    state0: State,
+    state: State,
     templata: InterfaceTemplata,
     templateArgs: List[ITemplata]):
-  (State, Kind)
+  (Kind)
 
-  def getPackKind(env: Env, state0: State, members: List[Coord]): (State, PackT2, Mutability)
+  def getPackKind(env: Env, state: State, members: List[Coord]): (PackT2, Mutability)
 
-  def getArraySequenceKind(env: Env, state0: State, mutability: Mutability, size: Int, element: Coord): (State, ArraySequenceT2)
+  def getArraySequenceKind(env: Env, state: State, mutability: Mutability, size: Int, element: Coord): (ArraySequenceT2)
 
-  def getAncestorInterfaceDistance(temputs0: State, descendantCitizenRef: CitizenRef2, ancestorInterfaceRef: InterfaceRef2): (State, Option[Int])
+  def getAncestorInterfaceDistance(temputs: State, descendantCitizenRef: CitizenRef2, ancestorInterfaceRef: InterfaceRef2): (Option[Int])
 
-  def getAncestorInterfaces(temputs0: State, descendantCitizenRef: CitizenRef2):
-  (State, Set[InterfaceRef2])
+  def getAncestorInterfaces(temputs: State, descendantCitizenRef: CitizenRef2):
+  (Set[InterfaceRef2])
 
   def getInterfaceTemplataType(it: InterfaceTemplata): ITemplataType
   def getStructTemplataType(st: StructTemplata): ITemplataType
 
   def getMemberCoords(state: State, structRef: StructRef2): List[Coord]
 
-  def citizenIsFromTemplate(state: State, citizen: CitizenRef2, template: ITemplata): (State, Boolean)
+  def citizenIsFromTemplate(state: State, citizen: CitizenRef2, template: ITemplata): (Boolean)
 }
 
 // This is the public API for the outside world to use the Infer code.
@@ -65,14 +65,14 @@ object Inferer {
   def solve[Env, State](
     delegate: IInfererDelegate[Env, State],
     env: Env,
-    state0: State,
-    rules0: List[IRulexAR],
+    state: State,
+    rules: List[IRulexAR],
     typeByRune: Map[String, ITemplataType],
     directInputs: Map[String, ITemplata],
     paramAtoms: List[AtomSP],
     maybeParamInputs: Option[List[ParamFilter]],
     checkAllRunesPresent: Boolean):
-  (State, IInferSolveResult) = {
+  (IInferSolveResult) = {
     val templataTemplar =
       new TemplataTemplarInner[Env, State](makeTemplataTemplarDelegate(delegate))
     val equalsLayer = new InfererEquator[Env, State](templataTemplar)
@@ -83,8 +83,8 @@ object Inferer {
         makeEvaluatorDelegate(delegate))
     templar.solve(
       env,
-      state0,
-      rules0,
+      state,
+      rules,
       typeByRune,
       directInputs,
       paramAtoms,
@@ -96,31 +96,31 @@ object Inferer {
     delegate: IInfererDelegate[Env, State]):
   (ITemplataTemplarInnerDelegate[Env, State]) = {
     new ITemplataTemplarInnerDelegate[Env, State] {
-      override def getAncestorInterfaceDistance(temputs0: State, descendantCitizenRef: CitizenRef2, ancestorInterfaceRef: InterfaceRef2): (State, Option[Int]) = {
-        delegate.getAncestorInterfaceDistance(temputs0, descendantCitizenRef, ancestorInterfaceRef)
+      override def getAncestorInterfaceDistance(temputs: State, descendantCitizenRef: CitizenRef2, ancestorInterfaceRef: InterfaceRef2): (Option[Int]) = {
+        delegate.getAncestorInterfaceDistance(temputs, descendantCitizenRef, ancestorInterfaceRef)
       }
       override def getMutability(state: State, kind: Kind): Mutability = {
         delegate.getMutability(state, kind)
       }
 
-      override def getPackKind(env: Env, state0: State, members: List[Coord]): (State, PackT2, Mutability) = {
-        delegate.getPackKind(env, state0, members)
+      override def getPackKind(env: Env, state: State, members: List[Coord]): (PackT2, Mutability) = {
+        delegate.getPackKind(env, state, members)
       }
 
       override def lookupTemplata(env: Env, name: String): ITemplata = {
         delegate.lookupTemplata(env, name)
       }
 
-      override def evaluateInterfaceTemplata(state0: State, templata: InterfaceTemplata, templateArgs: List[ITemplata]): (State, Kind) = {
-        delegate.evaluateInterfaceTemplata(state0, templata, templateArgs)
+      override def evaluateInterfaceTemplata(state: State, templata: InterfaceTemplata, templateArgs: List[ITemplata]): (Kind) = {
+        delegate.evaluateInterfaceTemplata(state, templata, templateArgs)
       }
 
-      override def evaluateStructTemplata(state0: State, templata: StructTemplata, templateArgs: List[ITemplata]): (State, Kind) = {
-        delegate.evaluateStructTemplata(state0, templata, templateArgs)
+      override def evaluateStructTemplata(state: State, templata: StructTemplata, templateArgs: List[ITemplata]): (Kind) = {
+        delegate.evaluateStructTemplata(state, templata, templateArgs)
       }
 
-      override def getArraySequenceKind(env: Env, state0: State, mutability: Mutability, size: Int, element: Coord): (State, ArraySequenceT2) = {
-        delegate.getArraySequenceKind(env, state0, mutability, size, element)
+      override def getArraySequenceKind(env: Env, state: State, mutability: Mutability, size: Int, element: Coord): (ArraySequenceT2) = {
+        delegate.getArraySequenceKind(env, state, mutability, size, element)
       }
 
       override def getInterfaceTemplataType(it: InterfaceTemplata): ITemplataType = {
@@ -142,28 +142,28 @@ object Inferer {
   private def makeEvaluatorDelegate[Env, State](delegate: IInfererDelegate[Env, State]):
   IInfererEvaluatorDelegate[Env, State] = {
     new IInfererEvaluatorDelegate[Env, State] {
-      override def getAncestorInterfaces(temputs0: State, descendantCitizenRef: CitizenRef2): (State, Set[InterfaceRef2]) = {
-        delegate.getAncestorInterfaces(temputs0, descendantCitizenRef)
+      override def getAncestorInterfaces(temputs: State, descendantCitizenRef: CitizenRef2): (Set[InterfaceRef2]) = {
+        delegate.getAncestorInterfaces(temputs, descendantCitizenRef)
       }
 
-      override def lookupMemberTypes(state0: State, kind: Kind, expectedNumMembers: Int):
+      override def lookupMemberTypes(state: State, kind: Kind, expectedNumMembers: Int):
       Option[List[Coord]] = {
-        delegate.lookupMemberTypes(state0, kind, expectedNumMembers)
+        delegate.lookupMemberTypes(state, kind, expectedNumMembers)
       }
 
-      override def getMutability(state0: State, kind: Kind): Mutability = {
-        delegate.getMutability(state0: State, kind: Kind)
+      override def getMutability(state: State, kind: Kind): Mutability = {
+        delegate.getMutability(state: State, kind: Kind)
       }
 
-      override def getAncestorInterfaceDistance(temputs0: State, descendantCitizenRef: CitizenRef2, ancestorInterfaceRef: InterfaceRef2): (State, Option[Int]) = {
-        delegate.getAncestorInterfaceDistance(temputs0, descendantCitizenRef, ancestorInterfaceRef)
+      override def getAncestorInterfaceDistance(temputs: State, descendantCitizenRef: CitizenRef2, ancestorInterfaceRef: InterfaceRef2): (Option[Int]) = {
+        delegate.getAncestorInterfaceDistance(temputs, descendantCitizenRef, ancestorInterfaceRef)
       }
 
       override def getMemberCoords(state: State, structRef: StructRef2): List[Coord] = {
         delegate.getMemberCoords(state, structRef)
       }
 
-      override def citizenIsFromTemplate(state: State, citizen: CitizenRef2, template: ITemplata): (State, Boolean) = {
+      override def citizenIsFromTemplate(state: State, citizen: CitizenRef2, template: ITemplata): (Boolean) = {
         delegate.citizenIsFromTemplate(state, citizen, template)
       }
     }

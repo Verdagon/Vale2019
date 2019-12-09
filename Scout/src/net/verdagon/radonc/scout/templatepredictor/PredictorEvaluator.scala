@@ -2,7 +2,7 @@ package net.verdagon.radonc.scout.templatepredictor
 
 import net.verdagon.radonc.scout._
 import net.verdagon.radonc.scout.patterns.{AtomSP, PatternSUtils}
-import net.verdagon.radonc.scout.predictor.{Conclusions, PredictorEvaluateResult}
+import net.verdagon.radonc.scout.predictor.{Conclusions, ConclusionsBox}
 import net.verdagon.radonc.scout.rules._
 import net.verdagon.radonc.vfail
 
@@ -30,227 +30,214 @@ object PredictorEvaluator {
   }
 
   private[scout] def solve(
-    rules0: List[IRulexSR],
+    rules: List[IRulexSR],
     paramAtoms: List[AtomSP],
   ): Conclusions = {
-    solveUntilSettled(rules0, Conclusions(Set(), Map()))
+    val conclusionsBox = ConclusionsBox(Conclusions(Set(), Map()))
+    solveUntilSettled(rules, conclusionsBox)
+    conclusionsBox.conclusions
   }
 
   private def solveUntilSettled(
     rules: List[IRulexSR],
-    conclusions0: Conclusions,
-  ): Conclusions = {
-    val PredictorEvaluateResult(conclusions10, _) = evaluateRules(conclusions0, rules)
+    conclusions: ConclusionsBox,
+  ): Unit = {
+    val _ = evaluateRules(conclusions, rules)
 
-    if (conclusions0 != conclusions10) {
+    if (conclusions != conclusions) {
       // Things have not settled, we made some sort of progress in this last iteration.
       // Keep going.
-      solveUntilSettled(rules, conclusions10)
+      solveUntilSettled(rules, conclusions)
     } else {
       // No need to do one last match, because we just did an entire iteration where nothing changed.
-      conclusions10
+
     }
   }
 
-  private def evaluateRule(
-    conclusions0: Conclusions,
-    rule: IRulexSR,
-  ): PredictorEvaluateResult[Boolean] = {
+  private def evaluateRule(conclusions: ConclusionsBox, rule: IRulexSR): Boolean = {
     rule match {
-      case r @ EqualsSR(_, _) => evaluateEqualsRule(conclusions0, r)
-      case r @ IsaSR(_, _) => evaluateIsaRule(conclusions0, r)
-      case r @ OrSR(_) => evaluateOrRule(conclusions0, r)
-      case r @ ComponentsSR(_, _) => evaluateComponentsRule(conclusions0, r)
-      case r @ TypedSR(_, _) => evaluateTypedRule(conclusions0, r)
-      case TemplexSR(templex) => evaluateTemplex(conclusions0, templex)
-      case r @ CallSR(_, _) => evaluateRuleCall(conclusions0, r)
+      case r @ EqualsSR(_, _) => evaluateEqualsRule(conclusions, r)
+      case r @ IsaSR(_, _) => evaluateIsaRule(conclusions, r)
+      case r @ OrSR(_) => evaluateOrRule(conclusions, r)
+      case r @ ComponentsSR(_, _) => evaluateComponentsRule(conclusions, r)
+      case r @ TypedSR(_, _) => evaluateTypedRule(conclusions, r)
+      case TemplexSR(templex) => evaluateTemplex(conclusions, templex)
+      case r @ CallSR(_, _) => evaluateRuleCall(conclusions, r)
     }
   }
 
   private def evaluateRules(
-    conclusions0: Conclusions,
+    conclusions: ConclusionsBox,
     rules: List[IRulexSR],
-  ): PredictorEvaluateResult[List[Boolean]] = {
-    val initial = PredictorEvaluateResult[List[Boolean]](conclusions0, List())
-    rules.foldLeft(initial)({
-      case (PredictorEvaluateResult(conclusions1, previousKnowns), rule) => {
-        val PredictorEvaluateResult(conclusions2, known) = evaluateRule(conclusions1, rule)
-        PredictorEvaluateResult(conclusions2, previousKnowns :+ known)
-      }
-    })
+  ): List[Boolean] = {
+    rules.map(evaluateRule(conclusions, _))
   }
 
   private def evaluateRuleCall(
-    conclusions0: Conclusions,
+    conclusions: ConclusionsBox,
     ruleCall: CallSR,
-  ): PredictorEvaluateResult[Boolean] = {
+  ): Boolean = {
     val CallSR(name, argumentRules) = ruleCall
 
     name match {
       case "toRef" => {
         val List(kindRule) = argumentRules
-        evaluateRule(conclusions0, kindRule)
+        evaluateRule(conclusions, kindRule)
       }
       case "passThroughIfConcrete" => {
         val List(kindRule) = argumentRules
-        evaluateRule(conclusions0, kindRule)
+        evaluateRule(conclusions, kindRule)
       }
       case "passThroughIfStruct" => {
         val List(kindRule) = argumentRules
-        evaluateRule(conclusions0, kindRule)
+        evaluateRule(conclusions, kindRule)
       }
       case "passThroughIfInterface" => {
         val List(kindRule) = argumentRules
-        evaluateRule(conclusions0, kindRule)
+        evaluateRule(conclusions, kindRule)
       }
       case _ => vfail("Unknown function \"" + name + "\"!");
     }
   }
   private def evaluateTemplexes(
-    conclusions0: Conclusions,
+    conclusions: ConclusionsBox,
     ruleTemplexes: List[ITemplexS],
-  ): PredictorEvaluateResult[List[Boolean]] = {
-    val initial = List[Boolean]()
-    val (conclusions10, knowns) =
-      ruleTemplexes.foldLeft((conclusions0, initial))({
-        case ((conclusions2, previous), ruleTemplex) => {
-          val PredictorEvaluateResult(conclusions4, result) =
-            evaluateTemplex(conclusions2, ruleTemplex)
-          (conclusions4, previous :+ result)
+  ): List[Boolean] = {
+    val knowns =
+      ruleTemplexes.map({
+        case (ruleTemplex) => {
+          val result = evaluateTemplex(conclusions, ruleTemplex)
+          result
         }
       })
-    PredictorEvaluateResult(conclusions10, knowns)
+    knowns
   }
 
   private def evaluateTemplex(
-    conclusions0: Conclusions,
+    conclusions: ConclusionsBox,
     ruleTemplex: ITemplexS,
-  ): PredictorEvaluateResult[Boolean] = {
+  ): Boolean = {
     ruleTemplex match {
-      case IntST(_) => PredictorEvaluateResult(conclusions0, true)
-      case BoolST(_) => PredictorEvaluateResult(conclusions0, true)
-      case MutabilityST(_) => PredictorEvaluateResult(conclusions0, true)
-      case PermissionST(_) => PredictorEvaluateResult(conclusions0, true)
-      case LocationST(_) => PredictorEvaluateResult(conclusions0, true)
-      case OwnershipST(_) => PredictorEvaluateResult(conclusions0, true)
-      case VariabilityST(_) => PredictorEvaluateResult(conclusions0, true)
-      case NameST(_) => PredictorEvaluateResult(conclusions0, true)
-      case AnonymousRuneST() => PredictorEvaluateResult(conclusions0, false)
+      case IntST(_) => true
+      case BoolST(_) => true
+      case MutabilityST(_) => true
+      case PermissionST(_) => true
+      case LocationST(_) => true
+      case OwnershipST(_) => true
+      case VariabilityST(_) => true
+      case NameST(_) => true
+      case AnonymousRuneST() => false
       case RuneST(rune) => {
-        PredictorEvaluateResult(conclusions0, conclusions0.knowableValueRunes.contains(rune))
+        conclusions.knowableValueRunes.contains(rune)
       }
-      case OwnershippedST(_, kindRule) => evaluateTemplex(conclusions0, kindRule)
+      case OwnershippedST(_, kindRule) => evaluateTemplex(conclusions, kindRule)
       case CallST(templateRule, paramRules) => {
-        val PredictorEvaluateResult(conclusions2, templateKnown) =
-          evaluateTemplex(conclusions0, templateRule)
-        val PredictorEvaluateResult(conclusions4, argsKnown) =
-          evaluateTemplexes(conclusions2, paramRules)
-        PredictorEvaluateResult(conclusions4, templateKnown && argsKnown.forall(_ == true))
+        val templateKnown =
+          evaluateTemplex(conclusions, templateRule)
+        val argsKnown =
+          evaluateTemplexes(conclusions, paramRules)
+        templateKnown && argsKnown.forall(_ == true)
       }
       case PrototypeST(_, _, _) => {
         vfail("Unimplemented")
       }
       case PackST(memberTemplexes) => {
-        val PredictorEvaluateResult(conclusions4, membersKnown) =
-          evaluateTemplexes(conclusions0, memberTemplexes)
-        PredictorEvaluateResult(conclusions4, membersKnown.forall(_ == true))
+        val membersKnown =
+          evaluateTemplexes(conclusions, memberTemplexes)
+        membersKnown.forall(_ == true)
       }
       case RepeaterSequenceST(mutabilityTemplex, sizeTemplex, elementTemplex) => {
-        val PredictorEvaluateResult(conclusions1, mutabilityKnown) =
-          evaluateTemplex(conclusions0, mutabilityTemplex)
-        val PredictorEvaluateResult(conclusions2, sizeKnown) =
-          evaluateTemplex(conclusions1, sizeTemplex)
-        val PredictorEvaluateResult(conclusions4, elementKnown) =
-          evaluateTemplex(conclusions2, elementTemplex)
-        PredictorEvaluateResult(conclusions4, mutabilityKnown && sizeKnown && elementKnown)
+        val mutabilityKnown =
+          evaluateTemplex(conclusions, mutabilityTemplex)
+        val sizeKnown =
+          evaluateTemplex(conclusions, sizeTemplex)
+        val elementKnown =
+          evaluateTemplex(conclusions, elementTemplex)
+        mutabilityKnown && sizeKnown && elementKnown
       }
       case ManualSequenceST(elementsTemplexes) => {
-        val PredictorEvaluateResult(conclusions4, membersKnown) =
-          evaluateTemplexes(conclusions0, elementsTemplexes)
-        PredictorEvaluateResult(conclusions4, membersKnown.forall(_ == true))
+        val membersKnown =
+          evaluateTemplexes(conclusions, elementsTemplexes)
+        membersKnown.forall(_ == true)
       }
     }
   }
 
   private def evaluateTypedRule(
-    conclusions0: Conclusions,
+    conclusions: ConclusionsBox,
     rule: TypedSR):
-  PredictorEvaluateResult[Boolean] = {
+  Boolean = {
     val TypedSR(maybeRune, tyype) = rule
     maybeRune match {
-      case None => PredictorEvaluateResult(conclusions0, false)
+      case None => false
       case Some(rune) => {
-        val conclusions1 = conclusions0.markRuneTypeKnown(rune, tyype)
-        PredictorEvaluateResult(
-          conclusions1,
-          conclusions1.knowableValueRunes.contains(rune))
+        conclusions.markRuneTypeKnown(rune, tyype)
+        conclusions.knowableValueRunes.contains(rune)
       }
     }
   }
 
   private def evaluateEqualsRule(
-    conclusions0: Conclusions,
+    conclusions: ConclusionsBox,
     rule: EqualsSR,
-  ): PredictorEvaluateResult[Boolean] = {
+  ): Boolean = {
     val EqualsSR(leftRule, rightRule) = rule
 
-    val PredictorEvaluateResult(conclusions1, leftKnown) =
-      evaluateRule(conclusions0, leftRule)
-    val PredictorEvaluateResult(conclusions2, rightKnown) =
-      evaluateRule(conclusions1, rightRule)
+    val leftKnown =
+      evaluateRule(conclusions, leftRule)
+    val rightKnown =
+      evaluateRule(conclusions, rightRule)
     if (!leftKnown && !rightKnown) {
-      PredictorEvaluateResult(conclusions2, false)
+      false
     } else {
-      val conclusions10 =
-        PredictorMatcher.matchAgainstRulexSR(conclusions2, leftRule)
-      val conclusions20 =
-        PredictorMatcher.matchAgainstRulexSR(conclusions10, rightRule)
-      PredictorEvaluateResult(conclusions20, true)
+      PredictorMatcher.matchAgainstRulexSR(conclusions, leftRule)
+      PredictorMatcher.matchAgainstRulexSR(conclusions, rightRule)
+      true
     }
   }
 
   private def evaluateIsaRule(
-    conclusions0: Conclusions,
+    conclusions: ConclusionsBox,
     rule: IsaSR,
-  ): PredictorEvaluateResult[Boolean] = {
+  ): Boolean = {
     val IsaSR(leftRule, rightRule) = rule
 
-    val PredictorEvaluateResult(conclusions1, leftKnown) =
-      evaluateRule(conclusions0, leftRule)
-    val PredictorEvaluateResult(conclusions2, rightKnown) =
-      evaluateRule(conclusions1, rightRule)
+    val leftKnown =
+      evaluateRule(conclusions, leftRule)
+    val rightKnown =
+      evaluateRule(conclusions, rightRule)
 
     // Knowing the right rule doesn't really help us with anything, unfortunately...
-    val (_) = rightKnown
+    val _ = rightKnown
 
     // We return the left thing for the rule, so if we know the left thing, we know the result of the rule.
-    PredictorEvaluateResult(conclusions2, leftKnown)
+    leftKnown
   }
 
   private def evaluateOrRule(
-    conclusions0: Conclusions,
+    conclusions: ConclusionsBox,
     rule: OrSR
-  ): PredictorEvaluateResult[Boolean] = {
-    val PredictorEvaluateResult(conclusions1, possibilitiesKnowns) =
-      evaluateRules(conclusions0, rule.alternatives)
+  ): Boolean = {
+    val possibilitiesKnowns =
+      evaluateRules(conclusions, rule.alternatives)
     println("is this right?")
     // Just took a guess, really. Maybe we return true if one is known?
-    PredictorEvaluateResult(conclusions1, possibilitiesKnowns.forall(_ == true))
+    possibilitiesKnowns.forall(_ == true)
   }
 
   private def evaluateComponentsRule(
-    conclusions0: Conclusions,
+    conclusions: ConclusionsBox,
     rule: ComponentsSR,
-  ): PredictorEvaluateResult[Boolean] = {
+  ): Boolean = {
     val ComponentsSR(typedRule, componentsRules) = rule
 
-    val PredictorEvaluateResult(conclusions2, runeKnown) =
-      evaluateRule(conclusions0, typedRule)
+    val runeKnown =
+      evaluateRule(conclusions, typedRule)
 
-    val PredictorEvaluateResult(conclusions10, componentsKnown) =
-      evaluateRules(conclusions2, componentsRules)
+    val componentsKnown =
+      evaluateRules(conclusions, componentsRules)
     val allComponentsKnown = componentsKnown.forall(_ == true)
 
-    PredictorEvaluateResult(conclusions10, runeKnown || allComponentsKnown)
+    runeKnown || allComponentsKnown
   }
 }

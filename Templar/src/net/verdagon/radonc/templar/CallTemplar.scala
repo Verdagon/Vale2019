@@ -19,23 +19,23 @@ object CallTemplar {
   val DESTRUCTOR_NAME = "destructor"
 
   private def evaluateCall(
-      temputs0: Temputs,
+      temputs: TemputsBox,
       fate0: FunctionEnvironment,
       callableExpr: ReferenceExpression2,
       explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
       givenArgsExprs2: List[ReferenceExpression2]):
-  (Temputs, FunctionEnvironment, FunctionPointerCall2) = {
+  (FunctionEnvironment, FunctionPointerCall2) = {
     callableExpr.resultRegister.reference.referend match {
       case Never2() | Bool2() => {
         vfail("wot " + callableExpr.resultRegister.reference.referend)
       }
       case structRef @ StructRef2(_) => {
         evaluateClosureCall(
-          fate0, temputs0, structRef, explicitlySpecifiedTemplateArgTemplexesS, callableExpr, givenArgsExprs2)
+          fate0, temputs, structRef, explicitlySpecifiedTemplateArgTemplexesS, callableExpr, givenArgsExprs2)
       }
       case interfaceRef @ InterfaceRef2(_) => {
         evaluateClosureCall(
-          fate0, temputs0, interfaceRef, explicitlySpecifiedTemplateArgTemplexesS, callableExpr, givenArgsExprs2)
+          fate0, temputs, interfaceRef, explicitlySpecifiedTemplateArgTemplexesS, callableExpr, givenArgsExprs2)
       }
       case OverloadSet(_, functionName, _) => {
         val unconvertedArgsPointerTypes2 =
@@ -50,54 +50,54 @@ object CallTemplar {
             ParamFilter(unconvertedArgsPointerType2, None)
           })
 
-        val (temputs2, prototype) =
+        val prototype =
           OverloadTemplar.scoutExpectedFunctionForPrototype(
               fate0,
-              temputs0,
+              temputs,
               functionName,
               explicitlySpecifiedTemplateArgTemplexesS,
               argsParamFilters,
               exact = false) match {
-            case (_, seff @ ScoutExpectedFunctionFailure(_, _, _, _, _)) => {
+            case (seff @ ScoutExpectedFunctionFailure(_, _, _, _, _)) => {
               vfail("Couldn't find function to call!\n" + seff.toString)
             }
-            case (temputs1, ScoutExpectedFunctionSuccess(p)) => (temputs1, p)
+            case (ScoutExpectedFunctionSuccess(p)) => (p)
           }
-        val (temputs3, argsExprs2) =
+        val argsExprs2 =
           TypeTemplar.convertExprs(
-            fate0, temputs2, givenArgsExprs2, prototype.functionType.paramTypes)
+            fate0, temputs, givenArgsExprs2, prototype.functionType.paramTypes)
 
         CallTemplar.checkTypes(
-          temputs2,
+          temputs,
           prototype.functionType.paramTypes,
           argsExprs2.map(a => a.resultRegister.reference),
           exact = true)
 
-        (temputs3, fate0, FunctionPointerCall2(FunctionLookup2(prototype), argsExprs2))
+        (fate0, FunctionPointerCall2(FunctionLookup2(prototype), argsExprs2))
       }
       case ft @ FunctionT2(_, _) => {
-        val (temputs10, argsExprs2) =
+        val argsExprs2 =
           TypeTemplar.convertExprs(
-            fate0, temputs0, givenArgsExprs2, ft.paramTypes)
+            fate0, temputs, givenArgsExprs2, ft.paramTypes)
 
         val argsPointerTypes2 = argsExprs2.map(_.resultRegister.expectReference().reference)
 
         val callableType = callableExpr.resultRegister.reference.referend.asInstanceOf[FunctionT2]
 
-        checkTypes(temputs0, callableType.paramTypes, argsPointerTypes2, exact = true);
+        checkTypes(temputs, callableType.paramTypes, argsPointerTypes2, exact = true);
 
-        (temputs10, fate0, FunctionPointerCall2(callableExpr, argsExprs2))
+        (fate0, FunctionPointerCall2(callableExpr, argsExprs2))
       }
     }
   }
 
   private def evaluateNamedCall(
-    temputs0: Temputs,
+    temputs: TemputsBox,
     fate0: FunctionEnvironment,
     functionName: String,
     explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
     givenArgsExprs2: List[ReferenceExpression2]):
-  (Temputs, FunctionEnvironment, FunctionPointerCall2) = {
+  (FunctionEnvironment, FunctionPointerCall2) = {
     val unconvertedArgsPointerTypes2 =
       givenArgsExprs2.map(_.resultRegister.expectReference().reference)
 
@@ -110,30 +110,30 @@ object CallTemplar {
         ParamFilter(unconvertedArgsPointerType2, None)
       })
 
-    val (temputs2, prototype) =
+    val prototype =
       OverloadTemplar.scoutExpectedFunctionForPrototype(
         fate0,
-        temputs0,
+        temputs,
         functionName,
         explicitlySpecifiedTemplateArgTemplexesS,
         argsParamFilters,
         exact = false) match {
-        case (_, seff @ ScoutExpectedFunctionFailure(_, _, _, _, _)) => {
+        case (seff @ ScoutExpectedFunctionFailure(_, _, _, _, _)) => {
           vfail("Couldn't find function to call!\n" + seff.toString)
         }
-        case (temputs1, ScoutExpectedFunctionSuccess(p)) => (temputs1, p)
+        case (ScoutExpectedFunctionSuccess(p)) => (p)
       }
-    val (temputs3, argsExprs2) =
+    val argsExprs2 =
       TypeTemplar.convertExprs(
-        fate0, temputs2, givenArgsExprs2, prototype.functionType.paramTypes)
+        fate0, temputs, givenArgsExprs2, prototype.functionType.paramTypes)
 
     CallTemplar.checkTypes(
-      temputs2,
+      temputs,
       prototype.functionType.paramTypes,
       argsExprs2.map(a => a.resultRegister.reference),
       exact = true)
 
-    (temputs3, fate0, FunctionPointerCall2(FunctionLookup2(prototype), argsExprs2))
+    (fate0, FunctionPointerCall2(FunctionLookup2(prototype), argsExprs2))
   }
 
 
@@ -152,25 +152,25 @@ object CallTemplar {
 
   private def evaluateClosureCall(
       fate0: FunctionEnvironment,
-      temputs0: Temputs,
+      temputs: TemputsBox,
       citizenRef: CitizenRef2,
       explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
       givenCallableUnborrowedExpr2: ReferenceExpression2,
       givenArgsExprs2: List[ReferenceExpression2]):
-      (Temputs, FunctionEnvironment, FunctionPointerCall2) = {
+      (FunctionEnvironment, FunctionPointerCall2) = {
     val env =
       citizenRef match {
-        case sr @ StructRef2(_) => temputs0.envByStructRef(sr)
-        case ir @ InterfaceRef2(_) => temputs0.envByInterfaceRef(ir)
+        case sr @ StructRef2(_) => temputs.envByStructRef(sr)
+        case ir @ InterfaceRef2(_) => temputs.envByInterfaceRef(ir)
       }
 
     val argsTypes2 = givenArgsExprs2.map(_.resultRegister.reference)
     val paramFilters =
-      ParamFilter(TemplataTemplar.pointifyReferend(temputs0, citizenRef, Borrow), None) ::
+      ParamFilter(TemplataTemplar.pointifyReferend(temputs, citizenRef, Borrow), None) ::
         argsTypes2.map(argType => ParamFilter(argType, None))
-    val (temputs20, maybePrototype, outscoredReasonByPotentialBanner, rejectedReasonByBanner, rejectedReasonByFunctionS) =
+    val (maybePrototype, outscoredReasonByPotentialBanner, rejectedReasonByBanner, rejectedReasonByFunctionS) =
       OverloadTemplar.scoutMaybeFunctionForPrototype(
-        env, temputs0, CallTemplar.CALL_FUNCTION_NAME, explicitlySpecifiedTemplateArgTemplexesS, paramFilters, false)
+        env, temputs, CallTemplar.CALL_FUNCTION_NAME, explicitlySpecifiedTemplateArgTemplexesS, paramFilters, false)
     val prototype2 =
       maybePrototype match {
         case None => {
@@ -196,17 +196,17 @@ object CallTemplar {
       }
 
     // Whether we're given a borrow or an own, the call itself will be given a borrow.
-    val (temputs21, fate1, givenCallableBorrowExpr2) =
+    val (fate1, givenCallableBorrowExpr2) =
       givenCallableUnborrowedExpr2.resultRegister.reference match {
-        case Coord(Borrow, _) => (temputs20, fate0, givenCallableUnborrowedExpr2)
-        case Coord(Share, _) => (temputs20, fate0, givenCallableUnborrowedExpr2)
-        case Coord(Raw, _) => (temputs20, fate0, givenCallableUnborrowedExpr2)
+        case Coord(Borrow, _) => (fate0, givenCallableUnborrowedExpr2)
+        case Coord(Share, _) => (fate0, givenCallableUnborrowedExpr2)
+        case Coord(Raw, _) => (fate0, givenCallableUnborrowedExpr2)
         case Coord(Own, _) => {
-          ExpressionTemplar.makeTemporaryLocal(temputs20, fate0, givenCallableUnborrowedExpr2)
+          ExpressionTemplar.makeTemporaryLocal(temputs, fate0, givenCallableUnborrowedExpr2)
         }
       }
 
-    val mutability = Templar.getMutability(temputs21, citizenRef)
+    val mutability = Templar.getMutability(temputs, citizenRef)
     val ownership = if (mutability == Mutable) Borrow else Share
     val actualCallableExpr2 =
       TemplarReinterpret2(givenCallableBorrowExpr2, Coord(ownership, citizenRef))
@@ -218,34 +218,33 @@ object CallTemplar {
       vfail("arg param type mismatch. params: " + prototype2.functionType.paramTypes + " args: " + argTypes)
     }
 
-    CallTemplar.checkTypes(temputs21, prototype2.functionType.paramTypes, argTypes, exact = true)
+    CallTemplar.checkTypes(temputs, prototype2.functionType.paramTypes, argTypes, exact = true)
 
     val resultingExpr2 = FunctionPointerCall2(FunctionLookup2(prototype2), actualArgsExprs2);
 
-    (temputs21, fate1, resultingExpr2)
+    (fate1, resultingExpr2)
   }
 
 
   def checkTypes(
-    temputs0: Temputs,
+    temputs: TemputsBox,
     params: List[Coord],
     args: List[Coord],
     exact: Boolean):
-  Temputs = {
+  Unit = {
     vassert(params.size == args.size)
     (params, args) match {
-      case (Nil, Nil) => temputs0
+      case (Nil, Nil) =>
       case (paramsHead :: paramsTail, argsHead :: argsTail) => {
-        val temputs2 =
           if (paramsHead == argsHead) {
-            temputs0
+
           } else {
             if (!exact) {
-              TemplataTemplar.isTypeConvertible(temputs0, argsHead, paramsHead) match {
-                case (temputs1, true) => {
-                  temputs1
+              TemplataTemplar.isTypeConvertible(temputs, argsHead, paramsHead) match {
+                case (true) => {
+
                 }
-                case (_, false) => {
+                case (false) => {
                   // do stuff here.
                   // also there is one special case here, which is when we try to hand in
                   // an owning when they just want a borrow, gotta account for that here
@@ -260,7 +259,7 @@ object CallTemplar {
             }
           }
         // It matches! Now check the rest.
-        checkTypes(temputs2, paramsTail, argsTail, exact)
+        checkTypes(temputs, paramsTail, argsTail, exact)
       }
       case _ => vfail("wat")
     }
@@ -269,46 +268,46 @@ object CallTemplar {
   }
 
   def evaluatePrefixCall(
-      temputs0: Temputs,
+      temputs: TemputsBox,
       fate0: FunctionEnvironment,
       callableExpr2: Expression2,
       explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
       argsExpr2: Expression2):
-  (Temputs, FunctionEnvironment, FunctionPointerCall2) = {
+  (FunctionEnvironment, FunctionPointerCall2) = {
     val (fate1, callableReferenceExpr2) =
       ExpressionTemplar.coerceToReferenceExpression(fate0, callableExpr2)
     val (fate2, argsRefExpr2) =
       ExpressionTemplar.coerceToReferenceExpression(fate1, argsExpr2);
-//    val (temputs1, flattenedArgsExprs) =
-//      PackTemplar.flatten(temputs0, List(argsReferenceExprs2));
+//    val flattenedArgsExprs =
+//      PackTemplar.flatten(temputs, List(argsReferenceExprs2));
     val unpackedArgsExprs =
       argsRefExpr2 match {
         case PackE2(exprs, _, _) => exprs
         case other => List(other)
       }
-    val (temputs3, fate3, callExpr) =
-      evaluateCall(temputs0, fate2, callableReferenceExpr2, explicitlySpecifiedTemplateArgTemplexesS, unpackedArgsExprs)
-    (temputs3, fate3, callExpr)
+    val (fate3, callExpr) =
+      evaluateCall(temputs, fate2, callableReferenceExpr2, explicitlySpecifiedTemplateArgTemplexesS, unpackedArgsExprs)
+    (fate3, callExpr)
   }
 
   def evaluateNamedPrefixCall(
-    temputs0: Temputs,
+    temputs: TemputsBox,
     fate0: FunctionEnvironment,
     functionName: String,
     explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
     argsExpr2: Expression2):
-  (Temputs, FunctionEnvironment, FunctionPointerCall2) = {
+  (FunctionEnvironment, FunctionPointerCall2) = {
     val (fate2, argsRefExpr2) =
       ExpressionTemplar.coerceToReferenceExpression(fate0, argsExpr2);
-    //    val (temputs1, flattenedArgsExprs) =
-    //      PackTemplar.flatten(temputs0, List(argsReferenceExprs2));
+    //    val flattenedArgsExprs =
+    //      PackTemplar.flatten(temputs, List(argsReferenceExprs2));
     val unpackedArgsExprs =
     argsRefExpr2 match {
       case PackE2(exprs, _, _) => exprs
       case other => List(other)
     }
-    val (temputs3, fate3, callExpr) =
-      evaluateNamedCall(temputs0, fate2, functionName, explicitlySpecifiedTemplateArgTemplexesS, unpackedArgsExprs)
-    (temputs3, fate3, callExpr)
+    val (fate3, callExpr) =
+      evaluateNamedCall(temputs, fate2, functionName, explicitlySpecifiedTemplateArgTemplexesS, unpackedArgsExprs)
+    (fate3, callExpr)
   }
 }
