@@ -138,6 +138,80 @@ case class FunctionEnvironment(
   // No particular reason we don't have an addFunction like NamespaceEnvironment does
 }
 
+case class FunctionEnvironmentBox(var functionEnvironment: FunctionEnvironment) extends IEnvironmentBox {
+  override def snapshot: FunctionEnvironment = functionEnvironment
+  def parentEnv: IEnvironment = functionEnvironment.parentEnv
+  def fullName: FullName2 = functionEnvironment.fullName
+  def function: FunctionA = functionEnvironment.function
+  def entries: Map[String, List[IEnvEntry]] = functionEnvironment.entries
+  def maybeReturnType: Option[Coord] = functionEnvironment.maybeReturnType
+  def scoutedLocals: Set[LocalVariable1] = functionEnvironment.scoutedLocals
+  def varCounter: Int = functionEnvironment.varCounter
+  def variables: List[IVariable2] = functionEnvironment.variables
+  def moveds: Set[VariableId2] = functionEnvironment.moveds
+  override def globalEnv: NamespaceEnvironment = parentEnv.globalEnv
+
+  def setReturnType(returnType: Option[Coord]): Unit = {
+    functionEnvironment = functionEnvironment.copy(maybeReturnType = returnType)
+  }
+
+  def setFullName(fullName: FullName2): Unit = {
+    functionEnvironment = functionEnvironment.copy(fullName = fullName)
+  }
+
+  def addScoutedLocals(newScoutedLocals: Set[LocalVariable1]): Unit = {
+    functionEnvironment = functionEnvironment.addScoutedLocals(newScoutedLocals)
+  }
+  def addVariables(newVars: List[IVariable2]): Unit= {
+    functionEnvironment = functionEnvironment.addVariables(newVars)
+  }
+  def addVariable(newVar: IVariable2): Unit= {
+    functionEnvironment = functionEnvironment.addVariable(newVar)
+  }
+  def markVariablesMoved(newMoveds: Set[VariableId2]): Unit= {
+    functionEnvironment = functionEnvironment.markVariablesMoved(newMoveds)
+  }
+  def markVariableMoved(newMoved: VariableId2): Unit= {
+    functionEnvironment = functionEnvironment.markVariableMoved(newMoved)
+  }
+  def nextVarCounter(): Int = {
+    val (newFunctionEnvironment, varCounter) = functionEnvironment.nextVarCounter()
+    functionEnvironment = newFunctionEnvironment
+    varCounter
+  }
+  // n is how many values to get
+  def nextCounters(n: Int): List[Int] = {
+    val (newFunctionEnvironment, counters) = functionEnvironment.nextCounters(n)
+    functionEnvironment = newFunctionEnvironment
+    counters
+  }
+
+  def addEntry(name: String, entry: IEnvEntry): Unit = {
+    functionEnvironment = functionEnvironment.addEntry(name, entry)
+  }
+  def addEntries(newEntries: Map[String, List[IEnvEntry]]): Unit= {
+    functionEnvironment = functionEnvironment.addEntries(newEntries)
+  }
+
+  override def getAllTemplatasWithName(name: String, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
+    functionEnvironment.getAllTemplatasWithName(name, lookupFilter)
+  }
+
+  override def getNearestTemplataWithName(name: String, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
+    functionEnvironment.getNearestTemplataWithName(name, lookupFilter)
+  }
+
+  def getVariable(name: String): Option[IVariable2] = {
+    functionEnvironment.getVariable(name)
+  }
+
+  def getAllLiveLocals(): List[ILocalVariable2] = {
+    functionEnvironment.getAllLiveLocals()
+  }
+
+  // No particular reason we don't have an addFunction like NamespaceEnvironment does
+}
+
 case class VariableId2(
   lambdaNumber: Int,
   variableName: String) extends Queriable2 {

@@ -4,7 +4,7 @@ import net.verdagon.radonc.astronomer.{ITemplataType, ITemplexA, TemplateTemplat
 import net.verdagon.radonc.scout._
 import net.verdagon.radonc.templar._
 import net.verdagon.radonc.templar.citizen.{ImplTemplar, StructTemplar}
-import net.verdagon.radonc.templar.env.{IEnvironment, TemplataLookupContext}
+import net.verdagon.radonc.templar.env.{IEnvironment, IEnvironmentBox, TemplataLookupContext}
 import net.verdagon.radonc.{vassertSome, vfail}
 import net.verdagon.radonc.templar.types._
 import net.verdagon.radonc.templar.templata._
@@ -60,7 +60,7 @@ object TemplataTemplar {
 
 //
 //  def lookupTemplata(
-//    env: IEnvironment,
+//    env: IEnvironmentBox,
 //    temputs: TemputsBox,
 //    name: String
 //  ): (Option[ITemplata]) = {
@@ -80,7 +80,7 @@ object TemplataTemplar {
 //  }
 //
 //  private def lookupTemplataFromGlobalEnv(
-//    env: IEnvironment,
+//    env: IEnvironmentBox,
 //    temputs: TemputsBox,
 //    name: String
 //  ): (Option[ITemplata]) = {

@@ -3,7 +3,7 @@ package net.verdagon.radonc.templar
 import net.verdagon.radonc._
 import net.verdagon.radonc.astronomer.ITemplexA
 import net.verdagon.radonc.templar.citizen.{ImplTemplar, StructTemplar}
-import net.verdagon.radonc.templar.env.IEnvironment
+import net.verdagon.radonc.templar.env.{IEnvironment, IEnvironmentBox}
 import net.verdagon.radonc.templar.templata._
 import net.verdagon.radonc.templar.types._
 

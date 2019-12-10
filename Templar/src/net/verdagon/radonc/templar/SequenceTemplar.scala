@@ -3,13 +3,13 @@ package net.verdagon.radonc.templar
 import net.verdagon.radonc.templar.types._
 import net.verdagon.radonc.templar.templata._
 import net.verdagon.radonc.templar.citizen.{StructTemplar, StructTemplarCore}
-import net.verdagon.radonc.templar.env.{FunctionEnvironment, IEnvironment, NamespaceEnvironment}
+import net.verdagon.radonc.templar.env.{FunctionEnvironment, FunctionEnvironmentBox, IEnvironment, NamespaceEnvironment}
 import net.verdagon.radonc.templar.function.{DestructorTemplar, FunctionTemplar}
 import net.verdagon.radonc.vassert
 
 object SequenceTemplar {
   def evaluate(
-    env: FunctionEnvironment,
+    env: FunctionEnvironmentBox,
     temputs: TemputsBox,
     exprs2: List[ReferenceExpression2]):
   (Expression2) = {
@@ -19,7 +19,7 @@ object SequenceTemplar {
       val memberType = types2.toSet.head
       // Theyre all the same type, so make it an array.
       val mutability = StructTemplarCore.getCompoundTypeMutability(temputs, List(memberType))
-      val arraySequenceType = ArrayTemplar.makeArraySequenceType(env, temputs, mutability, types2.size, memberType)
+      val arraySequenceType = ArrayTemplar.makeArraySequenceType(env.snapshot, temputs, mutability, types2.size, memberType)
       val ownership = if (arraySequenceType.array.mutability == Mutable) Own else Share
       val finalExpr = ArraySequenceE2(exprs2, Coord(ownership, arraySequenceType), arraySequenceType)
       (finalExpr)

@@ -19,6 +19,17 @@ trait IEnvironment {
   def fullName: FullName2
 }
 
+trait IEnvironmentBox {
+  def snapshot: IEnvironment
+  override def toString: String = {
+    "#Environment"
+  }
+  def globalEnv: NamespaceEnvironment
+  def getAllTemplatasWithName(name: String, lookupFilter: Set[ILookupContext]): List[ITemplata]
+  def getNearestTemplataWithName(name: String, lookupFilter: Set[ILookupContext]): Option[ITemplata]
+  def fullName: FullName2
+}
+
 sealed trait ILookupContext
 case object TemplataLookupContext extends ILookupContext
 case object ExpressionLookupContext extends ILookupContext

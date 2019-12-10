@@ -5,7 +5,7 @@ import net.verdagon.radonc.templar.types._
 import net.verdagon.radonc.templar.templata._
 import net.verdagon.radonc.templar.OverloadTemplar.{ScoutExpectedFunctionFailure, ScoutExpectedFunctionSuccess}
 import net.verdagon.radonc.templar._
-import net.verdagon.radonc.templar.env.{FunctionEnvironment, IEnvironment, ReferenceLocalVariable2, VariableId2}
+import net.verdagon.radonc.templar.env._
 import net.verdagon.radonc.{vassert, vfail, vimpl}
 
 object DestructorTemplar {
@@ -92,15 +92,14 @@ object DestructorTemplar {
   }
 
   def generateDropFunction(
-    innerEnv: FunctionEnvironment,
+    innerEnv: FunctionEnvironmentBox,
     temputs: TemputsBox,
     originFunction1: FunctionA,
     type2: Coord):
   (FunctionHeader2) = {
-    val fateA = innerEnv
-    val (fateB, dropExpr2) =
+    val dropExpr2 =
       DestructorTemplar.drop(
-        fateA,
+        innerEnv,
         temputs,
         ArgLookup2(0, type2))
     val header =
@@ -120,11 +119,11 @@ object DestructorTemplar {
   }
 
   def drop(
-      fate0: FunctionEnvironment,
+      fate: FunctionEnvironmentBox,
       temputs: TemputsBox,
       undestructedExpr2: ReferenceExpression2):
-  (FunctionEnvironment, ReferenceExpression2) = {
-    val (fateX, resultExpr2) =
+  (ReferenceExpression2) = {
+    val (resultExpr2) =
       undestructedExpr2.resultRegister.reference match {
         case Coord(Raw, _) => {
           undestructedExpr2.resultRegister.reference.referend match {
@@ -134,37 +133,37 @@ object DestructorTemplar {
               vfail("wat")
             }
           }
-          (fate0, undestructedExpr2)
+          (undestructedExpr2)
         }
         case r @ Coord(Own, referend) => {
           val destructorPrototype =
             referend match {
               case PackT2(_, understructRef) => {
-                getCitizenDestructor(fate0, temputs, Coord(Own, understructRef))
+                getCitizenDestructor(fate.snapshot, temputs, Coord(Own, understructRef))
               }
               case StructRef2(_) | InterfaceRef2(_) => {
-                getCitizenDestructor(fate0, temputs, r)
+                getCitizenDestructor(fate.snapshot, temputs, r)
               }
               case ArraySequenceT2(_, _) | UnknownSizeArrayT2(_) => {
-                getArrayDestructor(fate0, temputs, r)
+                getArrayDestructor(fate.snapshot, temputs, r)
               }
             }
-          val (fate2, destructExpr2) =
+          val (destructExpr2) =
             CallTemplar.evaluatePrefixCall(
               temputs,
-              fate0,
+              fate,
               FunctionLookup2(destructorPrototype),
               List(),
               undestructedExpr2)
           vassert(destructExpr2.resultRegister.reference.referend == Void2())
-          (fate2, destructExpr2)
+          (destructExpr2)
         }
-        case Coord(Borrow, _) => (fate0, Discard2(undestructedExpr2))
+        case Coord(Borrow, _) => (Discard2(undestructedExpr2))
         case Coord(Share, _) => {
           val destroySharedCitizen =
             (temputs: TemputsBox, Coord: Coord) => {
               val destructorHeader =
-                getCitizenDestructor(fate0, temputs, Coord)
+                getCitizenDestructor(fate.snapshot, temputs, Coord)
               // We just needed to ensure it's in the temputs, so that the backend can use it
               // for when reference counts drop to zero.
               // If/when we have a GC backend, we can skip generating share destructors.
@@ -174,7 +173,7 @@ object DestructorTemplar {
           val destroySharedArray =
             (temputs: TemputsBox, Coord: Coord) => {
               val destructorHeader =
-                getArrayDestructor(fate0, temputs, Coord)
+                getArrayDestructor(fate.snapshot, temputs, Coord)
               // We just needed to ensure it's in the temputs, so that the backend can use it
               // for when reference counts drop to zero.
               // If/when we have a GC backend, we can skip generating share destructors.
@@ -216,23 +215,23 @@ object DestructorTemplar {
                 destroySharedCitizen(temputs, undestructedExpr2.resultRegister.reference)
               }
             }
-          (fate0, unshareExpr2)
+          (unshareExpr2)
         }
       }
     vassert(
       resultExpr2.resultRegister.reference == Coord(Raw, Void2()) ||
       resultExpr2.resultRegister.reference == Coord(Raw, Never2()))
-    (fateX, resultExpr2)
+    (resultExpr2)
   }
 
   def generateStructDestructor(
-      innerEnv: FunctionEnvironment,
+      innerEnv: FunctionEnvironmentBox,
       temputs: TemputsBox,
       originFunction1: FunctionA,
       params2: List[Parameter2],
       structRef: StructRef2):
   (FunctionHeader2) = {
-    val fate0 = innerEnv
+    innerEnv
 
     val destructorFullName = innerEnv.fullName
 
@@ -267,16 +266,15 @@ object DestructorTemplar {
       })
 
     val destroyedUnletStruct = Destructure2(structArgument, structRef, memberLocalVariables)
-    val (fate4, destructMemberExprs) =
-      memberLocalVariables.foldLeft((fate0, List[ReferenceExpression2]()))({
-        case ((fate2, previousDestructMemberExprs), variable) => {
-          val (fate3, destructMemberExpr) =
-            drop(fate2, temputs, Unlet2(variable))
-          (fate3, previousDestructMemberExprs :+ destructMemberExpr)
+    val (destructMemberExprs) =
+      memberLocalVariables.map({
+        case (variable) => {
+          val (destructMemberExpr) = drop(innerEnv, temputs, Unlet2(variable))
+          destructMemberExpr
         }
       })
 
-    val _ = fate4
+    val _ = innerEnv
 
     val voidLiteral = VoidLiteral2()
 

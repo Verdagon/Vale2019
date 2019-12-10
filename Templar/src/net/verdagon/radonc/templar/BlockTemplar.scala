@@ -13,47 +13,52 @@ object BlockTemplar {
   // This is just for the simplest kind of block.
   // This can serve as an example for how we can use together all the tools provided by BlockTemplar.
   def evaluateBlock(
-    parentFate: FunctionEnvironment,
+    parentFate: FunctionEnvironmentBox,
     temputs: TemputsBox,
     block1: BlockAE):
-  (FunctionEnvironment, Block2, Set[Coord]) = {
-
+  (Block2, Set[Coord]) = {
     val newCounter = 1
-    val fate0 = FunctionEnvironment(parentFate, parentFate.fullName, parentFate.function, Map(), parentFate.maybeReturnType, Set(), newCounter, List(), Set())
+    val fate =
+      FunctionEnvironmentBox(
+        FunctionEnvironment(
+          parentFate.snapshot, parentFate.fullName, parentFate.function, Map(), parentFate.maybeReturnType, Set(), newCounter, List(), Set()))
+    val startingFate = fate.snapshot
 
-    val fate1 = fate0.addScoutedLocals(block1.locals)
 
-    val (fate2, unresultifiedUndestructedExpressions, returnsFromExprs) =
-      evaluateBlockStatements(temputs, fate1, block1.exprs);
+      fate.addScoutedLocals(block1.locals)
 
-    val (fate6, undestructedExpressions, maybeResultLocalVariable) =
-      resultifyExpressions(fate2, unresultifiedUndestructedExpressions)
+    val (unresultifiedUndestructedExpressions, returnsFromExprs) =
+      evaluateBlockStatements(temputs, fate, block1.exprs);
 
-    val (fate7, expressions) =
-      unletUnmovedVariablesIntroducedSince(temputs, fate0, fate6, maybeResultLocalVariable, undestructedExpressions)
+    val (undestructedExpressions, maybeResultLocalVariable) =
+      resultifyExpressions(fate, unresultifiedUndestructedExpressions)
 
-    val (fate9, expressionsWithResult) =
-      maybeAddUnlet(fate7, expressions, maybeResultLocalVariable)
+    val (expressions) =
+      unletUnmovedVariablesIntroducedSince(temputs, startingFate, fate, maybeResultLocalVariable, undestructedExpressions)
+
+    val (expressionsWithResult) =
+      maybeAddUnlet(fate, expressions, maybeResultLocalVariable)
 
     val block2 = Block2(expressionsWithResult)
 
     // We don't just use the old parentFate because this one might have had moveds added to it.
-    val newParentFate @ FunctionEnvironment(_, _, _, _, _, _, _, _, _) = fate9.parentEnv
+    val newParentFate @ FunctionEnvironment(_, _, _, _, _, _, _, _, _) = fate.parentEnv
+    parentFate.functionEnvironment = newParentFate
 
-    (newParentFate, block2, returnsFromExprs)
+    (block2, returnsFromExprs)
   }
 
   def maybeAddUnlet(
-    fate0: FunctionEnvironment,
+    fate: FunctionEnvironmentBox,
     exprs: List[ReferenceExpression2],
     maybeVar: Option[ILocalVariable2]):
-  (FunctionEnvironment, List[ReferenceExpression2]) = {
+  (List[ReferenceExpression2]) = {
     maybeVar match {
-      case None => (fate0, exprs)
+      case None => (exprs)
       case Some(resultLocalVariable) => {
-        val (fate8, getResultExpr) =
-          ExpressionTemplar.unletLocal(fate0, resultLocalVariable)
-        (fate8, exprs :+ getResultExpr)
+        val (getResultExpr) =
+          ExpressionTemplar.unletLocal(fate, resultLocalVariable)
+        (exprs :+ getResultExpr)
       }
     }
   }
@@ -61,10 +66,10 @@ object BlockTemplar {
   def unletUnmovedVariablesIntroducedSince(
     temputs: TemputsBox,
     sinceFate: FunctionEnvironment,
-    currentFate: FunctionEnvironment,
+    currentFate: FunctionEnvironmentBox,
     maybeExcludeVar: Option[ILocalVariable2],
     exprs: List[ReferenceExpression2]):
-  (FunctionEnvironment,List[ReferenceExpression2]) = {
+  List[ReferenceExpression2] = {
     val localsAsOfThen =
       sinceFate.variables.collect({
         case x @ ReferenceLocalVariable2(_, _, _) => x
@@ -90,27 +95,27 @@ object BlockTemplar {
 
     val reversedVariablesToDestruct = unreversedVariablesToDestruct.reverse
     // Dealiasing should be done by hammer. But destructors are done here
-    val (newFate, destructExprs) =
+    val destructExprs =
       unletAll(temputs, currentFate, reversedVariablesToDestruct)
 
-    (newFate, exprs ++ destructExprs)
+    exprs ++ destructExprs
   }
 
   // Makes the last expression stored in a variable, unless there are none, or it returns void.
-  def resultifyExpressions(fate0: FunctionEnvironment, undecayedExprs2: List[ReferenceExpression2]):
-  (FunctionEnvironment, List[ReferenceExpression2], Option[ReferenceLocalVariable2]) = {
+  def resultifyExpressions(fate: FunctionEnvironmentBox, undecayedExprs2: List[ReferenceExpression2]):
+  (List[ReferenceExpression2], Option[ReferenceLocalVariable2]) = {
     undecayedExprs2.lastOption match {
-      case None => (fate0, undecayedExprs2, None)
+      case None => (undecayedExprs2, None)
       case Some(lastExpr) => {
         if (lastExpr.resultRegister.referend == Void2()) {
-          (fate0, undecayedExprs2, None)
+          (undecayedExprs2, None)
         } else {
-          val (fate4, resultVarNum) = fate0.nextVarCounter()
-          val resultVarId = VariableId2(fate0.function.lambdaNumber, "__blockresult_" + resultVarNum)
+          val (resultVarNum) = fate.nextVarCounter()
+          val resultVarId = VariableId2(fate.function.lambdaNumber, "__blockresult_" + resultVarNum)
           val resultVariable = ReferenceLocalVariable2(resultVarId, Final, lastExpr.resultRegister.reference)
           val resultLet = LetNormal2(resultVariable, lastExpr)
-          val fate5 = fate4.addVariable(resultVariable)
-          (fate5, undecayedExprs2.init :+ resultLet, Some(resultVariable))
+          fate.addVariable(resultVariable)
+          (undecayedExprs2.init :+ resultLet, Some(resultVariable))
         }
       }
     }
@@ -118,49 +123,49 @@ object BlockTemplar {
 
   def evaluateBlockStatements(
     temputs: TemputsBox,
-    fate0: FunctionEnvironment,
+    fate: FunctionEnvironmentBox,
     expr1: List[IExpressionAE]):
-  (FunctionEnvironment, List[ReferenceExpression2], Set[Coord]) = {
+  (List[ReferenceExpression2], Set[Coord]) = {
     expr1 match {
-      case Nil => (fate0, List(), Set())
+      case Nil => (List(), Set())
       case first1 :: rest1 => {
-        val (fate1, undestructedFirstExpr2, returnsFromFirst) =
+        val (undestructedFirstExpr2, returnsFromFirst) =
           ExpressionTemplar.evaluateAndCoerceToReferenceExpression(
-            temputs, fate0, first1);
+            temputs, fate, first1);
 
-        val (fate2, destructedFirstExpr2) =
+        val (destructedFirstExpr2) =
           if (rest1.isEmpty) {
             // This is the last expression, which means it's getting returned,
             // so don't destruct it.
-            (fate1, undestructedFirstExpr2) // Do nothing
+            (undestructedFirstExpr2) // Do nothing
           } else {
-            val (fate2, destructedFirstExpr2) =
-              DestructorTemplar.drop(fate1, temputs, undestructedFirstExpr2)
-            (fate2, destructedFirstExpr2)
+            val (destructedFirstExpr2) =
+              DestructorTemplar.drop(fate, temputs, undestructedFirstExpr2)
+            (destructedFirstExpr2)
           }
 
-        val (fate4, restExprs2, returnsFromRest) =
-          evaluateBlockStatements(temputs, fate2, rest1)
+        val (restExprs2, returnsFromRest) =
+          evaluateBlockStatements(temputs, fate, rest1)
 
-        (fate4, destructedFirstExpr2 +: restExprs2, returnsFromFirst ++ returnsFromRest)
+        (destructedFirstExpr2 +: restExprs2, returnsFromFirst ++ returnsFromRest)
       }
     }
   }
 
   def unletAll(
     temputs: TemputsBox,
-    fate0: FunctionEnvironment,
+    fate: FunctionEnvironmentBox,
     variables: List[ILocalVariable2]):
-  (FunctionEnvironment, List[ReferenceExpression2]) = {
+  (List[ReferenceExpression2]) = {
     variables match {
-      case Nil => (fate0, List())
+      case Nil => (List())
       case head :: tail => {
-        val (fate1, unlet) = ExpressionTemplar.unletLocal(fate0, head)
-        val (fate2, maybeHeadExpr2) =
-          DestructorTemplar.drop(fate1, temputs, unlet)
-        val (fate3, tailExprs2) =
-          unletAll(temputs, fate2, tail)
-        (fate3, maybeHeadExpr2 :: tailExprs2)
+        val (unlet) = ExpressionTemplar.unletLocal(fate, head)
+        val (maybeHeadExpr2) =
+          DestructorTemplar.drop(fate, temputs, unlet)
+        val (tailExprs2) =
+          unletAll(temputs, fate, tail)
+        (maybeHeadExpr2 :: tailExprs2)
       }
     }
   }

@@ -4,7 +4,7 @@ import net.verdagon.radonc.astronomer._
 import net.verdagon.radonc.scout.patterns.AtomSP
 import net.verdagon.radonc.scout.ITemplexS
 import net.verdagon.radonc.templar.citizen.{ImplTemplar, StructTemplar}
-import net.verdagon.radonc.templar.env.{IEnvironment, TemplataLookupContext}
+import net.verdagon.radonc.templar.env.{IEnvironment, IEnvironmentBox, TemplataLookupContext}
 import net.verdagon.radonc.templar.infer._
 import net.verdagon.radonc.templar.templata._
 import net.verdagon.radonc.templar.types._
@@ -23,7 +23,7 @@ object InferTemplar {
     maybeParamInputs: Option[List[ParamFilter]],
     checkAllRunesPresent: Boolean,
   ): (IInferSolveResult) = {
-    Inferer.solve(
+    Inferer.solve[IEnvironment, TemputsBox](
       makeEvaluateDelegate(),
       env,
       state,

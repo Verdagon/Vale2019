@@ -36,7 +36,7 @@ object VirtualTemplar {
   }
 //
 //  private def evaluateDescendantsOverrideBanners(
-//    env: IEnvironment,
+//    env: IEnvironmentBox,
 //    temputs: TemputsBox,
 //    header: FunctionHeader2,
 //    descendants: Set[CitizenRef2],

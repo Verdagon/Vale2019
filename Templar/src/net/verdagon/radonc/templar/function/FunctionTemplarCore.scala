@@ -17,11 +17,12 @@ object FunctionTemplarCore {
   // - either no template args, or they were already added to the env.
   // - either no closured vars, or they were already added to the env.
   def evaluateFunctionForHeader(
-      innerEnv: FunctionEnvironment,
+      innerEnv: FunctionEnvironmentBox,
       temputs: TemputsBox,
       function1: FunctionA,
       params2: List[Parameter2]):
   (FunctionHeader2) = {
+    val startingInnerEnv = innerEnv.snapshot
 
     println("Evaluating function " + innerEnv.fullName)
 
@@ -30,7 +31,7 @@ object FunctionTemplarCore {
 
     function1.body match {
       case CodeBodyA(body) => {
-        val (fate2, header, body2) =
+        val (header, body2) =
           BodyTemplar.declareAndEvaluateFunctionBody(
             innerEnv, temputs, BFunctionA(function1, function1.name, body), params2, isDestructor)
 
@@ -47,10 +48,10 @@ object FunctionTemplarCore {
         // Remember, the near env contains closure variables, which we
         // don't care about here. So find the difference between the near
         // env and our latest env.
-        vassert(fate2.variables.startsWith(innerEnv.variables))
+        vassert(innerEnv.variables.startsWith(startingInnerEnv.variables))
         val introducedLocals =
-          fate2.variables
-            .drop(innerEnv.variables.size)
+          innerEnv.variables
+            .drop(startingInnerEnv.variables.size)
             .collect({
               case x @ ReferenceLocalVariable2(_, _, _) => x
               case x @ AddressibleLocalVariable2(_, _, _) => x
@@ -165,7 +166,7 @@ object FunctionTemplarCore {
 
 
   def makeInterfaceFunction(
-    env: FunctionEnvironment,
+    env: FunctionEnvironmentBox,
     temputs: TemputsBox,
     origin: Option[FunctionA],
     params2: List[Parameter2],

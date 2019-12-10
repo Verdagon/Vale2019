@@ -7,7 +7,7 @@ import net.verdagon.radonc.scout._
 import net.verdagon.radonc.scout.patterns.{AbstractSP, OverrideSP, VirtualitySP}
 import net.verdagon.radonc.templar._
 import net.verdagon.radonc.templar.citizen.StructTemplar
-import net.verdagon.radonc.templar.env.{ExpressionLookupContext, FunctionEnvironment, IEnvironment, TemplataLookupContext}
+import net.verdagon.radonc.templar.env._
 import net.verdagon.radonc.{vassert, vcurious, vfail}
 
 import scala.collection.immutable.{List, Set}
@@ -67,7 +67,7 @@ object FunctionTemplarMiddleLayer {
   // - either no template args, or they were already added to the env.
   // - either no closured vars, or they were already added to the env.
   def getOrEvaluateFunctionForBanner(
-    innerEnv: FunctionEnvironment,
+    innerEnv: FunctionEnvironmentBox,
     temputs: TemputsBox,
     function1: FunctionA):
   (FunctionBanner2) = {
@@ -77,7 +77,7 @@ object FunctionTemplarMiddleLayer {
       vassert(innerEnv.getNearestTemplataWithName(templateParam, Set(TemplataLookupContext, ExpressionLookupContext)).nonEmpty);
     })
 
-    val params2 = assembleFunctionParams(innerEnv, temputs, function1.params)
+    val params2 = assembleFunctionParams(innerEnv.snapshot, temputs, function1.params)
     val banner = FunctionBanner2(Some(function1), innerEnv.fullName, params2)
 
     // Now we want to add its Function2 into the temputs.
@@ -87,8 +87,8 @@ object FunctionTemplarMiddleLayer {
       (banner)
     } else {
       val signature = banner.toSignature
-      temputs.declareFunctionSignature(signature, Some(innerEnv))
-      val params2 = assembleFunctionParams(innerEnv, temputs, function1.params)
+      temputs.declareFunctionSignature(signature, Some(innerEnv.snapshot))
+      val params2 = assembleFunctionParams(innerEnv.snapshot, temputs, function1.params)
       val header =
         FunctionTemplarCore.evaluateFunctionForHeader(innerEnv, temputs, function1, params2)
       if (header.toBanner != banner) {
@@ -96,11 +96,7 @@ object FunctionTemplarMiddleLayer {
         vfail("wut\n" + bannerFromHeader + "\n" + banner)
       }
 
-
-        VirtualTemplar.evaluateParent(innerEnv, temputs, header)
-
-
-        VirtualTemplar.evaluateOverrides(innerEnv, temputs, header)
+      VirtualTemplar.evaluateParent(innerEnv.snapshot, temputs, header)
 
       (header.toBanner)
     }
@@ -111,7 +107,7 @@ object FunctionTemplarMiddleLayer {
   // - either no template args, or they were already added to the env.
   // - either no closured vars, or they were already added to the env.
   def getOrEvaluateFunctionForHeader(
-    innerEnv: FunctionEnvironment,
+    innerEnv: FunctionEnvironmentBox,
     temputs: TemputsBox,
     function1: FunctionA):
   (FunctionHeader2) = {
@@ -128,8 +124,8 @@ object FunctionTemplarMiddleLayer {
         (header)
       }
       case None => {
-        temputs.declareFunctionSignature(needleSignature, Some(innerEnv))
-        val params2 = assembleFunctionParams(innerEnv, temputs, function1.params)
+        temputs.declareFunctionSignature(needleSignature, Some(innerEnv.snapshot))
+        val params2 = assembleFunctionParams(innerEnv.snapshot, temputs, function1.params)
         val header =
           FunctionTemplarCore.evaluateFunctionForHeader(
             innerEnv, temputs, function1, params2)
@@ -147,7 +143,7 @@ object FunctionTemplarMiddleLayer {
   // - either no template args, or they were already added to the env.
   // - either no closured vars, or they were already added to the env.
   def getOrEvaluateFunctionForPrototype(
-    innerEnv: FunctionEnvironment,
+    innerEnv: FunctionEnvironmentBox,
     temputs: TemputsBox,
     function1: FunctionA):
   (Prototype2) = {
@@ -167,17 +163,13 @@ object FunctionTemplarMiddleLayer {
         if (temputs.exactDeclaredSignatureExists(needleSignature)) {
           vfail("Need return type for " + needleSignature + ", cycle found")
         }
-        temputs.declareFunctionSignature(needleSignature, Some(innerEnv))
-        val params2 = assembleFunctionParams(innerEnv, temputs, function1.params)
+        temputs.declareFunctionSignature(needleSignature, Some(innerEnv.snapshot))
+        val params2 = assembleFunctionParams(innerEnv.snapshot, temputs, function1.params)
         val header =
           FunctionTemplarCore.evaluateFunctionForHeader(
             innerEnv, temputs, function1, params2)
 
-
-          VirtualTemplar.evaluateParent(innerEnv, temputs, header)
-
-
-          VirtualTemplar.evaluateOverrides(innerEnv, temputs, header)
+        VirtualTemplar.evaluateParent(innerEnv.snapshot, temputs, header)
 
         vassert(header.toSignature == needleSignature)
         (header.toPrototype)
@@ -188,7 +180,7 @@ object FunctionTemplarMiddleLayer {
 
 
   private def evaluateFunctionParamTypes(
-    env: IEnvironment,
+    env: IEnvironmentBox,
     params1: List[ParameterS]):
   List[Coord] = {
     params1.map(param1 => {
@@ -213,7 +205,7 @@ object FunctionTemplarMiddleLayer {
   }
 
 //  def makeImplDestructor(
-//    env: IEnvironment,
+//    env: IEnvironmentBox,
 //    temputs: TemputsBox,
 //    structDef2: StructDefinition2,
 //    interfaceRef2: InterfaceRef2):

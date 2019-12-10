@@ -286,7 +286,7 @@ object FunctionScout {
 
     // Every lambda has a closure as its first arg, even if its empty
     val closureStructName = CLOSURE_STRUCT_NAME + funcName
-//    val (fate7, closurePatternId) = fate3.nextPatternNumber();
+//    val (closurePatternId) = fate.nextPatternNumber();
 
     // We're basically trying to add `__closure: &__Closure:main:lam1`
     val closureParamAtomSP =
@@ -539,7 +539,7 @@ object FunctionScout {
 //
 //  // returns seq num, new parameter, exported template names from typeless params, and capture names
 //  private def scoutParameter(
-//      fate0: ScoutFate,
+//      fate: ScoutFate,
 //      rulesS0: TemplateRulesS,
 //      param0: ParameterPP):
 //  (ScoutFate, TemplateRulesS, ParameterS) = {
@@ -550,44 +550,44 @@ object FunctionScout {
 //    patternP match {
 //      // Has name and type
 //      case ParameterPP(Some(CaptureP(name, _)), _, Some(CoordPP(_, maybeOwnershipP, ReferendSP(None, None)))) => {
-//        val (fate3, patternId) = fate0.nextPatternNumber()
+//        val (patternId) = fate.nextPatternNumber()
 //
 //        val param = ParameterS(patternId, name, pattern1)
-//        (fate3, rulesS0, param)
+//        (rulesS0, param)
 //      }
 //      // Has name, has no type
 //      case ParameterSP(_, CoordSP(None, OwnershipSP(None, None), ReferendSP(None, None)), ValueSP(Some(CaptureS(name, _)), _)) => {
-//        val (fate3, templateParamTypeNumber) = fate0.nextTypeNumber()
+//        val (templateParamTypeNumber) = fate.nextTypeNumber()
 //        val newTemplateParamName = "__T" + templateParamTypeNumber;
-//        val (fate4, patternId) = fate3.nextPatternNumber()
+//        val (patternId) = fate.nextPatternNumber()
 //        val param = ParameterS(patternId, name, pattern1)
-//        (fate4, param, List(newTemplateParamName))
+//        (param, List(newTemplateParamName))
 //      }
 //      // Has no name, has type
 //      case ParameterSP(_, CoordSP(Some(_), OwnershipSP(None, None), ReferendSP(None, None)), ValueSP(None, _)) => {
-//        val (fate1, num) = fate0.nextPatternNumber()
+//        val (num) = fate.nextPatternNumber()
 //        val name = "__arg_" + num
-//        val (fate4, patternId) = fate1.nextPatternNumber()
+//        val (patternId) = fate.nextPatternNumber()
 //        val param = ParameterS(patternId, name, pattern1)
-//        (fate4, param, List())
+//        (param, List())
 //      }
 //      // Has no name nor type
 //      case ParameterSP(_, CoordSP(None, OwnershipSP(None, None), ReferendSP(None, None)), ValueSP(None, _)) => {
-//        val (fate1, num) = fate0.nextPatternNumber()
+//        val (num) = fate.nextPatternNumber()
 //        val name = "__arg_" + num
-//        val (fate3, templateParamTypeNumber) = fate1.nextTypeNumber()
+//        val (templateParamTypeNumber) = fate.nextTypeNumber()
 //        val newTemplateParamName = "__T" + templateParamTypeNumber;
-//        val (fate4, patternId) = fate3.nextPatternNumber()
+//        val (patternId) = fate.nextPatternNumber()
 //        val param = ParameterS(patternId, name, pattern1)
-//        (fate4, param, List(newTemplateParamName))
+//        (param, List(newTemplateParamName))
 //      }
 //      case _ => {
 //        vfail("curiosity") // when does this happen
-//        val (fate1, num) = fate0.nextPatternNumber()
+//        val (num) = fate.nextPatternNumber()
 //        val name = "__arg_" + num
-//        val (fate4, patternId) = fate1.nextPatternNumber()
+//        val (patternId) = fate.nextPatternNumber()
 //        val param = ParameterS(patternId, name, pattern1)
-//        (fate4, param, List())
+//        (param, List())
 //      }
 //    }
 //  }

@@ -6,7 +6,7 @@ import net.verdagon.radonc.templar.templata._
 import net.verdagon.radonc.scout._
 import net.verdagon.radonc.templar.ExpressionTemplar.evaluateAndCoerceToReferenceExpression
 import net.verdagon.radonc.templar.citizen.StructTemplar
-import net.verdagon.radonc.templar.env.{FunctionEnvironment, IEnvironment, NamespaceEnvironment}
+import net.verdagon.radonc.templar.env.{FunctionEnvironment, FunctionEnvironmentBox, IEnvironment, NamespaceEnvironment}
 import net.verdagon.radonc.templar.function.DestructorTemplar
 import net.verdagon.radonc.{vassert, vfail}
 
@@ -18,11 +18,11 @@ object PackTemplar {
 
   val emptyPackExpression: PackE2 = PackE2(List(), Coord(Share, PackTemplar.emptyPackType), PackTemplar.emptyPackType)
 
-  def evaluate(temputs: TemputsBox, fate0: FunctionEnvironment, packExpr1: PackAE):
-  (FunctionEnvironment, ReferenceExpression2, Set[Coord]) = {
+  def evaluate(temputs: TemputsBox, fate: FunctionEnvironmentBox, packExpr1: PackAE):
+  (ReferenceExpression2, Set[Coord]) = {
 
-    val (fate1, argExprs2, returnsFromElements) =
-      ExpressionTemplar.evaluateAndCoerceToReferenceExpressions(temputs, fate0, packExpr1.elements);
+    val (argExprs2, returnsFromElements) =
+      ExpressionTemplar.evaluateAndCoerceToReferenceExpressions(temputs, fate, packExpr1.elements);
 
     // Simplify 1-element packs
     val finalExpr2 =
@@ -34,14 +34,14 @@ object PackTemplar {
           val types2 =
             argExprs2.map(
               expr2 => expr2.resultRegister.expectReference().reference)
-          val (packType2, mutability) = makePackType(fate0.globalEnv, temputs, types2)
+          val (packType2, mutability) = makePackType(fate.globalEnv, temputs, types2)
           val ownership = if (mutability == Mutable) Own else Share
           val expression = PackE2(argExprs2, Coord(ownership, packType2), packType2)
           (expression)
         }
       };
 
-    (fate1, finalExpr2, returnsFromElements)
+    (finalExpr2, returnsFromElements)
   }
 
   def makePackType(env: NamespaceEnvironment, temputs: TemputsBox, types2: List[Coord]):

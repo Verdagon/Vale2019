@@ -4,7 +4,7 @@ import net.verdagon.radonc.astronomer.ImplA
 import net.verdagon.radonc.templar.types._
 import net.verdagon.radonc.templar.templata._
 import net.verdagon.radonc.templar._
-import net.verdagon.radonc.templar.env.{ExpressionLookupContext, IEnvironment, ImplEnvEntry, TemplataLookupContext}
+import net.verdagon.radonc.templar.env._
 import net.verdagon.radonc.templar.infer.{InferSolveFailure, InferSolveSuccess}
 import net.verdagon.radonc.{vassertSome, vfail, vwat}
 

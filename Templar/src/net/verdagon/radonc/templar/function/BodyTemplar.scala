@@ -17,19 +17,19 @@ import scala.collection.immutable.{List, Nil, Set}
 object BodyTemplar {
 
   def declareAndEvaluateFunctionBody(
-      funcOuterEnv: FunctionEnvironment,
+      funcOuterEnv: FunctionEnvironmentBox,
       temputs: TemputsBox,
       bfunction1: BFunctionA,
       params2: List[Parameter2],
       isDestructor: Boolean):
-  (FunctionEnvironment, FunctionHeader2, Block2) = {
+  (FunctionHeader2, Block2) = {
     val BFunctionA(function1, name, _) = bfunction1;
     val functionFullName = funcOuterEnv.fullName
 
     function1.maybeRetCoordRune match {
       case None => {
         val banner = FunctionBanner2(Some(function1), functionFullName, params2)
-        val (env1, body2, returnsFromRets) =
+        val (body2, returnsFromRets) =
           evaluateFunctionBody(funcOuterEnv, temputs, bfunction1.origin.params, params2, bfunction1.body, isDestructor);
 
         val returns = returnsFromRets + body2.resultRegister.reference
@@ -48,7 +48,7 @@ object BodyTemplar {
 
         temputs.declareFunctionReturnType(banner.toSignature, returnType2)
         val header = FunctionHeader2(functionFullName, function1.lambdaNumber, false, function1.isUserFunction, params2, returnType2, Some(function1));
-        (env1, header, body2)
+        (header, body2)
       }
       case Some(expectedRetCoordRune) => {
         val CoordTemplata(expectedRetCoord) =
@@ -58,10 +58,10 @@ object BodyTemplar {
         val header = FunctionHeader2(functionFullName, function1.lambdaNumber, false, function1.isUserFunction, params2, expectedRetCoord, Some(function1));
         temputs.declareFunctionReturnType(header.toSignature, expectedRetCoord)
 
-        val funcEnvWithReturn = funcOuterEnv.copy(maybeReturnType = Some(expectedRetCoord))
+        funcOuterEnv.setReturnType(Some(expectedRetCoord))
 
-        val (env6, unconvertedBody2, returnsFromRets) =
-          evaluateFunctionBody(funcEnvWithReturn, temputs, bfunction1.origin.params, params2, bfunction1.body, isDestructor);
+        val (unconvertedBody2, returnsFromRets) =
+          evaluateFunctionBody(funcOuterEnv, temputs, bfunction1.origin.params, params2, bfunction1.body, isDestructor);
 
         val convertedBody2 =
           TemplataTemplar.isTypeTriviallyConvertible(temputs, unconvertedBody2.resultRegister.reference, expectedRetCoord) match {
@@ -70,7 +70,7 @@ object BodyTemplar {
             }
             case (true) => {
               val convertedBodyExpr2 =
-                TypeTemplar.convert(env6, temputs, unconvertedBody2, expectedRetCoord);
+                TypeTemplar.convert(funcOuterEnv.snapshot, temputs, unconvertedBody2, expectedRetCoord);
               (Block2(List(convertedBodyExpr2)))
             }
           }
@@ -92,37 +92,39 @@ object BodyTemplar {
           vfail("In function " + header + ":\nExpected return type " + expectedRetCoord + " but was " + returnsWithoutNever)
         }
 
-        (env6, header, convertedBody2)
+        (header, convertedBody2)
       }
     }
   }
 
   private def evaluateFunctionBody(
-      funcOuterEnv: FunctionEnvironment,
+      funcOuterEnv: FunctionEnvironmentBox,
       temputs: TemputsBox,
       params1: List[ParameterS],
       params2: List[Parameter2],
       body1: BodyAE,
       isDestructor: Boolean):
-  (FunctionEnvironment, Block2, Set[Coord]) = {
-    val fate1 = funcOuterEnv.addScoutedLocals(body1.block.locals)
+  (Block2, Set[Coord]) = {
+    val startingFuncOuterEnv = funcOuterEnv.functionEnvironment
 
-    val (fate2, letExprs2) =
-      evaluateLets(fate1, temputs, params1, params2);
+    funcOuterEnv.addScoutedLocals(body1.block.locals)
 
-    val (fate3, postLetUnresultifiedUndestructedExpressions, returnsFromInside) =
-      BlockTemplar.evaluateBlockStatements(temputs, fate2, body1.block.exprs);
+    val (letExprs2) =
+      evaluateLets(funcOuterEnv, temputs, params1, params2);
+
+    val (postLetUnresultifiedUndestructedExpressions, returnsFromInside) =
+      BlockTemplar.evaluateBlockStatements(temputs, funcOuterEnv, body1.block.exprs);
 
     val unresultifiedUndestructedExpressions = letExprs2 ++ postLetUnresultifiedUndestructedExpressions
 
-    val (fate6, undestructedExpressions, maybeResultLocalVariable) =
-      BlockTemplar.resultifyExpressions(fate3, unresultifiedUndestructedExpressions)
+    val (undestructedExpressions, maybeResultLocalVariable) =
+      BlockTemplar.resultifyExpressions(funcOuterEnv, unresultifiedUndestructedExpressions)
 
-    val (fate7, expressions) =
-      BlockTemplar.unletUnmovedVariablesIntroducedSince(temputs, funcOuterEnv, fate6, maybeResultLocalVariable, undestructedExpressions)
+    val (expressions) =
+      BlockTemplar.unletUnmovedVariablesIntroducedSince(temputs, startingFuncOuterEnv, funcOuterEnv, maybeResultLocalVariable, undestructedExpressions)
 
-    val (fate9, expressionsWithResult) =
-      BlockTemplar.maybeAddUnlet(fate7, expressions, maybeResultLocalVariable)
+    val (expressionsWithResult) =
+      BlockTemplar.maybeAddUnlet(funcOuterEnv, expressions, maybeResultLocalVariable)
 
     if (isDestructor) {
       // If it's a destructor, make sure that we've actually destroyed/moved/unlet'd
@@ -131,42 +133,42 @@ object BodyTemplar {
       // We don't want the user to accidentally just move it somewhere, they need to
       // promise it gets destroyed.
       val destructeeName = params2.head.name
-      if (!fate9.moveds.exists(_.variableName == destructeeName)) {
+      if (!funcOuterEnv.moveds.exists(_.variableName == destructeeName)) {
         vfail("Destructee wasn't moved/destroyed!");
       }
     }
 
     val block2 = Block2(expressionsWithResult)
 
-    (fate9, block2, returnsFromInside)
+    (block2, returnsFromInside)
   }
 
   // Produce the lets at the start of a function.
   private def evaluateLets(
-      fate0: FunctionEnvironment,
+      fate: FunctionEnvironmentBox,
       temputs: TemputsBox,
       params1: List[ParameterS],
       params2: List[Parameter2]):
-  (FunctionEnvironment, List[ReferenceExpression2]) = {
+  (List[ReferenceExpression2]) = {
     val paramLookups2 =
       params2.zipWithIndex.map({ case (p, index) => ArgLookup2(index, p.tyype) })
-    val (fate1, letExprs2) =
+    val (letExprs2) =
       PatternTemplar.nonCheckingTranslateList(
-        temputs, fate0, params1.map(_.pattern), paramLookups2);
+        temputs, fate, params1.map(_.pattern), paramLookups2);
 
     // todo: at this point, to allow for recursive calls, add a callable type to the environment
     // for everything inside the body to use
 
     params1.foreach({
       case ParameterS(AtomSP(Some(CaptureP(name, _)), _, _, _)) => {
-        if (!fate1.variables.exists(_.id.variableName == name)) {
+        if (!fate.variables.exists(_.id.variableName == name)) {
           vfail("wot couldnt find " + name)
         }
       }
       case _ =>
     });
 
-    (fate1, letExprs2)
+    (letExprs2)
   }
 
 }

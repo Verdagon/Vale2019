@@ -19,54 +19,52 @@ import scala.collection.immutable.{List, Map, Nil, Set}
 object ExpressionTemplar {
   private def evaluateList(
       temputs: TemputsBox,
-      fate0: FunctionEnvironment,
+      fate: FunctionEnvironmentBox,
       expr1: List[IExpressionAE]):
-      (FunctionEnvironment, List[Expression2], Set[Coord]) = {
+      (List[Expression2], Set[Coord]) = {
     expr1 match {
-      case Nil => (fate0, List(), Set())
+      case Nil => (List(), Set())
       case first1 :: rest1 => {
-        val (fate1, first2, returnsFromFirst) =
-          evaluate(temputs, fate0, first1);
-        val (fate2, rest2, returnsFromRest) =
-          evaluateList(temputs, fate1, rest1);
-        (fate2, first2 :: rest2, returnsFromFirst ++ returnsFromRest)
+        val (first2, returnsFromFirst) = evaluate(temputs, fate, first1);
+        val (rest2, returnsFromRest) = evaluateList(temputs, fate, rest1);
+        (first2 :: rest2, returnsFromFirst ++ returnsFromRest)
       }
     }
   }
 
   def evaluateAndCoerceToReferenceExpressions(
       temputs: TemputsBox,
-      fate0: FunctionEnvironment,
+      fate: FunctionEnvironmentBox,
       exprs1: List[IExpressionAE]):
-  (FunctionEnvironment, List[ReferenceExpression2], Set[Coord]) = {
+  (List[ReferenceExpression2], Set[Coord]) = {
     exprs1 match {
-      case Nil => (fate0, List(), Set())
+      case Nil => (List(), Set())
       case first1 :: rest1 => {
-        val (fate1, first2, returnsFromFirst) =
-          evaluateAndCoerceToReferenceExpression(temputs, fate0, first1);
-        val (fate2, rest2, returnsFromRest) =
-          evaluateAndCoerceToReferenceExpressions(temputs, fate1, rest1);
-        (fate2, first2 :: rest2, returnsFromFirst ++ returnsFromRest)
+        val (first2, returnsFromFirst) =
+          evaluateAndCoerceToReferenceExpression(temputs, fate, first1);
+        val (rest2, returnsFromRest) =
+          evaluateAndCoerceToReferenceExpressions(temputs, fate, rest1);
+        (first2 :: rest2, returnsFromFirst ++ returnsFromRest)
       }
     }
   }
 
   private def evaluateLookup(
     temputs: TemputsBox,
-    fate0: FunctionEnvironment,
+    fate: FunctionEnvironmentBox,
     name: String,
     borrow: Boolean):
-  (FunctionEnvironment, Option[Expression2]) = {
-    evaluateAddressibleLookup(temputs, fate0, name) match {
+  (Option[Expression2]) = {
+    evaluateAddressibleLookup(temputs, fate, name) match {
       case Some(x) => {
-        val (fate1, thing) = ExpressionTemplar.softLoad(fate0, x, borrow)
-        (fate1, Some(thing))
+        val (thing) = ExpressionTemplar.softLoad(fate, x, borrow)
+        (Some(thing))
       }
       case None => {
-        fate0.getNearestTemplataWithName(name, Set(TemplataLookupContext)) match {
-          case Some(IntegerTemplata(num)) => (fate0, Some(IntLiteral2(num)))
-          case Some(BooleanTemplata(bool)) => (fate0, Some(BoolLiteral2(bool)))
-          case None => (fate0, None)
+        fate.getNearestTemplataWithName(name, Set(TemplataLookupContext)) match {
+          case Some(IntegerTemplata(num)) => (Some(IntLiteral2(num)))
+          case Some(BooleanTemplata(bool)) => (Some(BoolLiteral2(bool)))
+          case None => (None)
         }
       }
     }
@@ -74,10 +72,10 @@ object ExpressionTemplar {
 
   private def evaluateAddressibleLookup(
       temputs: TemputsBox,
-      fate0: FunctionEnvironment,
+      fate: FunctionEnvironmentBox,
       name: String):
   Option[AddressExpression2] = {
-    fate0.getVariable(name) match {
+    fate.getVariable(name) match {
       case Some(alv @ AddressibleLocalVariable2(_, _, reference)) => {
         Some(LocalLookup2(alv, reference))
       }
@@ -92,7 +90,7 @@ object ExpressionTemplar {
           ExpressionTemplar.borrowSoftLoad(
             temputs,
             LocalLookup2(
-              ReferenceLocalVariable2(VariableId2(fate0.function.lambdaNumber, "__closure"), Final, closuredVarsStructRefRef),
+              ReferenceLocalVariable2(VariableId2(fate.function.lambdaNumber, "__closure"), Final, closuredVarsStructRefRef),
               closuredVarsStructRefRef))
         val lookup =
           AddressMemberLookup2(
@@ -110,7 +108,7 @@ object ExpressionTemplar {
           ExpressionTemplar.borrowSoftLoad(
             temputs,
             LocalLookup2(
-              ReferenceLocalVariable2(VariableId2(fate0.function.lambdaNumber, "__closure"), Final, closuredVarsStructRefRef),
+              ReferenceLocalVariable2(VariableId2(fate.function.lambdaNumber, "__closure"), Final, closuredVarsStructRefRef),
               closuredVarsStructRefRef))
         val lookup =
           ReferenceMemberLookup2(
@@ -125,80 +123,78 @@ object ExpressionTemplar {
 
   private def makeClosureStructConstructExpression(
       temputs: TemputsBox,
-      fate0: FunctionEnvironment,
+      fate: FunctionEnvironmentBox,
       closureStructRef: StructRef2):
-  (FunctionEnvironment, ReferenceExpression2) = {
+  (ReferenceExpression2) = {
     val closureStructDef = temputs.lookupStruct(closureStructRef);
     // Note, this is where the unordered closuredNames set becomes ordered.
-    val (fate3, lookupExpressions2) =
-      closureStructDef.members.foldLeft((fate0, List[Expression2]()))({
-        case ((fate1, previousExprs), StructMember2(memberName, variability, tyype)) => {
+    val (lookupExpressions2) =
+      closureStructDef.members.map({
+        case StructMember2(memberName, variability, tyype) => {
           val lookup =
-            ExpressionTemplar.evaluateAddressibleLookup(temputs, fate0, memberName) match {
+            ExpressionTemplar.evaluateAddressibleLookup(temputs, fate, memberName) match {
               case None => vfail("Couldn't find " + memberName)
               case Some(l) => l
             }
-          val (fate2, maybeDecayedExpr) =
-            tyype match {
-              case ReferenceMemberType2(reference) => {
-                // We might have to softload an own into a borrow, but the referends
-                // should at least be the same right here.
-                vassert(reference.referend == lookup.resultRegister.reference.referend)
-                // Closures never contain owning references.
-                // If we're capturing an own, then on the inside of the closure
-                // it's a borrow. See "Captured own is borrow" test for more.
-                ExpressionTemplar.softLoad(fate1, lookup, borrow = true)
-              }
-              case AddressMemberType2(reference) => {
-                vassert(reference == lookup.resultRegister.reference)
-                (fate1, lookup)
-              }
+          tyype match {
+            case ReferenceMemberType2(reference) => {
+              // We might have to softload an own into a borrow, but the referends
+              // should at least be the same right here.
+              vassert(reference.referend == lookup.resultRegister.reference.referend)
+              // Closures never contain owning references.
+              // If we're capturing an own, then on the inside of the closure
+              // it's a borrow. See "Captured own is borrow" test for more.
+              ExpressionTemplar.softLoad(fate, lookup, borrow = true)
             }
-          (fate2, previousExprs :+ maybeDecayedExpr)
+            case AddressMemberType2(reference) => {
+              vassert(reference == lookup.resultRegister.reference)
+              (lookup)
+            }
+          }
         }
       });
     val ownership = if (closureStructDef.mutability == Mutable) Own else Share
     val resultPointerType = Coord(ownership, closureStructRef)
     val constructExpr2 =
       Construct2(closureStructRef, resultPointerType, lookupExpressions2)
-    (fate3, constructExpr2)
+    (constructExpr2)
   }
 
   def evaluateAndCoerceToReferenceExpression(
       temputs: TemputsBox,
-      fate0: FunctionEnvironment,
+      fate: FunctionEnvironmentBox,
       expr1: IExpressionAE):
-  (FunctionEnvironment, ReferenceExpression2, Set[Coord]) = {
-    val (fate1, expr2, returnsFromExpr) =
-      evaluate(temputs, fate0, expr1)
+  (ReferenceExpression2, Set[Coord]) = {
+    val (expr2, returnsFromExpr) =
+      evaluate(temputs, fate, expr1)
     expr2 match {
       case r : ReferenceExpression2 => {
-        (fate1, r, returnsFromExpr)
+        (r, returnsFromExpr)
       }
       case a : AddressExpression2 => {
-        val (fate2, expr) = coerceToReferenceExpression(fate1, a)
-        (fate2, expr, returnsFromExpr)
+        val (expr) = coerceToReferenceExpression(fate, a)
+        (expr, returnsFromExpr)
       }
     }
   }
 
-  def coerceToReferenceExpression(fate0: FunctionEnvironment, expr2: Expression2):
-  (FunctionEnvironment, ReferenceExpression2) = {
+  def coerceToReferenceExpression(fate: FunctionEnvironmentBox, expr2: Expression2):
+  (ReferenceExpression2) = {
     expr2 match {
-      case r : ReferenceExpression2 => (fate0, r)
-      case a : AddressExpression2 => softLoad(fate0, a, borrow = a.coerceToBorrow)
+      case r : ReferenceExpression2 => (r)
+      case a : AddressExpression2 => softLoad(fate, a, borrow = a.coerceToBorrow)
     }
   }
 
   private def evaluateExpectedAddressExpression(
       temputs: TemputsBox,
-      fate0: FunctionEnvironment,
+      fate: FunctionEnvironmentBox,
       expr1: IExpressionAE):
-  (FunctionEnvironment, AddressExpression2, Set[Coord]) = {
-    val (fate1, expr2, returns) =
-      evaluate(temputs, fate0, expr1)
+  (AddressExpression2, Set[Coord]) = {
+    val (expr2, returns) =
+      evaluate(temputs, fate, expr1)
     expr2 match {
-      case a : AddressExpression2 => (fate1, a, returns)
+      case a : AddressExpression2 => (a, returns)
       case _ : ReferenceExpression2 => vfail("Expected reference expression!")
     }
   }
@@ -220,18 +216,18 @@ object ExpressionTemplar {
   // mutated from inside closures.
   def makeUserLocalVariable(
       temputs: TemputsBox,
-      fate0: FunctionEnvironment,
+      fate: FunctionEnvironmentBox,
       varId: VariableId2,
       variability: Variability,
       referenceType2: Coord):
   ILocalVariable2 = {
-    if (fate0.getVariable(varId.variableName).nonEmpty) {
+    if (fate.getVariable(varId.variableName).nonEmpty) {
       vfail("There's already a variable named " + varId.variableName)
     }
 
     val variable1 =
-      fate0.scoutedLocals.find(_.varName == varId.variableName) match {
-        case None => vfail("Missing local variable information from FunctionA for " + fate0.function.name + " for variable " + varId.variableName)
+      fate.scoutedLocals.find(_.varName == varId.variableName) match {
+        case None => vfail("Missing local variable information from FunctionA for " + fate.function.name + " for variable " + varId.variableName)
         case Some(v) => v
       }
 
@@ -254,76 +250,76 @@ object ExpressionTemplar {
   // - all the types that are returned from inside the body via ret
   private def evaluate(
       temputs: TemputsBox,
-      fate0: FunctionEnvironment,
+      fate: FunctionEnvironmentBox,
       expr1: IExpressionAE):
-  (FunctionEnvironment, Expression2, Set[Coord]) = {
+  (Expression2, Set[Coord]) = {
     expr1 match {
-      case VoidAE() => (fate0, VoidLiteral2(), Set())
-      case IntLiteralAE(i) => (fate0, IntLiteral2(i), Set())
-      case BoolLiteralAE(i) => (fate0, BoolLiteral2(i), Set())
-      case StrLiteralAE(s) => (fate0, StrLiteral2(s), Set())
-      case FloatLiteralAE(f) => (fate0, FloatLiteral2(f), Set())
+      case VoidAE() => (VoidLiteral2(), Set())
+      case IntLiteralAE(i) => (IntLiteral2(i), Set())
+      case BoolLiteralAE(i) => (BoolLiteral2(i), Set())
+      case StrLiteralAE(s) => (StrLiteral2(s), Set())
+      case FloatLiteralAE(f) => (FloatLiteral2(f), Set())
       case ArgLookupAE(index) => {
-        val paramCoordRune = fate0.function.params(index).pattern.coordRune
-        val paramCoordTemplata = fate0.getNearestTemplataWithName(paramCoordRune, Set(TemplataLookupContext)).get
+        val paramCoordRune = fate.function.params(index).pattern.coordRune
+        val paramCoordTemplata = fate.getNearestTemplataWithName(paramCoordRune, Set(TemplataLookupContext)).get
         val CoordTemplata(paramCoord) = paramCoordTemplata
-        (fate0, ArgLookup2(index, paramCoord), Set())
+        (ArgLookup2(index, paramCoord), Set())
       }
       case FunctionCallAE(TemplateSpecifiedLookupAE(name, templateArgTemplexesS), argsPackExpr1) => {
-        val (fate3, flattenedArgsExpr2, returnsFromArgs) =
-          PackTemplar.evaluate(temputs, fate0, argsPackExpr1)
-        val (fate5, callExpr2) =
+        val (flattenedArgsExpr2, returnsFromArgs) =
+          PackTemplar.evaluate(temputs, fate, argsPackExpr1)
+        val (callExpr2) =
           CallTemplar.evaluatePrefixCall(
             temputs,
-            fate3,
-            newGlobalFunctionGroupExpression(fate3, name),
+            fate,
+            newGlobalFunctionGroupExpression(fate, name),
             templateArgTemplexesS,
             flattenedArgsExpr2)
-        (fate5, callExpr2, returnsFromArgs)
+        (callExpr2, returnsFromArgs)
       }
       case FunctionCallAE(TemplateSpecifiedLookupAE(name, templateArgTemplexesS), argsPackExpr1) => {
-        val (fate3, flattenedArgsExpr2, returnsFromArgs) =
-          PackTemplar.evaluate(temputs, fate0, argsPackExpr1)
-        val (fate5, callExpr2) =
-          CallTemplar.evaluateNamedPrefixCall(temputs, fate3, name, templateArgTemplexesS, flattenedArgsExpr2)
-        (fate5, callExpr2, returnsFromArgs)
+        val (flattenedArgsExpr2, returnsFromArgs) =
+          PackTemplar.evaluate(temputs, fate, argsPackExpr1)
+        val (callExpr2) =
+          CallTemplar.evaluateNamedPrefixCall(temputs, fate, name, templateArgTemplexesS, flattenedArgsExpr2)
+        (callExpr2, returnsFromArgs)
       }
       case FunctionCallAE(GlobalLoadAE(name), argsPackExpr1) => {
-        val (fate3, flattenedArgsExpr2, returnsFromArgs) =
-          PackTemplar.evaluate(temputs, fate0, argsPackExpr1)
-        val (fate5, callExpr2) =
-          CallTemplar.evaluateNamedPrefixCall(temputs, fate3, name, List(), flattenedArgsExpr2)
-        (fate5, callExpr2, returnsFromArgs)
+        val (flattenedArgsExpr2, returnsFromArgs) =
+          PackTemplar.evaluate(temputs, fate, argsPackExpr1)
+        val (callExpr2) =
+          CallTemplar.evaluateNamedPrefixCall(temputs, fate, name, List(), flattenedArgsExpr2)
+        (callExpr2, returnsFromArgs)
       }
       case FunctionCallAE(callableExpr1, argsPackExpr1) => {
-        val (fate1, undecayedCallableExpr2, returnsFromCallable) =
-          evaluateAndCoerceToReferenceExpression(temputs, fate0, callableExpr1);
-        val (fate2, decayedCallableExpr2) =
-          maybeSoftLoad(fate1, undecayedCallableExpr2, true)
-        val (fate3, flattenedArgsExpr2, returnsFromPack) =
-          PackTemplar.evaluate(temputs, fate2, argsPackExpr1)
-        val (fate4, functionPointerCall2) =
-          CallTemplar.evaluatePrefixCall(temputs, fate3, decayedCallableExpr2, List(), flattenedArgsExpr2)
-        (fate4, functionPointerCall2, returnsFromCallable ++ returnsFromPack)
+        val (undecayedCallableExpr2, returnsFromCallable) =
+          evaluateAndCoerceToReferenceExpression(temputs, fate, callableExpr1);
+        val (decayedCallableExpr2) =
+          maybeSoftLoad(fate, undecayedCallableExpr2, true)
+        val (flattenedArgsExpr2, returnsFromPack) =
+          PackTemplar.evaluate(temputs, fate, argsPackExpr1)
+        val (functionPointerCall2) =
+          CallTemplar.evaluatePrefixCall(temputs, fate, decayedCallableExpr2, List(), flattenedArgsExpr2)
+        (functionPointerCall2, returnsFromCallable ++ returnsFromPack)
       }
 
       case ExpressionLendAE(innerExpr1) => {
-        val (fate1, innerExpr2, returnsFromInner) =
-          evaluateAndCoerceToReferenceExpression(temputs, fate0, innerExpr1);
-        val (fate3, resultExpr2) =
+        val (innerExpr2, returnsFromInner) =
+          evaluateAndCoerceToReferenceExpression(temputs, fate, innerExpr1);
+        val (resultExpr2) =
           innerExpr2.resultRegister.underlyingReference.ownership match {
-            case Borrow | Share => (fate1, innerExpr2)
-            case Own => makeTemporaryLocal(temputs, fate1, innerExpr2)
+            case Borrow | Share => (innerExpr2)
+            case Own => makeTemporaryLocal(temputs, fate, innerExpr2)
           }
-        (fate3, resultExpr2, returnsFromInner)
+        (resultExpr2, returnsFromInner)
       }
       case LocalLoadAE(name, borrow) => {
-        val (fate2, lookupExpr1) =
-          evaluateLookup(temputs, fate0, name, borrow) match {
-            case (_, None) => vfail("Couldnt find " + name)
-            case (fate1, Some(x)) => (fate1, x)
+        val (lookupExpr1) =
+          evaluateLookup(temputs, fate, name, borrow) match {
+            case (None) => vfail("Couldnt find " + name)
+            case (Some(x)) => (x)
           }
-        (fate2, lookupExpr1, Set())
+        (lookupExpr1, Set())
       }
       case GlobalLoadAE(name) => {
         // Note, we don't get here if we're about to call something with this, that's handled
@@ -333,76 +329,76 @@ object ExpressionTemplar {
         // not in templata context.
 
         val templataFromEnv =
-          fate0.getAllTemplatasWithName(name, Set(ExpressionLookupContext)) match {
+          fate.getAllTemplatasWithName(name, Set(ExpressionLookupContext)) match {
             case List(BooleanTemplata(value)) => BoolLiteral2(value)
             case List(IntegerTemplata(value)) => IntLiteral2(value)
             case templatas if templatas.nonEmpty && templatas.collect({ case FunctionTemplata(_, _) => case ExternFunctionTemplata(_) => }).size == templatas.size => {
-              newGlobalFunctionGroupExpression(fate0, name)
+              newGlobalFunctionGroupExpression(fate, name)
             }
             case things if things.size > 1 => {
               vfail("Found too many different things named \"" + name + "\" in env:\n" + things.map("\n" + _));
             }
             case List() => {
-              println("members: " + fate0.getAllTemplatasWithName(name, Set(ExpressionLookupContext, TemplataLookupContext)))
-              vfail("Couldn't find anything named \"" + name + "\" in env:\n" + fate0);
+              println("members: " + fate.getAllTemplatasWithName(name, Set(ExpressionLookupContext, TemplataLookupContext)))
+              vfail("Couldn't find anything named \"" + name + "\" in env:\n" + fate);
             }
           }
-        (fate0, templataFromEnv, Set())
+        (templataFromEnv, Set())
       }
       case LocalMutateAE(name, sourceExpr1) => {
         val destinationExpr2 =
-          evaluateAddressibleLookup(temputs, fate0, name) match {
+          evaluateAddressibleLookup(temputs, fate, name) match {
             case None => vfail("Couldnt find " + name)
             case Some(x) => x
           }
-        val (fate1, unconvertedSourceExpr2, returnsFromSource) =
-          evaluateAndCoerceToReferenceExpression(temputs, fate0, sourceExpr1)
+        val (unconvertedSourceExpr2, returnsFromSource) =
+          evaluateAndCoerceToReferenceExpression(temputs, fate, sourceExpr1)
 
         val isConvertible =
           TemplataTemplar.isTypeConvertible(
             temputs, unconvertedSourceExpr2.resultRegister.reference, destinationExpr2.resultRegister.reference)
         vassert(isConvertible)
         val convertedSourceExpr2 =
-          TypeTemplar.convert(fate0, temputs, unconvertedSourceExpr2, destinationExpr2.resultRegister.reference);
+          TypeTemplar.convert(fate.snapshot, temputs, unconvertedSourceExpr2, destinationExpr2.resultRegister.reference);
 
         val mutate2 = Mutate2(destinationExpr2, convertedSourceExpr2);
-        (fate1, mutate2, returnsFromSource)
+        (mutate2, returnsFromSource)
       }
       case ExprMutateAE(destinationExpr1, sourceExpr1) => {
-        val (fate1, unconvertedSourceExpr2, returnsFromSource) =
-          evaluateAndCoerceToReferenceExpression(temputs, fate0, sourceExpr1)
-        val (fate2, destinationExpr2, returnsFromDestination) =
-          evaluateExpectedAddressExpression(temputs, fate1, destinationExpr1)
+        val (unconvertedSourceExpr2, returnsFromSource) =
+          evaluateAndCoerceToReferenceExpression(temputs, fate, sourceExpr1)
+        val (destinationExpr2, returnsFromDestination) =
+          evaluateExpectedAddressExpression(temputs, fate, destinationExpr1)
         val isConvertible =
           TemplataTemplar.isTypeConvertible(temputs, unconvertedSourceExpr2.resultRegister.reference, destinationExpr2.resultRegister.reference)
         if (!isConvertible) {
           vfail("In mutate, can't convert from: " + unconvertedSourceExpr2.resultRegister.reference + "\nto: " + destinationExpr2.resultRegister.reference)
         }
         val convertedSourceExpr2 =
-          TypeTemplar.convert(fate0, temputs, unconvertedSourceExpr2, destinationExpr2.resultRegister.reference);
+          TypeTemplar.convert(fate.snapshot, temputs, unconvertedSourceExpr2, destinationExpr2.resultRegister.reference);
 
         val mutate2 = Mutate2(destinationExpr2, convertedSourceExpr2);
-        (fate2, mutate2, returnsFromSource ++ returnsFromDestination)
+        (mutate2, returnsFromSource ++ returnsFromDestination)
       }
       case CheckRefCountAE(refExpr1, category, numExpr1) => {
-        val (fate1, refExpr2, returnsFromRef) =
-          evaluateAndCoerceToReferenceExpression(temputs, fate0, refExpr1);
-        val (fate2, numExpr2, returnsFromNum) =
-          evaluateAndCoerceToReferenceExpression(temputs, fate1, numExpr1);
-        (fate2, CheckRefCount2(refExpr2, category, numExpr2), returnsFromRef ++ returnsFromNum)
+        val (refExpr2, returnsFromRef) =
+          evaluateAndCoerceToReferenceExpression(temputs, fate, refExpr1);
+        val (numExpr2, returnsFromNum) =
+          evaluateAndCoerceToReferenceExpression(temputs, fate, numExpr1);
+        (CheckRefCount2(refExpr2, category, numExpr2), returnsFromRef ++ returnsFromNum)
       }
       case TemplateSpecifiedLookupAE(name, templateArgs1) => {
         // So far, we only allow these when they're immediately called like functions
         vfail("unimplemented")
       }
       case DotCallAE(containerExpr1, indexExpr1) => {
-        val (fate1, unborrowedContainerExpr2, returnsFromContainerExpr) =
-          evaluate(temputs, fate0, containerExpr1);
-        val (fate2, containerExpr2) =
-          dotBorrow(temputs, fate1, unborrowedContainerExpr2)
+        val (unborrowedContainerExpr2, returnsFromContainerExpr) =
+          evaluate(temputs, fate, containerExpr1);
+        val (containerExpr2) =
+          dotBorrow(temputs, fate, unborrowedContainerExpr2)
 
-        val (fate3, indexExpr2, returnsFromIndexExpr) =
-          evaluateAndCoerceToReferenceExpression(temputs, fate2, indexExpr1);
+        val (indexExpr2, returnsFromIndexExpr) =
+          evaluateAndCoerceToReferenceExpression(temputs, fate, indexExpr1);
 
         val exprTemplata =
           containerExpr2.resultRegister.reference.referend match {
@@ -426,13 +422,13 @@ object ExpressionTemplar {
             }
             // later on, a map type could go here
           }
-        (fate3, exprTemplata, returnsFromContainerExpr ++ returnsFromIndexExpr)
+        (exprTemplata, returnsFromContainerExpr ++ returnsFromIndexExpr)
       }
       case DotAE(containerExpr1, memberName, borrowContainer) => {
-        val (fate1, unborrowedContainerExpr2, returnsFromContainerExpr) =
-          evaluate(temputs, fate0, containerExpr1);
-        val (fate5, containerExpr2) =
-          dotBorrow(temputs, fate1, unborrowedContainerExpr2)
+        val (unborrowedContainerExpr2, returnsFromContainerExpr) =
+          evaluate(temputs, fate, containerExpr1);
+        val (containerExpr2) =
+          dotBorrow(temputs, fate, unborrowedContainerExpr2)
 
         val expr2 =
           containerExpr2.resultRegister.reference.referend match {
@@ -480,38 +476,38 @@ object ExpressionTemplar {
             }
           }
 
-        (fate5, expr2, returnsFromContainerExpr)
+        (expr2, returnsFromContainerExpr)
       }
       case FunctionAE(function1 @ FunctionA(_, name, _, _, _, _, _, _, _, _, _, CodeBodyA(body))) => {
         val bfunction1 = BFunctionA(function1, name, body)
-        val (fate5, callExpr2) =
-          evaluateClosure(temputs, fate0, bfunction1)
-        (fate5, callExpr2, Set())
+        val (callExpr2) =
+          evaluateClosure(temputs, fate, bfunction1)
+        (callExpr2, Set())
       }
       case p @ PackAE(_) => {
         // Put them all into a pack because im not quite ready yet to have packs
         // that have templatas... we'd have to make some sort of... TemplataPack thing...
         // Note from later than that: yeah we definitely need a TemplataPack btw
-        val (fate1, packExpr2, returnsFromPack) =
-          PackTemplar.evaluate(temputs, fate0, p)
-        (fate1, packExpr2, returnsFromPack)
+        val (packExpr2, returnsFromPack) =
+          PackTemplar.evaluate(temputs, fate, p)
+        (packExpr2, returnsFromPack)
       }
       case SequenceEAE(elements1) => {
-        val (fate1, exprs2, returnsFromElements) =
-          evaluateAndCoerceToReferenceExpressions(temputs, fate0, elements1);
+        val (exprs2, returnsFromElements) =
+          evaluateAndCoerceToReferenceExpressions(temputs, fate, elements1);
 
         // would we need a sequence templata? probably right?
         val expr2 =
-          SequenceTemplar.evaluate(fate0, temputs, exprs2)
-        (fate1, expr2, returnsFromElements)
+          SequenceTemplar.evaluate(fate, temputs, exprs2)
+        (expr2, returnsFromElements)
       }
       case ConstructAE(type1, argExprs1) => {
-        val (fate1, argExprs2, returnsFromArgs) =
-          evaluateList(temputs, fate0, argExprs1);
+        val (argExprs2, returnsFromArgs) =
+          evaluateList(temputs, fate, argExprs1);
 
         val stuff = vfail() // this is where we do the thing
 
-        val kind = TemplataTemplar.evaluateTemplex(fate1, temputs, stuff)
+        val kind = TemplataTemplar.evaluateTemplex(fate.snapshot, temputs, stuff)
         val constructExpr2 =
           kind match {
             case KindTemplata(structRef2 @ StructRef2(_)) => {
@@ -522,25 +518,25 @@ object ExpressionTemplar {
             }
             case _ => vfail("wat")
           }
-        (fate1, constructExpr2, returnsFromArgs)
+        (constructExpr2, returnsFromArgs)
       }
       case ConstructArrayAE(elementCoordTemplex, sizeExpr1, generatorExpr1, arrayMutabilityP) => {
-        val (CoordTemplata(elementCoord)) = TemplataTemplar.evaluateTemplex(fate0, temputs, elementCoordTemplex)
+        val (CoordTemplata(elementCoord)) = TemplataTemplar.evaluateTemplex(fate.snapshot, temputs, elementCoordTemplex)
 
         val arrayMutability = Conversions.evaluateMutability(arrayMutabilityP)
 
-        val (fate1, sizeExpr2, returnsFromSize) =
-          evaluate(temputs, fate0, sizeExpr1);
+        val (sizeExpr2, returnsFromSize) =
+          evaluate(temputs, fate, sizeExpr1);
 
-        val (fate2, generatorExpr2, returnsFromGenerator) =
-          evaluateAndCoerceToReferenceExpression(temputs, fate1, generatorExpr1);
+        val (generatorExpr2, returnsFromGenerator) =
+          evaluateAndCoerceToReferenceExpression(temputs, fate, generatorExpr1);
 
         // Now, pretend we're calling it with an integer.
         // That zero should be replaced by an index in later stages.
-        val (fate3, callExpr2) =
+        val (callExpr2) =
           CallTemplar.evaluatePrefixCall(
             temputs,
-            fate2,
+            fate,
             generatorExpr2,
             List(),
             Placeholder2(Coord(Share, Int2())))
@@ -557,9 +553,9 @@ object ExpressionTemplar {
             Templar.getMutability(temputs, elementCoord.referend) == Mutable) {
           vfail("Can't have an immutable array of mutable elements!")
         }
-        val arrayType = ArrayTemplar.makeUnknownSizeArrayType(fate0, temputs, elementCoord, arrayMutability)
+        val arrayType = ArrayTemplar.makeUnknownSizeArrayType(fate.snapshot, temputs, elementCoord, arrayMutability)
 
-        val (fate4, sizeRefExpr2) = coerceToReferenceExpression(fate3, sizeExpr2)
+        val (sizeRefExpr2) = coerceToReferenceExpression(fate, sizeExpr2)
         vassert(sizeRefExpr2.resultRegister.expectReference().reference == Coord(Share, Int2()))
 
         val constructExpr2 =
@@ -567,37 +563,42 @@ object ExpressionTemplar {
             arrayType,
             sizeRefExpr2,
             callExpr2)
-        (fate4, constructExpr2, returnsFromSize ++ returnsFromGenerator)
+        (constructExpr2, returnsFromSize ++ returnsFromGenerator)
       }
       case LetAE(_, rulesA, typeByRune, pattern, sourceExpr1) => {
-        val (fate1, sourceExpr2, returnsFromSource) =
-          evaluateAndCoerceToReferenceExpression(temputs, fate0, sourceExpr1)
+        val (sourceExpr2, returnsFromSource) =
+          evaluateAndCoerceToReferenceExpression(temputs, fate, sourceExpr1)
 
-        val (fate2, lets2) =
+        val (lets2) =
           PatternTemplar.nonCheckingInferAndTranslate(
-            temputs, fate1, rulesA, typeByRune, pattern, sourceExpr2)
+            temputs, fate, rulesA, typeByRune, pattern, sourceExpr2)
 
         val resultExprBlock2 = Consecutor2(lets2)
 
-        (fate2, resultExprBlock2, returnsFromSource)
+        (resultExprBlock2, returnsFromSource)
       }
       case IfAE(condition1, thenBody1, elseBody1) => {
-        val (fateBeforeBranch, conditionExpr2, returnsFromCondition) =
-          BlockTemplar.evaluateBlock(fate0, temputs, condition1)
+        val (conditionExpr2, returnsFromCondition) =
+          BlockTemplar.evaluateBlock(fate, temputs, condition1)
+        val fateAfterBranch = fate.functionEnvironment
 
-        val fateForThen = fateBeforeBranch
-        val FunctionEnvironment(parentEnv, function, functionFullName, entries, maybeReturnType, scoutedLocals, counterBeforeBranch, variablesBeforeBranch, _) = fateBeforeBranch
+        val FunctionEnvironment(parentEnv, function, functionFullName, entries, maybeReturnType, scoutedLocals, counterBeforeBranch, variablesBeforeBranch, _) = fateAfterBranch
 
-        val (fateAfterThen, thenExpr2, returnsFromThen) =
-          BlockTemplar.evaluateBlock(fateForThen, temputs, thenBody1)
+        val fateForThen = FunctionEnvironmentBox(fateAfterBranch)
+        val (thenExpr2, returnsFromThen) = BlockTemplar.evaluateBlock(fateForThen, temputs, thenBody1)
+        val fateAfterThen = fateForThen.functionEnvironment
+
         val thenContinues = thenExpr2.resultRegister.reference.referend != Never2()
         val FunctionEnvironment(_, _, _, _, _, _, counterAfterThen, variablesAfterThen, movedsAfterThen) = fateAfterThen
 
         // Give the else branch the same fate the then branch got, except let the counter
         // remain higher.
-        val (fateForElse, _) = fateBeforeBranch.nextCounters(counterAfterThen - counterBeforeBranch)
-        val (fateAfterElse, elseExpr2, returnsFromElse) =
+        val fateForElse = FunctionEnvironmentBox(fateAfterBranch)
+        val _ = fateForElse.nextCounters(counterAfterThen - counterBeforeBranch)
+        val (elseExpr2, returnsFromElse) =
           BlockTemplar.evaluateBlock(fateForElse, temputs, elseBody1)
+        val fateAfterElse = fateForElse.functionEnvironment
+
         val elseContinues = elseExpr2.resultRegister.reference.referend != Never2()
         val FunctionEnvironment(_, _, _, _, _, _, counterAfterElse, variablesAfterElse, movedsAfterElse) = fateAfterElse
 
@@ -607,7 +608,7 @@ object ExpressionTemplar {
         vassert(variablesBeforeBranch == variablesAfterThen)
         vassert(variablesBeforeBranch == variablesAfterElse)
 
-        val fate5 =
+        val finalFate =
           if (thenContinues == elseContinues) { // Both continue, or both don't
             // Each branch might have moved some things. Make sure they moved the same things.
             if (movedsAfterThen != movedsAfterElse) {
@@ -633,68 +634,69 @@ object ExpressionTemplar {
               (fateAfterElse)
             } else vfail()
           }
-        (fate5, ifExpr2, returnsFromCondition ++ returnsFromThen ++ returnsFromElse)
+        fate.functionEnvironment = finalFate
+        (ifExpr2, returnsFromCondition ++ returnsFromThen ++ returnsFromElse)
       }
       case WhileAE(condition1, body1) => {
-        val (fate2, conditionExpr2, returnsFromCondition) =
-          BlockTemplar.evaluateBlock(fate0, temputs, condition1)
-        val (fate3, bodyExpr2, returnsFromBody) =
-          BlockTemplar.evaluateBlock(fate2, temputs, body1)
+        val (conditionExpr2, returnsFromCondition) =
+          BlockTemplar.evaluateBlock(fate, temputs, condition1)
+        val (bodyExpr2, returnsFromBody) =
+          BlockTemplar.evaluateBlock(fate, temputs, body1)
 
-        vassert(fate2.variables == fate3.variables)
-        (fate2.moveds != fate3.moveds, "Don't move things from inside whiles!")
+        vassert(fate.variables == fate.variables)
+        (fate.moveds != fate.moveds, "Don't move things from inside whiles!")
 
         val ifExpr2 = If2(conditionExpr2, Block2(List(bodyExpr2, BoolLiteral2(true))) , Block2(List(BoolLiteral2(false))))
         val whileExpr2 = While2(Block2(List(ifExpr2)))
-        (fate3, whileExpr2, returnsFromCondition ++ returnsFromBody)
+        (whileExpr2, returnsFromCondition ++ returnsFromBody)
       }
       case b @ BlockAE(_, _) => {
-        val (fate1, block2, returnsFromBlock) =
-          BlockTemplar.evaluateBlock(fate0, temputs, b);
-        (fate1, block2, returnsFromBlock)
+        val (block2, returnsFromBlock) =
+          BlockTemplar.evaluateBlock(fate, temputs, b);
+        (block2, returnsFromBlock)
       }
       case ArrayLengthAE(arrayExprA) => {
-        val (fate1, arrayExpr2, returnsFromArrayExpr) =
-          evaluateAndCoerceToReferenceExpression(temputs, fate0, arrayExprA);
-        (fate1, ArrayLength2(arrayExpr2), returnsFromArrayExpr)
+        val (arrayExpr2, returnsFromArrayExpr) =
+          evaluateAndCoerceToReferenceExpression(temputs, fate, arrayExprA);
+        (ArrayLength2(arrayExpr2), returnsFromArrayExpr)
       }
       case ReturnAE(innerExprA) => {
-        val (fate1, uncastedInnerExpr2, returnsFromInnerExpr) =
-          evaluateAndCoerceToReferenceExpression(temputs, fate0, innerExprA);
+        val (uncastedInnerExpr2, returnsFromInnerExpr) =
+          evaluateAndCoerceToReferenceExpression(temputs, fate, innerExprA);
 
         val innerExpr2 =
-          fate1.maybeReturnType match {
+          fate.maybeReturnType match {
             case None => (uncastedInnerExpr2)
             case Some(returnType) => {
               TemplataTemplar.isTypeConvertible(temputs, uncastedInnerExpr2.resultRegister.reference, returnType) match {
                 case (false) => vfail("Can't convert " + uncastedInnerExpr2.resultRegister.reference + " to return type " + returnType)
                 case (true) => {
-                  TypeTemplar.convert(fate1, temputs, uncastedInnerExpr2, returnType)
+                  TypeTemplar.convert(fate.snapshot, temputs, uncastedInnerExpr2, returnType)
                 }
               }
             }
           }
 
-        val variablesToDestruct = fate1.getAllLiveLocals()
+        val variablesToDestruct = fate.getAllLiveLocals()
         val reversedVariablesToDestruct = variablesToDestruct.reverse
 
-        val (fate2, resultVarNum) = fate1.nextVarCounter()
-        val resultVarId = VariableId2(fate1.function.lambdaNumber, "__funcresult_" + resultVarNum)
+        val (resultVarNum) = fate.nextVarCounter()
+        val resultVarId = VariableId2(fate.function.lambdaNumber, "__funcresult_" + resultVarNum)
         val resultVariable = ReferenceLocalVariable2(resultVarId, Final, innerExpr2.resultRegister.reference)
         val resultLet = LetNormal2(resultVariable, innerExpr2)
-        val fate3 = fate2.addVariable(resultVariable)
+        fate.addVariable(resultVariable)
 
-        val (fate4, destructExprs) =
-          unletAll(temputs, fate3, reversedVariablesToDestruct)
+        val (destructExprs) =
+          unletAll(temputs, fate, reversedVariablesToDestruct)
 
-        val (fate5, getResultExpr) =
-          ExpressionTemplar.unletLocal(fate4, resultVariable)
+        val (getResultExpr) =
+          ExpressionTemplar.unletLocal(fate, resultVariable)
 
         val consecutor = Consecutor2(List(resultLet) ++ destructExprs ++ List(getResultExpr))
 
         val returns = returnsFromInnerExpr + innerExpr2.resultRegister.reference
 
-        (fate5, Return2(consecutor), returns)
+        (Return2(consecutor), returns)
       }
       case _ => {
         println(expr1)
@@ -703,19 +705,19 @@ object ExpressionTemplar {
     }
   }
 
-  private def decaySoloPack(fate0: FunctionEnvironment, refExpr: ReferenceExpression2):
-  (FunctionEnvironment, ReferenceExpression2) = {
+  private def decaySoloPack(fate: FunctionEnvironmentBox, refExpr: ReferenceExpression2):
+  (ReferenceExpression2) = {
     refExpr.resultRegister.reference.referend match {
       case PackT2(List(onlyMember), understruct) => {
-        val (fate2, varNameCounter) = fate0.nextVarCounter()
+        val (varNameCounter) = fate.nextVarCounter()
         val varName = "__" + varNameCounter + "_temp"
-        val varId = VariableId2(fate0.function.lambdaNumber, varName)
+        val varId = VariableId2(fate.function.lambdaNumber, varName)
         val localVar = ReferenceLocalVariable2(varId, Final, onlyMember)
         val destructure = Destructure2(refExpr, understruct, List(localVar))
-        val (fate3, unletExpr) = unletLocal(fate2, localVar)
-        (fate3, Consecutor2(List(destructure, unletExpr)))
+        val (unletExpr) = unletLocal(fate, localVar)
+        (Consecutor2(List(destructure, unletExpr)))
       }
-      case _ => (fate0, refExpr)
+      case _ => (refExpr)
     }
   }
 
@@ -724,18 +726,18 @@ object ExpressionTemplar {
   // Rename this someday.
   private def dotBorrow(
       temputs: TemputsBox,
-      fate1: FunctionEnvironment,
+      fate: FunctionEnvironmentBox,
       undecayedUnborrowedContainerExpr2: Expression2):
-  (FunctionEnvironment, ReferenceExpression2) = {
+  (ReferenceExpression2) = {
     undecayedUnborrowedContainerExpr2 match {
       case a: AddressExpression2 => {
-        (fate1, borrowSoftLoad(temputs, a))
+        (borrowSoftLoad(temputs, a))
       }
       case r: ReferenceExpression2 => {
-        val (fate2, unborrowedContainerExpr2) = decaySoloPack(fate1, r)
+        val (unborrowedContainerExpr2) = decaySoloPack(fate, r)
         unborrowedContainerExpr2.resultRegister.reference.ownership match {
-          case Own => makeTemporaryLocal(temputs, fate2, unborrowedContainerExpr2)
-          case Borrow | Share => (fate2, unborrowedContainerExpr2)
+          case Own => makeTemporaryLocal(temputs, fate, unborrowedContainerExpr2)
+          case Borrow | Share => (unborrowedContainerExpr2)
         }
       }
     }
@@ -743,21 +745,21 @@ object ExpressionTemplar {
 
   def makeTemporaryLocal(
       temputs: TemputsBox,
-      fate0: FunctionEnvironment,
+      fate: FunctionEnvironmentBox,
       r: ReferenceExpression2):
-  (FunctionEnvironment, Defer2) = {
-    val (fate1, varNameCounter) = fate0.nextVarCounter()
+  (Defer2) = {
+    val (varNameCounter) = fate.nextVarCounter()
     val varName = "__" + varNameCounter + "_temp"
-    val varId = VariableId2(fate0.function.lambdaNumber, varName)
+    val varId = VariableId2(fate.function.lambdaNumber, varName)
     val rlv = ReferenceLocalVariable2(varId, Final, r.resultRegister.reference)
     val letExpr2 = LetAndLend2(rlv, r)
-    val fate2 = fate1.addVariable(rlv)
+    fate.addVariable(rlv)
 
-    val (fate3, unlet) = ExpressionTemplar.unletLocal(fate2, rlv)
-    val (fate4, destructExpr2) =
-      DestructorTemplar.drop(fate3, temputs, unlet)
+    val (unlet) = ExpressionTemplar.unletLocal(fate, rlv)
+    val (destructExpr2) =
+      DestructorTemplar.drop(fate, temputs, unlet)
 
-    (fate4, Defer2(letExpr2, destructExpr2))
+    (Defer2(letExpr2, destructExpr2))
   }
 
   // Given a function1, this will give a closure (an OrdinaryClosure2 or a TemplatedClosure2)
@@ -768,32 +770,32 @@ object ExpressionTemplar {
   // - hoistees; expressions to hoist (like initializing blocks)
   def evaluateClosure(
       temputs: TemputsBox,
-      fate0: FunctionEnvironment,
+      fate: FunctionEnvironmentBox,
       function1: BFunctionA):
-  (FunctionEnvironment, ReferenceExpression2) = {
+  (ReferenceExpression2) = {
 
     val closureStructRef2 =
-      FunctionTemplar.evaluateClosureStruct(temputs, fate0, function1);
+      FunctionTemplar.evaluateClosureStruct(temputs, fate.snapshot, function1);
     val closureCoord =
       TemplataTemplar.pointifyReferend(temputs, closureStructRef2, Own)
 
-    val (fate1, constructExpr2) =
-      makeClosureStructConstructExpression(temputs, fate0, closureStructRef2)
+    val (constructExpr2) =
+      makeClosureStructConstructExpression(temputs, fate, closureStructRef2)
     // The result of a constructor is always an own or a share.
     val resultExpr2 = TemplarReinterpret2(constructExpr2, closureCoord)
 
     // The below code was here, but i see no reason we need to put it in a temporary and lend it out.
     // shouldnt this be done automatically if we try to call the function which accepts a borrow?
-//    val closureVarId = VariableId2(fate0.lambdaNumber, "__closure_" + function1.origin.lambdaNumber)
+//    val closureVarId = VariableId2(fate.lambdaNumber, "__closure_" + function1.origin.lambdaNumber)
 //    val closureLocalVar = ReferenceLocalVariable2(closureVarId, Final, resultExpr2.resultRegister.reference)
 //    val letExpr2 = LetAndLend2(closureLocalVar, resultExpr2)
-//    val (fate3, unlet2) = ExpressionTemplar.unletLocal(fate1, closureLocalVar)
-//    val (fate5, dropExpr) =
-//      DestructorTemplar.drop(env, temputs, fate3, unlet2)
+//    val (unlet2) = ExpressionTemplar.unletLocal(fate, closureLocalVar)
+//    val (dropExpr) =
+//      DestructorTemplar.drop(env, temputs, fate, unlet2)
 //    val deferExpr2 = Defer2(letExpr2, dropExpr)
-//    (temputs, fate5, deferExpr2)
+//    (temputs, fate, deferExpr2)
 
-    (fate1, resultExpr2)
+    (resultExpr2)
   }
 
   def getBorrowOwnership(temputs: TemputsBox, referend: Kind):
@@ -842,18 +844,18 @@ object ExpressionTemplar {
   }
 
   def maybeSoftLoad(
-      fate0: FunctionEnvironment,
+      fate: FunctionEnvironmentBox,
       expr2: Expression2,
       borrow: Boolean):
-  (FunctionEnvironment, ReferenceExpression2) = {
+  (ReferenceExpression2) = {
     expr2 match {
-      case e : ReferenceExpression2 => (fate0, e)
-      case e : AddressExpression2 => softLoad(fate0, e, borrow)
+      case e : ReferenceExpression2 => (e)
+      case e : AddressExpression2 => softLoad(fate, e, borrow)
     }
   }
 
-  def softLoad(fate0: FunctionEnvironment, a: AddressExpression2, borrow: Boolean):
-  (FunctionEnvironment, ReferenceExpression2) = {
+  def softLoad(fate: FunctionEnvironmentBox, a: AddressExpression2, borrow: Boolean):
+  (ReferenceExpression2) = {
     if (borrow) {
       val targetOwnership =
         a.resultRegister.reference.ownership match {
@@ -862,7 +864,7 @@ object ExpressionTemplar {
           case Share => Share
           case Raw => Raw
         }
-      (fate0, SoftLoad2(a, targetOwnership))
+      (SoftLoad2(a, targetOwnership))
     } else {
       a.resultRegister.reference.ownership match {
         case Own => {
@@ -873,11 +875,11 @@ object ExpressionTemplar {
                 vfail("Can't move out of a member!")
               }
             }
-          val fate1 = fate0.markVariableMoved(localVar.id)
-          (fate1, Unlet2(localVar))
+          fate.markVariableMoved(localVar.id)
+          (Unlet2(localVar))
         }
         case Borrow | Share | Raw => {
-          (fate0, SoftLoad2(a, a.resultRegister.reference.ownership))
+          (SoftLoad2(a, a.resultRegister.reference.ownership))
         }
       }
     }
@@ -890,20 +892,19 @@ object ExpressionTemplar {
     SoftLoad2(expr2, ownership)
   }
 
-  def unletLocal(fate0: FunctionEnvironment, localVar: ILocalVariable2):
-  (FunctionEnvironment, Unlet2) = {
-    val fate1 = fate0.markVariableMoved(localVar.id)
-    val unlet = Unlet2(localVar)
-    (fate1, unlet)
+  def unletLocal(fate: FunctionEnvironmentBox, localVar: ILocalVariable2):
+  (Unlet2) = {
+    fate.markVariableMoved(localVar.id)
+    Unlet2(localVar)
   }
 
-  private def newGlobalFunctionGroupExpression(env: IEnvironment, name: String): ReferenceExpression2 = {
+  private def newGlobalFunctionGroupExpression(env: IEnvironmentBox, name: String): ReferenceExpression2 = {
     TemplarReinterpret2(
       PackTemplar.emptyPackExpression,
       Coord(
         Share,
         OverloadSet(
-          env,
+          env.snapshot,
           name,
           Program2.emptyPackStructRef)))
   }

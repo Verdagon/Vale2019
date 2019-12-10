@@ -4,7 +4,7 @@ import net.verdagon.radonc.templar.types._
 import net.verdagon.radonc.templar.templata._
 import net.verdagon.radonc.parser.MutableP
 import net.verdagon.radonc.templar.citizen.{StructTemplar, StructTemplarCore}
-import net.verdagon.radonc.templar.env.IEnvironment
+import net.verdagon.radonc.templar.env.{IEnvironment, IEnvironmentBox}
 import net.verdagon.radonc.templar.function.DestructorTemplar
 import net.verdagon.radonc.templar.types._
 import net.verdagon.radonc.templar.templata._

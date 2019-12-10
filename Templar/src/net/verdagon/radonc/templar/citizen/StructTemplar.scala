@@ -8,7 +8,7 @@ import net.verdagon.radonc.scout._
 import net.verdagon.radonc.scout.patterns.{AtomSP, PatternSUtils}
 import net.verdagon.radonc.scout.rules._
 import net.verdagon.radonc.templar._
-import net.verdagon.radonc.templar.env.{FunctionEnvironment, IEnvironment, NamespaceEnvironment}
+import net.verdagon.radonc.templar.env.{FunctionEnvironment, FunctionEnvironmentBox, IEnvironment, NamespaceEnvironment}
 import net.verdagon.radonc.templar.function.{FunctionTemplar, FunctionTemplarCore, FunctionTemplarMiddleLayer}
 import net.verdagon.radonc.{vassertSome, vcurious, vfail, vimpl}
 
@@ -30,7 +30,7 @@ object StructTemplar {
       "templatedConstructorGenerator" ->
         new IFunctionGenerator {
           override def generate(
-            env: FunctionEnvironment,
+            env: FunctionEnvironmentBox,
             temputs: TemputsBox,
             originFunction: Option[FunctionA],
             paramCoords: List[Parameter2],

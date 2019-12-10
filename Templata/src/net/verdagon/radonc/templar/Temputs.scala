@@ -732,7 +732,7 @@ case class Function2(
 
 trait IFunctionGenerator {
   def generate(
-    env: FunctionEnvironment,
+    env: FunctionEnvironmentBox,
     temputs: TemputsBox,
     // We might be able to move these all into the function environment... maybe....
     originFunction: Option[FunctionA],

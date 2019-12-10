@@ -70,7 +70,7 @@ object BuiltInFunctions {
         "concreteDestructorGenerator" ->
           new IFunctionGenerator {
             override def generate(
-              env: FunctionEnvironment,
+              env: FunctionEnvironmentBox,
               temputs: TemputsBox,
               maybeOriginFunction1: Option[FunctionA],
               paramCoords: List[Parameter2],
@@ -97,11 +97,11 @@ object BuiltInFunctions {
                 }
                 case List(r @ Coord(_, as @ ArraySequenceT2(_, _))) => {
                   DestructorTemplar.generateArraySequenceDestructor(
-                    env, temputs, maybeOriginFunction1, r, as)
+                    env.snapshot, temputs, maybeOriginFunction1, r, as)
                 }
                 case List(r @ Coord(_, ra @ UnknownSizeArrayT2(_))) => {
                   DestructorTemplar.generateUnknownSizeArrayDestructor(
-                    env, temputs, maybeOriginFunction1, r, ra)
+                    env.snapshot, temputs, maybeOriginFunction1, r, ra)
                 }
                 case _ => {
                   vfail("wot")
@@ -150,7 +150,7 @@ object BuiltInFunctions {
         ("interfaceDestructorGenerator" ->
         new IFunctionGenerator {
           override def generate(
-            innerEnv: FunctionEnvironment,
+            innerEnv: FunctionEnvironmentBox,
             temputs: TemputsBox,
             maybeOriginFunction1: Option[FunctionA],
             params: List[Parameter2],
@@ -215,7 +215,7 @@ object BuiltInFunctions {
         "implDestructorGenerator" ->
           new IFunctionGenerator {
             override def generate(
-              innerEnv: FunctionEnvironment,
+              innerEnv: FunctionEnvironmentBox,
               temputs: TemputsBox,
               maybeOriginFunction1: Option[FunctionA],
               params: List[Parameter2],
@@ -281,7 +281,7 @@ object BuiltInFunctions {
         "dropGenerator" ->
           new IFunctionGenerator {
             override def generate(
-              innerEnv: FunctionEnvironment,
+              innerEnv: FunctionEnvironmentBox,
               temputs: TemputsBox,
               maybeOriginFunction1: Option[FunctionA],
               params: List[Parameter2],

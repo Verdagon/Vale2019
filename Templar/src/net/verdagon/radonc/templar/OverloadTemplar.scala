@@ -6,7 +6,7 @@ import net.verdagon.radonc.scout.rules.{EqualsSR, TemplexSR, TypedSR}
 import net.verdagon.radonc.templar.types._
 import net.verdagon.radonc.templar.templata.{IPotentialBanner, _}
 import net.verdagon.radonc.scout.{CodeBody1, ITemplexS}
-import net.verdagon.radonc.templar.env.{ExpressionLookupContext, FunctionEnvironment, IEnvironment, TemplataLookupContext}
+import net.verdagon.radonc.templar.env._
 import net.verdagon.radonc.templar.function.FunctionTemplar
 import net.verdagon.radonc.templar.function.FunctionTemplar.{EvaluateFunctionFailure, EvaluateFunctionSuccess, IEvaluateFunctionResult}
 import net.verdagon.radonc.templar.infer.{InferSolveFailure, InferSolveSuccess}
@@ -42,8 +42,7 @@ object OverloadTemplar {
       }
       case Some(potentialBanner) => {
         val thing =
-          stampPotentialFunctionForPrototype(
-            env, temputs, potentialBanner, args)
+          stampPotentialFunctionForPrototype(temputs, potentialBanner, args)
         (Some(thing), outscoredReasonByPotentialBanner, rejectedReasonByBanner, rejectedReasonByFunction)
       }
     }
@@ -454,7 +453,7 @@ object OverloadTemplar {
   }
 
   def stampPotentialFunctionForBanner(
-      env: IEnvironment,
+      env: IEnvironmentBox,
       temputs: TemputsBox,
       potentialBanner: IPotentialBanner):
   (FunctionBanner2) = {
@@ -479,7 +478,6 @@ object OverloadTemplar {
   // The "for temputs" thing is important, it means we don't care what the result is, we just
   // want to make sure it gets into the outputs.
   private def stampPotentialFunctionForPrototype(
-      env: IEnvironment,
       temputs: TemputsBox,
       potentialBanner: IPotentialBanner,
       args: List[ParamFilter]):
