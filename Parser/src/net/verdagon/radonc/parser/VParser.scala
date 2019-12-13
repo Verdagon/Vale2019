@@ -77,9 +77,9 @@ object VParser
   }
 
   def structMember: Parser[StructMemberP] = {
-    opt("mut") ~ (exprIdentifier <~ optWhite <~ ":" <~ optWhite) ~ (templex <~ optWhite <~ ";") ^^ {
-      case None ~ name ~ tyype => StructMemberP(name, FinalP, tyype)
-      case Some(_) ~ name ~ tyype => StructMemberP(name, VaryingP, tyype)
+    (((exprIdentifier <~ optWhite) ~ opt("!" <~ optWhite)) <~ ":" <~ optWhite) ~ (templex <~ optWhite <~ ";") ^^ {
+      case name ~ None ~ tyype => StructMemberP(name, FinalP, tyype)
+      case name ~ Some(_) ~ tyype => StructMemberP(name, VaryingP, tyype)
     }
   }
 

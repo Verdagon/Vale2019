@@ -6,7 +6,7 @@ object ClosureSamples {
       |fn main() Int {
       |  x = 4;
       |  {
-      |    mut (x) = x + 1;
+      |    mut x = x + 1;
       |  }();
       |  x
       |}

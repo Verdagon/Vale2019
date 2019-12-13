@@ -173,8 +173,8 @@ class ClosureTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  mut x = 4;
-        |  { mut (x) = x + 1; }();
+        |  x! = 4;
+        |  { mut x = x + 1; }();
         |  = x;
         |}
       """.stripMargin)
@@ -203,7 +203,7 @@ class ClosureTests extends FunSuite with Matchers {
   }
 
   test("Mutates from inside a closure inside a closure") {
-    val compile = new Compilation("fn main() { mut x = 4; { { mut (x) = x + 1; }(); }(); = x; }")
+    val compile = new Compilation("fn main() { x! = 4; { { mut x = x + 1; }(); }(); = x; }")
 
     compile.evalForReferend(Vector()) shouldEqual VonInt(5)
   }

@@ -213,7 +213,7 @@ class ArrayTests extends FunSuite with Matchers {
       """
         |fn main() {
         |  arr = __Array<mut, Int>(3, {(row) row});
-        |  mut (arr.(1)) = 1337;
+        |  mut arr.(1) = 1337;
         |  = arr.1;
         |}
       """.stripMargin)
@@ -225,7 +225,7 @@ class ArrayTests extends FunSuite with Matchers {
 //        |fn main() {
 //        |  m = MyIntIdentity();
 //        |  arr = __Array<mut>(10, &m);
-//        |  mut (arr.(1)) = 1337;
+//        |  mut arr.(1) = 1337;
 //        |  = arr.1;
 //        |}
 //      """.stripMargin)
@@ -330,7 +330,7 @@ class ArrayTests extends FunSuite with Matchers {
       ArrayUtils.code +
       """fn main() {
         |  sum = 0;
-        |  [6, 60, 103].each({ mut (sum) = sum + _; });
+        |  [6, 60, 103].each({ mut sum = sum + _; });
         |  = sum;
         |}
         |""".stripMargin)

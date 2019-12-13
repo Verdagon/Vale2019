@@ -16,16 +16,16 @@ val code =
     |    newArray =
     |        __Array<mut, Opt<E>>(newLen, {(index)
     |          = if {index < len(list)} {
-    |              = (mut (list.array.(index)) = None<E>());
+    |              = (mut list.array.(index) = None<E>());
     |            } else {
     |              result: Opt<E> = None<E>();
     |              = result;
     |            }
     |        });
-    |    mut (list.array) = newArray;
+    |    mut list.array = newArray;
     |  }
-    |  mut (list.array.(list.size)) = Some<E>(newElement);
-    |  mut (list.size) = list.size + 1;
+    |  mut list.array.(list.size) = Some<E>(newElement);
+    |  mut list.size = list.size + 1;
     |}
     |// todo: make that return a &#E
     |fn get<#E>(list: &List<#E>, index: Int) &Opt<#E> {
@@ -33,7 +33,7 @@ val code =
     |  = a.(index);
     |}
     |fn set<#E>(list: &List<#E>, index: Int, value: #E) Void {
-    |  mut (list.array.(index)) = Some(value);
+    |  mut list.array.(index) = Some(value);
     |}
     |fn toArray<#M, #E>(list: &List<#E>) __Array<#M, #E> rules(#M: Mutability) {
     |  __Array<M, E>(list.len(), {(i) list.get(i).get()})

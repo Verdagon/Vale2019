@@ -191,7 +191,7 @@ class TemplarTests extends FunSuite with Matchers {
   }
 
   test("Test mutating a local var") {
-    val compile = new Compilation("fn main(){mut a = 3; mut (a) = 4; }")
+    val compile = new Compilation("fn main(){a! = 3; mut a = 4; }")
     val temputs = compile.getTemputs();
     temputs.only({ case Mutate2(LocalLookup2(ReferenceLocalVariable2(VariableId2(_, "a"), Varying, _), _), IntLiteral2(4)) => })
   }
@@ -568,7 +568,7 @@ class TemplarTests extends FunSuite with Matchers {
         |
         |fn main() {
         |  m: IOption<Int> = None<Int>();
-        |  mut (m) = Some(6);
+        |  mut m = Some(6);
         |}
       """.stripMargin)
 
@@ -593,7 +593,7 @@ class TemplarTests extends FunSuite with Matchers {
         |}
         |fn main() {
         |  m = Marine(None<Int>());
-        |  mut (m.weapon) = Some(6);
+        |  mut m.weapon = Some(6);
         |}
       """.stripMargin)
 

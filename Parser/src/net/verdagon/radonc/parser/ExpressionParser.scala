@@ -49,7 +49,7 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
   }
 
   private[parser] def mutate: Parser[IExpressionPE] = {
-    ("mut" ~> optWhite ~> "(" ~> optWhite ~> expression <~ optWhite <~ ")" <~ optWhite <~ "=" <~ optWhite) ~ expression ^^ {
+    ("mut" ~> white ~> expression <~ white <~ "=" <~ white) ~ expression ^^ {
       case destinationExpr ~ sourceExpr => MutatePE(destinationExpr, sourceExpr)
     }
   }
@@ -149,20 +149,12 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
     ret | mutate | ifLadder | lend | not | expressionLevel9
   }
 
-  def anyOf(strings: Set[String]): Parser[String] = {
-    val x: Parser[String] = failure("wat")
-    strings.foldLeft(x)({ case (a, b) => a | b })
-  }
-
   // Binariable = can have binary operators in it
-  // These are separated by `white ~> binaryOperatorParser <~ white` because otherwise
-  // we stop early when we're just looking for "<", in "<=". Expecting the whitespace means
-  // we parse the entire operator.
   def binariableExpression[T](
       innerParser: Parser[IExpressionPE],
       binaryOperatorParser: Parser[T],
       combiner: (T, IExpressionPE, IExpressionPE) => IExpressionPE): Parser[IExpressionPE] = {
-    innerParser ~ rep((white ~> binaryOperatorParser <~ white) ~ innerParser) ^^ {
+    innerParser ~ rep((binaryOperatorParser) ~ innerParser) ^^ {
       case firstElement ~ restBinaryOperatorsAndElements => {
         restBinaryOperatorsAndElements.foldLeft(firstElement)({
           case (previousResult, (operator ~ nextElement)) => {
@@ -174,22 +166,25 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
   }
 
   def expression: Parser[IExpressionPE] = {
+    // These extra white parsers are here otherwise we stop early when we're just looking for "<", in "<=".
+    // Expecting the whitespace means we parse the entire operator.
+
     val withMultDiv =
       binariableExpression(
         postfixableExpressions,
-        anyOf(Set("*", "/")),
+        white ~> ("*" | "/") <~ white,
         (op: String, left, right) => FunctionCallPE(LookupPE(op, List()), PackPE(List(left, right)), true))
 
     val withAddSubtract =
       binariableExpression(
         withMultDiv,
-        anyOf(Set("+", "-")),
+        white ~> ("+" | "-") <~ white,
         (op: String, left, right) => FunctionCallPE(LookupPE(op, List()), PackPE(List(left, right)), true))
 
     val withLessGreater =
       binariableExpression(
         withAddSubtract,
-        anyOf(Set("<", ">")),
+        white ~> ("<" | ">") <~ white,
         (op: String, left, right) => FunctionCallPE(LookupPE(op, List()), PackPE(List(left, right)), true))
 
 //    val withAnd =
@@ -207,7 +202,7 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
     val withCustomBinaries =
       binariableExpression(
         withLessGreater,
-        infixFunctionIdentifier,
+        not(white ~> "=" <~ white) ~> (white ~> infixFunctionIdentifier <~ white),
         (funcName: String, left, right) => FunctionCallPE(LookupPE(funcName, List()), PackPE(List(left, right)), true))
 
     withCustomBinaries

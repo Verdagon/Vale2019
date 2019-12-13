@@ -68,9 +68,9 @@ object Roguelike {
         |struct LocationHasher { }
         |fn __call(this: &LocationHasher, loc: Location) {
         |  hash = 0;
-        |  mut (hash) = 41 * hash + loc.groupX;
-        |  mut (hash) = 41 * hash + loc.groupY;
-        |  mut (hash) = 41 * hash + loc.indexInGroup;
+        |  mut hash = 41 * hash + loc.groupX;
+        |  mut hash = 41 * hash + loc.groupY;
+        |  mut hash = 41 * hash + loc.indexInGroup;
         |  = hash;
         |}
         |
@@ -98,10 +98,10 @@ object Roguelike {
         |        })
         |      });
         |
-        |  mut playerRow = 4;
-        |  mut playerCol = 3;
+        |  w! = 4;
+        |  l! = 3;
         |
-        |  mut running = true;
+        |  g! = true;
         |  while {running} {
         |    __Array<mut, Int>(10, {(rowI)
         |      row = board.(rowI);
@@ -121,15 +121,15 @@ object Roguelike {
         |    key = __getch();
         |    println(key);
         |    if {key == 81} {
-        |      mut (running) = false;
+        |      mut running = false;
         |    } else if {key == 119} {
-        |      mut (playerRow) = playerRow + -1;
+        |      mut playerRow = playerRow + -1;
         |    } else if {key == 115} {
-        |      mut (playerRow) = playerRow + 1;
+        |      mut playerRow = playerRow + 1;
         |    } else if {key == 97} {
-        |      mut (playerCol) = playerCol + -1;
+        |      mut playerCol = playerCol + -1;
         |    } else if {key == 100} {
-        |      mut (playerCol) = playerCol + 1;
+        |      mut playerCol = playerCol + 1;
         |    }
         |  }
         |}
@@ -193,10 +193,10 @@ object Roguelike {
 //        |  lam1 = Lam1();
 //        |  board = __Array<mut>(10, &lam1);
 //        |
-//        |  mut playerRow = 4;
-//        |  mut playerCol = 3;
+//        |  w! = 4;
+//        |  l! = 3;
 //        |
-//        |  mut running = true;
+//        |  g! = true;
 //        |  while {running} {
 //        |    lam3 = Lam3(&board, playerRow, playerCol);
 //        |    __Array<mut>(10, &lam3);
@@ -204,15 +204,15 @@ object Roguelike {
 //        |    key = __getch();
 //        |    println(key);
 //        |    if {key == 81} {
-//        |      mut (running) = false;
+//        |      mut running = false;
 //        |    } else if {key == 119} {
-//        |      mut (playerRow) = playerRow + -1;
+//        |      mut playerRow = playerRow + -1;
 //        |    } else if {key == 115} {
-//        |      mut (playerRow) = playerRow + 1;
+//        |      mut playerRow = playerRow + 1;
 //        |    } else if {key == 97} {
-//        |      mut (playerCol) = playerCol + -1;
+//        |      mut playerCol = playerCol + -1;
 //        |    } else if {key == 100} {
-//        |      mut (playerCol) = playerCol + 1;
+//        |      mut playerCol = playerCol + 1;
 //        |    }
 //        |  }
 //        |}

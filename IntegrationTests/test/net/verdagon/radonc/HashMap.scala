@@ -61,17 +61,17 @@ object HashMap {
       |      if {map.table.(i).empty?()} {
       |        // do nothing
       |      } else {
-      |        node? = (mut (map.table.(i)) = None<HashNode<K, V>>());
+      |        node? = (mut map.table.(i) = None<HashNode<K, V>>());
       |        node = get(node?);
       |        addNodeToTable(&newTable, map.hasher, node);
       |      }
-      |      mut (i) = i + 1;
+      |      mut i = i + 1;
       |    }
-      |    mut (map.table) = newTable;
+      |    mut map.table = newTable;
       |  }
       |
       |  addNodeToTable(map.table, map.hasher, HashNode<K, V>(key, value));
-      |  mut (map.size) = map.size + 1;
+      |  mut map.size = map.size + 1;
       |}
       |
       |fn addNodeToTable(table: &__Array<mut, Opt<HashNode<#K, #V>>>, hasher: #H, node: HashNode<#K, #V>) {
@@ -80,7 +80,7 @@ object HashMap {
       |  index = findEmptyIndexForKey(table, startIndex, node.key);
       |
       |  opt: Opt<HashNode<K, V>> = Some(node);
-      |  mut (table.(index)) = opt;
+      |  mut table.(index) = opt;
       |}
       |
       |fn findEmptyIndexForKey(table: &__Array<mut, Opt<HashNode<#K, #V>>>, startIndex: Int, key: #K) Int {
@@ -92,7 +92,7 @@ object HashMap {
       |      ret index;
       |    }
       |    // continue to next node
-      |    mut (i) = i + 1;
+      |    mut i = i + 1;
       |  }
       |  = panic("findEmptyIndexForKey went past end of table!");
       |}
@@ -110,7 +110,7 @@ object HashMap {
       |      ret Some<Int>(index);
       |    }
       |    // continue to next node
-      |    mut (i) = i + 1;
+      |    mut i = i + 1;
       |  }
       |  = panic("findIndexOfKey went past end of table! len: " + Str(table.len()) + " and i: " + Str(i));
       |}
@@ -143,7 +143,7 @@ object HashMap {
       |    if {not(node?.empty?())} {
       |      list.add(node?.get().key);
       |    }
-      |    mut (index) = index + 1;
+      |    mut index = index + 1;
       |  }
       |  = list.toArray<imm>();
       |}

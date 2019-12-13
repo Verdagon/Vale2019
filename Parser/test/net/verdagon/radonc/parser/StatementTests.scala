@@ -35,11 +35,11 @@ class StatementTests extends FunSuite with Matchers {
   }
 
   test("9") {
-    compile("mut (x.a) = 5;") shouldEqual MutatePE(DotPE(LookupPE("x", List()), LookupPE("a", List()), true), IntLiteralPE(5));
+    compile("mut x.a = 5;") shouldEqual MutatePE(DotPE(LookupPE("x", List()), LookupPE("a", List()), true), IntLiteralPE(5));
   }
 
   test("1PE") {
-    compile("""mut (board.PE.PE.symbol) = "v";""") shouldEqual
+    compile("""mut board.PE.PE.symbol = "v";""") shouldEqual
         MutatePE(DotPE(DotPE(DotPE(LookupPE("board", List()), LookupPE("PE", List()), true), LookupPE("PE", List()), true), LookupPE("symbol", List()), true), StrLiteralPE("v"));
   }
 
@@ -49,7 +49,7 @@ class StatementTests extends FunSuite with Matchers {
   }
 
   test("Test simple mut") {
-    compile("mut (x) = 5;") shouldEqual
+    compile("mut x = 5;") shouldEqual
       MutatePE(LookupPE("x", List()),IntLiteralPE(5))
   }
 

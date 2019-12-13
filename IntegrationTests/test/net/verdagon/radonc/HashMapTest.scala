@@ -91,9 +91,9 @@ class HashMapTest extends FunSuite with Matchers {
           |struct LocationHasher { }
           |fn __call(this: &LocationHasher, loc: Location) {
           |  hash = 0;
-          |  mut (hash) = 41 * hash + loc.groupX;
-          |  mut (hash) = 41 * hash + loc.groupY;
-          |  mut (hash) = 41 * hash + loc.indexInGroup;
+          |  mut hash = 41 * hash + loc.groupX;
+          |  mut hash = 41 * hash + loc.groupY;
+          |  mut hash = 41 * hash + loc.indexInGroup;
           |  = hash;
           |}
           |

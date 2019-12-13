@@ -86,12 +86,12 @@ class IntegrationTestsA extends FunSuite with Matchers {
   }
 
   test("Test mutating a local var") {
-    val compile = new Compilation("fn main(){mut a = 3; mut (a) = 4; }")
+    val compile = new Compilation("fn main(){a! = 3; mut a = 4; }")
     compile.run(Vector())
   }
 
   test("Test returning a local mutable var") {
-    val compile = new Compilation("fn main(){mut a = 3; mut (a) = 4; = a;}")
+    val compile = new Compilation("fn main(){a! = 3; mut a = 4; = a;}")
     compile.evalForReferend(Vector()) shouldEqual VonInt(4)
   }
 

@@ -29,7 +29,7 @@ object ArrayUtils {
       |    if {(equator)(arr.(i), elem)} {
       |      ret true;
       |    }
-      |    mut (i) = i + 1;
+      |    mut i = i + 1;
       |  }
       |  = false;
       |}
@@ -44,7 +44,7 @@ object ArrayUtils {
       |    if {(equator)(seq.(i), elem)} {
       |      ret true;
       |    }
-      |    mut (i) = i + 1;
+      |    mut i = i + 1;
       |  }
       |  = false;
       |}

@@ -157,7 +157,7 @@ class ScoutTests extends FunSuite with Matchers {
 //          Some(BodySE(Set(),Set(),List(IntLiteral1(2))))),
 //        PackSE(List(IntLiteral1(3))))))))))));
 //    check(7,
-//        "fn main(){let $a = 3; mut a = 4;}",
+//        "fn main(){let $a = 3; a! = 4;}",
 //        ProgramS(List(), List(), List(
 //            FunctionS("main",0,false,false,true,List(),List(),None,
 //              Some(BodySE(Set(),Set(),List(

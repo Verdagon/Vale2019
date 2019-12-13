@@ -216,4 +216,9 @@ class BiggerTests extends FunSuite with Matchers with Collector {
         PackPE(List()),
         true)
   }
+
+  test("!=") {
+    // This is why we can't disallow ! and = in infixFunctionIdentifier.
+    compile(VParser.infixFunctionIdentifier,"!=") shouldEqual "!="
+  }
 }

@@ -222,7 +222,7 @@ class OwnershipTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  mut i = 0;
+        |  i! = 0;
         |  = i;
         |}
       """.stripMargin)
