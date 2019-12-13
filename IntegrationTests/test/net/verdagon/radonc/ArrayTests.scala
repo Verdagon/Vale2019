@@ -13,7 +13,7 @@ class ArrayTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  let a = [2, 3, 4, 5, 6];
+        |  a = [2, 3, 4, 5, 6];
         |  = a.3;
         |}
       """.stripMargin)
@@ -49,8 +49,8 @@ class ArrayTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  let i = 2;
-        |  let a = [2, 3, 4, 5, 6];
+        |  i = 2;
+        |  a = [2, 3, 4, 5, 6];
         |  = a.(i);
         |}
       """.stripMargin)
@@ -71,7 +71,7 @@ class ArrayTests extends FunSuite with Matchers {
         |  arr.3
         |}
         |fn main() {
-        |  let a = [2, 3, 4, 5, 6];
+        |  a = [2, 3, 4, 5, 6];
         |  = doThings(a);
         |}
       """.stripMargin)
@@ -90,7 +90,7 @@ class ArrayTests extends FunSuite with Matchers {
         |  arr.2.x
         |}
         |fn main() {
-        |  let a = [MutableStruct(2), MutableStruct(3), MutableStruct(4)];
+        |  a = [MutableStruct(2), MutableStruct(3), MutableStruct(4)];
         |  = doThings(&a);
         |}
       """.stripMargin)
@@ -102,7 +102,7 @@ class ArrayTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  let a = __Array:(imm, Int)(10, {_});
+        |  a = __Array<imm, Int>(10, {_});
         |  = a.3;
         |}
       """.stripMargin)
@@ -119,19 +119,19 @@ class ArrayTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  let x = 7;
-        |  let a = __Array:(imm, Int)(10, {_ + x});
+        |  x = 7;
+        |  a = __Array<imm, Int>(10, {_ + x});
         |  = a.3;
         |}
       """.stripMargin)
 //    val compile = new Compilation(
 //      """
 //        |struct MyIntFunctor { x: Int; }
-//        |impl MyIntFunctor for IFunction1:(mut, Int, Int);
-//        |fn __call(this: &MyIntFunctor for IFunction1:(mut, Int, Int), i: Int) Int { this.x + i }
+//        |impl MyIntFunctor for IFunction1<mut, Int, Int>;
+//        |fn __call(this: &MyIntFunctor for IFunction1<mut, Int, Int>, i: Int) Int { this.x + i }
 //        |fn main() {
-//        |  let x = 7;
-//        |  let a = __Array:imm(10, MyIntFunctor(x));
+//        |  x = 7;
+//        |  a = __Array<imm>(10, MyIntFunctor(x));
 //        |  = a.3;
 //        |}
 //      """.stripMargin)
@@ -142,20 +142,20 @@ class ArrayTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  let a = __Array:(imm, Int)(10, {_});
-        |  let i = 5;
+        |  a = __Array<imm, Int>(10, {_});
+        |  i = 5;
         |  = a.(i);
         |}
       """.stripMargin)
 //    val compile = new Compilation(
 //      """
 //        |struct MyIntIdentity {}
-//        |impl MyIntIdentity for IFunction1:(mut, Int, Int);
-//        |fn __call(this: &MyIntIdentity for IFunction1:(mut, Int, Int), i: Int) Int { i }
+//        |impl MyIntIdentity for IFunction1<mut, Int, Int>;
+//        |fn __call(this: &MyIntIdentity for IFunction1<mut, Int, Int>, i: Int) Int { i }
 //        |fn main() {
-//        |  let m = MyIntIdentity();
-//        |  let a = __Array:imm(10, &m);
-//        |  let i = 5;
+//        |  m = MyIntIdentity();
+//        |  a = __Array<imm>(10, &m);
+//        |  i = 5;
 //        |  = a.(i);
 //        |}
 //      """.stripMargin)
@@ -179,27 +179,27 @@ class ArrayTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  let board = __Array:(mut, __Array:(mut, Int))(20, {(row) __Array:(mut, Int)(20, {(col) row + col})});
+        |  board = __Array<mut, __Array<mut, Int>>(20, {(row) __Array<mut, Int>(20, {(col) row + col})});
         |  = board.8.9;
         |}
       """.stripMargin)
 //    val compile = new Compilation(
 //      """
 //        |struct MyInnerIntFunctor { x: Int; }
-//        |impl MyInnerIntFunctor for IFunction1:(mut, Int, Int);
-//        |fn __call(this: &MyInnerIntFunctor for IFunction1:(mut, Int, Int), i: Int) Int { this.x + i }
+//        |impl MyInnerIntFunctor for IFunction1<mut, Int, Int>;
+//        |fn __call(this: &MyInnerIntFunctor for IFunction1<mut, Int, Int>, i: Int) Int { this.x + i }
 //        |
 //        |
 //        |struct MyOuterIntFunctor {}
-//        |impl MyOuterIntFunctor for IFunction1:(mut, Int, __Array:(imm, Int));
-//        |fn __call(this: &MyOuterIntFunctor for IFunction1:(mut, Int, __Array:(imm, Int)), i: Int) __Array:(imm, Int) {
-//        |  let innerIntFunctor = MyInnerIntFunctor(i);
-//        |  = __Array:imm(20, &innerIntFunctor);
+//        |impl MyOuterIntFunctor for IFunction1:(mut, Int, __Array<imm, Int>);
+//        |fn __call(this: &MyOuterIntFunctor for IFunction1:(mut, Int, __Array<imm, Int>, i: Int) __Array<imm, Int> {
+//        |  innerIntFunctor = MyInnerIntFunctor(i);
+//        |  = __Array<imm>(20, &innerIntFunctor);
 //        |}
 //        |
 //        |fn main() {
-//        |  let outerIntFunctor = MyOuterIntFunctor();
-//        |  let board = __Array:imm(20, &outerIntFunctor);
+//        |  outerIntFunctor = MyOuterIntFunctor();
+//        |  board = __Array<imm>(20, &outerIntFunctor);
 //        |  = board.8.9;
 //        |}
 //      """.stripMargin)
@@ -212,7 +212,7 @@ class ArrayTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  let arr = __Array:(mut, Int)(3, {(row) row});
+        |  arr = __Array<mut, Int>(3, {(row) row});
         |  mut (arr.(1)) = 1337;
         |  = arr.1;
         |}
@@ -220,11 +220,11 @@ class ArrayTests extends FunSuite with Matchers {
 //    val compile = new Compilation(
 //      """
 //        |struct MyIntIdentity {}
-//        |impl MyIntIdentity for IFunction1:(mut, Int, Int);
-//        |fn __call(this: &MyIntIdentity for IFunction1:(mut, Int, Int), i: Int) Int { i }
+//        |impl MyIntIdentity for IFunction1<mut, Int, Int>;
+//        |fn __call(this: &MyIntIdentity for IFunction1<mut, Int, Int>, i: Int) Int { i }
 //        |fn main() {
-//        |  let m = MyIntIdentity();
-//        |  let arr = __Array:mut(10, &m);
+//        |  m = MyIntIdentity();
+//        |  arr = __Array<mut>(10, &m);
 //        |  mut (arr.(1)) = 1337;
 //        |  = arr.1;
 //        |}
@@ -237,12 +237,12 @@ class ArrayTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |struct MyIntIdentity {}
-        |impl MyIntIdentity for IFunction1:(mut, Int, Int);
-        |fn __call(this: &MyIntIdentity for IFunction1:(mut, Int, Int), i: Int) Int { i }
+        |impl MyIntIdentity for IFunction1<mut, Int, Int>;
+        |fn __call(this: &MyIntIdentity for IFunction1<mut, Int, Int>, i: Int) Int { i }
         |fn main() {
-        |  let m = MyIntIdentity();
-        |  let arr = __Array:(mut, Int)(10, &m);
-        |  let lam = { println(arr.6); };
+        |  m = MyIntIdentity();
+        |  arr = __Array<mut, Int>(10, &m);
+        |  lam = { println(arr.6); };
         |  (lam)();
         |}
       """.stripMargin)
@@ -255,7 +255,7 @@ class ArrayTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  let a = __Array:(mut, Int)(11, {_});
+        |  a = __Array<mut, Int>(11, {_});
         |  = len(&a);
         |}
       """.stripMargin)
@@ -266,9 +266,9 @@ class ArrayTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  let board = __Array:(mut, Int)(5, {(x) x});
-        |  let result =
-        |      __Array:(mut, Int)(5, {(i)
+        |  board = __Array<mut, Int>(5, {(x) x});
+        |  result =
+        |      __Array<mut, Int>(5, {(i)
         |        board.(i) + 2
         |      });
         |  = result.2;
@@ -277,25 +277,25 @@ class ArrayTests extends FunSuite with Matchers {
 //    val compile = new Compilation(
 //      """
 //        |struct MyIntIdentity {}
-//        |impl MyIntIdentity for IFunction1:(mut, Int, Int);
-//        |fn __call(this: &MyIntIdentity for IFunction1:(mut, Int, Int), i: Int) Int { i }
+//        |impl MyIntIdentity for IFunction1<mut, Int, Int>;
+//        |fn __call(this: &MyIntIdentity for IFunction1<mut, Int, Int>, i: Int) Int { i }
 //        |
 //        |struct MyMappingFunctor {
-//        |  board: &__Array:(mut, Int);
+//        |  board: &__Array<mut, Int>;
 //        |}
-//        |impl MyMappingFunctor for IFunction1:(mut, Int, Int);
-//        |fn __call(this: &MyMappingFunctor for IFunction1:(mut, Int, Int), i: Int) Int {
-//        |  let board = this.board;
-//        |  let old = board.(i);
+//        |impl MyMappingFunctor for IFunction1<mut, Int, Int>;
+//        |fn __call(this: &MyMappingFunctor for IFunction1<mut, Int, Int>, i: Int) Int {
+//        |  board = this.board;
+//        |  old = board.(i);
 //        |  = old + 2;
 //        |}
 //        |
 //        |fn main() {
-//        |  let m = MyIntIdentity();
-//        |  let board = __Array:mut(10, &m);
+//        |  m = MyIntIdentity();
+//        |  board = __Array<mut>(10, &m);
 //        |
-//        |  let mapper = MyMappingFunctor(&board);
-//        |  let result = __Array:mut(5, &mapper);
+//        |  mapper = MyMappingFunctor(&board);
+//        |  result = __Array<mut>(5, &mapper);
 //        |  = result.2;
 //        |}
 //      """.stripMargin)
@@ -305,11 +305,11 @@ class ArrayTests extends FunSuite with Matchers {
 
   test("Map from hardcoded values") {
     val compile = new Compilation(
-      """fn toArray:#M(seq: &[:_ #N * #E]) rules(#M: Mutability) {
-        |  __Array:(M, E)(N, {(i) seq.(i)})
+      """fn toArray<#M>(seq: &[:_ #N * #E]) rules(#M: Mutability) {
+        |  __Array<M, E>(N, {(i) seq.(i)})
         |}
         |fn main() {
-        |  [6, 4, 3, 5, 2, 8].toArray:mut().(3)
+        |  [6, 4, 3, 5, 2, 8].toArray<mut>().(3)
         |}
         |""".stripMargin)
     compile.evalForReferend(Vector()) shouldEqual VonInt(5)
@@ -319,7 +319,7 @@ class ArrayTests extends FunSuite with Matchers {
     val compile = new Compilation(
       ArrayUtils.code +
       """fn main() {
-        |  [[6, 60].toArray:imm(), [4, 40].toArray:imm(), [3, 30].toArray:imm()].toArray:imm().(2).(1)
+        |  [[6, 60].toArray<imm>(), [4, 40].toArray<imm>(), [3, 30].toArray<imm>()].toArray<imm>().(2).(1)
         |}
         |""".stripMargin)
     compile.evalForReferend(Vector()) shouldEqual VonInt(30)
@@ -329,7 +329,7 @@ class ArrayTests extends FunSuite with Matchers {
     val compile = new Compilation(
       ArrayUtils.code +
       """fn main() {
-        |  let sum = 0;
+        |  sum = 0;
         |  [6, 60, 103].each({ mut (sum) = sum + _; });
         |  = sum;
         |}
@@ -355,11 +355,11 @@ class ArrayTests extends FunSuite with Matchers {
 //        |fn map
 //        |:(n: Int, T: reference, F: referend)
 //        |(arr: &[n T], generator: &F) {
-//        |  __Array:mut(n, {(i) generator(arr.(i))})
+//        |  __Array<mut>(n, {(i) generator(arr.(i))})
 //        |}
 //        |fn main() {
-//        |  let board = __Array:mut(5, {(x) x});
-//        |  let result = map(board, {_});
+//        |  board = __Array<mut>(5, {(x) x});
+//        |  result = map(board, {_});
 //        |  = result.3;
 //        |}
 //      """.stripMargin)
@@ -371,5 +371,5 @@ class ArrayTests extends FunSuite with Matchers {
 
   // if we want to make sure that our thing returns an int, then we can
   // try and cast it to a callable:
-  // fn makeArray:T(size: Int, callable: (Int):T) {
+  // fn makeArray<T>(size: Int, callable: (Int):T) {
 }

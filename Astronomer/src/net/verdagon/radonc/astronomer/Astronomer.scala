@@ -118,7 +118,7 @@ object Astronomer {
   }
 
   def lookupType(astrouts: AstroutsBox, env: Environment, name: String): ITemplataType = {
-    // When the scout comes across a lambda, it doesn't put the e.g. __Closure:main:lam1 struct into
+    // When the scout comes across a lambda, it doesn't put the e.g. __Closure<main>:lam1 struct into
     // the environment or anything, it lets templar to do that (because templar knows the actual types).
     // However, this means that when the lambda function gets to the astronomer, the astronomer doesn't
     // know what to do with it.

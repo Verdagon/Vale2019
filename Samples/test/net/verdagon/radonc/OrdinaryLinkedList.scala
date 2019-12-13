@@ -32,7 +32,7 @@ object OrdinaryLinkedList {
       |
       |
       |fn main() Int {
-      | 	let list = MyList(10, MySome(MyList(20, MySome(MyList(30, MyNone())))));
+      | 	list = MyList(10, MySome(MyList(20, MySome(MyList(30, MyNone())))));
       | 	printValues(list);
       | 	= 0;
       |}

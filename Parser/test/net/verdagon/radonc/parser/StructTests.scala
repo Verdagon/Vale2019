@@ -19,9 +19,9 @@ class StructTests extends FunSuite with Matchers with Collector {
   test("Struct with rune") {
     compile(VParser.topLevelThing,
       """
-        |struct ListNode:#E {
+        |struct ListNode<#E> {
         |  value: E;
-        |  next: ListNode:E;
+        |  next: ListNode<E>;
         |}
       """.stripMargin) shouldEqual
           TopLevelStruct(
@@ -38,7 +38,7 @@ class StructTests extends FunSuite with Matchers with Collector {
   test("Struct with int rune") {
     compile(VParser.topLevelThing,
       """
-        |struct Vecf:#N
+        |struct Vecf<#N>
         |rules(#N: Int)
         |{
         |  values: [N * Float];
@@ -57,7 +57,7 @@ class StructTests extends FunSuite with Matchers with Collector {
   test("Struct with int rune, array sequence specifies mutability") {
     compile(VParser.topLevelThing,
       """
-        |struct Vecf:#N
+        |struct Vecf<#N>
         |rules(#N: Int)
         |{
         |  values: [:imm N * Float];

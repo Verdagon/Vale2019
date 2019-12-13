@@ -34,7 +34,7 @@ class SignatureTests extends FunSuite with Matchers with Collector {
   }
 
   test("Param") {
-    val program = compile(VParser.program, "fn call(f:F){f()}")
+    val program = compile(VParser.program, "fn call(f: F){f()}")
     program shouldHave PatternPP(Some(CaptureP("f",FinalP)),Some(NamePPT("F")),None,None)
   }
 
@@ -46,7 +46,7 @@ class SignatureTests extends FunSuite with Matchers with Collector {
   test("Identifying runes") {
     compile(
       VParser.topLevelFunction,
-      "fn wrap:#F(a: #A) { }") shouldEqual
+      "fn wrap<#F>(a: #A) { }") shouldEqual
         FunctionP(
           Some("wrap"),false,false,true,
           List("F"),

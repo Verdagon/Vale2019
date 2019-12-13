@@ -60,7 +60,7 @@ class ClosureTests extends FunSuite with Matchers {
     // Even if we're certain it's moved, it must be addressible.
     // Imagine:
     // fn main() {
-    //   let m = Marine();
+    //   m = Marine();
     //   if {something} {
     //     something.consume(m);
     //   } else {
@@ -96,7 +96,7 @@ class ClosureTests extends FunSuite with Matchers {
         |  hp: *Int;
         |}
         |fn main() {
-        |  let m = Marine(9);
+        |  m = Marine(9);
         |  = { m.hp }();
         |}
       """.stripMargin)
@@ -105,7 +105,7 @@ class ClosureTests extends FunSuite with Matchers {
   }
 
   test("Test closure's local variables") {
-    val compile = new Compilation("fn main() { let x = 4; = {x}(); }")
+    val compile = new Compilation("fn main() { x = 4; = {x}(); }")
     val temputs = compile.getTemputs()
 
     temputs.lookupFunction("main:lam1").variables match {
@@ -117,7 +117,7 @@ class ClosureTests extends FunSuite with Matchers {
   }
 
   test("Test returning a nonmutable closured variable from the closure") {
-    val compile = new Compilation("fn main() { let x = 4; = {x}(); }")
+    val compile = new Compilation("fn main() { x = 4; = {x}(); }")
     val temputs = compile.getTemputs()
 
     // The struct should have an int x in it which is a reference type.
@@ -173,7 +173,7 @@ class ClosureTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  let mut x = 4;
+        |  mut x = 4;
         |  { mut (x) = x + 1; }();
         |  = x;
         |}
@@ -203,7 +203,7 @@ class ClosureTests extends FunSuite with Matchers {
   }
 
   test("Mutates from inside a closure inside a closure") {
-    val compile = new Compilation("fn main() { let mut x = 4; { { mut (x) = x + 1; }(); }(); = x; }")
+    val compile = new Compilation("fn main() { mut x = 4; { { mut (x) = x + 1; }(); }(); = x; }")
 
     compile.evalForReferend(Vector()) shouldEqual VonInt(5)
   }

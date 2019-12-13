@@ -15,12 +15,12 @@ class StatementTests extends FunSuite with Matchers {
   }
 
   test("Simple let") {
-    compile("let x = 4;") shouldEqual
+    compile("x = 4;") shouldEqual
         LetPE(List(),PatternPP(Some(CaptureP("x",FinalP)),None,None,None),IntLiteralPE(4))
   }
 
   test("8") {
-    compile("let [x, y] = (4, 5);") shouldEqual
+    compile("[x, y] = (4, 5);") shouldEqual
         LetPE(
           List(),
           PatternPP(
@@ -44,7 +44,7 @@ class StatementTests extends FunSuite with Matchers {
   }
 
   test("Test simple let") {
-    compile("let x = 3;") shouldEqual
+    compile("x = 3;") shouldEqual
       LetPE(List(),PatternPP(Some(CaptureP("x",FinalP)),None,None,None),IntLiteralPE(3))
   }
 
@@ -70,12 +70,12 @@ class StatementTests extends FunSuite with Matchers {
   }
 
   test("Let with pattern with only a capture") {
-    compile("let a = m;") shouldEqual
+    compile("a = m;") shouldEqual
         LetPE(List(),Patterns.capture("a"),LookupPE("m", List()))
   }
 
   test("Let with simple pattern") {
-    compile("let a : Moo = m;") shouldEqual
+    compile("a : Moo = m;") shouldEqual
         LetPE(
           List(),
           PatternPP(Some(CaptureP("a",FinalP)),Some(NamePPT("Moo")),None,None),
@@ -83,7 +83,7 @@ class StatementTests extends FunSuite with Matchers {
   }
 
   test("Let with simple pattern in seq") {
-    compile("let [a : Moo] = m;") shouldEqual
+    compile("[a : Moo] = m;") shouldEqual
         LetPE(
           List(),
           PatternPP(
@@ -95,7 +95,7 @@ class StatementTests extends FunSuite with Matchers {
   }
 
   test("Let with destructuring pattern") {
-    compile("let :Muta[] = m;") shouldEqual
+    compile(":Muta[] = m;") shouldEqual
       LetPE(List(),PatternPP(None,Some(NamePPT("Muta")),Some(List()),None),LookupPE("m", List()))
   }
 

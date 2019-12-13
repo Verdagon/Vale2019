@@ -20,7 +20,7 @@ class WhileTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  let mut i = 0;
+        |  mut i = 0;
         |  while {i < 4} {
         |    mut (i) = i + 1;
         |  }
@@ -35,7 +35,7 @@ class WhileTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  let mut key = 0;
+        |  mut key = 0;
         |  while {mut (key) = __getch(); = key < 96;} {
         |    print(key);
         |  }
@@ -50,7 +50,7 @@ class WhileTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  let mut key = 0;
+        |  mut key = 0;
         |  while {mut (key) = __getch(); = key != 99;} {
         |    print(key);
         |  }
@@ -81,7 +81,7 @@ class WhileTests extends FunSuite with Matchers {
 //        |fn doThings(m: Marine) { }
 //        |struct Marine { hp: *Int; }
 //        |fn main() {
-//        |  let m = Marine(7);
+//        |  m = Marine(7);
 //        |  while {true} {
 //        |    doThings(m);
 //        |  }

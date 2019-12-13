@@ -191,7 +191,7 @@ object PatternTemplar {
           case StructRef2(_) => {
             // Example:
             //   struct Marine { bork: Bork; }
-            //   let Marine(b) = m;
+            //   Marine(b) = m;
             // In this case, expectedStructType1 = TypeName1("Marine") and
             // destructureMemberPatterns = List(CaptureSP("b", FinalP, None)).
             // Since we're receiving an owning reference, and we're *not* capturing
@@ -265,7 +265,7 @@ object PatternTemplar {
 //      case CaptureSP(name, variability, _, Some(TypeOfSP(expectedType1))) => {
 //        // Example:
 //        //   struct Marine { bork: Bork; }
-//        //   let Marine(b : Bork) = m;
+//        //   Marine(b : Bork) = m;
 //        // In this case, name = 'b' and inner1 = 'Bork'
 //
 //        // This is local variable b
@@ -289,7 +289,7 @@ object PatternTemplar {
 //      case CaptureSP(name, variability, _, Some(DestructureSP(expectedStructType1, destructureMemberPatterns))) => {
 //        // Example:
 //        //   struct Marine { bork: Bork; }
-//        //   let m : Marine(b) = inMarine;
+//        //   m : Marine(b) = inMarine;
 //        // In this case, name = 'm', expectedStructType1 = TypeName1("Marine"),
 //        // and destructureMemberPatterns = List(CaptureSP("b", FinalP, None)).
 //        // The local m is actually an owning reference, and things inside the

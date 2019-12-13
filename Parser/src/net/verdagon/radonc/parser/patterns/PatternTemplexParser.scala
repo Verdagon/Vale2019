@@ -31,11 +31,8 @@ trait PatternTemplexParser extends RegexParsers with ParserUtils {
     packPatternTemplex |
     manualSeqPatternTemplex |
     repeaterSeqPatternTemplex |
-    ((nameOrRunePatternTemplex <~ optWhite <~ ":" <~ optWhite <~ "(" <~ optWhite) ~ repsep(patternTemplex, optWhite ~> "," <~ optWhite) <~ optWhite <~ ")" ^^ {
+    ((nameOrRunePatternTemplex <~ optWhite <~ "<" <~ optWhite) ~ repsep(patternTemplex, optWhite ~> "," <~ optWhite) <~ optWhite <~ ">" ^^ {
       case template ~ args => CallPPT(template, args)
-    }) |
-    ((nameOrRunePatternTemplex <~ optWhite <~ ":" <~ optWhite) ~ patternTemplex ^^ {
-      case template ~ arg => CallPPT(template, List(arg))
     }) |
     (int ^^ (value => IntPPT(value))) |
     ("mut" ^^^ MutabilityPPT(MutableP)) |

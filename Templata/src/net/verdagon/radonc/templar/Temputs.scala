@@ -704,7 +704,7 @@ case class CompleteProgram2(
   def lookupFunction(humanName: String): Function2 = {
     val matches = functions.filter(_.header.fullName.steps.last.humanName == humanName)
     if (matches.size == 0) {
-      vfail("Not found!")
+      vfail("Function \"" + humanName + "\" not found!")
     } else if (matches.size > 1) {
       vfail("Multiple found!")
     }

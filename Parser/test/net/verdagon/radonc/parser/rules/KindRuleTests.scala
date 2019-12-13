@@ -106,34 +106,34 @@ class KindRuleTests extends FunSuite with Matchers {
 //  }
 
   test("Templated struct, one arg") {
-    compile(rulePR,"Moo:Int") shouldEqual
+    compile(rulePR,"Moo<Int>") shouldEqual
       TemplexPR(CallPRT(NamePRT("Moo"),List(NamePRT("Int"))))
-    compile(rulePR,"Moo:*Int") shouldEqual
+    compile(rulePR,"Moo<*Int>") shouldEqual
       TemplexPR(CallPRT(NamePRT("Moo"),List(SharePRT(NamePRT("Int")))))
   }
 
   test("RWKILC") {
-    compile(rulePR,"List:Int") shouldEqual
+    compile(rulePR,"List<Int>") shouldEqual
         TemplexPR(CallPRT(NamePRT("List"),List(NamePRT("Int"))))
-    compile(rulePR,"#K:Int") shouldEqual
+    compile(rulePR,"#K: Int") shouldEqual
         TypedPR(Some("K"),IntTypePR)
-    compile(rulePR,"#K:(Int)") shouldEqual
+    compile(rulePR,"#K<Int>") shouldEqual
         TemplexPR(CallPRT(RunePRT("K"),List(NamePRT("Int"))))
   }
 
   test("Templated struct, rune arg") {
     // Make sure every pattern on the way down to kind can match Int
-    compile(rulePR,"Moo:#R") shouldEqual
+    compile(rulePR,"Moo<#R>") shouldEqual
         TemplexPR(CallPRT(NamePRT("Moo"),List(RunePRT("R"))))
   }
   test("Templated struct, multiple args") {
     // Make sure every pattern on the way down to kind can match Int
-    compile(rulePR,"Moo:(Int, Str)") shouldEqual
+    compile(rulePR,"Moo<Int, Str>") shouldEqual
         TemplexPR(CallPRT(NamePRT("Moo"),List(NamePRT("Int"), NamePRT("Str"))))
   }
   test("Templated struct, arg is another templated struct with one arg") {
     // Make sure every pattern on the way down to kind can match Int
-    compile(rulePR,"Moo:Blarg:Int") shouldEqual
+    compile(rulePR,"Moo<Blarg<Int>>") shouldEqual
         TemplexPR(
           CallPRT(
             NamePRT("Moo"),
@@ -144,7 +144,7 @@ class KindRuleTests extends FunSuite with Matchers {
   }
   test("Templated struct, arg is another templated struct with multiple arg") {
     // Make sure every pattern on the way down to kind can match Int
-    compile(rulePR,"Moo:Blarg:(Int, Str)") shouldEqual
+    compile(rulePR,"Moo<Blarg<Int, Str>>") shouldEqual
         TemplexPR(
           CallPRT(
             NamePRT("Moo"),

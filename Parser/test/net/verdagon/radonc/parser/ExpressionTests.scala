@@ -4,16 +4,21 @@ import net.verdagon.radonc.vassert
 import org.scalatest.{FunSuite, Matchers}
 
 class ExpressionTests extends FunSuite with Matchers {
-  private def compile(code: String): IExpressionPE = {
-    VParser.parse(VParser.expression, code.toCharArray()) match {
+  private def compile[T](parser: VParser.Parser[IExpressionPE], code: String): IExpressionPE = {
+    VParser.parse(parser, code.toCharArray()) match {
       case VParser.NoSuccess(msg, input) => {
         fail();
       }
       case VParser.Success(expr, rest) => {
-        vassert(rest.atEnd)
+        vassert(
+          rest.atEnd,
+          "Parsed \"" + code.slice(0, rest.offset) + "\" as \"" + expr + "\" but stopped at \"" + code.slice(rest.offset, code.length) + "\"")
         expr
       }
     }
+  }
+  private def compile(code: String): IExpressionPE = {
+    compile(VParser.expression, code)
   }
 
   test("PE") {
@@ -59,7 +64,7 @@ class ExpressionTests extends FunSuite with Matchers {
   }
 
   test("Templated function call") {
-    compile("toArray:imm(&result)") shouldEqual
+    compile("toArray<imm>(&result)") shouldEqual
       FunctionCallPE(
         LookupPE("toArray",List(MutabilityPT(ImmutableP))),
         PackPE(List(LendPE(LookupPE("result",List())))),
@@ -67,7 +72,7 @@ class ExpressionTests extends FunSuite with Matchers {
   }
 
   test("Templated method call") {
-    compile("result.toArray:imm()") shouldEqual
+    compile("result.toArray<imm>()") shouldEqual
       FunctionCallPE(
         DotPE(
           LookupPE("result",List()),
@@ -108,10 +113,18 @@ class ExpressionTests extends FunSuite with Matchers {
   }
 
   test("Template calling") {
-    compile("MyNone:Int()") shouldEqual
+    compile("MyNone<Int>()") shouldEqual
       FunctionCallPE(LookupPE("MyNone", List(NamePT("Int"))),PackPE(List()), true)
-    compile("MySome:MyNone:Int()") shouldEqual
+    compile("MySome<MyNone<Int>>()") shouldEqual
       FunctionCallPE(LookupPE("MySome", List(CallPT(NamePT("MyNone"),List(NamePT("Int"))))),PackPE(List()), true)
+  }
+
+  test(">=") {
+    // It turns out, this was only parsing "9 >=" because it was looking for > specifically (in fact, it was looking
+    // for + - * / < >) so it parsed as >(9, =) which was bad. We changed the infix operator parser to expect the
+    // whitespcae on both sides, so that it was forced to parse the entire thing.
+    compile(VParser.expression,"9 >= 3") shouldEqual
+      FunctionCallPE(LookupPE(">=",List()),PackPE(List(IntLiteralPE(9), IntLiteralPE(3))),true)
   }
 
   // debt: fix

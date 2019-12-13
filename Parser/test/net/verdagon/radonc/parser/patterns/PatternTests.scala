@@ -37,8 +37,6 @@ class PatternTests extends FunSuite with Matchers {
     }
   }
 
-  test("Check no parser rules match empty") {
-  }
   test("Simple Int") {
     // Make sure every pattern on the way down to kind can match Int
     compile(typeIdentifier,"Int") shouldEqual "Int"

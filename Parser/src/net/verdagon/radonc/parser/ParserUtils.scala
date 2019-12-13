@@ -12,11 +12,15 @@ trait ParserUtils extends RegexParsers {
   // but, we don't want it to parse it as (marine^).item
   // so, we need to look ahead a bit and see if there's a . after it.
   private[parser] def exprIdentifier: Parser[String] = {
-    """[^\s\.\$\&\,\:\(\)\;\[\]\{\}\'\^\"]+""".r
+    """[^\s\.\$\&\,\:\(\)\;\[\]\{\}\'\^\"\<\>]+""".r
+  }
+
+  private[parser] def infixFunctionIdentifier: Parser[String] = {
+    """[^\s\.\$\&\,\:\(\)\;\[\]\{\}\'\"]+""".r
   }
 
   private[parser] def typeIdentifier: Parser[String] = {
-    """[^\s\.\!\*\?\#\$\&\,\:\|\;\(\)\[\]\{\}=]+""".r
+    """[^\s\.\!\*\?\#\$\&\,\:\|\;\(\)\[\]\{\}=\<\>]+""".r
   }
 
   private[parser] def stringOr[T](string: String, parser: Parser[T]): Parser[Option[T]] = {

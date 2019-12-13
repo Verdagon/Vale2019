@@ -63,12 +63,12 @@ class IfTests extends FunSuite with Matchers {
       """
         |struct Marine { x: *Int; }
         |fn main() {
-        |  let m = Marine(5);
+        |  m = Marine(5);
         |  = if {false} {
-        |      let [x] = m;
+        |      [x] = m;
         |      = x;
         |    } else {
-        |      let [y] = m;
+        |      [y] = m;
         |      = y;
         |    }
         |}
@@ -93,7 +93,7 @@ class IfTests extends FunSuite with Matchers {
       """
         |struct Marine { x: *Int; }
         |fn main() {
-        |  let m = Marine(5);
+        |  m = Marine(5);
         |  = if {m.x == 5} { "#" }
         |  else if {0 == 0} { "?" }
         |  else { "." }
@@ -112,11 +112,11 @@ class IfTests extends FunSuite with Matchers {
       """struct Marine { hp: Int; }
         |fn destructor(marine: Marine) Void {
         |  println("Destroying marine!");
-        |  let :Marine[weapon] = marine;
+        |  :Marine[weapon] = marine;
         |}
         |fn main() {
-        |  let m = Marine(5);
-        |  let x =
+        |  m = Marine(5);
+        |  x =
         |    if {true} {
         |      println("In then!");
         |      ret 7;
@@ -137,11 +137,11 @@ class IfTests extends FunSuite with Matchers {
       """struct Marine { hp: Int; }
         |fn destructor(marine: Marine) Void {
         |  println("Destroying marine!");
-        |  let :Marine[weapon] = marine;
+        |  :Marine[weapon] = marine;
         |}
         |fn main() {
-        |  let m = Marine(5);
-        |  let x =
+        |  m = Marine(5);
+        |  x =
         |    if {false} {
         |      println("In then!");
         |      ret 7;

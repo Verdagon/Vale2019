@@ -10,7 +10,7 @@ class TypeTests extends FunSuite with Matchers {
   private def compile[T](parser: VParser.Parser[T], code: String): T = {
     VParser.parse(parser, code.toCharArray()) match {
       case VParser.NoSuccess(msg, input) => {
-        fail();
+        fail(msg + "\n" + input);
       }
       case VParser.Success(expr, rest) => {
         if (!rest.atEnd) {
@@ -90,7 +90,7 @@ class TypeTests extends FunSuite with Matchers {
         None)
   }
   test("15z") {
-    compile(": MyOption:MyList:Int") shouldEqual
+    compile(": MyOption<MyList<Int>>") shouldEqual
       PatternPP(
         None,
         Some(

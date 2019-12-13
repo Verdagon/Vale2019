@@ -95,7 +95,7 @@ class TemplarTests extends FunSuite with Matchers {
   }
 
   test("Taking an argument and returning it") {
-    val compile = new Compilation("fn main(a:Int){a}")
+    val compile = new Compilation("fn main(a: Int){a}")
     val temputs = compile.getTemputs()
     temputs.lookupFunction("main").onlyOf(classOf[Parameter2]).tyype == Coord(Share, Int2())
     val lookup = temputs.lookupFunction("main").allOf(classOf[LocalLookup2]).head;
@@ -149,7 +149,7 @@ class TemplarTests extends FunSuite with Matchers {
 
   // Test that the lambda's arg is the right type, and the name is right
   test("Lambda with a type specified param") {
-    val compile = new Compilation("fn main(){{(a:Int) +(a,a)}(3)}");
+    val compile = new Compilation("fn main(){{(a: Int) +(a,a)}(3)}");
     val temputs = compile.getTemputs()
 
     val lambda = temputs.lookupFunction("main:lam1");
@@ -166,8 +166,8 @@ class TemplarTests extends FunSuite with Matchers {
   test("Test overloads") {
     val compile = new Compilation(
       """
-        |fn ~(a:Int, b:Int){+(a, b)}
-        |fn ~(a:Str, b:Str){+(a, b)}
+        |fn ~(a: Int, b: Int){+(a, b)}
+        |fn ~(a: Str, b: Str){+(a, b)}
         |fn main(){3 ~ 3}
       """.stripMargin)
     val temputs = compile.getTemputs()
@@ -181,7 +181,7 @@ class TemplarTests extends FunSuite with Matchers {
   test("Test templates") {
     val compile = new Compilation(
       """
-        |fn ~:#T(a:#T, b:#T)#T{a}
+        |fn ~<#T>(a: #T, b: #T)#T{a}
         |fn main(){true ~ false; 2 ~ 2; = 3 ~ 3;}
       """.stripMargin)
     val temputs = compile.getTemputs()
@@ -191,7 +191,7 @@ class TemplarTests extends FunSuite with Matchers {
   }
 
   test("Test mutating a local var") {
-    val compile = new Compilation("fn main(){let mut a = 3; mut (a) = 4; }")
+    val compile = new Compilation("fn main(){mut a = 3; mut (a) = 4; }")
     val temputs = compile.getTemputs();
     temputs.only({ case Mutate2(LocalLookup2(ReferenceLocalVariable2(VariableId2(_, "a"), Varying, _), _), IntLiteral2(4)) => })
   }
@@ -227,7 +227,7 @@ class TemplarTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |struct MyStruct { a: *Int; }
-        |fn main() { let ms = MyStruct(7); = ms.a; }
+        |fn main() { ms = MyStruct(7); = ms.a; }
       """.stripMargin)
     val temputs = compile.getTemputs()
 
@@ -284,8 +284,8 @@ class TemplarTests extends FunSuite with Matchers {
   test("Tests stamping an interface template from a function param") {
     val compile = new Compilation(
       """
-        |interface MyOption:#T rules(#T: Ref) { }
-        |fn main(a: MyOption:*Int) { }
+        |interface MyOption<#T> rules(#T: Ref) { }
+        |fn main(a: MyOption<*Int>) { }
       """.stripMargin)
     val temputs = compile.getTemputs()
 
@@ -301,10 +301,10 @@ class TemplarTests extends FunSuite with Matchers {
   test("Tests stamping a struct and its implemented interface from a function param") {
     val compile = new Compilation(
       """
-        |interface MyOption:#T imm rules(#T: Ref) { }
-        |struct MySome:#T imm rules(#T: Ref) { value: #T; }
-        |impl MySome:#T for MyOption:#T;
-        |fn moo(a: MySome:*Int) { }
+        |interface MyOption<#T> imm rules(#T: Ref) { }
+        |struct MySome<#T> imm rules(#T: Ref) { value: #T; }
+        |impl MySome<#T> for MyOption<#T>;
+        |fn moo(a: MySome<*Int>) { }
       """.stripMargin)
     val temputs = compile.getTemputs()
 
@@ -400,33 +400,33 @@ class TemplarTests extends FunSuite with Matchers {
   }
 
   test("Tests calling a templated function with explicit template args") {
-    // Tests putting MyOption:Int as the type of x.
+    // Tests putting MyOption<Int> as the type of x.
     val compile = new Compilation(
       """
-        |fn moo:#T () rules(#T: Ref) { }
+        |fn moo<#T> () rules(#T: Ref) { }
         |
         |fn main() {
-        |	moo:*Int();
+        |	moo<*Int>();
         |}
       """.stripMargin)
     val temputs = compile.getTemputs()
   }
 
   test("Tests making a variable with a pattern") {
-    // Tests putting MyOption:Int as the type of x.
+    // Tests putting MyOption<Int> as the type of x.
     val compile = new Compilation(
       """
-        |interface MyOption:#T rules(#T: Ref) { }
+        |interface MyOption<#T> rules(#T: Ref) { }
         |
-        |struct MySome:#T rules(#T: Ref) {}
-        |impl MySome:#T for MyOption:#T;
+        |struct MySome<#T> rules(#T: Ref) {}
+        |impl MySome<#T> for MyOption<#T>;
         |
-        |fn doSomething(opt: MyOption:*Int) *Int {
+        |fn doSomething(opt: MyOption<*Int>) *Int {
         |  = 9;
         |}
         |
         |fn main() Int {
-        |	let x: MyOption:*Int = MySome:*Int();
+        |	x: MyOption<*Int> = MySome<*Int>();
         |	= doSomething(x);
         |}
       """.stripMargin)
@@ -466,10 +466,10 @@ class TemplarTests extends FunSuite with Matchers {
   test("Templated imm struct") {
     val compile = new Compilation(
       """
-        |struct ListNode:#T imm rules(#T: Ref) {
-        |  tail: ListNode:#T;
+        |struct ListNode<#T> imm rules(#T: Ref) {
+        |  tail: ListNode<#T>;
         |}
-        |fn main(a: ListNode:Int) {}
+        |fn main(a: ListNode<Int>) {}
       """.stripMargin)
     val temputs = compile.getTemputs()
   }
@@ -483,7 +483,7 @@ class TemplarTests extends FunSuite with Matchers {
         |  y: Float;
         |}
         |struct Pattern imm {
-        |  patternTiles: __Array:(imm, Vec2);
+        |  patternTiles: __Array<imm, Vec2>;
         |}
       """.stripMargin)
     val temputs = compile.getTemputs()
@@ -493,7 +493,7 @@ class TemplarTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  let a = __Array:(mut, Int)(11, {_});
+        |  a = __Array<mut, Int>(11, {_});
         |  = len(&a);
         |}
       """.stripMargin)
@@ -535,8 +535,8 @@ class TemplarTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """struct Marine { hp: Int; }
         |fn main() {
-        |  let m = Marine(5);
-        |  let x =
+        |  m = Marine(5);
+        |  x =
         |    if {true} {
         |      ret 7;
         |    } else {
@@ -560,14 +560,14 @@ class TemplarTests extends FunSuite with Matchers {
   test("Local-mut upcasts") {
     val compile = new Compilation(
       """
-        |interface IOption:#T rules(#T: Ref) { }
-        |struct Some:#T rules(#T: Ref) { value: #T; }
-        |impl Some:#T for IOption:#T;
-        |struct None:#T rules(#T: Ref) { }
-        |impl None:#T for IOption:#T;
+        |interface IOption<#T> rules(#T: Ref) { }
+        |struct Some<#T> rules(#T: Ref) { value: #T; }
+        |impl Some<#T> for IOption<#T>;
+        |struct None<#T> rules(#T: Ref) { }
+        |impl None<#T> for IOption<#T>;
         |
         |fn main() {
-        |  let m: IOption:Int = None:Int();
+        |  m: IOption<Int> = None<Int>();
         |  mut (m) = Some(6);
         |}
       """.stripMargin)
@@ -582,17 +582,17 @@ class TemplarTests extends FunSuite with Matchers {
   test("Expr-mut upcasts") {
     val compile = new Compilation(
       """
-        |interface IOption:#T rules(#T: Ref) { }
-        |struct Some:#T rules(#T: Ref) { value: #T; }
-        |impl Some:#T for IOption:#T;
-        |struct None:#T rules(#T: Ref) { }
-        |impl None:#T for IOption:#T;
+        |interface IOption<#T> rules(#T: Ref) { }
+        |struct Some<#T> rules(#T: Ref) { value: #T; }
+        |impl Some<#T> for IOption<#T>;
+        |struct None<#T> rules(#T: Ref) { }
+        |impl None<#T> for IOption<#T>;
         |
         |struct Marine {
-        |  weapon: IOption:Int;
+        |  weapon: IOption<Int>;
         |}
         |fn main() {
-        |  let m = Marine(None:Int());
+        |  m = Marine(None<Int>());
         |  mut (m.weapon) = Some(6);
         |}
       """.stripMargin)

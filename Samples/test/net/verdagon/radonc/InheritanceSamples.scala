@@ -7,7 +7,7 @@ object InheritanceSamples {
       |struct MyStruct { value: *Int; }
       |impl MyStruct for MyInterface;
       |fn main() {
-      |  let x: MyInterface = MyStruct(9);
+      |  x: MyInterface = MyStruct(9);
       |}
     """.stripMargin
 
@@ -29,7 +29,7 @@ object InheritanceSamples {
       |}
       |
       |fn main() Int {
-      |	let x: Car = Toyota();
+      |	x: Car = Toyota();
       |	= doCivicDance(x);
       |}
     """.stripMargin
@@ -52,8 +52,8 @@ object InheritanceSamples {
       |}
       |
       |fn main() Int {
-      |	let x: Car = Toyota();
-      | let b = &x;
+      |	x: Car = Toyota();
+      | b = &x;
       |	= doCivicDance(b);
       |}
     """.stripMargin
@@ -61,16 +61,16 @@ object InheritanceSamples {
   val callingAbstract =
 
     """
-      |interface MyInterface:#T rules(#T: Ref) { }
-      |abstract fn doThing:#T(x: virtual MyInterface:#T) *Int;
+      |interface MyInterface<#T> rules(#T: Ref) { }
+      |abstract fn doThing<#T>(x: virtual MyInterface<#T>) *Int;
       |
-      |struct MyStruct:#T rules(#T: Ref) { }
-      |impl MyStruct:#T for MyInterface:#T;
-      |fn doThing(x: MyStruct:#T for MyInterface:#T) *Int {4}
+      |struct MyStruct<#T> rules(#T: Ref) { }
+      |impl MyStruct<#T> for MyInterface<#T>;
+      |fn doThing(x: MyStruct<#T> for MyInterface<#T>) *Int {4}
       |
       |fn main() {
-      |  let x = MyStruct:*Int();
-      |  let y = MyStruct:*Str();
+      |  x = MyStruct<*Int>();
+      |  y = MyStruct<*Str>();
       |  doThing(x);
       |  = doThing(y);
       |}

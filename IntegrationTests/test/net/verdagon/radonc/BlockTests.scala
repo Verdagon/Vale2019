@@ -28,7 +28,7 @@ class BlockTests extends FunSuite with Matchers {
       """
         |fn main() {
         |  block {
-        |    let y = 6;
+        |    y = 6;
         |  }
         |  = 3;
         |}
@@ -48,9 +48,9 @@ class BlockTests extends FunSuite with Matchers {
       """
         |fn main() {
         |  block {
-        |    let y = 6;
+        |    y = 6;
         |  }
-        |  let y = 3;
+        |  y = 3;
         |  = y;
         |}
       """.stripMargin)

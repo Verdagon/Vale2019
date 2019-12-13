@@ -393,13 +393,13 @@ case class OverloadSet(
 
 //// In the case of:
 //// fn main() {
-////   let x = 3;
+////   x = 3;
 ////   {
 ////     println(x);
-////     let x = 6;
+////     x = 6;
 ////     {
 ////       println(x);
-////       let x = 6;
+////       x = 6;
 ////     }();
 ////   }();
 //// }

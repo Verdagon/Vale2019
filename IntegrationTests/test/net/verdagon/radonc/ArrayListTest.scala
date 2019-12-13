@@ -9,32 +9,32 @@ class ArrayListTest extends FunSuite with Matchers {
   test("Simple ArrayList, no optionals") {
     val compile = new Compilation(
       """
-        |struct List:#E rules(#E: Ref) {
-        |  array: __Array:(mut, #E);
+        |struct List<#E> rules(#E: Ref) {
+        |  array: __Array<mut, #E>;
         |}
-        |fn len:#E(list: &List:#E) { len(list.array) }
-        |fn add:#E(list: &List:#E, newElement: #E) {
-        |  let newArray =
-        |      __Array:(mut, E)(len(list) + 1, {(index)
+        |fn len<#E>(list: &List<#E>) { len(list.array) }
+        |fn add<#E>(list: &List<#E>, newElement: #E) {
+        |  newArray =
+        |      __Array<mut, E>(len(list) + 1, {(index)
         |        = if {index == len(list)} {
         |            = newElement;
         |          } else {
-        |            let a = list.array;
+        |            a = list.array;
         |            = a.(index);
         |          }
         |      });
         |  mut (list.array) = newArray;
         |}
         |// todo: make that return a &#E
-        |fn get:#E(list: &List:#E, index: Int) #E {
-        |  let a = list.array;
+        |fn get<#E>(list: &List<#E>, index: Int) #E {
+        |  a = list.array;
         |  = a.(index);
         |}
         |
         |fn main() {
-        |  let l =
-        |      List:Int(
-        |           __Array:(mut, Int)(
+        |  l =
+        |      List<Int>(
+        |           __Array<mut, Int>(
         |               0,
         |               {(index)
         |                 index
@@ -56,12 +56,12 @@ class ArrayListTest extends FunSuite with Matchers {
       """
         |
         |fn main() {
-        |  let l =
-        |      List:Int(
-        |          __Array:(mut, Opt:Int)(
+        |  l =
+        |      List<Int>(
+        |          __Array<mut, Opt<Int>>(
         |              0,
         |              {(index)
-        |                let result: Opt:Int = Some(index);
+        |                result: Opt<Int> = Some(index);
         |                = result;
         |              }),
         |          0);
@@ -82,7 +82,7 @@ class ArrayListTest extends FunSuite with Matchers {
         """
           |
           |fn main() {
-          |  let l = List:Int();
+          |  l = List<Int>();
           |  add(&l, 5);
           |  add(&l, 9);
           |  add(&l, 7);
@@ -100,7 +100,7 @@ class ArrayListTest extends FunSuite with Matchers {
         """
           |
           |fn main() {
-          |  let l = List:Int();
+          |  l = List<Int>();
           |  add(&l, 5);
           |  add(&l, 9);
           |  add(&l, 7);
@@ -118,7 +118,7 @@ class ArrayListTest extends FunSuite with Matchers {
         """
           |
           |fn main() {
-          |  let l = List:Int();
+          |  l = List<Int>();
           |  add(&l, 5);
           |  add(&l, 9);
           |  add(&l, 7);
@@ -138,12 +138,12 @@ class ArrayListTest extends FunSuite with Matchers {
           |struct Marine { hp: Int; }
           |
           |fn main() {
-          |  let l =
-          |      List:Marine(
-          |          __Array:(mut, Opt:Marine)(
+          |  l =
+          |      List<Marine>(
+          |          __Array<mut, Opt<Marine>>(
           |              0,
           |              {(index)
-          |                let result: Opt:Marine = Some(Marine(index));
+          |                result: Opt<Marine> = Some(Marine(index));
           |                = result;
           |              }),
           |          0);
@@ -163,8 +163,8 @@ class ArrayListTest extends FunSuite with Matchers {
           |struct Marine { hp: Int; }
           |
           |fn main() {
-          |  let m = Marine(6);
-          |  let lam = {
+          |  m = Marine(6);
+          |  lam = {
           |    mut (m) = Marine(9);
           |  };
           |  lam();
@@ -187,9 +187,9 @@ class ArrayListTest extends FunSuite with Matchers {
         |struct Marine { hp: Int; }
         |
         |fn main() {
-        |  let m: Opt:Marine = Some(Marine(6));
-        |  let lam = {
-        |    let m2 = (mut (m) = None:Marine())^.get();
+        |  m: Opt<Marine> = Some(Marine(6));
+        |  lam = {
+        |    m2 = (mut (m) = None<Marine>())^.get();
         |    = m2.hp;
         |  };
         |  = lam();

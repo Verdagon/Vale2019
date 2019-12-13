@@ -42,10 +42,7 @@ trait TemplexParser extends RegexParsers with ParserUtils {
     ("&" ~> optWhite ~> templex ^^ BorrowPT) |
     ("*" ~> optWhite ~> templex ^^ SharePT) |
     ("^" ~> optWhite ~> templex ^^ OwnPT) |
-    (((unaryTemplex <~ optWhite <~ ":" <~ optWhite) ~ templex) ^^ {
-      case template ~ arg => CallPT(template, List(arg))
-    }) |
-    (((unaryTemplex <~ optWhite <~ ":" <~ optWhite) ~ ("(" ~> optWhite ~> repsep(templex, optWhite ~ "," ~ optWhite) <~ optWhite <~ ")")) ^^ {
+    (((unaryTemplex <~ optWhite) ~ ("<" ~> optWhite ~> repsep(templex, optWhite ~ "," ~ optWhite) <~ optWhite <~ ">")) ^^ {
       case template ~ args => CallPT(template, args)
     }) |
     unaryTemplex

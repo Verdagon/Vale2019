@@ -24,7 +24,7 @@ object SculptorTests {
 //    check(1,
 //        "fn main()Int{7}",
 //        """
-//          |define i64* @"main:0"(){
+//          |define i64* @"main<0>"(){
 //          |%line0sizeptr = getelementptr i64, i64* null, i64 1
 //          |%line0size = ptrtoint i64* %line0sizeptr to i64
 //          |%line0raw = call i8* @malloc(i64 %line0size)

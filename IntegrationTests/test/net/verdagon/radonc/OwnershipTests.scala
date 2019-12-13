@@ -40,7 +40,7 @@ class OwnershipTests extends FunSuite with Matchers {
         |
         |fn destructor(m: ^Muta) Void {
         |  println("Destroying!");
-        |  let :Muta[] = m;
+        |  :Muta[] = m;
         |}
         |
         |fn main() {
@@ -62,7 +62,7 @@ class OwnershipTests extends FunSuite with Matchers {
         |
         |fn destructor(m: ^Muta) {
         |  println("Destroying!");
-        |  let :Muta[hp] = m;
+        |  :Muta[hp] = m;
         |}
         |
         |fn main() {
@@ -83,11 +83,11 @@ class OwnershipTests extends FunSuite with Matchers {
         |
         |fn destructor(m: ^Muta) {
         |  println("Destroying!");
-        |  let :Muta[] = m;
+        |  :Muta[] = m;
         |}
         |
         |fn main() {
-        |  let a = Muta();
+        |  a = Muta();
         |}
       """.stripMargin)
 
@@ -106,14 +106,14 @@ class OwnershipTests extends FunSuite with Matchers {
         |
         |fn destructor(m: ^Muta) {
         |  println("Destroying!");
-        |  let :Muta[] = m;
+        |  :Muta[] = m;
         |}
         |
         |fn moo(m: ^Muta) {
         |}
         |
         |fn main() {
-        |  let a = Muta();
+        |  a = Muta();
         |  moo(a);
         |}
       """.stripMargin)
@@ -146,11 +146,11 @@ class OwnershipTests extends FunSuite with Matchers {
         |
         |fn destructor(m: ^Muta) {
         |  println("Destroying!");
-        |  let :Muta[hp] = m;
+        |  :Muta[hp] = m;
         |}
         |
         |fn main() {
-        |  let a = Muta(10);
+        |  a = Muta(10);
         |  = a.hp;
         |}
       """.stripMargin)
@@ -207,7 +207,7 @@ class OwnershipTests extends FunSuite with Matchers {
       """
         |struct Muta { }
         |fn main() {
-        |  let a = Muta();
+        |  a = Muta();
         |  __checkvarrc(&a, 1);
         |}
       """.stripMargin)
@@ -222,7 +222,7 @@ class OwnershipTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  let mut i = 0;
+        |  mut i = 0;
         |  = i;
         |}
       """.stripMargin)
@@ -244,8 +244,8 @@ class OwnershipTests extends FunSuite with Matchers {
 //      """
 //        |struct Muta { }
 //        |fn main() {
-//        |  let a = Muta();
-//        |  let b = a;
+//        |  a = Muta();
+//        |  b = a;
 //        |  = __varrc(&b);
 //        |}
 //      """.stripMargin)
@@ -261,9 +261,9 @@ class OwnershipTests extends FunSuite with Matchers {
 //        |  a: &MutaA;
 //        |}
 //        |fn main() {
-//        |  let a = MutaA();
-//        |  let b = MutaB(&a);
-//        |  let c = a;
+//        |  a = MutaA();
+//        |  b = MutaB(&a);
+//        |  c = a;
 //        |}
 //      """.stripMargin)
 //

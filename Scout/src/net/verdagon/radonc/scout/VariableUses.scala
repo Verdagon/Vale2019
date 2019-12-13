@@ -61,7 +61,7 @@ case class VariableUses(uses: Set[VariableUse]) {
   }
   // Turns all Used into MaybeUsed. For example:
   //   fn main() {
-  //     let m = Marine();
+  //     m = Marine();
   //     someFunction({ doThings(m); });
   //     ...
   //   }
@@ -72,7 +72,7 @@ case class VariableUses(uses: Set[VariableUse]) {
   // Note: we even consider a lambda to *maybe* have happened even if it's
   // immediately called, like:
   //   fn main() {
-  //     let m = Marine();
+  //     m = Marine();
   //     { doThings(m); }();
   //     ...
   //   }

@@ -38,15 +38,15 @@ class RuleScoutTests extends FunSuite with Matchers {
     compile(
       """fn main(a: #A)
         |rules(
-        |  #B:Ref = List:#A,
-        |  #C:Ref = #B | #A | Int)
+        |  #B: Ref = List<#A>,
+        |  #C: Ref = #B | #A | Int)
         |{ }
         |""".stripMargin) shouldEqual
       expectedRulesS
   }
 
   test("B") {
-    val rulesS = compile("fn main() rules(#B:Ref = List:#A, #C:Ref = #B | #A | Int) {}")
+    val rulesS = compile("fn main() rules(#B<Ref> = List<#A>, #C<Ref> = #B | #A | Int) {}")
     RuleSUtils.getDistinctOrderedRunesForRulexes(rulesS) shouldEqual List("B", "A", "C")
   }
 }

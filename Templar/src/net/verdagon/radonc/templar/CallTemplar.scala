@@ -138,14 +138,14 @@ object CallTemplar {
 
 
   // given args means, the args that the user gave, like in
-  // let a = 6;
-  // let f = {[a](x) print(6, x) };
+  // a = 6;
+  // f = {[a](x) print(6, x) };
   // f(4);
   // in the f(4), the given args is just 4.
   //
   // however, since f is actually a struct, it's secretly this:
-  // let a = 6;
-  // let f = {[a](x) print(6, x) };
+  // a = 6;
+  // f = {[a](x) print(6, x) };
   // f.__function(f.__closure, 4);
   // in that f.__function(f.__closure, 4), the given args is just 4, but the actual args is f.__closure and 4.
   // also, the given callable is f, but the actual callable is f.__function.

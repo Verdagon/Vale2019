@@ -132,7 +132,7 @@ class BiggerTests extends FunSuite with Matchers with Collector {
     compile(
       VParser.block,
       """
-        |let a = 2;
+        |a = 2;
         |= doThings(a);
       """.stripMargin) shouldEqual
         BlockPE(
@@ -145,7 +145,7 @@ class BiggerTests extends FunSuite with Matchers with Collector {
     compile(
       VParser.impl,
       """
-        |impl SomeStruct:T for MyInterface:T;
+        |impl SomeStruct<T> for MyInterface<T>;
       """.stripMargin) shouldEqual
       ImplP(
         List(),
@@ -157,7 +157,7 @@ class BiggerTests extends FunSuite with Matchers with Collector {
     compile(
       VParser.impl,
       """
-        |impl MyIntIdentity for IFunction1:(mut, Int, Int);
+        |impl MyIntIdentity for IFunction1<mut, Int, Int>;
         |""".stripMargin) shouldEqual
       ImplP(
         List(),
@@ -182,20 +182,20 @@ class BiggerTests extends FunSuite with Matchers with Collector {
   test("17") {
     compile(
       VParser.structMember,
-      "a: *ListNode:T;") shouldEqual
+      "a: *ListNode<T>;") shouldEqual
       StructMemberP("a",FinalP,SharePT(CallPT(NamePT("ListNode"),List(NamePT("T")))))
   }
 
   test("18") {
     compile(
       VParser.structMember,
-      "a: __Array:(imm, #T);") shouldEqual
+      "a: __Array<imm, #T>;") shouldEqual
       StructMemberP("a",FinalP,CallPT(NamePT("__Array"),List(MutabilityPT(ImmutableP), RunePT("T"))))
   }
 
   test("19") {
     compile(VParser.statement,
-      "let newLen = if {num == 0} { 1 } else { 2 };") shouldEqual
+      "newLen = if {num == 0} { 1 } else { 2 };") shouldEqual
       LetPE(
         List(),
         PatternPP(Some(CaptureP("newLen",FinalP)),None,None,None),

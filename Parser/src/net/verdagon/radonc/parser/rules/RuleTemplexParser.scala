@@ -45,12 +45,8 @@ trait RuleTemplexParser extends RegexParsers with ParserUtils {
     ("_" ^^^ AnonymousRunePRT()) |
     (("&" ~> optWhite ~> ruleTemplexPR) ^^ BorrowPRT) |
     (("*" ~> optWhite ~> ruleTemplexPR) ^^ SharePRT) |
-    ((keywordOrIdentifierOrRuneRuleTemplexPR <~ optWhite <~ ":" <~ optWhite <~ "(" <~ optWhite) ~ repsep(ruleTemplexPR, optWhite ~> "," <~ optWhite) <~ optWhite <~ ")" ^^ {
+    ((keywordOrIdentifierOrRuneRuleTemplexPR <~ optWhite <~ "<" <~ optWhite) ~ repsep(ruleTemplexPR, optWhite ~> "," <~ optWhite) <~ optWhite <~ ">" ^^ {
       case template ~ args => CallPRT(template, args)
-    }) |
-    // This doesn't match runes on the left side because we can't do things like #R:Marine, see RWKILC.
-    ((keywordOrIdentifierRuleTemplexPR <~ optWhite <~ ":" <~ optWhite) ~ ruleTemplexPR ^^ {
-      case template ~ arg => CallPRT(template, List(arg))
     }) |
     prototypeRulePR |
     callableRulePR |

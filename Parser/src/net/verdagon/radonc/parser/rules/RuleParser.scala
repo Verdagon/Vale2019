@@ -88,8 +88,7 @@ trait RuleParser extends RegexParsers with ParserUtils {
   // Add any new rules to the "Check no parser rules match empty" test!
 
   private[parser] def identifyingRunesPR: Parser[List[String]] = {
-    (":" ~> optWhite ~> rune ^^ (r => List(r))) |
-    (":" ~> optWhite ~> "(" ~> optWhite ~> repsep(rune, optWhite ~> "," <~ optWhite) <~ optWhite <~ ")")
+    ("<" ~> optWhite ~> repsep(rune, optWhite ~> "," <~ optWhite) <~ optWhite <~ ">")
   }
 
   // Add any new rules to the "Check no parser rules match empty" test!

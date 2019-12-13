@@ -41,9 +41,9 @@ package object infer {
   ) extends IInferEvaluateResult[T] with IConflictCause
   case class InferEvaluateUnknown[T](
     // Whether we've satisfied every rule in this subtree.
-    // This can be false for example if we have rule like `Moo = (Bork like ISomething:#T)`
+    // This can be false for example if we have rule like `Moo = (Bork like ISomething<#T>)`
     // when we don't know #T yet, but we do know the result of the
-    // `(Bork like ISomething:#T)` rule.
+    // `(Bork like ISomething<#T>)` rule.
     // See IEUNDS for why unknowns need deeplySatisfied.
     deeplySatisfied: Boolean,
   ) extends IInferEvaluateResult[T]
@@ -51,9 +51,9 @@ package object infer {
     templata: T,
 
     // Whether we've satisfied every rule in this subtree.
-    // This can be false for example if we have rule like `Moo = (Bork like ISomething:#T)`
+    // This can be false for example if we have rule like `Moo = (Bork like ISomething<#T>)`
     // when we don't know #T yet, but we do know the result of the
-    // `(Bork like ISomething:#T)` rule.
+    // `(Bork like ISomething<#T>)` rule.
     deeplySatisfied: Boolean,
   ) extends IInferEvaluateResult[T]
 
@@ -75,9 +75,9 @@ package object infer {
   }
   case class InferMatchSuccess(
     // Whether we've satisfied every rule in this subtree.
-    // This can be false for example if we have rule like `Moo = (Bork like ISomething:#T)`
+    // This can be false for example if we have rule like `Moo = (Bork like ISomething<#T>)`
     // when we don't know #T yet, but we do know the result of the
-    // `(Bork like ISomething:#T)` rule.
+    // `(Bork like ISomething<#T>)` rule.
     deeplySatisfied: Boolean
   ) extends IInferMatchResult
 }

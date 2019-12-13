@@ -36,9 +36,9 @@ object FunctionTemplarCore {
             innerEnv, temputs, BFunctionA(function1, function1.name, body), params2, isDestructor)
 
         // Funny story... let's say we're current instantiating a constructor,
-        // for example MySome:T().
-        // The constructor returns a MySome:T, which means when we do the above
-        // evaluating of the function body, we stamp the MySome:T struct.
+        // for example MySome<T>().
+        // The constructor returns a MySome<T>, which means when we do the above
+        // evaluating of the function body, we stamp the MySome<T> struct.
         // That ends up stamping the entire struct, including the constructor.
         // That's what we were originally here for, and evaluating the body above
         // just did it for us O_o
@@ -119,9 +119,9 @@ object FunctionTemplarCore {
           }
 
         // Funny story... let's say we're current instantiating a constructor,
-        // for example MySome:T().
-        // The constructor returns a MySome:T, which means when we do the above
-        // evaluating of the function body, we stamp the MySome:T struct.
+        // for example MySome<T>().
+        // The constructor returns a MySome<T>, which means when we do the above
+        // evaluating of the function body, we stamp the MySome<T> struct.
         // That ends up stamping the entire struct, including the constructor.
         // That's what we were originally here for, and evaluating the body above
         // just did it for us O_o

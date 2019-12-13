@@ -16,7 +16,7 @@ object Terrain {
       |
       |struct LocationHasher { }
       |fn __call(this: &LocationHasher, loc: Location) {
-      |  let hash = 0;
+      |  hash = 0;
       |  mut (hash) = 41 * hash + loc.groupX;
       |  mut (hash) = 41 * hash + loc.groupY;
       |  mut (hash) = 41 * hash + loc.indexInGroup;
@@ -31,7 +31,7 @@ object Terrain {
       |struct Terrain {
       |  pattern: Pattern;
       |  elevationStepHeight: Float;
-      |  tiles: HashMap:(Location, TerrainTile, LocationHasher, LocationEquator);
+      |  tiles: HashMap<Location, TerrainTile, LocationHasher, LocationEquator>;
       |}
       |
     """.stripMargin
@@ -60,11 +60,11 @@ object Terrain {
         |}
         |
         |fn getRelativeAdjacentLocations(pattern: Pattern, tileIndex: Int, adjacentCornersToo: Bool)
-        |__Array:(imm, Location) {
-        |  let result = HashMap:(Location, Int, LocationHasher, LocationEquator)(LocationHasher(), LocationEquator());
-        |  let tile = pattern.patternTiles.(tileIndex);
+        |__Array<imm, Location> {
+        |  result = HashMap<Location, Int, LocationHasher, LocationEquator>(LocationHasher(), LocationEquator());
+        |  tile = pattern.patternTiles.(tileIndex);
         |  tile.sideAdjacenciesBySideIndex each {(sideAdjacency)
-        |    let location =
+        |    location =
         |        Location(sideAdjacency.groupRelativeX, sideAdjacency.groupRelativeY, sideAdjacency.tileIndex);
         |    if {not(result.has(location))} {
         |      result.add(location, 0);
@@ -73,7 +73,7 @@ object Terrain {
         |  if {adjacentCornersToo} {
         |    tile.cornerAdjacenciesByCornerIndex each {(cornerAdjacencies)
         |      cornerAdjacencies each {(cornerAdjacency)
-        |        let location =
+        |        location =
         |            Location(cornerAdjacency.groupRelativeX, cornerAdjacency.groupRelativeY, cornerAdjacency.tileIndex);
         |        if {not(result.has(location))} {
         |          result.add(location, 0);
@@ -84,15 +84,15 @@ object Terrain {
         |  = result.keys();
         |}
         |
-        |fn getAdjacentLocations(pattern: Pattern, loc: Location, considerCornersAdjacent:Bool) __Array:(imm, Location) {
-        |  let result = List:Location();
+        |fn getAdjacentLocations(pattern: Pattern, loc: Location, considerCornersAdjacent<Bool>) __Array<imm, Location> {
+        |  result = List<Location>();
         |  pattern.getRelativeAdjacentLocations(loc.indexInGroup, considerCornersAdjacent) each {(relativeLoc)
         |    result.add(Location(
         |      loc.groupX + relativeLoc.groupX,
         |      loc.groupY + relativeLoc.groupY,
         |      relativeLoc.indexInGroup));
         |  };
-        |  = toArray:imm(&result);
+        |  = toArray<imm>(&result);
         |}
         |
         |fn Str(loc: Location) {
@@ -101,22 +101,22 @@ object Terrain {
         |
         |fn getAdjacentLocationsToAll(
         |    pattern: Pattern,
-        |    sourceLocs: &__Array:(imm, Location),
+        |    sourceLocs: &__Array<imm, Location>,
         |    includeSourceLocs: Bool,
         |    considerCornersAdjacent: Bool)
-        |HashMap:(Location, Int, LocationHasher, LocationEquator) {
-        |  let sourceLocsSet = HashMap:(Location, Int)(LocationHasher(), LocationEquator());
+        |HashMap<Location, Int, LocationHasher, LocationEquator> {
+        |  sourceLocsSet = HashMap<Location, Int>(LocationHasher(), LocationEquator());
         |  sourceLocs each {(sourceLoc)
         |    sourceLocsSet.add(sourceLoc, 0);
         |  };
         |
-        |  let result = HashMap:(Location, Int)(LocationHasher(), LocationEquator());
+        |  result = HashMap<Location, Int>(LocationHasher(), LocationEquator());
         |  sourceLocs each {(originalLocation)
-        |    let adjacents = pattern.getAdjacentLocations(originalLocation, considerCornersAdjacent).toList();
+        |    adjacents = pattern.getAdjacentLocations(originalLocation, considerCornersAdjacent).toList();
         |    if {includeSourceLocs} {
         |      adjacents.add(originalLocation);
         |    }
-        |    adjacents.toArray:imm() each {(adjacentLocation)
+        |    adjacents.toArray<imm>() each {(adjacentLocation)
         |      if {sourceLocsSet.has(adjacentLocation) and not(includeSourceLocs)} {
         |        // if this is a source loc, and we don't want to include them, do nothing.
         |      } else {
@@ -131,7 +131,7 @@ object Terrain {
         |}
         |
         |fn locationsAreAdjacent(pattern: Pattern, a: Location, b: Location, considerCornersAdjacent: Bool) Bool {
-        |  let locsAdjacentToA = pattern.getAdjacentLocations(a, considerCornersAdjacent);
+        |  locsAdjacentToA = pattern.getAdjacentLocations(a, considerCornersAdjacent);
         |  = locsAdjacentToA.has(b, LocationEquator());
         |}
         |
@@ -172,18 +172,18 @@ object Terrain {
         |//
         |
         |fn main() {
-        |  let pattern = makePentagonPattern9();
-        |  //let adjacent1Locations = getAdjacentLocations(pattern, Location(0, 0, 0), true);
+        |  pattern = makePentagonPattern9();
+        |  //adjacent1Locations = getAdjacentLocations(pattern, Location(0, 0, 0), true);
         |  //println("Adjacent 1s: " + Str(adjacent1Locations.len()));
-        |  //let adjacent2Locations = getAdjacentLocationsToAll(pattern, adjacent1Locations, true, true);
+        |  //adjacent2Locations = getAdjacentLocationsToAll(pattern, adjacent1Locations, true, true);
         |  //println("Adjacent 2s: " + Str(adjacent2Locations.keys().len()));
-        |  //let adjacent3Locations = getAdjacentLocationsToAll(pattern, adjacent2Locations.keys(), true, true);
+        |  //adjacent3Locations = getAdjacentLocationsToAll(pattern, adjacent2Locations.keys(), true, true);
         |  //println("Adjacent 3s: " + Str(adjacent3Locations.keys().len()));
-        |  //let adjacent4Locations = getAdjacentLocationsToAll(pattern, adjacent3Locations.keys(), true, true);
+        |  //adjacent4Locations = getAdjacentLocationsToAll(pattern, adjacent3Locations.keys(), true, true);
         |  //println("Adjacent 4s: " + Str(adjacent4Locations.keys().len()));
-        |  //let adjacent5Locations = getAdjacentLocationsToAll(pattern, adjacent4Locations.keys(), true, true);
+        |  //adjacent5Locations = getAdjacentLocationsToAll(pattern, adjacent4Locations.keys(), true, true);
         |  //println("Done! 5s: " + Str(adjacent5Locations.keys().len()));
-        |  let terrain = Terrain(pattern, 0.4, HashMap:(Location, TerrainTile)(LocationHasher(), LocationEquator(), 1024));
+        |  terrain = Terrain(pattern, 0.4, HashMap<Location, TerrainTile>(LocationHasher(), LocationEquator(), 1024));
         |
         |  terrain.tiles.add(Location(0, 0, 0), TerrainTile(1, true, "ground"));
         |  println("a");
@@ -304,10 +304,10 @@ object Terrain {
         |  terrain.tiles.add(Location(2, -1, 6), TerrainTile(1, true, "ground"));
         |  println("g");
         |
-        |  let rand = 0;
+        |  rand = 0;
         |  terrain.tiles.keys() each {(location)
-        |    let tile?: Opt:&TerrainTile = terrain.tiles.get(location);
-        |    let tile = tile?^.get();
+        |    tile?: Opt:&TerrainTile = terrain.tiles.get(location);
+        |    tile = tile?^.get();
         |    mut (tile.elevation) = 1 + (abs(location.groupX + location.groupY + location.indexInGroup + rand) mod 3);
         |    mut (rand) = rand * 41 + 13;
         |    println(Str(location) + " " + Str(tile.elevation));

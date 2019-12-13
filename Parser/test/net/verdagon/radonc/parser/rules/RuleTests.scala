@@ -39,7 +39,6 @@ class RuleTests extends FunSuite with Matchers {
     checkFail(prototypeRulePR, "")
     checkFail(callableRulePR, "")
     checkFail(existsPR, "")
-    checkFail(identifyingRunesPR, "")
     checkFail(implementsPR, "")
     checkFail(keywordOrIdentifierOrRuneRuleTemplexPR, "")
     checkFail(keywordOrIdentifierRuleTemplexPR, "")

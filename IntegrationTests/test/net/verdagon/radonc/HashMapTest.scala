@@ -15,7 +15,7 @@ class HashMapTest extends FunSuite with Matchers {
       Assert.code +
       """
         |fn main() {
-        |  let m = HashMap:(Int, Int)({_}, ==);
+        |  m = HashMap<Int, Int>({_}, ==);
         |  m.add(0, 100);
         |  m.add(4, 101);
         |  m.add(8, 102);
@@ -61,12 +61,12 @@ class HashMapTest extends FunSuite with Matchers {
         |struct IntEquator { }
         |fn __call(this: &IntEquator, a: Int, b: Int) { a == b }
         |
-        |fn add42(map: &HashMap:(Int, Int, IntHasher, IntEquator)) {
+        |fn add42(map: &HashMap<Int, Int, IntHasher, IntEquator>) {
         |  map.add(42, 100);
         |}
         |
         |fn main() {
-        |  let m = HashMap:(Int, Int, IntHasher, IntEquator)(IntHasher(), IntEquator());
+        |  m = HashMap<Int, Int, IntHasher, IntEquator>(IntHasher(), IntEquator());
         |  add42(&m);
         |  = m.get(42).get();
         |}
@@ -90,7 +90,7 @@ class HashMapTest extends FunSuite with Matchers {
           |
           |struct LocationHasher { }
           |fn __call(this: &LocationHasher, loc: Location) {
-          |  let hash = 0;
+          |  hash = 0;
           |  mut (hash) = 41 * hash + loc.groupX;
           |  mut (hash) = 41 * hash + loc.groupY;
           |  mut (hash) = 41 * hash + loc.indexInGroup;
@@ -103,7 +103,7 @@ class HashMapTest extends FunSuite with Matchers {
           |}
           |
           |fn main() {
-          |  let m = HashMap:(Location, Int)(LocationHasher(), LocationEquator());
+          |  m = HashMap<Location, Int>(LocationHasher(), LocationEquator());
           |  m.add(Location(4, 5, 6), 100);
           |  = m.get(Location(4, 5, 6)).get();
           |}
@@ -120,7 +120,7 @@ class HashMapTest extends FunSuite with Matchers {
         Assert.code +
         """
           |fn main() {
-          |  let m = HashMap:(Int, Int)({_}, ==);
+          |  m = HashMap<Int, Int>({_}, ==);
           |  m.add(0, 100);
           |  m.add(4, 101);
           |  m.add(8, 102);
@@ -147,12 +147,12 @@ class HashMapTest extends FunSuite with Matchers {
         Assert.code +
         """
           |fn main() {
-          |  let m = HashMap:(Int, Int)({_}, ==);
+          |  m = HashMap<Int, Int>({_}, ==);
           |  m.add(0, 100);
           |  m.add(4, 101);
           |  m.add(8, 102);
           |  m.add(12, 103);
-          |  let k = m.keys();
+          |  k = m.keys();
           |  assertEq(k.len(), 4);
           |  assertEq(k.(0), 0);
           |  assertEq(k.(1), 4);

@@ -288,7 +288,7 @@ object FunctionScout {
     val closureStructName = CLOSURE_STRUCT_NAME + funcName
 //    val (closurePatternId) = fate.nextPatternNumber();
 
-    // We're basically trying to add `__closure: &__Closure:main:lam1`
+    // We're basically trying to add `__closure: &__Closure<main>:lam1`
     val closureParamAtomSP =
       PatternScout.translatePattern(
         initialRulesAndRunes,
@@ -387,7 +387,7 @@ object FunctionScout {
     tlfName: String, fate: ScoutFateBox, stackFrame: StackFrame, body0: BlockPE, paramDeclarations: VariableDeclarations):
   (BodySE, VariableUses) = {
     // There's an interesting consequence of calling this function here...
-    // If we have a lone lookup node, like "let m = Marine(); m;" then that
+    // If we have a lone lookup node, like "m = Marine(); m;" then that
     // 'm' will be turned into an expression, which means that's how it's
     // destroyed. So, thats how we destroy things before their time.
     val (NormalResult(block1WithoutParamLocals), selfUses, childUses) =

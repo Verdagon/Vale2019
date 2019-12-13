@@ -50,7 +50,7 @@ class TypeAndDestructureTests extends FunSuite with Matchers {
   }
 
   test("Templated destructure") {
-    compile(":Muta:Int[]") shouldEqual
+    compile(":Muta<Int>[]") shouldEqual
         PatternPP(
           None,
           Some(
@@ -59,7 +59,7 @@ class TypeAndDestructureTests extends FunSuite with Matchers {
               List(NamePPT("Int")))),
           Some(List()),
           None)
-    compile(":Muta:#R[]") shouldEqual
+    compile(":Muta<#R>[]") shouldEqual
         PatternPP(
           None,
           Some(

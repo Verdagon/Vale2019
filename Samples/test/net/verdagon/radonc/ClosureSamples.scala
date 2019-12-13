@@ -4,7 +4,7 @@ object ClosureSamples {
   val mutate =
     """
       |fn main() Int {
-      |  let x = 4;
+      |  x = 4;
       |  {
       |    mut (x) = x + 1;
       |  }();

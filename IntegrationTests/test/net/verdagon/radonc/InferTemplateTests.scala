@@ -11,9 +11,9 @@ class InferTemplateTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |struct Muta { hp: Int; }
-        |fn moo:#T(m: &#T) { m.hp }
+        |fn moo<#T>(m: &#T) { m.hp }
         |fn main() {
-        |  let x = Muta(10);
+        |  x = Muta(10);
         |  = moo(&x);
         |}
       """.stripMargin)

@@ -70,26 +70,26 @@ class CarpenterTests extends FunSuite with Matchers {
 //  test("Unrelated structs don't share function families") {
 //    val compile = new Compilation(
 //      """
-//        |interface MyInterface:T { }
-//        |fn doThing:T(x: virtual MyInterface:T) {}
+//        |interface MyInterface<T> { }
+//        |fn doThing<T>(x: virtual MyInterface<T>) {}
 //        |
-//        |struct MyStruct:T { }
-//        |MyStruct:T implements MyInterface:T;
-//        |fn doThing:T(x: MyStruct:T for MyInterface:T) {}
+//        |struct MyStruct<T> { }
+//        |MyStruct<T> implements MyInterface<T>;
+//        |fn doThing<T>(x: MyStruct<T> for MyInterface<T>) {}
 //        |
 //        |
-//        |interface OtherInterface:T { }
-//        |fn doThing:T(x: virtual OtherInterface:T) {}
+//        |interface OtherInterface<T> { }
+//        |fn doThing<T>(x: virtual OtherInterface<T>) {}
 //        |
-//        |struct OtherStruct:T { }
-//        |OtherStruct:T implements OtherInterface:T;
-//        |fn doThing:T(x: OtherStruct:T for MyInterface:T) {}
+//        |struct OtherStruct<T> { }
+//        |OtherStruct<T> implements OtherInterface<T>;
+//        |fn doThing<T>(x: OtherStruct<T> for MyInterface<T>) {}
 //        |
 //        |
 //        |fn main() {
-//        |  let x = MyStruct:Int();
+//        |  x = MyStruct<Int>();
 //        |  doThing(x);
-//        |  let y = OtherStruct:Int();
+//        |  y = OtherStruct<Int>();
 //        |  doThing(y);
 //        |}
 //      """.stripMargin)
@@ -103,20 +103,20 @@ class CarpenterTests extends FunSuite with Matchers {
 //  test("Functions with same signatures for different ancestors") {
 //    val compile = new Compilation(
 //      """
-//        |interface I:T { }
-//        |interface J:T { }
+//        |interface I<T> { }
+//        |interface J<T> { }
 //        |
-//        |struct MyStruct:T { }
-//        |MyStruct:T implements I:T;
-//        |MyStruct:T implements J:T;
+//        |struct MyStruct<T> { }
+//        |MyStruct<T> implements I<T>;
+//        |MyStruct<T> implements J<T>;
 //        |
-//        |fn doThing:T(x: virtual I:T) {}
-//        |fn doThing:T(x: virtual J:T) {}
-//        |fn doThing:T(x: MyStruct:T for I:T) {}
-//        |fn doThing:T(x: MyStruct:T for J:T) {}
+//        |fn doThing<T>(x: virtual I<T>) {}
+//        |fn doThing<T>(x: virtual J<T>) {}
+//        |fn doThing<T>(x: MyStruct<T> for I<T>) {}
+//        |fn doThing<T>(x: MyStruct<T> for J<T>) {}
 //        |
 //        |fn main() {
-//        |  let x = MyStruct:Int();
+//        |  x = MyStruct<Int>();
 //        |  doThing(x);
 //        |}
 //      """.stripMargin)
@@ -130,19 +130,19 @@ class CarpenterTests extends FunSuite with Matchers {
 //  test("Virtual function is added to overridden families and gets its own family") {
 //    val compile = new Compilation(
 //      """
-//        |interface I:T { }
-//        |interface J:T { }
+//        |interface I<T> { }
+//        |interface J<T> { }
 //        |
-//        |struct MyStruct:T { }
-//        |MyStruct:T implements I:T;
-//        |MyStruct:T implements J:T;
+//        |struct MyStruct<T> { }
+//        |MyStruct<T> implements I<T>;
+//        |MyStruct<T> implements J<T>;
 //        |
-//        |fn doThing:T(x: virtual I:T) {}
-//        |fn doThing:T(x: virtual J:T) {}
-//        |fn doThing:T(x: virtual MyStruct:T) {}
+//        |fn doThing<T>(x: virtual I<T>) {}
+//        |fn doThing<T>(x: virtual J<T>) {}
+//        |fn doThing<T>(x: virtual MyStruct<T>) {}
 //        |
 //        |fn main() {
-//        |  let x = MyStruct:Int();
+//        |  x = MyStruct<Int>();
 //        |  doThing(x);
 //        |}
 //      """.stripMargin)
@@ -158,21 +158,21 @@ class CarpenterTests extends FunSuite with Matchers {
 //  test("Struct is stamped and function families created") {
 //    val compile = new Compilation(
 //      """
-//        |interface I:T { }
+//        |interface I<T> { }
 //        |
-//        |interface J:T { }
-//        |J:T implements I:T;
+//        |interface J<T> { }
+//        |J<T> implements I<T>;
 //        |
-//        |interface K:T { }
-//        |K:T implements J:T;
+//        |interface K<T> { }
+//        |K<T> implements J<T>;
 //        |
-//        |struct MyStruct:T { }
-//        |MyStruct:T implements K:T;
+//        |struct MyStruct<T> { }
+//        |MyStruct<T> implements K<T>;
 //        |
-//        |fn doThing:T(x: virtual T) {}
+//        |fn doThing<T>(x: virtual T) {}
 //        |
 //        |fn main() {
-//        |  let x = MyStruct:Int();
+//        |  x = MyStruct<Int>();
 //        |  doThing(x);
 //        |}
 //      """.stripMargin)
@@ -189,16 +189,16 @@ class CarpenterTests extends FunSuite with Matchers {
 //  test("Functions with same params but different name dont share families") {
 //    val compile = new Compilation(
 //      """
-//        |interface MyInterface:T { }
-//        |struct MyStruct:T { }
-//        |MyStruct:T implements MyInterface:T;
+//        |interface MyInterface<T> { }
+//        |struct MyStruct<T> { }
+//        |MyStruct<T> implements MyInterface<T>;
 //        |
-//        |fn doAThing:T(x: virtual T) {}
-//        |fn doBThing:T(x: virtual T) {}
+//        |fn doAThing<T>(x: virtual T) {}
+//        |fn doBThing<T>(x: virtual T) {}
 //        |
 //        |fn main() {
-//        |  doAThing(MyStruct:Int());
-//        |  doBThing(MyStruct:Int());
+//        |  doAThing(MyStruct<Int>());
+//        |  doBThing(MyStruct<Int>());
 //        |}
 //      """.stripMargin)
 //    val hinputs = compile.getHinputs()

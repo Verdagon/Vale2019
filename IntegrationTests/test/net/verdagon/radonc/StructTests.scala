@@ -22,7 +22,7 @@ class StructTests extends FunSuite with Matchers {
       """
         |struct Marine { hp: *Int; }
         |fn main() {
-        |  let m = Marine(9);
+        |  m = Marine(9);
         |  = m.hp;
         |}
       """.stripMargin)
@@ -35,7 +35,7 @@ class StructTests extends FunSuite with Matchers {
       """
         |struct Marine { hp: *Int; }
         |fn main() {
-        |  let m = Marine(9);
+        |  m = Marine(9);
         |  mut (m.hp) = 4;
         |  = m.hp;
         |}
@@ -50,14 +50,14 @@ class StructTests extends FunSuite with Matchers {
         |struct Weapon { }
         |fn destructor(weapon: Weapon) Void {
         |  println("Destroying weapon!");
-        |  let :Weapon[] = weapon;
+        |  :Weapon[] = weapon;
         |}
         |struct Marine {
         |  weapon: Weapon;
         |}
         |fn destructor(marine: Marine) Void {
         |  println("Destroying marine!");
-        |  let :Marine[weapon] = marine;
+        |  :Marine[weapon] = marine;
         |}
         |fn main() {
         |  Marine(Weapon());
@@ -70,52 +70,52 @@ class StructTests extends FunSuite with Matchers {
   test("Mutate destroys member after moving it out of the object") {
     val compile = new Compilation(
       """
-        |interface Opt:#T rules(#T: Ref) { }
-        |struct Some:#T rules(#T: Ref) { value: #T; }
-        |impl Some:#T for Opt:#T;
-        |struct None:#T rules(#T: Ref) { }
-        |impl None:#T for Opt:#T;
+        |interface Opt<#T> rules(#T: Ref) { }
+        |struct Some<#T> rules(#T: Ref) { value: #T; }
+        |impl Some<#T> for Opt<#T>;
+        |struct None<#T> rules(#T: Ref) { }
+        |impl None<#T> for Opt<#T>;
         |
-        |abstract fn getOr:#T(opt: virtual &Opt:#T, default: #T) #T;
-        |fn getOr:#T(opt: &None:#T for Opt:#T, default: #T) #T {
+        |abstract fn getOr<#T>(opt: virtual &Opt<#T>, default: #T) #T;
+        |fn getOr<#T>(opt: &None<#T> for Opt<#T>, default: #T) #T {
         |  default
         |}
-        |fn getOr:#T(opt: &Some:#T for Opt:#T, default: #T) #T {
+        |fn getOr<#T>(opt: &Some<#T> for Opt<#T>, default: #T) #T {
         |  opt.value
         |}
         |
-        |abstract fn map:(#T, #R)(opt: virtual &Opt:#T, func: &IFunction1:(mut, #T, #R)) Opt:#R;
-        |fn map:(#T, #R)(opt: &None:#T for Opt:#T, func: &IFunction1:(mut, #T, #R)) Opt:#R {
-        |  None:R()
+        |abstract fn map<#T, #R>(opt: virtual &Opt<#T>, func: &IFunction1<mut, #T, #R>) Opt<#R>;
+        |fn map<#T, #R>(opt: &None<#T> for Opt<#T>, func: &IFunction1<mut, #T, #R>) Opt<#R> {
+        |  None<R>()
         |}
-        |fn map:(#T, #R)(opt: &Some:#T for Opt:#T, func: &IFunction1:(mut, #T, #R)) Opt:#R {
-        |  Some:R(func(opt.value))
+        |fn map<#T, #R>(opt: &Some<#T> for Opt<#T>, func: &IFunction1<mut, #T, #R>) Opt<#R> {
+        |  Some<R>(func(opt.value))
         |}
         |
         |struct GetMarineWeaponNameFunc { }
-        |impl GetMarineWeaponNameFunc for IFunction1:(mut, &Marine, Str);
-        |fn __call(this: &GetMarineWeaponNameFunc for IFunction1:(mut, &Marine, Str), m: &Marine) Str {
+        |impl GetMarineWeaponNameFunc for IFunction1<mut, &Marine, Str>;
+        |fn __call(this: &GetMarineWeaponNameFunc for IFunction1<mut, &Marine, Str>, m: &Marine) Str {
         |  m.weapon.name
         |}
         |
         |struct Weapon {
         |  name: Str;
-        |  owner: Opt:&Marine;
+        |  owner: Opt<&Marine>;
         |}
         |fn destructor(weapon: Weapon) Void {
         |  println("Destroying weapon, owner's weapon is: " + weapon.owner.map(&GetMarineWeaponNameFunc()).getOr("none"));
-        |  let :Weapon[name, owner] = weapon;
+        |  :Weapon[name, owner] = weapon;
         |}
         |struct Marine {
         |  weapon: Weapon;
         |}
         |fn destructor(marine: Marine) Void {
         |  println("Destroying marine!");
-        |  mut (marine.weapon.owner) = None:&Marine();
-        |  let :Marine[weapon] = marine;
+        |  mut (marine.weapon.owner) = None<&Marine>();
+        |  :Marine[weapon] = marine;
         |}
         |fn main() {
-        |  let m = Marine(Weapon("Sword", None:&Marine()));
+        |  m = Marine(Weapon("Sword", None<&Marine>()));
         |  mut (m.weapon.owner) = Some(&m);
         |  mut (m.weapon) = Weapon("Spear", Some(&m));
         |}
@@ -137,18 +137,18 @@ class StructTests extends FunSuite with Matchers {
   test("Panic function") {
     val compile = new Compilation(
       """
-        |interface Opt:#T rules(#T: Ref) { }
-        |struct Some:#T rules(#T: Ref) { value: #T; }
-        |impl Some:#T for Opt:#T;
-        |struct None:#T rules(#T: Ref) { }
-        |impl None:#T for Opt:#T;
+        |interface Opt<#T> rules(#T: Ref) { }
+        |struct Some<#T> rules(#T: Ref) { value: #T; }
+        |impl Some<#T> for Opt<#T>;
+        |struct None<#T> rules(#T: Ref) { }
+        |impl None<#T> for Opt<#T>;
         |
-        |abstract fn get:#T(opt: virtual &Opt:#T) &#T;
-        |fn get:#T(opt: &None:#T for Opt:#T) &#T { panic() }
-        |fn get:#T(opt: &Some:#T for Opt:#T) &#T { opt.value }
+        |abstract fn get<#T>(opt: virtual &Opt<#T>) &#T;
+        |fn get<#T>(opt: &None<#T> for Opt<#T>) &#T { panic() }
+        |fn get<#T>(opt: &Some<#T> for Opt<#T>) &#T { opt.value }
         |
         |fn main() {
-        |  let m: Opt:Int = None:Int();
+        |  m: Opt<Int> = None<Int>();
         |  = m.get();
         |}
       """.stripMargin)

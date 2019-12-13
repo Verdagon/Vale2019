@@ -548,7 +548,7 @@ class InfererMatcher[Env, State](
     // We don't match into the argRules here, see MDMIA.
     // But we can't just *not* match them, and evaluating could return unknown, in which case we
     // don't know what to do.
-    // For now, we'll only allow calls like toRef that are 1:1, and so can be matched.
+    // For now, we'll only allow calls like toRef that are 1<1>, and so can be matched.
 
     val CallAR(name, args, resultType) = rule
 

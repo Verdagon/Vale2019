@@ -21,8 +21,8 @@ class HammerTests extends FunSuite with Matchers {
 //  test("Templated struct makes it into hamuts") {
 //    val compile = new Compilation(
 //      """
-//        |struct ListNode:#T imm rules(#T: Ref) {
-//        |  tail: *ListNode:#T;
+//        |struct ListNode<#T> imm rules(#T: Ref) {
+//        |  tail: *ListNode<#T>;
 //        |}
 //        |fn main(a: *ListNode:*Int) {}
 //      """.stripMargin)
@@ -33,13 +33,13 @@ class HammerTests extends FunSuite with Matchers {
   test("Two templated structs make it into hamuts") {
     val compile = new Compilation(
       """
-        |interface MyOption:#T imm rules(#T: Ref) { }
-        |struct MyNone:#T imm rules(#T: Ref) { }
-        |impl MyNone:#T for MyOption:#T;
-        |struct MySome:#T imm rules(#T: Ref) { value: #T; }
-        |impl MySome:#T for MyOption:#T;
+        |interface MyOption<#T> imm rules(#T: Ref) { }
+        |struct MyNone<#T> imm rules(#T: Ref) { }
+        |impl MyNone<#T> for MyOption<#T>;
+        |struct MySome<#T> imm rules(#T: Ref) { value: #T; }
+        |impl MySome<#T> for MyOption<#T>;
         |
-        |fn main(a: *MySome:*Int, b: *MyNone:*Int) {}
+        |fn main(a: *MySome<*Int>, b: *MyNone<*Int>) {}
       """.stripMargin)
     val hamuts = compile.getHamuts()
     hamuts.interfaces.find(_.fullName.parts.last.humanName == "MyOption").get;
@@ -55,13 +55,13 @@ class HammerTests extends FunSuite with Matchers {
   test("Generated etables are size 1") {
     val compile = new Compilation(
       """
-        |interface MyOption:#T imm rules(#T: Ref) { }
-        |struct MyNone:#T imm rules(#T: Ref) { }
-        |impl MyNone:#T for MyOption:#T;
-        |struct MySome:#T imm rules(#T: Ref) { value: #T; }
-        |impl MySome:#T for MyOption:#T;
+        |interface MyOption<#T> imm rules(#T: Ref) { }
+        |struct MyNone<#T> imm rules(#T: Ref) { }
+        |impl MyNone<#T> for MyOption<#T>;
+        |struct MySome<#T> imm rules(#T: Ref) { value: #T; }
+        |impl MySome<#T> for MyOption<#T>;
         |
-        |fn main(a: *MySome:*Int, b: *MyNone:*Int) {}
+        |fn main(a: *MySome<*Int>, b: *MyNone<*Int>) {}
       """.stripMargin)
     val hamuts = compile.getHamuts()
     hamuts.structs

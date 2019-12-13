@@ -30,8 +30,8 @@ object Roguelike {
         |
         |struct Pattern imm {
         |  name: Str;
-        |  cornersByShapeIndex: __Array:(imm, __Array:(imm, Vec2));
-        |  patternTiles: __Array:(imm, PatternTile);
+        |  cornersByShapeIndex: __Array:(imm, __Array<imm, Vec2>);
+        |  patternTiles: __Array<imm, PatternTile>;
         |  xOffset: Vec2;
         |  yOffset: Vec2;
         |}
@@ -40,8 +40,8 @@ object Roguelike {
         |  shapeIndex: Int;
         |  rotateRadians: Float;
         |  translate: Vec2;
-        |  sideAdjacenciesBySideIndex: __Array:(imm, PatternSideAdjacency);
-        |  cornerAdjacenciesByCornerIndex: __Array:(imm, __Array:(imm, PatternCornerAdjacency));
+        |  sideAdjacenciesBySideIndex: __Array<imm, PatternSideAdjacency>;
+        |  cornerAdjacenciesByCornerIndex: __Array:(imm, __Array<imm, PatternCornerAdjacency>);
         |}
         |
         |struct PatternSideAdjacency imm {
@@ -67,7 +67,7 @@ object Roguelike {
         |
         |struct LocationHasher { }
         |fn __call(this: &LocationHasher, loc: Location) {
-        |  let hash = 0;
+        |  hash = 0;
         |  mut (hash) = 41 * hash + loc.groupX;
         |  mut (hash) = 41 * hash + loc.groupY;
         |  mut (hash) = 41 * hash + loc.indexInGroup;
@@ -82,14 +82,14 @@ object Roguelike {
         |struct Terrain {
         |  pattern: Pattern;
         |  elevationStepHeight: Float;
-        |  tiles: HashMap:(Location, TerrainTile, LocationHasher, LocationEquator);
+        |  tiles: HashMap<Location, TerrainTile, LocationHasher, LocationEquator>;
         |}
         |
         |
         |fn main() {
-        |  let board =
-        |      __Array:(mut, __Array:(mut, Str))(10, {(row)
-        |        __Array:(mut, Str)(10, {(col)
+        |  board =
+        |      __Array:(mut, __Array<mut, Str>)(10, {(row)
+        |        __Array<mut, Str>(10, {(col)
         |          = if {row == 0} { "#" }
         |            else if {col == 0} { "#" }
         |            else if {row == 9} { "#" }
@@ -98,15 +98,15 @@ object Roguelike {
         |        })
         |      });
         |
-        |  let mut playerRow = 4;
-        |  let mut playerCol = 3;
+        |  mut playerRow = 4;
+        |  mut playerCol = 3;
         |
-        |  let mut running = true;
+        |  mut running = true;
         |  while {running} {
-        |    __Array:(mut, Int)(10, {(rowI)
-        |      let row = board.(rowI);
-        |      __Array:(mut, Int)(10, {(colI)
-        |        let cell = row.(colI);
+        |    __Array<mut, Int>(10, {(rowI)
+        |      row = board.(rowI);
+        |      __Array<mut, Int>(10, {(colI)
+        |        cell = row.(colI);
         |        if {and(rowI == playerRow, colI == playerCol)} {
         |          print("@");
         |        } else {
@@ -118,7 +118,7 @@ object Roguelike {
         |      = 0;
         |    });
         |
-        |    let key = __getch();
+        |    key = __getch();
         |    println(key);
         |    if {key == 81} {
         |      mut (running) = false;
@@ -137,17 +137,17 @@ object Roguelike {
 //    val compile = new Compilation(
 //      """
 //        |struct Lam1 { }
-//        |impl Lam1 for IFunction1:(mut, Int, __Array:(mut, Str));
-//        |fn __call(this: &Lam1 for IFunction1:(mut, Int, __Array:(mut, Str)), row: Int) __Array:(mut, Str) {
-//        |  let lam2 = Lam2(row);
-//        |  = __Array:mut(10, &lam2);
+//        |impl Lam1 for IFunction1:(mut, Int, __Array<mut, Str>);
+//        |fn __call(this: &Lam1 for IFunction1:(mut, Int, __Array<mut, Str>, row: Int) __Array<mut, Str> {
+//        |  lam2 = Lam2(row);
+//        |  = __Array<mut>(10, &lam2);
 //        |}
 //        |
 //        |struct Lam2 {
 //        |  row: Int;
 //        |}
-//        |impl Lam2 for IFunction1:(mut, Int, Str);
-//        |fn __call(this: &Lam2 for IFunction1:(mut, Int, Str), col: Int) Str {
+//        |impl Lam2 for IFunction1<mut, Int, Str>;
+//        |fn __call(this: &Lam2 for IFunction1<mut, Int, Str>, col: Int) Str {
 //        |  = if {this.row == 0} { "#" }
 //        |    else if {col == 0} { "#" }
 //        |    else if {this.row == 9} { "#" }
@@ -156,30 +156,30 @@ object Roguelike {
 //        |}
 //        |
 //        |struct Lam3 {
-//        |  board: &__Array:(mut, __Array:(mut, Str));
+//        |  board: &__Array:(mut, __Array<mut, Str>);
 //        |  playerRow: Int;
 //        |  playerCol: Int;
 //        |}
-//        |impl Lam3 for IFunction1:(mut, Int, Bool);
-//        |fn __call(this: &Lam3 for IFunction1:(mut, Int, Bool), rowI: Int) Bool {
-//        |  let board = this.board;
-//        |  let row = board.(rowI);
-//        |  let lam4 = Lam4(rowI, row, this.playerRow, this.playerCol);
-//        |  __Array:mut(10, &lam4);
+//        |impl Lam3 for IFunction1<mut, Int, Bool>;
+//        |fn __call(this: &Lam3 for IFunction1<mut, Int, Bool>, rowI: Int) Bool {
+//        |  board = this.board;
+//        |  row = board.(rowI);
+//        |  lam4 = Lam4(rowI, row, this.playerRow, this.playerCol);
+//        |  __Array<mut>(10, &lam4);
 //        |  println("");
 //        |  = true;
 //        |}
 //        |
 //        |struct Lam4 {
 //        |  rowI: Int;
-//        |  row: &__Array:(mut, Str);
+//        |  row: &__Array<mut, Str>;
 //        |  playerRow: Int;
 //        |  playerCol: Int;
 //        |}
-//        |impl Lam4 for IFunction1:(mut, Int, Bool);
-//        |fn __call(this: &Lam4 for IFunction1:(mut, Int, Bool), colI: Int) Bool {
-//        |  let row = this.row;
-//        |  let cell = row.(colI);
+//        |impl Lam4 for IFunction1<mut, Int, Bool>;
+//        |fn __call(this: &Lam4 for IFunction1<mut, Int, Bool>, colI: Int) Bool {
+//        |  row = this.row;
+//        |  cell = row.(colI);
 //        |  if {and(this.rowI == this.playerRow, colI == this.playerCol)} {
 //        |    print("@");
 //        |  } else {
@@ -190,18 +190,18 @@ object Roguelike {
 //        |
 //        |
 //        |fn main() {
-//        |  let lam1 = Lam1();
-//        |  let board = __Array:mut(10, &lam1);
+//        |  lam1 = Lam1();
+//        |  board = __Array<mut>(10, &lam1);
 //        |
-//        |  let mut playerRow = 4;
-//        |  let mut playerCol = 3;
+//        |  mut playerRow = 4;
+//        |  mut playerCol = 3;
 //        |
-//        |  let mut running = true;
+//        |  mut running = true;
 //        |  while {running} {
-//        |    let lam3 = Lam3(&board, playerRow, playerCol);
-//        |    __Array:mut(10, &lam3);
+//        |    lam3 = Lam3(&board, playerRow, playerCol);
+//        |    __Array<mut>(10, &lam3);
 //        |
-//        |    let key = __getch();
+//        |    key = __getch();
 //        |    println(key);
 //        |    if {key == 81} {
 //        |      mut (running) = false;

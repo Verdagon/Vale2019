@@ -31,10 +31,10 @@ case class Local(
   // Multiple variables in a Function3 can have the same height. For example:
   // fn main() {
   //   {
-  //     let x = 4;
+  //     x = 4;
   //   }
   //   {
-  //     let y = 4;
+  //     y = 4;
   //   }
   // }
   // Both of these will have index 0.
@@ -118,22 +118,22 @@ case class Locals(
 
 object Hammer {
   def translate(hinputs: Hinputs): Program3 = {
-    val miduts0 = Hamuts(Map(), Map(), Map(), hinputs.structIds.values.max + 1, Map(), Map(), Map(), Map())
-    val (miduts1, emptyPackStructRef3) =
-      StructHammer.translateStructRef(hinputs, miduts0, hinputs.program2.emptyPackStructRef)
-    val miduts2 = StructHammer.translateInterfaces(hinputs, miduts1);
-    val miduts3 = StructHammer.translateStructs(hinputs, miduts2)
+    val hamuts0 = Hamuts(Map(), Map(), Map(), hinputs.structIds.values.max + 1, Map(), Map(), Map(), Map())
+    val (hamuts1, emptyPackStructRef3) =
+      StructHammer.translateStructRef(hinputs, hamuts0, hinputs.program2.emptyPackStructRef)
+    val hamuts2 = StructHammer.translateInterfaces(hinputs, hamuts1);
+    val hamuts3 = StructHammer.translateStructs(hinputs, hamuts2)
     val userFunctions = hinputs.program2.functions.filter(_.header.isUserFunction).toList
     val nonUserFunctions = hinputs.program2.functions.filter(!_.header.isUserFunction).toList
-    val (miduts4, _) = FunctionHammer.translateFunctions(hinputs, miduts3, userFunctions)
-    val (miduts5, _) = FunctionHammer.translateFunctions(hinputs, miduts4, nonUserFunctions)
+    val (hamuts4, _) = FunctionHammer.translateFunctions(hinputs, hamuts3, userFunctions)
+    val (hamuts5, _) = FunctionHammer.translateFunctions(hinputs, hamuts4, nonUserFunctions)
 
     Program3(
-      miduts5.interfaceDefs.values.toList,
-      miduts5.structDefsById.values.toList,
+      hamuts5.interfaceDefs.values.toList,
+      hamuts5.structDefsById.values.toList,
       emptyPackStructRef3,
       List() /* externs */,
-      miduts5.functionDefs.values.toList)
+      hamuts5.functionDefs.values.toList)
   }
 
   def newId(nodesByLine: Vector[Node3]) = {

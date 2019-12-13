@@ -151,29 +151,29 @@ class VirtualTests extends FunSuite with Matchers {
 //  test("Stamps ancestor structs when we declare a child struct") {
 //    val compile = new Compilation(
 //      """
-//        |interface I:T { }
-//        |fn dance:T(i: virtual I:T) {
+//        |interface I<T> { }
+//        |fn dance<T>(i: virtual I<T>) {
 //        |   print(1);
 //        |}
 //        |
-//        |struct SA:T { }
-//        |SA:T implements I:T;
-//        |fn dance:T(a: SA:T for I:T) {
+//        |struct SA<T> { }
+//        |SA<T> implements I<T>;
+//        |fn dance<T>(a: SA<T> for I<T>) {
 //        |   print(2);
 //        |}
 //        |
 //        |fn main() {
-//        |  dance(SA:Int());
+//        |  dance(SA<Int>());
 //        |}
 //        |
-//        |struct SB:T { }
-//        |SB:T implements I:T;
-//        |fn dance:T(b: SB:T for I:T) {
+//        |struct SB<T> { }
+//        |SB<T> implements I<T>;
+//        |fn dance<T>(b: SB<T> for I<T>) {
 //        |   print(3);
 //        |}
 //        |
 //        |fn thing() {
-//        |  let x = SB:Int();
+//        |  x = SB<Int>();
 //        |}
 //      """.stripMargin)
 //    vfail("what would this test be testing")
@@ -193,26 +193,26 @@ class VirtualTests extends FunSuite with Matchers {
 //  test("Calls an overriding function") {
 //    val compile = new Compilation(
 //      """
-//        |interface I:T { }
-//        |fn dance:T(i: virtual I:T) {
+//        |interface I<T> { }
+//        |fn dance<T>(i: virtual I<T>) {
 //        |   print(1);
 //        |}
 //        |
-//        |struct SA:T { }
-//        |SA:T implements I:T;
-//        |fn dance:T(a: SA:T for I:T) {
+//        |struct SA<T> { }
+//        |SA<T> implements I<T>;
+//        |fn dance<T>(a: SA<T> for I<T>) {
 //        |   print(2);
 //        |}
 //        |
-//        |struct SB:T { }
-//        |SB:T implements I:T;
-//        |fn dance:T(b: SB:T for I:T) {
+//        |struct SB<T> { }
+//        |SB<T> implements I<T>;
+//        |fn dance<T>(b: SB<T> for I<T>) {
 //        |   print(3);
 //        |}
 //        |
 //        |fn main() {
-//        |  let x = SB:Int();
-//        |  dance(SA:Int());
+//        |  x = SB<Int>();
+//        |  dance(SA<Int>());
 //        |}
 //      """.stripMargin)
 //    compile.getTemputs()
@@ -237,21 +237,21 @@ class VirtualTests extends FunSuite with Matchers {
 //  test("Stamp multiple function families") {
 //    val compile = new Compilation(
 //      """
-//        |interface I:T { }
+//        |interface I<T> { }
 //        |
-//        |interface J:T { }
-//        |J:T implements I:T;
+//        |interface J<T> { }
+//        |J<T> implements I<T>;
 //        |
-//        |interface K:T { }
-//        |K:T implements J:T;
+//        |interface K<T> { }
+//        |K<T> implements J<T>;
 //        |
-//        |struct MyStruct:T { }
-//        |MyStruct:T implements K:T;
+//        |struct MyStruct<T> { }
+//        |MyStruct<T> implements K<T>;
 //        |
-//        |fn doThing:T(x: virtual T) {}
+//        |fn doThing<T>(x: virtual T) {}
 //        |
 //        |fn main() {
-//        |  let x = MyStruct:Int();
+//        |  x = MyStruct<Int>();
 //        |  doThing(x);
 //        |}
 //      """.stripMargin)
@@ -299,32 +299,32 @@ class VirtualTests extends FunSuite with Matchers {
 //    vassert(getParamArgTypeByVirtualRoot(doThingFamilyForMyStruct) == Map("MyStruct" -> "MyStruct"))
 //  }
 //
-//  // We manifest a doThing:Int, which takes in an I:Int.
-//  // If you thought it should spawn a doThing(:MyStruct:Int), youre wrong; the function
-//  // specifically says its parameter is an I:T, not a MyStruct:T.
-//  // There should never be a doThing(:MyStruct:Int), doThing(:K:Int), or doThing(:J:Int).
-//  // That said, we can still pass a MyStruct:Int arg to an I:Int parameter.
+//  // We manifest a doThing<Int>, which takes in an I<Int>.
+//  // If you thought it should spawn a doThing(:MyStruct<Int>), youre wrong; the function
+//  // specifically says its parameter is an I<T>, not a MyStruct<T>.
+//  // There should never be a doThing(:MyStruct<Int>), doThing(:K<Int>), or doThing(:J<Int>).
+//  // That said, we can still pass a MyStruct<Int> arg to an I<Int> parameter.
 //  // This should only spawn that one function family.
 //  // However, each struct is required to have a vtable entry for that function... they'll all
-//  // point to the original doThing:Int(:I:Int).
+//  // point to the original doThing<Int>(:I<Int>).
 //  test("Stamps virtual functions on a templated interface") {
 //    val compile = new Compilation(
 //      """
-//        |interface I:T { }
+//        |interface I<T> { }
 //        |
-//        |interface J:T { }
-//        |J:T implements I:T;
+//        |interface J<T> { }
+//        |J<T> implements I<T>;
 //        |
-//        |interface K:T { }
-//        |K:T implements J:T;
+//        |interface K<T> { }
+//        |K<T> implements J<T>;
 //        |
-//        |struct MyStruct:T { }
-//        |MyStruct:T implements K:T;
+//        |struct MyStruct<T> { }
+//        |MyStruct<T> implements K<T>;
 //        |
-//        |fn doThing:T(x: virtual I:T) {}
+//        |fn doThing<T>(x: virtual I<T>) {}
 //        |
 //        |fn main() {
-//        |  let x = MyStruct:Int();
+//        |  x = MyStruct<Int>();
 //        |  doThing(x);
 //        |}
 //      """.stripMargin)
@@ -352,19 +352,19 @@ class VirtualTests extends FunSuite with Matchers {
 //  test("Virtual creates function family roots") {
 //    val compile = new Compilation(
 //      """
-//        |interface I:T { }
-//        |interface J:T { }
+//        |interface I<T> { }
+//        |interface J<T> { }
 //        |
-//        |struct MyStruct:T { }
-//        |MyStruct:T implements I:T;
-//        |MyStruct:T implements J:T;
+//        |struct MyStruct<T> { }
+//        |MyStruct<T> implements I<T>;
+//        |MyStruct<T> implements J<T>;
 //        |
-//        |fn doThing:T(x: virtual I:T) {}
-//        |fn doThing:T(x: virtual J:T) {}
-//        |fn doThing:T(x: virtual MyStruct:T) {}
+//        |fn doThing<T>(x: virtual I<T>) {}
+//        |fn doThing<T>(x: virtual J<T>) {}
+//        |fn doThing<T>(x: virtual MyStruct<T>) {}
 //        |
 //        |fn main() {
-//        |  let x = MyStruct:Int();
+//        |  x = MyStruct<Int>();
 //        |  doThing(x);
 //        |}
 //      """.stripMargin)
@@ -373,26 +373,26 @@ class VirtualTests extends FunSuite with Matchers {
 //    vassert(temputs.functionFamiliesByRootBanner.size == 3)
 //    // See the next test, which does the same thing but with override.
 //    // Also, even though theres three function families, the SuperFamilyCarpenter
-//    // will merge the MyStruct:T families into the others.
+//    // will merge the MyStruct<T> families into the others.
 //  }
 //
 //  // Should only be two function families.
 //  test("Override doesnt make a function family root") {
 //    val compile = new Compilation(
 //      """
-//        |interface I:T { }
-//        |interface J:T { }
+//        |interface I<T> { }
+//        |interface J<T> { }
 //        |
-//        |struct MyStruct:T { }
-//        |MyStruct:T implements I:T;
-//        |MyStruct:T implements J:T;
+//        |struct MyStruct<T> { }
+//        |MyStruct<T> implements I<T>;
+//        |MyStruct<T> implements J<T>;
 //        |
-//        |fn doThing:T(x: virtual I:T) {}
-//        |fn doThing:T(x: virtual J:T) {}
-//        |fn doThing:T(x: MyStruct:T for I:T) {}
+//        |fn doThing<T>(x: virtual I<T>) {}
+//        |fn doThing<T>(x: virtual J<T>) {}
+//        |fn doThing<T>(x: MyStruct<T> for I<T>) {}
 //        |
 //        |fn main() {
-//        |  let x = MyStruct:Int();
+//        |  x = MyStruct<Int>();
 //        |  doThing(x);
 //        |}
 //      """.stripMargin)
@@ -434,16 +434,16 @@ class VirtualTests extends FunSuite with Matchers {
 //  test("Functions with same signatures but different template params make different families") {
 //    val compile = new Compilation(
 //      """
-//        |interface MyInterface:T { }
-//        |fn doThing:T(x: virtual MyInterface:T) {}
+//        |interface MyInterface<T> { }
+//        |fn doThing<T>(x: virtual MyInterface<T>) {}
 //        |
-//        |struct MyStruct:T { }
-//        |MyStruct:T implements MyInterface:T;
-//        |fn doThing:T(x: MyStruct:T for MyInterface:T) {}
+//        |struct MyStruct<T> { }
+//        |MyStruct<T> implements MyInterface<T>;
+//        |fn doThing<T>(x: MyStruct<T> for MyInterface<T>) {}
 //        |
 //        |fn main() {
-//        |  let x = MyStruct:Int();
-//        |  let y = MyStruct:Str();
+//        |  x = MyStruct<Int>();
+//        |  y = MyStruct<Str>();
 //        |  doThing(x);
 //        |  doThing(y);
 //        |}
@@ -457,16 +457,16 @@ class VirtualTests extends FunSuite with Matchers {
 //  test("Stamps different families for different template args") {
 //    val compile = new Compilation(
 //      """
-//        |interface MyInterface:T { }
-//        |abstract fn doThing:T(x: virtual MyInterface:T)Void;
+//        |interface MyInterface<T> { }
+//        |abstract fn doThing<T>(x: virtual MyInterface<T>)Void;
 //        |
-//        |struct MyStruct:T { }
-//        |MyStruct:T implements MyInterface:T;
-//        |fn doThing:T(x: MyStruct:T for MyInterface:T) {}
+//        |struct MyStruct<T> { }
+//        |MyStruct<T> implements MyInterface<T>;
+//        |fn doThing<T>(x: MyStruct<T> for MyInterface<T>) {}
 //        |
 //        |fn main() {
-//        |  let x = MyStruct:Int();
-//        |  let y = MyStruct:Str();
+//        |  x = MyStruct<Int>();
+//        |  y = MyStruct<Str>();
 //        |  doThing(x);
 //        |  doThing(y);
 //        |}

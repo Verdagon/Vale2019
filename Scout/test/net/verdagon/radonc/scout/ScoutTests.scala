@@ -85,7 +85,7 @@ class ScoutTests extends FunSuite with Matchers {
   }
 
   test("Method call") {
-    val program1 = compile("fn main() { let x = 4; = x.shout(); }")
+    val program1 = compile("fn main() { x = 4; = x.shout(); }")
     val main = program1.lookupFunction("main")
 
     val CodeBody1(BodySE(_, block)) = main.body
@@ -95,7 +95,7 @@ class ScoutTests extends FunSuite with Matchers {
   }
 
   test("Moving method call") {
-    val program1 = compile("fn main() { let x = 4; = x^.shout(); }")
+    val program1 = compile("fn main() { x = 4; = x^.shout(); }")
     val main = program1.lookupFunction("main")
 
     val CodeBody1(BodySE(_, block)) = main.body
@@ -135,7 +135,7 @@ class ScoutTests extends FunSuite with Matchers {
 //            FunctionS("main",0,false,false,true,List(),List(),None,
 //              Some(BodySE(Set(),Set(),List(Scramble1(List(IntLiteral1(4), LookuSP("-"), IntLiteral1(3))))))))));
 //    check(4,
-//        "fn main(){{(a:Int) +(a,a)}(3)}",
+//        "fn main(){{(a: Int) +(a,a)}(3)}",
 //        ProgramS(List(), List(), List(
 //            FunctionS("main",0,false,false,true,List(),List(),None,
 //              Some(BodySE(Set(),Set(),List(
@@ -167,28 +167,28 @@ class ScoutTests extends FunSuite with Matchers {
 //
 //    // Make sure it's in the lambda's capture list but not main's
 //    check(8,
-//        "fn main() { let x = 4; { print x }() }",
+//        "fn main() { x = 4; { print x }() }",
 //        ProgramS(List(), List(), List(
 //          FunctionS("main",0,false,false,true,List(),List(),None,
 //            Some(BodySE(Set(),Set(),List(
 //              Let1(1,"x", CaptureSP("x", FinalP,None),IntLiteral1(4)),
 //              Scramble1(List(
-//                FunctionS("main:lam2",2,false,false,true,List(),List(),None,
+//                FunctionS("main<lam2>",2,false,false,true,List(),List(),None,
 //                  Some(BodySE(Set(),Set(),List(Scramble1(List(LookuSP("print"), LookuSP("x"))))))),
 //                scout.PackSE(List()))))))))))
 //
 //
 //    // Make sure the outer lambda only captures x, and main captures nothing
 //    check(9,
-//        "fn main() { let x = 4; { let y = 5; { x + y }() }() }",
+//        "fn main() { x = 4; { y = 5; { x + y }() }() }",
 //        ProgramS(List(), List(), List(
 //          FunctionS("main",0,false,false,true,List(),List(),None,Some(BodySE(Set(),Set(),List(
 //            Let1(1,"x", CaptureSP("x", FinalP,None),IntLiteral1(4)),
 //            Scramble1(List(
-//              FunctionS("main:lam2",1,false,false,true,List(),List(),None,Some(BodySE(Set(),Set(),List(
+//              FunctionS("main<lam2>",1,false,false,true,List(),List(),None,Some(BodySE(Set(),Set(),List(
 //                Let1(3,"y", CaptureSP("y", FinalP,None),IntLiteral1(5)),
 //                Scramble1(List(
-//                  FunctionS("main:lam4",2,false,false,true,List(),List(),None,
+//                  FunctionS("main<lam4>",2,false,false,true,List(),List(),None,
 //                    Some(BodySE(Set(),Set(),List(Scramble1(List(LookuSP("x"), LookuSP("+"), LookuSP("y"))))))),
 //                  scout.PackSE(List()))))))),
 //              scout.PackSE(List()))))))))))

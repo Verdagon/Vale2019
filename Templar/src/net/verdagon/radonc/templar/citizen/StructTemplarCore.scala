@@ -15,7 +15,7 @@ import scala.collection.immutable.List
 
 object StructTemplarCore {
   // Takes a IEnvironment because we might be inside a:
-  // struct:T Thing:T {
+  // struct<T> Thing<T> {
   //   t: T;
   // }
   // which means we need some way to know what T is.
@@ -183,7 +183,7 @@ object StructTemplarCore {
     val mutability =
       getCompoundTypeMutability(temputs, members.map(_.tyype.reference))
 
-    val nearName = FunctionScout.CLOSURE_STRUCT_NAME + functionS.name // For example "__Closure:main:lam1"
+    val nearName = FunctionScout.CLOSURE_STRUCT_NAME + functionS.name // For example "__Closure<main>:lam1"
     val fullName = FullName2(functionFullName.steps :+ NamePart2(nearName, Some(List())))
 
     val structRef = StructRef2(fullName)
