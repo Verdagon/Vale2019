@@ -1,6 +1,6 @@
 package net.verdagon.von
 
-import net.verdagon.radonc.vassert
+import net.verdagon.vale.vassert
 
 sealed trait IVonData
 

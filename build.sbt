@@ -1,4 +1,4 @@
-name := "RadonC"
+name := "vale"
 
 version := "0.1"
 

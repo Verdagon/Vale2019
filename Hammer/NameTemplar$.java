@@ -1,4 +1,4 @@
-package net.verdagon.radonc.templar;
+package net.verdagon.vale.templar;
 
 object NameTemplar {
   // Identifier names need to come from the Templar output because some things are erased

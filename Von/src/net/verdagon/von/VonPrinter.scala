@@ -1,6 +1,6 @@
 package net.verdagon.von
 
-import net.verdagon.radonc.{vfail, vimpl}
+import net.verdagon.vale.{vfail, vimpl}
 import org.apache.commons.lang.StringEscapeUtils
 
 sealed trait ISyntax
