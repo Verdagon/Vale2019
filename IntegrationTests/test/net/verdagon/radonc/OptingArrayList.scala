@@ -11,11 +11,11 @@ val code =
     |}
     |fn len<#E>(list: &List<#E>) { list.size }
     |fn add<#E>(list: &List<#E>, newElement: #E) {
-    |  if {list.size == list.len()} {
-    |    newLen = if {len(list) == 0} { 1 } else { len(list) * 2 };
+    |  if (list.size == list.len()) {
+    |    newLen = if (len(list) == 0) { 1 } else { len(list) * 2 };
     |    newArray =
     |        __Array<mut, Opt<E>>(newLen, {(index)
-    |          = if {index < len(list)} {
+    |          = if (index < len(list)) {
     |              = (mut list.array.(index) = None<E>());
     |            } else {
     |              result: Opt<E> = None<E>();

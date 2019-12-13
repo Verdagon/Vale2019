@@ -90,10 +90,10 @@ object Roguelike {
         |  board =
         |      __Array:(mut, __Array<mut, Str>)(10, {(row)
         |        __Array<mut, Str>(10, {(col)
-        |          = if {row == 0} { "#" }
-        |            else if {col == 0} { "#" }
-        |            else if {row == 9} { "#" }
-        |            else if {col == 9} { "#" }
+        |          = if (row == 0) { "#" }
+        |            else if (col == 0) { "#" }
+        |            else if (row == 9) { "#" }
+        |            else if (col == 9) { "#" }
         |            else { "." }
         |        })
         |      });
@@ -102,12 +102,12 @@ object Roguelike {
         |  l! = 3;
         |
         |  g! = true;
-        |  while {running} {
+        |  while (running) {
         |    __Array<mut, Int>(10, {(rowI)
         |      row = board.(rowI);
         |      __Array<mut, Int>(10, {(colI)
         |        cell = row.(colI);
-        |        if {and(rowI == playerRow, colI == playerCol)} {
+        |        if (and(rowI == playerRow, colI == playerCol)) {
         |          print("@");
         |        } else {
         |          print(cell);
@@ -120,15 +120,15 @@ object Roguelike {
         |
         |    key = __getch();
         |    println(key);
-        |    if {key == 81} {
+        |    if (key == 81) {
         |      mut running = false;
-        |    } else if {key == 119} {
+        |    } else if (key == 119) {
         |      mut playerRow = playerRow + -1;
-        |    } else if {key == 115} {
+        |    } else if (key == 115) {
         |      mut playerRow = playerRow + 1;
-        |    } else if {key == 97} {
+        |    } else if (key == 97) {
         |      mut playerCol = playerCol + -1;
-        |    } else if {key == 100} {
+        |    } else if (key == 100) {
         |      mut playerCol = playerCol + 1;
         |    }
         |  }
@@ -148,10 +148,10 @@ object Roguelike {
 //        |}
 //        |impl Lam2 for IFunction1<mut, Int, Str>;
 //        |fn __call(this: &Lam2 for IFunction1<mut, Int, Str>, col: Int) Str {
-//        |  = if {this.row == 0} { "#" }
-//        |    else if {col == 0} { "#" }
-//        |    else if {this.row == 9} { "#" }
-//        |    else if {col == 9} { "#" }
+//        |  = if (this.row == 0) { "#" }
+//        |    else if (col == 0) { "#" }
+//        |    else if (this.row == 9) { "#" }
+//        |    else if (col == 9) { "#" }
 //        |    else { "." }
 //        |}
 //        |
@@ -180,7 +180,7 @@ object Roguelike {
 //        |fn __call(this: &Lam4 for IFunction1<mut, Int, Bool>, colI: Int) Bool {
 //        |  row = this.row;
 //        |  cell = row.(colI);
-//        |  if {and(this.rowI == this.playerRow, colI == this.playerCol)} {
+//        |  if (and(this.rowI == this.playerRow, colI == this.playerCol)) {
 //        |    print("@");
 //        |  } else {
 //        |    print(cell);
@@ -197,21 +197,21 @@ object Roguelike {
 //        |  l! = 3;
 //        |
 //        |  g! = true;
-//        |  while {running} {
+//        |  while (running) {
 //        |    lam3 = Lam3(&board, playerRow, playerCol);
 //        |    __Array<mut>(10, &lam3);
 //        |
 //        |    key = __getch();
 //        |    println(key);
-//        |    if {key == 81} {
+//        |    if (key == 81) {
 //        |      mut running = false;
-//        |    } else if {key == 119} {
+//        |    } else if (key == 119) {
 //        |      mut playerRow = playerRow + -1;
-//        |    } else if {key == 115} {
+//        |    } else if (key == 115) {
 //        |      mut playerRow = playerRow + 1;
-//        |    } else if {key == 97} {
+//        |    } else if (key == 97) {
 //        |      mut playerCol = playerCol + -1;
-//        |    } else if {key == 100} {
+//        |    } else if (key == 100) {
 //        |      mut playerCol = playerCol + 1;
 //        |    }
 //        |  }

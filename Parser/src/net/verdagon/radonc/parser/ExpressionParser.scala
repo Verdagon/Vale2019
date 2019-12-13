@@ -63,13 +63,13 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
   private[parser] def bracedBlock = ("{" ~> optWhite ~> block <~ optWhite <~ "}")
 
   private[parser] def whiile: Parser[WhilePE] = {
-    ("while" ~> optWhite ~> bracedBlock <~ optWhite) ~ bracedBlock ^^ {
+    ("while" ~> optWhite ~> "(" ~> optWhite ~> block <~ optWhite <~ ")" <~ optWhite) ~ bracedBlock ^^ {
       case cond ~ thenBlock => WhilePE(cond, thenBlock)
     }
   }
 
   private[parser] def ifPart: Parser[(BlockPE, BlockPE)] = {
-    ("if" ~> optWhite ~> "{" ~> optWhite ~> block <~ optWhite <~ "}" <~ optWhite) ~ bracedBlock ^^ {
+    ("if" ~> optWhite ~> "(" ~> optWhite ~> block <~ optWhite <~ ")" <~ optWhite) ~ bracedBlock ^^ {
       case condLambda ~ thenLambda => (condLambda, thenLambda)
     }
   }

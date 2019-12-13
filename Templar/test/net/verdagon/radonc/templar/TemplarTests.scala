@@ -516,7 +516,7 @@ class TemplarTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  if {true} {
+        |  if (true) {
         |    ret 7;
         |  } else {
         |    ret 9;
@@ -537,7 +537,7 @@ class TemplarTests extends FunSuite with Matchers {
         |fn main() {
         |  m = Marine(5);
         |  x =
-        |    if {true} {
+        |    if (true) {
         |      ret 7;
         |    } else {
         |      = m.hp;

@@ -66,16 +66,16 @@ object Terrain {
         |  tile.sideAdjacenciesBySideIndex each {(sideAdjacency)
         |    location =
         |        Location(sideAdjacency.groupRelativeX, sideAdjacency.groupRelativeY, sideAdjacency.tileIndex);
-        |    if {not(result.has(location))} {
+        |    if (not(result.has(location))) {
         |      result.add(location, 0);
         |    }
         |  };
-        |  if {adjacentCornersToo} {
+        |  if (adjacentCornersToo) {
         |    tile.cornerAdjacenciesByCornerIndex each {(cornerAdjacencies)
         |      cornerAdjacencies each {(cornerAdjacency)
         |        location =
         |            Location(cornerAdjacency.groupRelativeX, cornerAdjacency.groupRelativeY, cornerAdjacency.tileIndex);
-        |        if {not(result.has(location))} {
+        |        if (not(result.has(location))) {
         |          result.add(location, 0);
         |        }
         |      }
@@ -113,14 +113,14 @@ object Terrain {
         |  result = HashMap<Location, Int>(LocationHasher(), LocationEquator());
         |  sourceLocs each {(originalLocation)
         |    adjacents = pattern.getAdjacentLocations(originalLocation, considerCornersAdjacent).toList();
-        |    if {includeSourceLocs} {
+        |    if (includeSourceLocs) {
         |      adjacents.add(originalLocation);
         |    }
         |    adjacents.toArray<imm>() each {(adjacentLocation)
-        |      if {sourceLocsSet.has(adjacentLocation) and not(includeSourceLocs)} {
+        |      if (sourceLocsSet.has(adjacentLocation) and not(includeSourceLocs)) {
         |        // if this is a source loc, and we don't want to include them, do nothing.
         |      } else {
-        |        if {not(result.has(adjacentLocation))} {
+        |        if (not(result.has(adjacentLocation))) {
         |          println("Found an adjacent location: " + Str(adjacentLocation));
         |          result.add(adjacentLocation, 0);
         |        }

@@ -8,7 +8,7 @@ class WhileTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  while {false} {}
+        |  while (false) {}
         |  = 5;
         |}
       """.stripMargin)
@@ -21,7 +21,7 @@ class WhileTests extends FunSuite with Matchers {
       """
         |fn main() {
         |  i! = 0;
-        |  while {i < 4} {
+        |  while (i < 4) {
         |    mut i = i + 1;
         |  }
         |  = i;
@@ -36,7 +36,7 @@ class WhileTests extends FunSuite with Matchers {
       """
         |fn main() {
         |  key! = 0;
-        |  while {mut key = __getch(); = key < 96;} {
+        |  while (mut key = __getch(); = key < 96;) {
         |    print(key);
         |  }
         |  = key;
@@ -51,7 +51,7 @@ class WhileTests extends FunSuite with Matchers {
       """
         |fn main() {
         |  key! = 0;
-        |  while {mut key = __getch(); = key != 99;} {
+        |  while (mut key = __getch(); = key != 99;) {
         |    print(key);
         |  }
         |  = key;
@@ -65,7 +65,7 @@ class WhileTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() Int {
-        |  while {true} {
+        |  while (true) {
         |    ret 9;
         |  }
         |  = panic();
@@ -82,7 +82,7 @@ class WhileTests extends FunSuite with Matchers {
 //        |struct Marine { hp: *Int; }
 //        |fn main() {
 //        |  m = Marine(7);
-//        |  while {true} {
+//        |  while (true) {
 //        |    doThings(m);
 //        |  }
 //        |  = 4;

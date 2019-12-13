@@ -54,12 +54,12 @@ class BiggerTests extends FunSuite with Matchers with Collector {
   }
 
   test("Simple while loop") {
-    compile(VParser.statement,"while {} {}") shouldEqual
+    compile(VParser.statement,"while () {}") shouldEqual
         WhilePE(BlockPE(List(VoidPE())), BlockPE(List(VoidPE())))
   }
 
   test("Result after while loop") {
-    compile(VParser.block,"while {} {} = false;") shouldEqual
+    compile(VParser.block,"while () {} = false;") shouldEqual
         BlockPE(List(
           WhilePE(BlockPE(List(VoidPE())), BlockPE(List(VoidPE()))),
           BoolLiteralPE(false)))
@@ -100,7 +100,7 @@ class BiggerTests extends FunSuite with Matchers with Collector {
   }
 
   test("ifs") {
-    compile(VParser.ifLadder, "if {true} { doBlarks(&x) } else { }") shouldEqual
+    compile(VParser.ifLadder, "if (true) { doBlarks(&x) } else { }") shouldEqual
         IfPE(
           BlockPE(List(BoolLiteralPE(true))),
           BlockPE(List(FunctionCallPE(LookupPE("doBlarks", List()),PackPE(List(LendPE(LookupPE("x", List())))),true))),
@@ -195,7 +195,7 @@ class BiggerTests extends FunSuite with Matchers with Collector {
 
   test("19") {
     compile(VParser.statement,
-      "newLen = if {num == 0} { 1 } else { 2 };") shouldEqual
+      "newLen = if (num == 0) { 1 } else { 2 };") shouldEqual
       LetPE(
         List(),
         PatternPP(Some(CaptureP("newLen",FinalP)),None,None,None),

@@ -11,7 +11,7 @@ class IfTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  = if {true} { 3 } else { 5 }
+        |  = if (true) { 3 } else { 5 }
         |}
       """.stripMargin)
     val scoutput = compile.getScoutput()
@@ -28,7 +28,7 @@ class IfTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  = if {false} { 3 } else { 5 }
+        |  = if (false) { 3 } else { 5 }
         |}
       """.stripMargin)
 
@@ -39,7 +39,7 @@ class IfTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  = if {false} { 3 } else if {true} { 5 } else { 7 }
+        |  = if (false) { 3 } else if (true) { 5 } else { 7 }
         |}
       """.stripMargin)
 
@@ -64,7 +64,7 @@ class IfTests extends FunSuite with Matchers {
         |struct Marine { x: *Int; }
         |fn main() {
         |  m = Marine(5);
-        |  = if {false} {
+        |  = if (false) {
         |      [x] = m;
         |      = x;
         |    } else {
@@ -94,8 +94,8 @@ class IfTests extends FunSuite with Matchers {
         |struct Marine { x: *Int; }
         |fn main() {
         |  m = Marine(5);
-        |  = if {m.x == 5} { "#" }
-        |  else if {0 == 0} { "?" }
+        |  = if (m.x == 5) { "#" }
+        |  else if (0 == 0) { "?" }
         |  else { "." }
         |}
       """.stripMargin)
@@ -117,7 +117,7 @@ class IfTests extends FunSuite with Matchers {
         |fn main() {
         |  m = Marine(5);
         |  x =
-        |    if {true} {
+        |    if (true) {
         |      println("In then!");
         |      ret 7;
         |    } else {
@@ -142,7 +142,7 @@ class IfTests extends FunSuite with Matchers {
         |fn main() {
         |  m = Marine(5);
         |  x =
-        |    if {false} {
+        |    if (false) {
         |      println("In then!");
         |      ret 7;
         |    } else {

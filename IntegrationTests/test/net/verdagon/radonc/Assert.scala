@@ -7,7 +7,7 @@ object Assert {
       |  assert(cond, "Assertion failed!");
       |}
       |fn assert(cond: Bool, msg: Str) Void {
-      |  if {cond == false} {
+      |  if (cond == false) {
       |    println(msg);
       |    panic();
       |  }

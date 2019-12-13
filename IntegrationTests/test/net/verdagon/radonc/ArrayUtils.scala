@@ -25,8 +25,8 @@ object ArrayUtils {
       |
       |fn has(arr: &__Array<_, #E>, elem: #E, equator: #F) Bool {
       |  i = 0;
-      |  while {i < arr.len()} {
-      |    if {(equator)(arr.(i), elem)} {
+      |  while (i < arr.len()) {
+      |    if ((equator)(arr.(i), elem)) {
       |      ret true;
       |    }
       |    mut i = i + 1;
@@ -40,8 +40,8 @@ object ArrayUtils {
       |
       |fn has(seq: &[:_ _ * #E], elem: #E, equator: #F) Bool {
       |  i = 0;
-      |  while {i < seq.len()} {
-      |    if {(equator)(seq.(i), elem)} {
+      |  while (i < seq.len()) {
+      |    if ((equator)(seq.(i), elem)) {
       |      ret true;
       |    }
       |    mut i = i + 1;

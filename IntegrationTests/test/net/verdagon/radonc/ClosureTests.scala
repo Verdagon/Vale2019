@@ -61,7 +61,7 @@ class ClosureTests extends FunSuite with Matchers {
     // Imagine:
     // fn main() {
     //   m = Marine();
-    //   if {something} {
+    //   if (something) {
     //     something.consume(m);
     //   } else {
     //     otherthing.consume(m);

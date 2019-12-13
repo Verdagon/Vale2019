@@ -16,7 +16,7 @@ class ArrayListTest extends FunSuite with Matchers {
         |fn add<#E>(list: &List<#E>, newElement: #E) {
         |  newArray =
         |      __Array<mut, E>(len(list) + 1, {(index)
-        |        = if {index == len(list)} {
+        |        = if (index == len(list)) {
         |            = newElement;
         |          } else {
         |            a = list.array;

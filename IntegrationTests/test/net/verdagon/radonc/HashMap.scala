@@ -9,7 +9,7 @@ object HashMap {
       |}
       |
       |fn abs(a: Int) {
-      |  = if {a < 0} { a * -1 } else { a }
+      |  = if (a < 0) { a * -1 } else { a }
       |}
       |
       |struct HashNode<#K, #V> {
@@ -42,12 +42,12 @@ object HashMap {
       |}
       |
       |fn add(map: &HashMap<#K, #V, #H, #E>, key: #K, value: #V) Void {
-      |  if {map.has(key)} {
+      |  if (map.has(key)) {
       |    panic("Map already has given key!");
       |  }
-      |  if {(map.size + 1) * 2 >= map.table.len()} {
+      |  if ((map.size + 1) * 2 >= map.table.len()) {
       |    newSize =
-      |        if {map.table.len() == 0} { 2 }
+      |        if (map.table.len() == 0) { 2 }
       |        else { map.table.len() * 2 };
       |    newTable =
       |        __Array<mut, Opt<HashNode<K, V>>>(
@@ -57,8 +57,8 @@ object HashMap {
       |              = opt;
       |            });
       |    i = 0;
-      |    while {i < map.table.len()} {
-      |      if {map.table.(i).empty?()} {
+      |    while (i < map.table.len()) {
+      |      if (map.table.(i).empty?()) {
       |        // do nothing
       |      } else {
       |        node? = (mut map.table.(i) = None<HashNode<K, V>>());
@@ -85,10 +85,10 @@ object HashMap {
       |
       |fn findEmptyIndexForKey(table: &__Array<mut, Opt<HashNode<#K, #V>>>, startIndex: Int, key: #K) Int {
       |  i = 0;
-      |  while {i < table.len()} {
+      |  while (i < table.len()) {
       |    index = (startIndex + i) mod table.len();
       |    something = table.(index);
-      |    if {something.empty?()} {
+      |    if (something.empty?()) {
       |      ret index;
       |    }
       |    // continue to next node
@@ -99,14 +99,14 @@ object HashMap {
       |
       |fn findIndexOfKey(table: &__Array<mut, Opt<HashNode<#K, #V>>>, equator: #E, startIndex: Int, key: #K) Opt<Int> {
       |  i = 0;
-      |  while {i < table.len()} {
+      |  while (i < table.len()) {
       |    index = (startIndex + i) mod table.len();
       |    something = table.(index);
-      |    if {something.empty?()} {
+      |    if (something.empty?()) {
       |      ret None<Int>();
       |    }
       |    node = something.get();
-      |    if {(equator)(node.key, key)} {
+      |    if ((equator)(node.key, key)) {
       |      ret Some<Int>(index);
       |    }
       |    // continue to next node
@@ -116,13 +116,13 @@ object HashMap {
       |}
       |
       |fn get(this: &HashMap<#K, #V, #H, #E>, key: #K) Opt<&#V> {
-      |  if {this.table.len() == 0} {
+      |  if (this.table.len() == 0) {
       |    ret None<&V>();
       |  }
       |  hash = (this.hasher)(key);
       |  startIndex = abs(hash mod this.table.len());
       |  index? = findIndexOfKey(this.table, this.equator, startIndex, key);
-      |  if {index?.empty?()} {
+      |  if (index?.empty?()) {
       |    opt: Opt<&V> = None<&V>();
       |    ret opt;
       |  }
@@ -138,9 +138,9 @@ object HashMap {
       |fn keys(this: &HashMap<#K, #V, #H, #E>) __Array<imm, #K> {
       |  list = List<K>();
       |  index = 0;
-      |  while {index < this.table.len()} {
+      |  while (index < this.table.len()) {
       |    node? = this.table.(index);
-      |    if {not(node?.empty?())} {
+      |    if (not(node?.empty?())) {
       |      list.add(node?.get().key);
       |    }
       |    mut index = index + 1;

@@ -22,8 +22,8 @@ object Vec {
       |fn distance(a: Vec2, b: Vec2) {
       |  sqrt((b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y))
       |}
-      |fn min(a: #T, b: #T) { = if {a < b} { a } else { b } }
-      |fn max(a: #T, b: #T) { = if {a > b} { a } else { b } }
+      |fn min(a: #T, b: #T) { = if (a < b) { a } else { b } }
+      |fn max(a: #T, b: #T) { = if (a > b) { a } else { b } }
       |
       |fn minimums(a: Vec2, b: Vec2) { Vec2(min(a.x, b.x), min(a.y, b.y)) }
       |fn maximums(a: Vec2, b: Vec2) { Vec2(max(a.x, b.x), max(a.y, b.y)) }
