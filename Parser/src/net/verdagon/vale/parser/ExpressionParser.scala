@@ -265,13 +265,13 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
   }
 
   private[parser] def filledParamLambda: Parser[LambdaPE] = {
-    ("{" ~> patternPrototypeParams) ~ opt(patternTemplex) ~ (optWhite ~> block <~ optWhite <~ "}") ^^ {
+    (patternPrototypeParams <~ optWhite) ~ opt(":" ~> optWhite ~> patternTemplex <~ optWhite) ~ ("{" ~> optWhite ~> block <~ optWhite <~ "}") ^^ {
       case patternParams ~ maybeReturn ~ maybeBody => LambdaPE(FunctionP(None, false, false, true, List(), List(), patternParams, maybeReturn, Some(maybeBody)))
     }
   }
 
   private[parser] def emptyParamLambda: Parser[LambdaPE] = {
-    ("{" ~> patternPrototypeParams) ~ opt(patternTemplex) <~ optWhite <~ "}" ^^ {
+    (patternPrototypeParams <~ optWhite) ~ opt(":" ~> optWhite ~> patternTemplex <~ optWhite) <~ "{" <~ optWhite <~ "}" ^^ {
       case patternParams ~ maybeReturn => LambdaPE(FunctionP(None, false, false, true, List(), List(), patternParams, maybeReturn, Some(BlockPE(List(VoidPE())))))
     }
   }

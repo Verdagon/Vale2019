@@ -60,10 +60,10 @@ object Terrain {
         |}
         |
         |fn getRelativeAdjacentLocations(pattern: Pattern, tileIndex: Int, adjacentCornersToo: Bool)
-        |__Array<imm, Location> {
+        |Array<imm, Location> {
         |  result = HashMap<Location, Int, LocationHasher, LocationEquator>(LocationHasher(), LocationEquator());
         |  tile = pattern.patternTiles.(tileIndex);
-        |  tile.sideAdjacenciesBySideIndex each {(sideAdjacency)
+        |  tile.sideAdjacenciesBySideIndex each (sideAdjacency){
         |    location =
         |        Location(sideAdjacency.groupRelativeX, sideAdjacency.groupRelativeY, sideAdjacency.tileIndex);
         |    if (not(result.has(location))) {
@@ -71,8 +71,8 @@ object Terrain {
         |    }
         |  };
         |  if (adjacentCornersToo) {
-        |    tile.cornerAdjacenciesByCornerIndex each {(cornerAdjacencies)
-        |      cornerAdjacencies each {(cornerAdjacency)
+        |    tile.cornerAdjacenciesByCornerIndex each (cornerAdjacencies){
+        |      cornerAdjacencies each (cornerAdjacency){
         |        location =
         |            Location(cornerAdjacency.groupRelativeX, cornerAdjacency.groupRelativeY, cornerAdjacency.tileIndex);
         |        if (not(result.has(location))) {
@@ -84,9 +84,9 @@ object Terrain {
         |  = result.keys();
         |}
         |
-        |fn getAdjacentLocations(pattern: Pattern, loc: Location, considerCornersAdjacent<Bool>) __Array<imm, Location> {
+        |fn getAdjacentLocations(pattern: Pattern, loc: Location, considerCornersAdjacent<Bool>) Array<imm, Location> {
         |  result = List<Location>();
-        |  pattern.getRelativeAdjacentLocations(loc.indexInGroup, considerCornersAdjacent) each {(relativeLoc)
+        |  pattern.getRelativeAdjacentLocations(loc.indexInGroup, considerCornersAdjacent) each (relativeLoc){
         |    result.add(Location(
         |      loc.groupX + relativeLoc.groupX,
         |      loc.groupY + relativeLoc.groupY,
@@ -101,22 +101,22 @@ object Terrain {
         |
         |fn getAdjacentLocationsToAll(
         |    pattern: Pattern,
-        |    sourceLocs: &__Array<imm, Location>,
+        |    sourceLocs: &Array<imm, Location>,
         |    includeSourceLocs: Bool,
         |    considerCornersAdjacent: Bool)
         |HashMap<Location, Int, LocationHasher, LocationEquator> {
         |  sourceLocsSet = HashMap<Location, Int>(LocationHasher(), LocationEquator());
-        |  sourceLocs each {(sourceLoc)
+        |  sourceLocs each (sourceLoc){
         |    sourceLocsSet.add(sourceLoc, 0);
         |  };
         |
         |  result = HashMap<Location, Int>(LocationHasher(), LocationEquator());
-        |  sourceLocs each {(originalLocation)
+        |  sourceLocs each (originalLocation){
         |    adjacents = pattern.getAdjacentLocations(originalLocation, considerCornersAdjacent).toList();
         |    if (includeSourceLocs) {
         |      adjacents.add(originalLocation);
         |    }
-        |    adjacents.toArray<imm>() each {(adjacentLocation)
+        |    adjacents.toArray<imm>() each (adjacentLocation){
         |      if (sourceLocsSet.has(adjacentLocation) and not(includeSourceLocs)) {
         |        // if this is a source loc, and we don't want to include them, do nothing.
         |      } else {
@@ -305,7 +305,7 @@ object Terrain {
         |  println("g");
         |
         |  rand = 0;
-        |  terrain.tiles.keys() each {(location)
+        |  terrain.tiles.keys() each (location){
         |    tile?: Opt:&TerrainTile = terrain.tiles.get(location);
         |    tile = tile?^.get();
         |    mut tile.elevation = 1 + (abs(location.groupX + location.groupY + location.indexInGroup + rand) mod 3);

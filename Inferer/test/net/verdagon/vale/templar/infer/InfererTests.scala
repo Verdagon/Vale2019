@@ -109,7 +109,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
     SimpleEnvironment(
       Map(
         "ImmInterface" -> InterfaceEnvEntry(InterfaceA(CodeLocation("ImmInterface.vale", 0, 0), List(), "ImmInterface", ImmutableP, Some(ImmutableP), KindTemplataType, List(), Map(), List())),
-        "__Array" -> TemplataEnvEntry(ArrayTemplateTemplata()),
+        "Array" -> TemplataEnvEntry(ArrayTemplateTemplata()),
         "MutTStruct" -> StructEnvEntry(StructA(CodeLocation("MutTStruct.vale", 0, 0), List(), "MutTStruct", MutableP, Some(MutableP), TemplateTemplataType(List(CoordTemplataType), KindTemplataType), List("T"), Map("T" -> CoordTemplataType), List(), List())),
         "MutTInterface" -> InterfaceEnvEntry(InterfaceA(CodeLocation("MutTInterface.vale", 0, 0), List(), "MutTInterface", MutableP, Some(MutableP), TemplateTemplataType(List(CoordTemplataType), KindTemplataType), List("T"), Map("T" -> CoordTemplataType), List())),
         "MutStruct" -> StructEnvEntry(StructA(CodeLocation("MutStruct.vale", 0, 0), List(), "MutStruct", MutableP, Some(MutableP), KindTemplataType, List(), Map(), List(), List())),
@@ -797,14 +797,14 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
             TemplexAR(RuneAT("K", KindTemplataType)),
             TemplexAR(
               CallAT(
-                NameAT("__Array", TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), KindTemplataType)),
+                NameAT("Array", TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), KindTemplataType)),
                 List(MutabilityAT(MutableP), NameAT("Int", CoordTemplataType)),
                 KindTemplataType))),
           EqualsAR(
             TemplexAR(RuneAT("K", KindTemplataType)),
             TemplexAR(
               CallAT(
-                NameAT("__Array", TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), KindTemplataType)),
+                NameAT("Array", TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), KindTemplataType)),
                 List(RuneAT("M", MutabilityTemplataType), RuneAT("T", CoordTemplataType)),
                 KindTemplataType)))),
         Map("T" -> CoordTemplataType, "M" -> MutabilityTemplataType, "K" -> KindTemplataType),

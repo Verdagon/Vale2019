@@ -80,7 +80,7 @@ class BiggerTests extends FunSuite with Matchers with Collector {
   }
 
   test("Test templated lambda param") {
-    val program = compile(VParser.program, "fn main(){{(a) a + a}(3)}")
+    val program = compile(VParser.program, "fn main(){(a){ a + a}(3)}")
     program shouldHaveMatch { case FunctionCallPE(LambdaPE(_), PackPE(List(IntLiteralPE(3))),true) => }
     program shouldHave PatternPP(Some(CaptureP("a",FinalP)),None,None,None)
     program shouldHave FunctionCallPE(LookupPE("+", List()),PackPE(List(LookupPE("a", List()), LookupPE("a", List()))),true)
@@ -189,8 +189,8 @@ class BiggerTests extends FunSuite with Matchers with Collector {
   test("18") {
     compile(
       VParser.structMember,
-      "a: __Array<imm, #T>;") shouldEqual
-      StructMemberP("a",FinalP,CallPT(NamePT("__Array"),List(MutabilityPT(ImmutableP), RunePT("T"))))
+      "a: Array<imm, #T>;") shouldEqual
+      StructMemberP("a",FinalP,CallPT(NamePT("Array"),List(MutabilityPT(ImmutableP), RunePT("T"))))
   }
 
   test("19") {

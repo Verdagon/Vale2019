@@ -32,7 +32,7 @@ class RuleTyperTests extends FunSuite with Matchers {
     SimpleEnvironment(
       Map(
         "ImmInterface" -> List(KindTemplataType),
-        "__Array" -> List(TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), KindTemplataType)),
+        "Array" -> List(TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), KindTemplataType)),
         "MutTStruct" -> List(TemplateTemplataType(List(CoordTemplataType), KindTemplataType)),
         "MutTInterface" -> List(TemplateTemplataType(List(CoordTemplataType), KindTemplataType)),
         "MutStruct" -> List(KindTemplataType),
@@ -419,10 +419,10 @@ class RuleTyperTests extends FunSuite with Matchers {
         List(
           EqualsSR(
             TypedSR(Some("K"), KindTypeSR),
-            TemplexSR(CallST(NameST("__Array"),List(MutabilityST(MutableP), NameST("Int"))))),
+            TemplexSR(CallST(NameST("Array"),List(MutabilityST(MutableP), NameST("Int"))))),
           EqualsSR(
             TypedSR(Some("K"), KindTypeSR),
-            TemplexSR(CallST(NameST("__Array"),List(RuneST("M"), RuneST("T")))))),
+            TemplexSR(CallST(NameST("Array"),List(RuneST("M"), RuneST("T")))))),
         List(),
         None)
     conclusions.typeByRune("M") shouldEqual MutabilityTemplataType

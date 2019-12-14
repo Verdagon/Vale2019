@@ -10,12 +10,12 @@ class ArrayListTest extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |struct List<#E> rules(#E: Ref) {
-        |  array: __Array<mut, #E>;
+        |  array: Array<mut, #E>;
         |}
         |fn len<#E>(list: &List<#E>) { len(list.array) }
         |fn add<#E>(list: &List<#E>, newElement: #E) {
         |  newArray =
-        |      __Array<mut, E>(len(list) + 1, {(index)
+        |      Array<mut, E>(len(list) + 1, (index){
         |        = if (index == len(list)) {
         |            = newElement;
         |          } else {
@@ -34,9 +34,9 @@ class ArrayListTest extends FunSuite with Matchers {
         |fn main() {
         |  l =
         |      List<Int>(
-        |           __Array<mut, Int>(
+        |           Array<mut, Int>(
         |               0,
-        |               {(index)
+        |               (index){
         |                 index
         |               }));
         |  add(&l, 5);
@@ -58,9 +58,9 @@ class ArrayListTest extends FunSuite with Matchers {
         |fn main() {
         |  l =
         |      List<Int>(
-        |          __Array<mut, Opt<Int>>(
+        |          Array<mut, Opt<Int>>(
         |              0,
-        |              {(index)
+        |              (index){
         |                result: Opt<Int> = Some(index);
         |                = result;
         |              }),
@@ -140,9 +140,9 @@ class ArrayListTest extends FunSuite with Matchers {
           |fn main() {
           |  l =
           |      List<Marine>(
-          |          __Array<mut, Opt<Marine>>(
+          |          Array<mut, Opt<Marine>>(
           |              0,
-          |              {(index)
+          |              (index){
           |                result: Opt<Marine> = Some(Marine(index));
           |                = result;
           |              }),

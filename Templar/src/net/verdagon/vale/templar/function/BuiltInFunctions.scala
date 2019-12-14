@@ -321,7 +321,7 @@ object BuiltInFunctions {
                   OrAR(List(TemplexAR(OwnershipAT(BorrowP)), TemplexAR(OwnershipAT(ShareP)))),
                   TemplexAR(
                     CallAT(
-                      NameAT("__Array", TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), KindTemplataType)),
+                      NameAT("Array", TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), KindTemplataType)),
                       List(
                         AnonymousRuneAT(MutabilityTemplataType),
                         AnonymousRuneAT(CoordTemplataType)),

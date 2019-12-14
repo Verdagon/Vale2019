@@ -11,8 +11,8 @@ object Pattern {
       |
       |struct Pattern imm {
       |  name: Str;
-      |  cornersByShapeIndex: __Array:(imm, __Array<imm, Vec2>);
-      |  patternTiles: __Array<imm, PatternTile>;
+      |  cornersByShapeIndex: Array:(imm, Array<imm, Vec2>);
+      |  patternTiles: Array<imm, PatternTile>;
       |  xOffset: Vec2;
       |  yOffset: Vec2;
       |}
@@ -21,8 +21,8 @@ object Pattern {
       |  shapeIndex: Int;
       |  rotateRadians: Float;
       |  translate: Vec2;
-      |  sideAdjacenciesBySideIndex: __Array<imm, PatternSideAdjacency>;
-      |  cornerAdjacenciesByCornerIndex: __Array:(imm, __Array<imm, PatternCornerAdjacency>);
+      |  sideAdjacenciesBySideIndex: Array<imm, PatternSideAdjacency>;
+      |  cornerAdjacenciesByCornerIndex: Array:(imm, Array<imm, PatternCornerAdjacency>);
       |}
       |
       |struct PatternSideAdjacency imm {

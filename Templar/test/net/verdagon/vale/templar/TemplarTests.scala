@@ -149,7 +149,7 @@ class TemplarTests extends FunSuite with Matchers {
 
   // Test that the lambda's arg is the right type, and the name is right
   test("Lambda with a type specified param") {
-    val compile = new Compilation("fn main(){{(a: Int) +(a,a)}(3)}");
+    val compile = new Compilation("fn main(){(a: Int){+(a,a)}(3)}");
     val temputs = compile.getTemputs()
 
     val lambda = temputs.lookupFunction("main:lam1");
@@ -483,7 +483,7 @@ class TemplarTests extends FunSuite with Matchers {
         |  y: Float;
         |}
         |struct Pattern imm {
-        |  patternTiles: __Array<imm, Vec2>;
+        |  patternTiles: Array<imm, Vec2>;
         |}
       """.stripMargin)
     val temputs = compile.getTemputs()
@@ -493,7 +493,7 @@ class TemplarTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  a = __Array<mut, Int>(11, {_});
+        |  a = Array<mut, Int>(11, {_});
         |  = len(&a);
         |}
       """.stripMargin)

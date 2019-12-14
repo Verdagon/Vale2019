@@ -67,7 +67,7 @@ object Astronomer {
       "Float" -> KindTypeSR,
       "Void" -> KindTypeSR,
       "IFunction1" -> TemplateTypeSR(List(MutabilityTypeSR, CoordTypeSR, CoordTypeSR), KindTypeSR),
-      "__Array" -> TemplateTypeSR(List(MutabilityTypeSR, CoordTypeSR), KindTypeSR))
+      "Array" -> TemplateTypeSR(List(MutabilityTypeSR, CoordTypeSR), KindTypeSR))
 
   def translateStructs(astrouts: AstroutsBox, env: Environment, structsS: List[StructS]): List[StructA] = {
     structsS match {

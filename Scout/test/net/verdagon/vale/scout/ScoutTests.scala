@@ -111,7 +111,7 @@ class ScoutTests extends FunSuite with Matchers {
       compile(
         """fn main() {
           |  {_};
-          |  {(a) a};
+          |  (a){a};
           |}
         """.stripMargin)
     val main = program1.lookupFunction("main")
@@ -135,7 +135,7 @@ class ScoutTests extends FunSuite with Matchers {
 //            FunctionS("main",0,false,false,true,List(),List(),None,
 //              Some(BodySE(Set(),Set(),List(Scramble1(List(IntLiteral1(4), LookuSP("-"), IntLiteral1(3))))))))));
 //    check(4,
-//        "fn main(){{(a: Int) +(a,a)}(3)}",
+//        "fn main(){(a: Int){ +(a,a)}(3)}",
 //        ProgramS(List(), List(), List(
 //            FunctionS("main",0,false,false,true,List(),List(),None,
 //              Some(BodySE(Set(),Set(),List(
@@ -144,14 +144,14 @@ class ScoutTests extends FunSuite with Matchers {
 //                      Some(BodySE(Set(),Set(),List(
 //                        Scramble1(List(LookuSP("+"), scout.PackSE(List(LookuSP("a"), LookuSP("a"))))))))),
 //                  scout.PackSE(List(IntLiteral1(3))))))))))));
-//    check(5,"fn main(){{(a) a - 2}(3)}",
+//    check(5,"fn main(){(a){ a - 2}(3)}",
 //      ProgramS(List(), List(), List(
 //        FunctionS("main",0,false,false,true,List(),List(),None,
 //          Some(BodySE(Set(),Set(),List(Scramble1(List(
 //            FunctionS("main:lam1",1,false,false,true,List(),List(ParameterS(None,3,"a", CaptureSP("a", FinalP,Some(TypeOfSP(TypeName1("__T2")))))),None,
 //              Some(BodySE(Set(),Set(),List(Scramble1(List(LookuSP("a"), LookuSP("-"), IntLiteral1(2))))))),
 //            PackSE(List(IntLiteral1(3))))))))))))
-//    check(6,"fn main(){{(_) 2}(3)}",
+//    check(6,"fn main(){(_){ 2}(3)}",
 //      ProgramS(List(), List(), List(FunctionS("main",0,false,false,true,List(),List(),None,Some(BodySE(Set(),Set(),List(Scramble1(List(
 //        FunctionS("main:lam1",1,false,false,true,List(TemplateParameter1("__T2", ReferenceTemplataType1)),List(ParameterS(None,3,"__P2", CaptureSP("__P2", FinalP,Some(TypeOfSP(TypeName1("__T2")))))),None,
 //          Some(BodySE(Set(),Set(),List(IntLiteral1(2))))),

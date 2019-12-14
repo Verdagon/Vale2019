@@ -28,7 +28,7 @@ object Templar {
         FullName2(List()),
         Map(
           "Int" -> List(TemplataEnvEntry(KindTemplata(Int2()))),
-          "__Array" -> List(TemplataEnvEntry(ArrayTemplateTemplata())),
+          "Array" -> List(TemplataEnvEntry(ArrayTemplateTemplata())),
           "Bool" -> List(TemplataEnvEntry(KindTemplata(Bool2()))),
           "Float" -> List(TemplataEnvEntry(KindTemplata(Float2()))),
           "__Never" -> List(TemplataEnvEntry(KindTemplata(Never2()))),

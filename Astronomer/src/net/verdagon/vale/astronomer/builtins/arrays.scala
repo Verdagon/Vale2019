@@ -9,9 +9,9 @@ object Arrays {
   def makeArrayFunction(mutability: MutabilityP): FunctionA = {
 //    List(
       FunctionA(
-        CodeLocation("__Array.builtin.vale", 0, 0),
-        "__Array",
-        List("__Array"),
+        CodeLocation("Array.builtin.vale", 0, 0),
+        "Array",
+        List("Array"),
         0,
         false,
         TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), FunctionTemplataType),
@@ -38,7 +38,7 @@ object Arrays {
             TemplexAR(
               CallAT(
                 NameAT(
-                  "__Array",
+                  "Array",
                   TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), KindTemplataType)),
                 List(RuneAT("ArrayMutability", MutabilityTemplataType), RuneAT("T", CoordTemplataType)),
                 CoordTemplataType)))),
@@ -56,9 +56,9 @@ object Arrays {
                   LocalLoadAE("generator", false),
                   mutability))))))
 //      FunctionA(
-//        CodeLocation("__Array.builtin.vale", 0, 0),
-//        "__Array",
-//        List("__Array"),
+//        CodeLocation("Array.builtin.vale", 0, 0),
+//        "Array",
+//        List("Array"),
 //        0,
 //        false,
 //        TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), FunctionTemplataType),
@@ -79,7 +79,7 @@ object Arrays {
 //            TemplexAR(RuneAT("R", CoordTemplataType)),
 //            TemplexAR(
 //              CallAT(
-//                NameAT("__Array", TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), KindTemplataType)),
+//                NameAT("Array", TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), KindTemplataType)),
 //                List(
 //                  RuneAT("ArrayMutability", MutabilityTemplataType),
 //                  RuneAT("T", CoordTemplataType)),

@@ -30,8 +30,8 @@ object Roguelike {
         |
         |struct Pattern imm {
         |  name: Str;
-        |  cornersByShapeIndex: __Array:(imm, __Array<imm, Vec2>);
-        |  patternTiles: __Array<imm, PatternTile>;
+        |  cornersByShapeIndex: Array<imm, Array<imm, Vec2>>;
+        |  patternTiles: Array<imm, PatternTile>;
         |  xOffset: Vec2;
         |  yOffset: Vec2;
         |}
@@ -40,8 +40,8 @@ object Roguelike {
         |  shapeIndex: Int;
         |  rotateRadians: Float;
         |  translate: Vec2;
-        |  sideAdjacenciesBySideIndex: __Array<imm, PatternSideAdjacency>;
-        |  cornerAdjacenciesByCornerIndex: __Array:(imm, __Array<imm, PatternCornerAdjacency>);
+        |  sideAdjacenciesBySideIndex: Array<imm, PatternSideAdjacency>;
+        |  cornerAdjacenciesByCornerIndex: Array<imm, Array<imm, PatternCornerAdjacency>>;
         |}
         |
         |struct PatternSideAdjacency imm {
@@ -88,8 +88,8 @@ object Roguelike {
         |
         |fn main() {
         |  board =
-        |      __Array:(mut, __Array<mut, Str>)(10, {(row)
-        |        __Array<mut, Str>(10, {(col)
+        |      Array<mut, Array<mut, Str>>(10, (row){
+        |        Array<mut, Str>(10, (col){
         |          = if (row == 0) { "#" }
         |            else if (col == 0) { "#" }
         |            else if (row == 9) { "#" }
@@ -98,14 +98,14 @@ object Roguelike {
         |        })
         |      });
         |
-        |  w! = 4;
-        |  l! = 3;
+        |  playerRow! = 4;
+        |  playerCol! = 3;
         |
-        |  g! = true;
+        |  running! = true;
         |  while (running) {
-        |    __Array<mut, Int>(10, {(rowI)
+        |    Array<mut, Int>(10, (rowI){
         |      row = board.(rowI);
-        |      __Array<mut, Int>(10, {(colI)
+        |      Array<mut, Int>(10, (colI){
         |        cell = row.(colI);
         |        if (and(rowI == playerRow, colI == playerCol)) {
         |          print("@");
@@ -137,10 +137,10 @@ object Roguelike {
 //    val compile = new Compilation(
 //      """
 //        |struct Lam1 { }
-//        |impl Lam1 for IFunction1:(mut, Int, __Array<mut, Str>);
-//        |fn __call(this: &Lam1 for IFunction1:(mut, Int, __Array<mut, Str>, row: Int) __Array<mut, Str> {
+//        |impl Lam1 for IFunction1:(mut, Int, Array<mut, Str>);
+//        |fn __call(this: &Lam1 for IFunction1:(mut, Int, Array<mut, Str>, row: Int) Array<mut, Str> {
 //        |  lam2 = Lam2(row);
-//        |  = __Array<mut>(10, &lam2);
+//        |  = Array<mut>(10, &lam2);
 //        |}
 //        |
 //        |struct Lam2 {
@@ -156,7 +156,7 @@ object Roguelike {
 //        |}
 //        |
 //        |struct Lam3 {
-//        |  board: &__Array:(mut, __Array<mut, Str>);
+//        |  board: &Array:(mut, Array<mut, Str>);
 //        |  playerRow: Int;
 //        |  playerCol: Int;
 //        |}
@@ -165,14 +165,14 @@ object Roguelike {
 //        |  board = this.board;
 //        |  row = board.(rowI);
 //        |  lam4 = Lam4(rowI, row, this.playerRow, this.playerCol);
-//        |  __Array<mut>(10, &lam4);
+//        |  Array<mut>(10, &lam4);
 //        |  println("");
 //        |  = true;
 //        |}
 //        |
 //        |struct Lam4 {
 //        |  rowI: Int;
-//        |  row: &__Array<mut, Str>;
+//        |  row: &Array<mut, Str>;
 //        |  playerRow: Int;
 //        |  playerCol: Int;
 //        |}
@@ -191,7 +191,7 @@ object Roguelike {
 //        |
 //        |fn main() {
 //        |  lam1 = Lam1();
-//        |  board = __Array<mut>(10, &lam1);
+//        |  board = Array<mut>(10, &lam1);
 //        |
 //        |  w! = 4;
 //        |  l! = 3;
@@ -199,7 +199,7 @@ object Roguelike {
 //        |  g! = true;
 //        |  while (running) {
 //        |    lam3 = Lam3(&board, playerRow, playerCol);
-//        |    __Array<mut>(10, &lam3);
+//        |    Array<mut>(10, &lam3);
 //        |
 //        |    key = __getch();
 //        |    println(key);

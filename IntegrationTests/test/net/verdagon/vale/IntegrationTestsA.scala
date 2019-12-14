@@ -57,7 +57,7 @@ class IntegrationTestsA extends FunSuite with Matchers {
 
   // Test that the lambda's arg is the right type, and the name is right
   test("Lambda with a type specified param") {
-    val compile = new Compilation("fn main(){{(a: Int) +(a,a)}(3)}");
+    val compile = new Compilation("fn main(){(a: Int){ +(a,a)}(3)}");
     compile.evalForReferend(Vector()) shouldEqual VonInt(6)
   }
 

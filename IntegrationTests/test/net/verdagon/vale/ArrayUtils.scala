@@ -4,26 +4,26 @@ object ArrayUtils {
   val code =
     """
       |fn toArray<#M>(seq: &[:_ #N * #E]) rules(#M: Mutability) {
-      |  __Array<M, E>(N, {(i) seq.(i)})
+      |  Array<M, E>(N, (i){ seq.(i)})
       |}
       |
       |fn each(seq: &[:_ #N * #E], func: #F) Void {
-      |  __Array<mut, Int>(N, {(i) func(seq.(i)); = 0; });
+      |  Array<mut, Int>(N, (i){ func(seq.(i)); = 0; });
       |}
       |
       |//fn map<#M>(seq: &[:_ #N * #E], func: #F) rules(#M: Mutability) {
-      |//  __Array<M>(N, {(i) func(seq.(i)) })
+      |//  Array<M>(N, (i){ func(seq.(i)) })
       |//}
       |
-      |fn each(arr: &__Array<_, #E>, func: #F) Void {
-      |  __Array<mut, Int>(arr.len(), {(i) func(arr.(i)); = 0; });
+      |fn each(arr: &Array<_, #E>, func: #F) Void {
+      |  Array<mut, Int>(arr.len(), (i){ func(arr.(i)); = 0; });
       |}
       |
-      |//fn map<#M>(arr: &__Array<_, #E>, func: #F) rules(#M: Mutability) {
-      |//  __Array<M>(arr.len(), {(i) func(arr.(i)) })
+      |//fn map<#M>(arr: &Array<_, #E>, func: #F) rules(#M: Mutability) {
+      |//  Array<M>(arr.len(), (i){ func(arr.(i)) })
       |//}
       |
-      |fn has(arr: &__Array<_, #E>, elem: #E, equator: #F) Bool {
+      |fn has(arr: &Array<_, #E>, elem: #E, equator: #F) Bool {
       |  i = 0;
       |  while (i < arr.len()) {
       |    if ((equator)(arr.(i), elem)) {
@@ -34,7 +34,7 @@ object ArrayUtils {
       |  = false;
       |}
       |
-      |fn has(arr: &__Array<_, #E>, elem: #E) Bool {
+      |fn has(arr: &Array<_, #E>, elem: #E) Bool {
       |  has(arr, elem, ==)
       |}
       |

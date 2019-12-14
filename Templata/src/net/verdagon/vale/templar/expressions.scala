@@ -431,7 +431,7 @@ case class ExternFunctionCall2(
 }
 
 // This should never be executed, it's just a placeholder that will be replaced later.
-// For example, Array(4, {(i) i * 2 }) the ConstructArray2 contains a FunctionPointerCall
+// For example, Array(4, (i){ i * 2 }) the ConstructArray2 contains a FunctionPointerCall
 // which has the closure struct as the first argument, and the index as the second. But,
 // the index isn't determined by an expression, it's determined by Vivem or Sculptor.
 // So, we put a placeholder there, knowing it should be replaced later on.
