@@ -85,6 +85,13 @@ object Roguelike {
         |  tiles: HashMap<Location, TerrainTile, LocationHasher, LocationEquator>;
         |}
         |
+        |fn for(beginInclusive: Int, endExclusive: Int, func: #F) {
+        |  i! = beginInclusive;
+        |  while (i < endExclusive) {
+        |    func(i);
+        |    mut i = i + 1;
+        |  }
+        |}
         |
         |fn main() {
         |  board =
@@ -103,19 +110,17 @@ object Roguelike {
         |
         |  running! = true;
         |  while (running) {
-        |    Array<mut, Int>(10, (rowI){
+        |    for(0, 10, (rowI){
         |      row = board.(rowI);
-        |      Array<mut, Int>(10, (colI){
+        |      for(0, 10, (colI){
         |        cell = row.(colI);
         |        if (and(rowI == playerRow, colI == playerCol)) {
         |          print("@");
         |        } else {
         |          print(cell);
         |        }
-        |        = 0;
         |      });
         |      println("");
-        |      = 0;
         |    });
         |
         |    key = __getch();
@@ -123,17 +128,17 @@ object Roguelike {
         |    if (key == 81) {
         |      mut running = false;
         |    } else if (key == 119) {
-        |      mut playerRow = playerRow + -1;
+        |      mut playerRow = playerRow - 1;
         |    } else if (key == 115) {
         |      mut playerRow = playerRow + 1;
         |    } else if (key == 97) {
-        |      mut playerCol = playerCol + -1;
+        |      mut playerCol = playerCol - 1;
         |    } else if (key == 100) {
         |      mut playerCol = playerCol + 1;
         |    }
         |  }
         |}
-      """.stripMargin)
+        |""".stripMargin)
 //    val compile = new Compilation(
 //      """
 //        |struct Lam1 { }
