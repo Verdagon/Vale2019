@@ -11,8 +11,13 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
   private[parser] def atomPattern: Parser[PatternPP]
   private[parser] def patternTemplex: Parser[ITemplexPPT]
 
+  private[parser] def specialOperators: Parser[String] = {
+    ("<=>" | "<=" | "<" | ">=" | ">" | "==" | "!=")
+  }
+
   private[parser] def lookup: Parser[LookupPE] = {
-    exprIdentifier ^^ (i => LookupPE(i, List()))
+//    ("`" ~> "[^`]+".r <~ "`" ^^ (i => LookupPE(i, List()))) |
+    (exprIdentifier ^^ (i => LookupPE(i, List())))
   }
 
   private[parser] def templateSpecifiedLookup: Parser[LookupPE] = {
@@ -181,10 +186,10 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
         white ~> ("+" | "-") <~ white,
         (op: String, left, right) => FunctionCallPE(LookupPE(op, List()), PackPE(List(left, right)), true))
 
-    val withLessGreater =
+    val withComparisons =
       binariableExpression(
         withAddSubtract,
-        white ~> ("<" | ">") <~ white,
+        white ~> specialOperators <~ white,
         (op: String, left, right) => FunctionCallPE(LookupPE(op, List()), PackPE(List(left, right)), true))
 
 //    val withAnd =
@@ -201,11 +206,12 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
 
     val withCustomBinaries =
       binariableExpression(
-        withLessGreater,
+        withComparisons,
         not(white ~> "=" <~ white) ~> (white ~> infixFunctionIdentifier <~ white),
         (funcName: String, left, right) => FunctionCallPE(LookupPE(funcName, List()), PackPE(List(left, right)), true))
 
-    withCustomBinaries
+    withCustomBinaries |
+    (specialOperators ^^ (op => LookupPE(op, List())))
   }
 
   sealed trait StatementType

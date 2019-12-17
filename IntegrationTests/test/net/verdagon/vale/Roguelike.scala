@@ -67,7 +67,7 @@ object Roguelike {
         |
         |struct LocationHasher { }
         |fn __call(this: &LocationHasher, loc: Location) {
-        |  hash = 0;
+        |  hash! = 0;
         |  mut hash = 41 * hash + loc.groupX;
         |  mut hash = 41 * hash + loc.groupY;
         |  mut hash = 41 * hash + loc.indexInGroup;

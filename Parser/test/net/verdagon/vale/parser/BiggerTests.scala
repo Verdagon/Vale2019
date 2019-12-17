@@ -218,7 +218,7 @@ class BiggerTests extends FunSuite with Matchers with Collector {
   }
 
   test("!=") {
-    // This is why we can't disallow ! and = in infixFunctionIdentifier.
-    compile(VParser.infixFunctionIdentifier,"!=") shouldEqual "!="
+    compile(VParser.expression,"3 != 4") shouldEqual
+      FunctionCallPE(LookupPE("!=",List()),PackPE(List(IntLiteralPE(3), IntLiteralPE(4))),true)
   }
 }
