@@ -212,8 +212,3 @@ case class BFunctionS(
   name: String,
   body: BodySE)
 
-
-sealed trait RefCountCategory
-case object VariableRefCount extends RefCountCategory
-case object MemberRefCount extends RefCountCategory
-case object RegisterRefCount extends RefCountCategory
