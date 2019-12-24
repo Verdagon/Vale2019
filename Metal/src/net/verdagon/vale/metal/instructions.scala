@@ -1,84 +1,23 @@
-package net.verdagon.vale.hammer
+package net.verdagon.vale.metal
 
-import net.verdagon.vale.hinputs.TetrisTable
-import net.verdagon.vale.scout.RefCountCategory
-import net.verdagon.vale.templar.types._
 import net.verdagon.vale.{vassert, vcurious, vfail}
 
-import scala.collection.immutable.ListMap
-
-trait IRegisterH {
-  def expectReferenceRegister(): ReferenceRegisterH = {
-    this match {
-      case r @ ReferenceRegisterH(_) => r
-      case AddressRegisterH(_) => vfail("Expected a reference as a result, but got an address!")
-    }
-  }
-  def expectAddressRegister(): AddressRegisterH = {
-    this match {
-      case a @ AddressRegisterH(_) => a
-      case ReferenceRegisterH(_) => vfail("Expected an address as a result, but got a reference!")
-    }
-  }
-}
-case class ReferenceRegisterH(reference: ReferenceH[ReferendH]) extends IRegisterH
-case class AddressRegisterH(reference: ReferenceH[ReferendH]) extends IRegisterH
-
+// Common trait for all instructions.
 sealed trait NodeH {
+  // The resulting registerId produced by this instruction.
   def registerId: String;
 }
 
-case class RegisterAccessH[+T <: ReferendH](
+// Creates an integer and puts it into a register.
+case class ConstantI64H(
+  // The register ID to put the integer into.
   registerId: String,
-  expectedType: ReferenceH[T]) {
-
-  vassert(expectedType.kind != VoidH())
-
-  def expectStructAccess(): RegisterAccessH[StructRefH] = {
-    this match {
-      case RegisterAccessH(registerId, ReferenceH(ownership, x @ StructRefH(_, _))) => {
-        RegisterAccessH[StructRefH](registerId, ReferenceH(ownership, x))
-      }
-    }
-  }
-  def expectInterfaceAccess(): RegisterAccessH[InterfaceRefH] = {
-    this match {
-      case RegisterAccessH(registerId, ReferenceH(ownership, x @ InterfaceRefH(_, _))) => {
-        RegisterAccessH[InterfaceRefH](registerId, ReferenceH(ownership, x))
-      }
-    }
-  }
-  def expectUnknownSizeArrayAccess(): RegisterAccessH[UnknownSizeArrayTH] = {
-    this match {
-      case RegisterAccessH(registerId, ReferenceH(ownership, x @ UnknownSizeArrayTH(_))) => {
-        RegisterAccessH[UnknownSizeArrayTH](registerId, ReferenceH(ownership, x))
-      }
-    }
-  }
-  def expectKnownSizeArrayAccess(): RegisterAccessH[KnownSizeArrayTH] = {
-    this match {
-      case RegisterAccessH(registerId, ReferenceH(ownership, x @ KnownSizeArrayTH(_, _))) => {
-        RegisterAccessH[KnownSizeArrayTH](registerId, ReferenceH(ownership, x))
-      }
-    }
-  }
-  def expectIntAccess(): RegisterAccessH[IntH] = {
-    this match {
-      case RegisterAccessH(registerId, ReferenceH(ownership, x @ IntH())) => {
-        RegisterAccessH[IntH](registerId, ReferenceH(ownership, x))
-      }
-    }
-  }
-  def expectBoolAccess(): RegisterAccessH[BoolH] = {
-    this match {
-      case RegisterAccessH(registerId, ReferenceH(ownership, x @ BoolH())) => {
-        RegisterAccessH[BoolH](registerId, ReferenceH(ownership, x))
-      }
-    }
-  }
-}
+  // The value of the integer.
+  value: Int
+) extends NodeH
 
 // Creates a Void, which can be thought of as an empty struct, and puts it into a register.
+// TODO: See if we can replace this with just an empty struct (inlined), to simplify things.
 case class ConstantVoidH(
   // The register ID to put the void into.
   registerId: String
@@ -90,14 +29,6 @@ case class ConstantBoolH(
   registerId: String,
   // The value of the boolean.
   value: Boolean
-) extends NodeH
-
-// Creates an integer and puts it into a register.
-case class ConstantI64H(
-  // The register ID to put the integer into.
-  registerId: String,
-  // The value of the integer.
-  value: Int
 ) extends NodeH
 
 // Creates a string and puts it into a register.
@@ -584,115 +515,118 @@ case class CheckRefCountH(
 // we consistently discard all registers that were created, in the exact reverse
 // order they were created.
 case class DiscardH(
-    registerId: String,
-    sourceRegister: RegisterAccessH[ReferendH]
+  registerId: String,
+  sourceRegister: RegisterAccessH[ReferendH]
 ) extends NodeH
 
-case class NamePartH(humanName: String, maybeTemplateArgs: Option[List[ITemplataH]])
-case class FullNameH(parts: List[NamePartH])
+// A convenience class that represents reading from a register. Contains the register ID
+// and the type we expect it to contain.
+// Remember that reading from a register will invalidate the register.
+case class RegisterAccessH[+T <: ReferendH](
+  registerId: String,
+  expectedType: ReferenceH[T]) {
 
-case class PrototypeH(
-    functionId: Int,
-    fullName: FullNameH,
-    params: List[ReferenceH[ReferendH]],
-    returnType: ReferenceH[ReferendH]
-) {
-  def functionType = FunctionTH(params, returnType)
-}
+  vassert(expectedType.kind != VoidH())
 
-case class FunctionH(
-    prototype: PrototypeH,
-    isAbstract: Boolean,
-    isExtern: Boolean,
-    isUserFunction: Boolean,
-    block: BlockH) {
-  def getRef = FunctionRefH(prototype)
-  def fullName = prototype.fullName
-}
-
-
-case class InterfaceDefinitionH(
-    interfaceId: Int,
-    fullName: FullNameH,
-    mutability: Mutability,
-    superInterfaces: List[InterfaceRefH],
-    prototypes: List[PrototypeH]) {
-  def getRef = InterfaceRefH(interfaceId, fullName)
-}
-
-case class FunctionRefH(prototype: PrototypeH) {
-  def functionType = prototype.functionType
-  def fullName = prototype.fullName
-}
-
-case class EdgeH(
-    struct: StructRefH,
-    interface: InterfaceRefH,
-    structPrototypesByInterfacePrototype: ListMap[PrototypeH, PrototypeH])
-
-case class ETableH(struct: StructRefH, table: TetrisTable[InterfaceRefH, InterfaceRefH])
-
-case class StructMemberH(
-    name: String,
-    variability: Variability,
-    tyype: ReferenceH[ReferendH])
-
-case class StructDefinitionH(
-    structId: Int,
-    fullName: FullNameH,
-    mutability: Mutability,
-    eTable: ETableH,
-    edges: List[EdgeH],
-    members: List[StructMemberH]) {
-
-  def getRef: StructRefH = StructRefH(structId, fullName)
-
-  // These functions are tightly coupled with StructSculptor.declareStructInfo
-  def getInterfacePtrElementIndex(interfaceRef: InterfaceRefH): Int = {
-    val index = edges.indexWhere(_.interface == interfaceRef)
-    vassert(index >= 0)
-    index
+  def expectStructAccess(): RegisterAccessH[StructRefH] = {
+    this match {
+      case RegisterAccessH(registerId, ReferenceH(ownership, x @ StructRefH(_, _))) => {
+        RegisterAccessH[StructRefH](registerId, ReferenceH(ownership, x))
+      }
+    }
   }
-  def getSInfoPtrElementIndex(): Int = {
-    edges.size + 1
+  def expectInterfaceAccess(): RegisterAccessH[InterfaceRefH] = {
+    this match {
+      case RegisterAccessH(registerId, ReferenceH(ownership, x @ InterfaceRefH(_, _))) => {
+        RegisterAccessH[InterfaceRefH](registerId, ReferenceH(ownership, x))
+      }
+    }
   }
-
-  def getMemberLlvmIndex(memberIndex: Int): Int = {
-    vassert(memberIndex < members.size)
-    edges.size + 2 + memberIndex
+  def expectUnknownSizeArrayAccess(): RegisterAccessH[UnknownSizeArrayTH] = {
+    this match {
+      case RegisterAccessH(registerId, ReferenceH(ownership, x @ UnknownSizeArrayTH(_))) => {
+        RegisterAccessH[UnknownSizeArrayTH](registerId, ReferenceH(ownership, x))
+      }
+    }
   }
-
-  def getTypeAndIndex(memberName: String): (ReferenceH[ReferendH], Int) = {
-    members.zipWithIndex.find(p => p._1.name.equals(memberName)) match {
-      case None => vfail("wat " + this + " " + memberName)
-      case Some((member, index)) => (member.tyype, index)
+  def expectKnownSizeArrayAccess(): RegisterAccessH[KnownSizeArrayTH] = {
+    this match {
+      case RegisterAccessH(registerId, ReferenceH(ownership, x @ KnownSizeArrayTH(_, _))) => {
+        RegisterAccessH[KnownSizeArrayTH](registerId, ReferenceH(ownership, x))
+      }
+    }
+  }
+  def expectIntAccess(): RegisterAccessH[IntH] = {
+    this match {
+      case RegisterAccessH(registerId, ReferenceH(ownership, x @ IntH())) => {
+        RegisterAccessH[IntH](registerId, ReferenceH(ownership, x))
+      }
+    }
+  }
+  def expectBoolAccess(): RegisterAccessH[BoolH] = {
+    this match {
+      case RegisterAccessH(registerId, ReferenceH(ownership, x @ BoolH())) => {
+        RegisterAccessH[BoolH](registerId, ReferenceH(ownership, x))
+      }
     }
   }
 }
 
-case class ProgramH(
-    interfaces: List[InterfaceDefinitionH],
-    structs: List[StructDefinitionH],
-    emptyPackStructRef: StructRefH,
-    externs: List[PrototypeH],
-    functions: List[FunctionH]) {
-  def externFunctions = functions.filter(_.isExtern)
-  def abstractFunctions = functions.filter(_.isAbstract)
-  // Functions that are neither extern nor abstract
-  def getAllUserImplementedFunctions = functions.filter(f => f.isUserFunction && !f.isExtern && !f.isAbstract)
-  // Abstract or implemented
-  def nonExternFunctions = functions.filter(!_.isExtern)
-  def getAllUserFunctions = functions.filter(_.isUserFunction)
-  def main() = {
-    val matching = functions.filter(_.fullName.parts.last.humanName == "main")
-    vassert(matching.size == 1)
-    matching.head
+trait IRegisterH {
+  def expectReferenceRegister(): ReferenceRegisterH = {
+    this match {
+      case r @ ReferenceRegisterH(_) => r
+      case AddressRegisterH(_) => vfail("Expected a reference as a result, but got an address!")
+    }
   }
-
-  def lookupFunction(humanName: String) = {
-    val matches = functions.filter(_.fullName.parts.last.humanName == humanName)
-    vassert(matches.size == 1)
-    matches.head
+  def expectAddressRegister(): AddressRegisterH = {
+    this match {
+      case a @ AddressRegisterH(_) => a
+      case ReferenceRegisterH(_) => vfail("Expected an address as a result, but got a reference!")
+    }
   }
 }
+case class ReferenceRegisterH(reference: ReferenceH[ReferendH]) extends IRegisterH
+case class AddressRegisterH(reference: ReferenceH[ReferendH]) extends IRegisterH
 
+// Identifies a local variable.
+case class Local(
+  // No two variables in a FunctionH have the same id.
+  id: VariableIdH,
+
+  // Multiple variables in a FunctionH can have the same height. For example:
+  // fn main() {
+  //   {
+  //     x = 4;
+  //   }
+  //   {
+  //     y = 4;
+  //   }
+  // }
+  // Both of these will have index 0.
+  // In the context of JVM, this is the local index.
+  // In LLVM, this could almost be thought of as where it is on the stack.
+  height: StackHeight,
+
+  // The type of the reference this local variable has.
+  typeH: ReferenceH[ReferendH])
+
+case class VariableIdH(
+  // Just to uniquify VariableIdH instances. No two variables in a FunctionH will have
+  // the same number.
+  number: Int,
+  // Just for debugging purposes
+  name: Option[String])
+
+case class StackHeight(
+  blockHeight: Int, // How many blocks deep we are in the function. The first block is 0
+  blockStartLocalsHeight: Int, // At the start of the block, how many locals are on the stack
+  localsHeight: Int, // How many locals are on the stack right now total for this function
+) {
+  def oneLocalHigher() = {
+    StackHeight(blockHeight, blockStartLocalsHeight, localsHeight + 1)
+  }
+  def oneBlockHigher() = {
+    StackHeight(blockHeight + 1, localsHeight, localsHeight)
+  }
+}
