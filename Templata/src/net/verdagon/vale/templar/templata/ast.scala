@@ -172,9 +172,8 @@ case class FunctionHeader2(
   })
 
   def toBanner: FunctionBanner2 = FunctionBanner2(maybeOriginFunction, fullName, params)
-  def toPrototype: Prototype2 = Prototype2(fullName, FunctionT2(params.map(_.tyype), returnType))
+  def toPrototype: Prototype2 = Prototype2(fullName, params.map(_.tyype), returnType)
   def toSignature: Signature2 = toPrototype.toSignature
-  def functionType = toPrototype.functionType
 
   def paramTypes: List[Coord] = params.map(_.tyype)
 
@@ -188,10 +187,11 @@ case class FunctionHeader2(
 
 case class Prototype2(
     fullName: FullName2,
-    functionType: FunctionT2) extends Queriable2 {
-  def toSignature: Signature2 = Signature2(fullName, functionType.paramTypes)
+    paramTypes: List[Coord],
+    returnType: Coord) extends Queriable2 {
+  def toSignature: Signature2 = Signature2(fullName, paramTypes)
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
-    List(this).collect(func) ++ functionType.all(func)
+    List(this).collect(func) ++ paramTypes.flatMap(_.all(func)) ++ returnType.all(func)
   }
 }

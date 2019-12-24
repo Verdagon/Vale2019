@@ -20,8 +20,8 @@ object BuiltInFunctions {
   (NamespaceEnvironment, Map[String, IFunctionGenerator]) = {
     val (currentlyConstructingEnv1, functionGeneratorByName1) = addConcreteDestructor(currentlyConstructingEnv0, functionGeneratorByName0)
     val (currentlyConstructingEnv2, functionGeneratorByName2) = addInterfaceDestructor(currentlyConstructingEnv1, functionGeneratorByName1)
-    val (currentlyConstructingEnv3, functionGeneratorByName3) = addImplDestructor(currentlyConstructingEnv2, functionGeneratorByName2)
-    val (currentlyConstructingEnv4, functionGeneratorByName4) = addDrop(currentlyConstructingEnv3, functionGeneratorByName3)
+    val (currentlyConstructingEnvH, functionGeneratorByNameH) = addImplDestructor(currentlyConstructingEnv2, functionGeneratorByName2)
+    val (currentlyConstructingEnv4, functionGeneratorByName4) = addDrop(currentlyConstructingEnvH, functionGeneratorByNameH)
     val currentlyConstructingEnv5 = addArrayLen(currentlyConstructingEnv4)
     val currentlyConstructingEnv6 = addPanic(currentlyConstructingEnv5)
     (currentlyConstructingEnv6, functionGeneratorByName4)

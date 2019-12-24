@@ -8,12 +8,12 @@ object SculptorTests {
 //      case None => {
 //        println("No! " + testNumber)
 //      }
-//      case Some(program3) => {
-//        if (program3.toString.trim.equals(expected.toString.trim)) {
+//      case Some(programH) => {
+//        if (programH.toString.trim.equals(expected.toString.trim)) {
 ////          println("Yes!")
 //        } else {
 //          println("Uh sculptor " + testNumber + "...");
-//            println(program3.toString());
+//            println(programH.toString());
 //            println(expected.toString());
 //        }
 //      }

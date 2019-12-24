@@ -7,25 +7,25 @@ import scala.collection.immutable.ListMap
 
 object StructSculptor {
 
-  private def signatureToString(paramTypes: List[Reference3[Referend3]], returnType3: Reference3[Referend3]): String = {
-    val returnTypeStr = TypeSculptor.getReferenceLlvmType(returnType3);
+  private def signatureToString(paramTypes: List[ReferenceH[ReferendH]], returnTypeH: ReferenceH[ReferendH]): String = {
+    val returnTypeStr = TypeSculptor.getReferenceLlvmType(returnTypeH);
     val paramsStr = paramTypes.map(TypeSculptor.getReferenceLlvmType).mkString(", ");
     returnTypeStr + " (" + paramsStr + ")*"
   }
 
-  private def functionRefToLlvmFunctionRef(functionRef: FunctionRef3): String = {
+  private def functionRefToLlvmFunctionRef(functionRef: FunctionRefH): String = {
     // void ()* @"doTheThingNAME"
     signatureToString(functionRef.prototype.params, functionRef.prototype.returnType) + "@\"" + functionRef.globalName + "\""
   }
 
-  def declareStructs(program: Program3): String = {
+  def declareStructs(program: ProgramH): String = {
     val structs = program.structs
     val interfaces = program.interfaces
     interfaces.map(interface => declareInterfaceInfo(program, interface)).mkString("") + "\n" +
     structs.map(struct => declareStructInfo(program, struct)).mkString("") + "\n"
   }
 
-  private def declareInterfaceInfo(program: Program3, interface: InterfaceDefinition3): String = {
+  private def declareInterfaceInfo(program: ProgramH, interface: InterfaceDefinitionH): String = {
     val interfaceName = interface.globalName
     val interfaceNameLength = (interfaceName.length + 1).toString
     val methods = interface.prototypes.map(method => {
@@ -58,7 +58,7 @@ object StructSculptor {
         .replaceAllLiterally("METHODS", methods)
   }
 
-  private def getKTablePath(program: Program3, struct: StructDefinition3, interface: InterfaceRef3): List[Int] = {
+  private def getKTablePath(program: ProgramH, struct: StructDefinitionH, interface: InterfaceRefH): List[Int] = {
     val numEdges = struct.edges.size;
     val numIntroducedMethods = struct.methods.size;
 
@@ -81,7 +81,7 @@ object StructSculptor {
     }
   }
 
-  private def assembleETableDirectory(program: Program3, struct: StructDefinition3): (String, String) = {
+  private def assembleETableDirectory(program: ProgramH, struct: StructDefinitionH): (String, String) = {
     val structName = struct.globalName
 
     val (types, values) =
@@ -122,7 +122,7 @@ object StructSculptor {
     (types.mkString("\n"), values.mkString("\n"))
   }
 
-  private def assembleETableForest(program: Program3, struct: StructDefinition3): (String, String) = {
+  private def assembleETableForest(program: ProgramH, struct: StructDefinitionH): (String, String) = {
     val structName = struct.globalName
 
     val (types, values) =
@@ -141,12 +141,12 @@ object StructSculptor {
 
           (forentryType, forentryValue)
         }
-        case (Some((interfaceRef3, _)), direntryIndex) => {
-          val interfaceName = interfaceRef3.globalName
+        case (Some((interfaceRefH, _)), direntryIndex) => {
+          val interfaceName = interfaceRefH.globalName
           val direntryType = """  %"__Edge_INAME"*,"""
               .replaceAllLiterally("INAME", interfaceName)
 
-          val path = getKTablePath(program, struct, interfaceRef3).map("i32 " + _).mkString(", ")
+          val path = getKTablePath(program, struct, interfaceRefH).map("i32 " + _).mkString(", ")
           val direntryValue =
             """    %"__Edge_INAME"* getelementptr (%"__SInfoWhole_SNAME", %"__SInfoWhole_SNAME"* @"__sInfoWhole_SNAME", i32 0, i32 0, PATH),"""
                 .replaceAllLiterally("INAME", interfaceName)
@@ -160,7 +160,7 @@ object StructSculptor {
     (types.mkString("\n"), values.mkString("\n"))
   }
 
-  private def declareStructInfo(program: Program3, struct: StructDefinition3): String = {
+  private def declareStructInfo(program: ProgramH, struct: StructDefinitionH): String = {
     val (eTableDirectoryType, eTableDirectoryValue) = assembleETableDirectory(program, struct)
     val (eTableForestType, eTableForestValue) = assembleETableForest(program, struct)
 
@@ -239,7 +239,7 @@ object StructSculptor {
         .replaceAllLiterally("METHODS_VALUE", methodsValue)
   }
 
-  private def assembleMethodsInterfaceEdges(program: Program3, struct: StructDefinition3): (String, String) = {
+  private def assembleMethodsInterfaceEdges(program: ProgramH, struct: StructDefinitionH): (String, String) = {
     val (types, values) =
       struct.edges.map(edge => {
         val interfaceName = edge.interface.globalName
@@ -274,11 +274,11 @@ object StructSculptor {
     (types.mkString("\n"), values.mkString("\n"))
   }
 
-  private def assembleMethodsBaseClass(program: Program3, struct: StructDefinition3): (String, String) = {
+  private def assembleMethodsBaseClass(program: ProgramH, struct: StructDefinitionH): (String, String) = {
     val superclassMethodsType =
       struct.base match {
         case None => ""
-        case Some(StructRef3(_, globalName)) => {
+        case Some(StructRefH(_, globalName)) => {
           """  %"__Methods_SUPERSTRUCTID","""
               .replaceAllLiterally("SUPERSTRUCTID", globalName)
         }
@@ -295,7 +295,7 @@ object StructSculptor {
     (superclassMethodsType, superclassMethodsValue)
   }
 
-  private def assembleIntroducedMethods(program: Program3, struct: StructDefinition3): (String, String) = {
+  private def assembleIntroducedMethods(program: ProgramH, struct: StructDefinitionH): (String, String) = {
     val (introducedMethodsType, introducedMethodsValue) =
       struct.methods.map(method => {
         val signatureTypeLine = """  SIGNATURETYPE, ; PROTOTYPENAME"""
@@ -312,7 +312,7 @@ object StructSculptor {
     (introducedMethodsType.mkString("\n"), introducedMethodsValue.mkString("\n"))
   }
 
-  private def assembleMethodsParameter(program: Program3, baseOrThisStruct: StructDefinition3, thisStruct: StructDefinition3): (String, String) = {
+  private def assembleMethodsParameter(program: ProgramH, baseOrThisStruct: StructDefinitionH, thisStruct: StructDefinitionH): (String, String) = {
     val structName = thisStruct.globalName
 
     val (introducedMethodsTypes, introducedMethodsValues) =

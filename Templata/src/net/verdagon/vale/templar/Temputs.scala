@@ -721,10 +721,6 @@ case class Function2(
   // Used for testing
   variables: List[ILocalVariable2],
   body: Block2) extends Queriable2 {
-  def getFunctionType: FunctionT2 = {
-    FunctionT2(header.params.map(_.tyype), header.returnType)
-  }
-
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func) ++ header.all(func) ++ variables.flatMap(_.all(func)) ++ body.all(func)
   }

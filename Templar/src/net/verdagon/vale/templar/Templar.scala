@@ -94,7 +94,7 @@ object Templar {
     // struct or interface is figuring out what it extends.
     val env4 =
       impls1.foldLeft(env2)({
-        case (env3, impl1) => env3.addEntry(IMPL_NAME, ImplEnvEntry(impl1))
+        case (envH, impl1) => envH.addEntry(IMPL_NAME, ImplEnvEntry(impl1))
       })
     val env5 =
       structsA.foldLeft(env4)({
@@ -263,7 +263,6 @@ object Templar {
       case Bool2() => Immutable
       case Str2() => Immutable
       case Void2() => Immutable
-      case FunctionT2(_, _) => Immutable
       case UnknownSizeArrayT2(RawArrayT2(_, mutability)) => mutability
       case ArraySequenceT2(_, RawArrayT2(_, mutability)) => mutability
       case sr @ StructRef2(_) => temputs.lookupMutability(sr)

@@ -110,7 +110,7 @@ class TemplarTests extends FunSuite with Matchers {
     temputs.only({ case IntLiteral2(3) => true })
     temputs.only({
       case FunctionPointerCall2(
-        FunctionLookup2(functionName("+")),
+        functionName("+"),
         List(
           IntLiteral2(2),
           IntLiteral2(3))) =>
@@ -160,7 +160,7 @@ class TemplarTests extends FunSuite with Matchers {
     lambda.header match { case functionName("main:lam1") => }
 
     val main = temputs.lookupFunction("main");
-    main.only({ case FunctionLookup2(functionName("main:lam1")) => })
+    main.only({ case FunctionPointerCall2(functionName("main:lam1"), _) => })
   }
 
   test("Test overloads") {
@@ -252,8 +252,8 @@ class TemplarTests extends FunSuite with Matchers {
     // Check that we call the constructor
     temputs.only({
       case FunctionPointerCall2(
-      FunctionLookup2(Prototype2(simpleName("MyStruct"), _)),
-      List(IntLiteral2(7))) =>
+        Prototype2(simpleName("MyStruct"), _, _),
+        List(IntLiteral2(7))) =>
     })
   }
 
@@ -358,7 +358,7 @@ class TemplarTests extends FunSuite with Matchers {
     }
 
     temputs.lookupFunction("main").only({
-      case FunctionLookup2(functionName("MySome")) =>
+      case FunctionPointerCall2(functionName("MySome"), _) =>
     })
   }
 
@@ -395,7 +395,7 @@ class TemplarTests extends FunSuite with Matchers {
 
     val main = temputs.lookupFunction("main")
     main.only({
-      case FunctionLookup2(Prototype2(simpleName("doCivicDance"),FunctionT2(List(Coord(Borrow,InterfaceRef2(simpleName("Car")))),Coord(Share,Int2())))) =>
+      case FunctionPointerCall2(Prototype2(simpleName("doCivicDance"),List(Coord(Borrow,InterfaceRef2(simpleName("Car")))),Coord(Share,Int2())), _) =>
     })
   }
 
@@ -458,7 +458,7 @@ class TemplarTests extends FunSuite with Matchers {
 
     val main = temputs.lookupFunction("main")
     main.only({
-      case f @ FunctionLookup2(functionName("forEach")) => f
+      case f @ FunctionPointerCall2(functionName("forEach"), _) => f
     })
   }
 
@@ -548,7 +548,7 @@ class TemplarTests extends FunSuite with Matchers {
     val temputs = compile.getTemputs()
     val main = temputs.lookupFunction("main")
     val destructorCalls =
-      main.all({ case fpc @ FunctionPointerCall2(FunctionLookup2(Prototype2(FullName2(List(NamePart2("destructor",Some(List(CoordTemplata(Coord(Own,StructRef2(simpleName("Marine"))))))))),_)),_) => fpc })
+      main.all({ case fpc @ FunctionPointerCall2(Prototype2(FullName2(List(NamePart2("destructor",Some(List(CoordTemplata(Coord(Own,StructRef2(simpleName("Marine"))))))))), _, _),_) => fpc })
     destructorCalls.size shouldEqual 2
   }
 

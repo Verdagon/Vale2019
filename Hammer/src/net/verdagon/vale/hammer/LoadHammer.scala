@@ -14,12 +14,12 @@ object LoadHammer {
       hamuts0: Hamuts,
       locals0: Locals,
       stackHeight0: StackHeight,
-      nodesByLine0: Vector[Node3],
+      nodesByLine0: Vector[NodeH],
       load2: SoftLoad2):
-  (Hamuts, Locals, StackHeight, Vector[Node3], RegisterAccess3[Referend3], List[Expression2]) = {
+  (Hamuts, Locals, StackHeight, Vector[NodeH], RegisterAccessH[ReferendH], List[Expression2]) = {
     val SoftLoad2(sourceExpr2, targetOwnership) = load2
 
-    val (hamuts5, locals5, stackHeight5, nodesByLine5, loadedAccess3, sourceDeferreds) =
+    val (hamuts5, locals5, stackHeight5, nodesByLine5, loadedAccessH, sourceDeferreds) =
       sourceExpr2 match {
         case LocalLookup2(ReferenceLocalVariable2(varId, variability, reference), varType2) => {
           vassert(reference == varType2)
@@ -45,7 +45,7 @@ object LoadHammer {
 
     // Note how we return the deferreds upward, see Hammer doc for why.
 
-    (hamuts5, locals5, stackHeight5, nodesByLine5, loadedAccess3, sourceDeferreds)
+    (hamuts5, locals5, stackHeight5, nodesByLine5, loadedAccessH, sourceDeferreds)
   }
 
   private def translateMundaneUnknownSizeArrayLoad(
@@ -53,38 +53,38 @@ object LoadHammer {
       hamuts2: Hamuts,
       locals0: Locals,
       stackHeight0: StackHeight,
-      nodesByLine0: Vector[Node3],
+      nodesByLine0: Vector[NodeH],
       arrayExpr2: ReferenceExpression2,
       indexExpr2: ReferenceExpression2,
       targetOwnership: Ownership
-  ): (Hamuts, Locals, StackHeight, Vector[Node3], RegisterAccess3[Referend3], List[Expression2]) = {
-    val (hamuts3, locals1, stackHeight1, nodesByLine1, Some(arrayResultLine), arrayDeferreds) =
+  ): (Hamuts, Locals, StackHeight, Vector[NodeH], RegisterAccessH[ReferendH], List[Expression2]) = {
+    val (hamutsH, locals1, stackHeight1, nodesByLine1, Some(arrayResultLine), arrayDeferreds) =
       translate(hinputs, hamuts2, locals0, stackHeight0, nodesByLine0, arrayExpr2);
     val arrayAccess = arrayResultLine.expectUnknownSizeArrayAccess()
 
     val (hamuts4, locals2, stackHeight2, nodesByLine2, Some(indexExprResultLine), indexDeferreds) =
-      translate(hinputs, hamuts3, locals1, stackHeight1, nodesByLine1, indexExpr2);
+      translate(hinputs, hamutsH, locals1, stackHeight1, nodesByLine1, indexExpr2);
     val indexAccess = indexExprResultLine.expectIntAccess()
 
     vassert(targetOwnership == Borrow || targetOwnership == Share)
 
     val borrowedElementType =
-      Reference3(targetOwnership, arrayAccess.expectedType.kind.rawArray.elementType.kind)
+      ReferenceH(targetOwnership, arrayAccess.expectedType.kind.rawArray.elementType.kind)
 
     // We're storing into a regular reference element of an array.
-    val (nodesByLine3, loadedNode3) =
+    val (nodesByLineH, loadedNodeH) =
       addNode(
         nodesByLine2,
-        UnknownSizeArrayLoad3(
+        UnknownSizeArrayLoadH(
           newId(nodesByLine2),
           arrayAccess,
           indexAccess,
           borrowedElementType,
           targetOwnership))
     val loadedAccess =
-      RegisterAccess3(loadedNode3.registerId, borrowedElementType)
+      RegisterAccessH(loadedNodeH.registerId, borrowedElementType)
 
-    (hamuts4, locals2, stackHeight2, nodesByLine3, loadedAccess, arrayDeferreds ++ indexDeferreds)
+    (hamuts4, locals2, stackHeight2, nodesByLineH, loadedAccess, arrayDeferreds ++ indexDeferreds)
   }
 
   private def translateMundaneKnownSizeArrayLoad(
@@ -92,38 +92,38 @@ object LoadHammer {
     hamuts2: Hamuts,
     locals0: Locals,
     stackHeight0: StackHeight,
-    nodesByLine0: Vector[Node3],
+    nodesByLine0: Vector[NodeH],
     arrayExpr2: ReferenceExpression2,
     indexExpr2: ReferenceExpression2,
     targetOwnership: Ownership
-  ): (Hamuts, Locals, StackHeight, Vector[Node3], RegisterAccess3[Referend3], List[Expression2]) = {
-    val (hamuts3, locals1, stackHeight1, nodesByLine1, Some(arrayResultLine), arrayDeferreds) =
+  ): (Hamuts, Locals, StackHeight, Vector[NodeH], RegisterAccessH[ReferendH], List[Expression2]) = {
+    val (hamutsH, locals1, stackHeight1, nodesByLine1, Some(arrayResultLine), arrayDeferreds) =
       translate(hinputs, hamuts2, locals0, stackHeight0, nodesByLine0, arrayExpr2);
     val arrayAccess = arrayResultLine.expectKnownSizeArrayAccess()
 
     val (hamuts4, locals2, stackHeight2, nodesByLine2, Some(indexExprResultLine), indexDeferreds) =
-      translate(hinputs, hamuts3, locals1, stackHeight1, nodesByLine1, indexExpr2);
+      translate(hinputs, hamutsH, locals1, stackHeight1, nodesByLine1, indexExpr2);
     val indexAccess = indexExprResultLine.expectIntAccess()
 
     vassert(targetOwnership == Borrow || targetOwnership == Share)
 
     val borrowedElementType =
-      Reference3(targetOwnership, arrayAccess.expectedType.kind.rawArray.elementType.kind)
+      ReferenceH(targetOwnership, arrayAccess.expectedType.kind.rawArray.elementType.kind)
 
     // We're storing into a regular reference element of an array.
-    val (nodesByLine3, loadedNode3) =
+    val (nodesByLineH, loadedNodeH) =
       addNode(
         nodesByLine2,
-        KnownSizeArrayLoad3(
+        KnownSizeArrayLoadH(
           newId(nodesByLine2),
           arrayAccess,
           indexAccess,
           borrowedElementType,
           targetOwnership))
     val loadedAccess =
-      RegisterAccess3(loadedNode3.registerId, borrowedElementType)
+      RegisterAccessH(loadedNodeH.registerId, borrowedElementType)
 
-    (hamuts4, locals2, stackHeight2, nodesByLine3, loadedAccess, arrayDeferreds ++ indexDeferreds)
+    (hamuts4, locals2, stackHeight2, nodesByLineH, loadedAccess, arrayDeferreds ++ indexDeferreds)
   }
 
   private def translateAddressibleMemberLoad(
@@ -131,12 +131,12 @@ object LoadHammer {
       hamuts0: Hamuts,
       locals1: Locals,
       stackHeight0: StackHeight,
-      nodesByLine0: Vector[Node3],
+      nodesByLine0: Vector[NodeH],
       structExpr2: ReferenceExpression2,
       memberName: String,
       expectedType2: Coord,
       targetOwnership: Ownership
-  ): (Hamuts, Locals, StackHeight, Vector[Node3], RegisterAccess3[Referend3], List[Expression2]) = {
+  ): (Hamuts, Locals, StackHeight, Vector[NodeH], RegisterAccessH[ReferendH], List[Expression2]) = {
     val (hamuts1, locals2, stackHeight2, nodesByLine1, Some(structResultLine), structDeferreds) =
       translate(hinputs, hamuts0, locals1, stackHeight0, nodesByLine0, structExpr2);
 
@@ -155,22 +155,22 @@ object LoadHammer {
 
     val boxedType2 = member2.tyype.expectAddressMember().reference
 
-    val (hamuts2, boxedType3) =
+    val (hamuts2, boxedTypeH) =
       TypeHammer.translateReference(hinputs, hamuts1, boxedType2);
 
-    val (hamuts3, boxStructRef3) =
-      StructHammer.makeBox(hinputs, hamuts2, variability, boxedType2, boxedType3)
+    val (hamutsH, boxStructRefH) =
+      StructHammer.makeBox(hinputs, hamuts2, variability, boxedType2, boxedTypeH)
 
     // We expect a borrow because structs never own boxes, they only borrow them
-    val expectedStructBoxMemberType = Reference3(Borrow, boxStructRef3)
-    val expectedBorrowBoxResultType = Reference3(Borrow, boxStructRef3)
+    val expectedStructBoxMemberType = ReferenceH(Borrow, boxStructRefH)
+    val expectedBorrowBoxResultType = ReferenceH(Borrow, boxStructRefH)
 
     // We're storing into a struct's member that is a box. The stack is also
     // pointing at this box. First, get the box, then mutate what's inside.
     val (nodesByLine2, loadBoxNode) =
       addNode(
         nodesByLine1,
-        MemberLoad3(
+        MemberLoadH(
           newId(nodesByLine1),
           structResultLine.expectStructAccess(),
           memberIndex,
@@ -179,22 +179,22 @@ object LoadHammer {
           expectedBorrowBoxResultType,
           memberName))
     val loadBoxAccess =
-      RegisterAccess3(loadBoxNode.registerId, expectedBorrowBoxResultType)
-    val (nodesByLine3, loadedNode3) =
+      RegisterAccessH(loadBoxNode.registerId, expectedBorrowBoxResultType)
+    val (nodesByLineH, loadedNodeH) =
       addNode(
         nodesByLine2,
-        MemberLoad3(
+        MemberLoadH(
           newId(nodesByLine2),
           loadBoxAccess,
           StructHammer.BOX_MEMBER_INDEX,
           targetOwnership,
-          boxedType3,
-          Reference3(targetOwnership, boxedType3.kind),
+          boxedTypeH,
+          ReferenceH(targetOwnership, boxedTypeH.kind),
           StructHammer.BOX_MEMBER_NAME))
 
     val loadedAccess =
-      RegisterAccess3(loadedNode3.registerId, boxedType3)
-    (hamuts3, locals2, stackHeight2, nodesByLine3, loadedAccess, structDeferreds)
+      RegisterAccessH(loadedNodeH.registerId, boxedTypeH)
+    (hamutsH, locals2, stackHeight2, nodesByLineH, loadedAccess, structDeferreds)
   }
 
   private def translateMundaneMemberLoad(
@@ -202,17 +202,17 @@ object LoadHammer {
       hamuts2: Hamuts,
       locals1: Locals,
       stackHeight0: StackHeight,
-      nodesByLine0: Vector[Node3],
+      nodesByLine0: Vector[NodeH],
       structExpr2: ReferenceExpression2,
       expectedMemberType2: Coord,
       memberName: String,
       targetOwnership: Ownership
-  ): (Hamuts, Locals, StackHeight, Vector[Node3], RegisterAccess3[Referend3], List[Expression2]) = {
-    val (hamuts3, locals2, stackHeight1, nodesByLine1, Some(structResultLine), structDeferreds) =
+  ): (Hamuts, Locals, StackHeight, Vector[NodeH], RegisterAccessH[ReferendH], List[Expression2]) = {
+    val (hamutsH, locals2, stackHeight1, nodesByLine1, Some(structResultLine), structDeferreds) =
       translate(hinputs, hamuts2, locals1, stackHeight0, nodesByLine0, structExpr2);
 
-    val (hamuts4, expectedMemberType3) =
-      TypeHammer.translateReference(hinputs, hamuts3, expectedMemberType2);
+    val (hamuts4, expectedMemberTypeH) =
+      TypeHammer.translateReference(hinputs, hamutsH, expectedMemberType2);
 
     val structRef2 =
       structExpr2.resultRegister.reference.referend match {
@@ -224,23 +224,23 @@ object LoadHammer {
     val memberIndex = structDef2.members.indexWhere(_.name == memberName)
     vassert(memberIndex >= 0)
 
-    val resultType3 =
-      Reference3(targetOwnership, expectedMemberType3.kind)
+    val resultTypeH =
+      ReferenceH(targetOwnership, expectedMemberTypeH.kind)
 
     // We're loading from a regular reference member of a struct.
     val (nodesByLine2, loadedNode) =
       addNode(
         nodesByLine1,
-        MemberLoad3(
+        MemberLoadH(
           newId(nodesByLine1),
           structResultLine.expectStructAccess(),
           memberIndex,
           targetOwnership,
-          expectedMemberType3,
-          resultType3,
+          expectedMemberTypeH,
+          resultTypeH,
           memberName))
     val loadedAccess =
-      RegisterAccess3(loadedNode.registerId, resultType3)
+      RegisterAccessH(loadedNode.registerId, resultTypeH)
     (hamuts4, locals2, stackHeight1, nodesByLine2, loadedAccess, structDeferreds)
   }
 
@@ -249,29 +249,29 @@ object LoadHammer {
       hamuts0: Hamuts,
       locals1: Locals,
       stackHeight0: StackHeight,
-      nodesByLine1: Vector[Node3],
+      nodesByLine1: Vector[NodeH],
       varId: VariableId2,
       variability: Variability,
       localReference2: Coord,
       targetOwnership: Ownership
-  ): (Hamuts, Locals, StackHeight, Vector[Node3], RegisterAccess3[Referend3], List[Expression2]) = {
+  ): (Hamuts, Locals, StackHeight, Vector[NodeH], RegisterAccessH[ReferendH], List[Expression2]) = {
     val local = locals1.get(varId).get
 
-    val (hamuts1, localType3) =
+    val (hamuts1, localTypeH) =
       TypeHammer.translateReference(hinputs, hamuts0, localReference2);
-    val (hamuts3, boxStructRef3) =
-      StructHammer.makeBox(hinputs, hamuts1, variability, localReference2, localType3)
-    vassert(local.type3.kind == boxStructRef3)
+    val (hamutsH, boxStructRefH) =
+      StructHammer.makeBox(hinputs, hamuts1, variability, localReference2, localTypeH)
+    vassert(local.typeH.kind == boxStructRefH)
 
-    val expectedStructBoxMemberType = Reference3(Own, boxStructRef3)
-    val expectedBorrowBoxResultType = Reference3(Borrow, boxStructRef3)
+    val expectedStructBoxMemberType = ReferenceH(Own, boxStructRefH)
+    val expectedBorrowBoxResultType = ReferenceH(Borrow, boxStructRefH)
 
     // This means we're trying to load from a local variable that holds a box.
     // We need to load the box, then mutate its contents.
     val (nodesByLine2, loadBoxNode) =
       addNode(
         nodesByLine1,
-        LocalLoad3(
+        LocalLoadH(
           newId(nodesByLine1),
           local,
           Borrow,
@@ -279,23 +279,23 @@ object LoadHammer {
           expectedBorrowBoxResultType,
           varId.variableName))
     val loadBoxAccess =
-      RegisterAccess3(loadBoxNode.registerId, expectedBorrowBoxResultType)
+      RegisterAccessH(loadBoxNode.registerId, expectedBorrowBoxResultType)
 
-    val resultType3 = Reference3(targetOwnership, localType3.kind)
-    val (nodesByLine3, loadedNode) =
+    val resultTypeH = ReferenceH(targetOwnership, localTypeH.kind)
+    val (nodesByLineH, loadedNode) =
       addNode(
         nodesByLine2,
-        MemberLoad3(
+        MemberLoadH(
           newId(nodesByLine2),
           loadBoxAccess,
           StructHammer.BOX_MEMBER_INDEX,
           targetOwnership,
-          localType3,
-          resultType3,
+          localTypeH,
+          resultTypeH,
           StructHammer.BOX_MEMBER_NAME))
     val loadedAccess =
-      RegisterAccess3(loadedNode.registerId, resultType3)
-    (hamuts3, locals1, stackHeight0, nodesByLine3, loadedAccess, List())
+      RegisterAccessH(loadedNode.registerId, resultTypeH)
+    (hamutsH, locals1, stackHeight0, nodesByLineH, loadedAccess, List())
   }
 
   def translateMundaneLocalLoad(
@@ -303,11 +303,11 @@ object LoadHammer {
       hamuts0: Hamuts,
       locals1: Locals,
       stackHeight0: StackHeight,
-      nodesByLine1: Vector[Node3],
+      nodesByLine1: Vector[NodeH],
       varId: VariableId2,
       expectedType2: Coord,
       targetOwnership: Ownership
-  ): (Hamuts, Locals, StackHeight, Vector[Node3], RegisterAccess3[Referend3], List[Expression2]) = {
+  ): (Hamuts, Locals, StackHeight, Vector[NodeH], RegisterAccessH[ReferendH], List[Expression2]) = {
 
     val local = locals1.get(varId) match {
       case Some(x) => x
@@ -316,24 +316,24 @@ object LoadHammer {
       }
     }
 
-    val (hamuts1, expectedType3) =
+    val (hamuts1, expectedTypeH) =
       TypeHammer.translateReference(hinputs, hamuts0, expectedType2);
-    vassert(expectedType3 == local.type3)
+    vassert(expectedTypeH == local.typeH)
 
-    val resultType3 = Reference3(targetOwnership, expectedType3.kind)
+    val resultTypeH = ReferenceH(targetOwnership, expectedTypeH.kind)
 
     val (nodesByLine2, loadedNode) =
       addNode(
         nodesByLine1,
-        LocalLoad3(
+        LocalLoadH(
           newId(nodesByLine1),
           local,
           targetOwnership,
-          local.type3,
-          resultType3,
+          local.typeH,
+          resultTypeH,
           varId.variableName))
     val loadedAccess =
-      RegisterAccess3(loadedNode.registerId, resultType3)
+      RegisterAccessH(loadedNode.registerId, resultTypeH)
     (hamuts1, locals1, stackHeight0, nodesByLine2, loadedAccess, List())
   }
 
@@ -342,25 +342,25 @@ object LoadHammer {
       hamuts0: Hamuts,
       locals1: Locals,
       stackHeight0: StackHeight,
-      nodesByLine1: Vector[Node3],
+      nodesByLine1: Vector[NodeH],
       lookup2: LocalLookup2):
-  (Hamuts, Locals, StackHeight, Vector[Node3], RegisterAccess3[Referend3]) = {
+  (Hamuts, Locals, StackHeight, Vector[NodeH], RegisterAccessH[ReferendH]) = {
     val LocalLookup2(localVar, type2) = lookup2;
     vassert(type2 == localVar.reference)
 
     val local = locals1.get(localVar.id).get
-    val (hamuts3, boxStructRef3) =
-      StructHammer.makeBox(hinputs, hamuts0, localVar.variability, localVar.reference, local.type3)
+    val (hamutsH, boxStructRefH) =
+      StructHammer.makeBox(hinputs, hamuts0, localVar.variability, localVar.reference, local.typeH)
 
-    val expectedStructBoxMemberType = Reference3(Own, boxStructRef3)
-    val expectedBorrowBoxResultType = Reference3(Borrow, boxStructRef3)
+    val expectedStructBoxMemberType = ReferenceH(Own, boxStructRefH)
+    val expectedBorrowBoxResultType = ReferenceH(Borrow, boxStructRefH)
 
     // This means we're trying to load from a local variable that holds a box.
     // We need to load the box, then mutate its contents.
     val (nodesByLine2, loadBoxNode) =
     addNode(
       nodesByLine1,
-      LocalLoad3(
+      LocalLoadH(
         newId(nodesByLine1),
         local,
         Borrow,
@@ -368,8 +368,8 @@ object LoadHammer {
         expectedBorrowBoxResultType,
         localVar.id.variableName))
     val loadBoxAccess =
-      RegisterAccess3(loadBoxNode.registerId, expectedBorrowBoxResultType)
-    (hamuts3, locals1, stackHeight0, nodesByLine2, loadBoxAccess)
+      RegisterAccessH(loadBoxNode.registerId, expectedBorrowBoxResultType)
+    (hamutsH, locals1, stackHeight0, nodesByLine2, loadBoxAccess)
   }
 
   def translateMemberAddress(
@@ -377,9 +377,9 @@ object LoadHammer {
       hamuts0: Hamuts,
       locals1: Locals,
       stackHeight0: StackHeight,
-      nodesByLine0: Vector[Node3],
+      nodesByLine0: Vector[NodeH],
       lookup2: AddressMemberLookup2):
-  (Hamuts, Locals, StackHeight, Vector[Node3], RegisterAccess3[Referend3], List[Expression2]) = {
+  (Hamuts, Locals, StackHeight, Vector[NodeH], RegisterAccessH[ReferendH], List[Expression2]) = {
     val AddressMemberLookup2(structExpr2, memberName, varId, resultType2) = lookup2;
 
     val (hamuts1, locals2, stackHeight1, nodesByLine1, Some(structResultLine), structDeferreds) =
@@ -401,22 +401,22 @@ object LoadHammer {
 
     val boxedType2 = member2.tyype.expectAddressMember().reference
 
-    val (hamuts2, boxedType3) =
+    val (hamuts2, boxedTypeH) =
       TypeHammer.translateReference(hinputs, hamuts1, boxedType2);
 
-    val (hamuts3, boxStructRef3) =
-      StructHammer.makeBox(hinputs, hamuts2, variability, boxedType2, boxedType3)
+    val (hamutsH, boxStructRefH) =
+      StructHammer.makeBox(hinputs, hamuts2, variability, boxedType2, boxedTypeH)
 
     // We expect a borrow because structs never own boxes, they only borrow them
-    val expectedStructBoxMemberType = Reference3(Borrow, boxStructRef3)
-    val expectedBorrowBoxResultType = Reference3(Borrow, boxStructRef3)
+    val expectedStructBoxMemberType = ReferenceH(Borrow, boxStructRefH)
+    val expectedBorrowBoxResultType = ReferenceH(Borrow, boxStructRefH)
 
     // We're storing into a struct's member that is a box. The stack is also
     // pointing at this box. First, get the box, then mutate what's inside.
     val (nodesByLine2, loadBoxNode) =
     addNode(
       nodesByLine1,
-      MemberLoad3(
+      MemberLoadH(
         newId(nodesByLine1),
         structResultLine.expectStructAccess(),
         memberIndex,
@@ -425,8 +425,8 @@ object LoadHammer {
         expectedBorrowBoxResultType,
         memberName))
     val loadBoxAccess =
-      RegisterAccess3(loadBoxNode.registerId, expectedBorrowBoxResultType)
+      RegisterAccessH(loadBoxNode.registerId, expectedBorrowBoxResultType)
 
-    (hamuts3, locals2, stackHeight1, nodesByLine2, loadBoxAccess, structDeferreds)
+    (hamutsH, locals2, stackHeight1, nodesByLine2, loadBoxAccess, structDeferreds)
   }
 }

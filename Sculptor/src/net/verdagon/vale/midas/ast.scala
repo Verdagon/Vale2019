@@ -11,10 +11,10 @@ trait Node4 {
 }
 
 // This is different in that it uses the name verbatim
-case class LoadExternFunction4(registerId: Int, prototype3: Prototype3, functionType: FunctionT4) extends Node4 {
+case class LoadExternFunction4(registerId: Int, prototypeH: PrototypeH, functionType: FunctionT4) extends Node4 {
   override def register = ReferenceRegister4(FunctionReference4(functionType))
 }
-case class LoadFunction4(registerId: Int, prototype3: Prototype3, functionType: FunctionT4) extends Node4 {
+case class LoadFunction4(registerId: Int, prototypeH: PrototypeH, functionType: FunctionT4) extends Node4 {
   override def register = ReferenceRegister4(FunctionReference4(functionType))
 }
 case class ConstantBool4(registerId: Int, value: Boolean) extends Node4 {
@@ -114,12 +114,12 @@ case class NewHeapStruct4(registerId: Int, tyype: FarStructReference4, sourceReg
   override def register = ReferenceRegister4(tyype)
 }
 
-case class Prototype4(hamut: Prototype3, humanName: String, params: List[Reference4], returnType: Reference4) {
+case class Prototype4(hamut: PrototypeH, humanName: String, params: List[Reference4], returnType: Reference4) {
   def functionType() = FunctionT4(hamut.functionType, params, returnType)
 }
 
 case class Function4(
-    origin: Function3,
+    origin: FunctionH,
     prototype: Prototype4,
     isAbstract: Boolean,
     isExtern: Boolean,
@@ -127,11 +127,11 @@ case class Function4(
   def getRef = FunctionRef4(origin.getRef, prototype)
 }
 
-case class FunctionRef4(origin: FunctionRef3, prototype: Prototype4)
+case class FunctionRef4(origin: FunctionRefH, prototype: Prototype4)
 
 
 case class StructDefinition4(
-    origin: StructDefinition3,
+    origin: StructDefinitionH,
     base: Option[StructId4],
     eTable: ETable4,
     edges: List[Edge4],
@@ -173,7 +173,7 @@ case class VariableAddressStructFieldType4(referenceType: Reference4) extends St
 case class ReferenceStructFieldType4(referenceType: Reference4) extends StructFieldType4
 
 
-case class StructId4(midut: StructRef3) {
+case class StructId4(midut: StructRefH) {
   def structId: Int = midut.structId;
 }
 
@@ -184,7 +184,7 @@ case class ETable4(struct: StructId4, table: TetrisTable[InterfaceId4, Interface
 
 
 case class InterfaceDefinition4(
-    hamut: InterfaceDefinition3,
+    hamut: InterfaceDefinitionH,
     superInterfaces: List[InterfaceId4],
     prototypes: List[Prototype4]) {
   def interfaceId = hamut.interfaceId
@@ -193,7 +193,7 @@ case class InterfaceDefinition4(
   def getRef = InterfaceId4(hamut.getRef)
 }
 
-case class InterfaceId4(midut: InterfaceRef3) {
+case class InterfaceId4(midut: InterfaceRefH) {
   def interfaceId: Int = midut.interfaceId
 }
 

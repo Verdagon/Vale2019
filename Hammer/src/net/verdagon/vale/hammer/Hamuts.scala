@@ -6,15 +6,15 @@ import net.verdagon.vale.vassert
 
 
 case class Hamuts(
-    structRefsByRef2: Map[StructRef2, StructRef3],
-    structDefsByRef2: Map[StructRef2, StructDefinition3],
-    structDefsById: Map[Int, StructDefinition3],
+    structRefsByRef2: Map[StructRef2, StructRefH],
+    structDefsByRef2: Map[StructRef2, StructDefinitionH],
+    structDefsById: Map[Int, StructDefinitionH],
     nextStructId: Int,
-    interfaceRefs: Map[InterfaceRef2, InterfaceRef3],
-    interfaceDefs: Map[InterfaceRef2, InterfaceDefinition3],
-    functionRefs: Map[Prototype2, FunctionRef3],
-    functionDefs: Map[Prototype2, Function3]) {
-  private def addPackStruct(pack: PackT2, structDef: StructDefinition3): Hamuts = {
+    interfaceRefs: Map[InterfaceRef2, InterfaceRefH],
+    interfaceDefs: Map[InterfaceRef2, InterfaceDefinitionH],
+    functionRefs: Map[Prototype2, FunctionRefH],
+    functionDefs: Map[Prototype2, FunctionH]) {
+  private def addPackStruct(pack: PackT2, structDef: StructDefinitionH): Hamuts = {
     Hamuts(
       structRefsByRef2,
       structDefsByRef2,
@@ -26,9 +26,9 @@ case class Hamuts(
       functionDefs)
   }
 
-  def forwardDeclareStruct(structRef2: StructRef2, structRef3: StructRef3): Hamuts = {
+  def forwardDeclareStruct(structRef2: StructRef2, structRefH: StructRefH): Hamuts = {
     Hamuts(
-      structRefsByRef2 + (structRef2 -> structRef3),
+      structRefsByRef2 + (structRef2 -> structRefH),
       structDefsByRef2,
       structDefsById,
       nextStructId,
@@ -38,13 +38,13 @@ case class Hamuts(
       functionDefs)
   }
 
-  def addStructOriginatingFromTemplar(structRef2: StructRef2, structDef3: StructDefinition3): Hamuts = {
+  def addStructOriginatingFromTemplar(structRef2: StructRef2, structDefH: StructDefinitionH): Hamuts = {
     vassert(structRefsByRef2.contains(structRef2))
-    vassert(!structDefsById.contains(structDef3.structId))
+    vassert(!structDefsById.contains(structDefH.structId))
     Hamuts(
       structRefsByRef2,
-      structDefsByRef2 + (structRef2 -> structDef3),
-      structDefsById + (structDef3.structId -> structDef3),
+      structDefsByRef2 + (structRef2 -> structDefH),
+      structDefsById + (structDefH.structId -> structDefH),
       nextStructId,
       interfaceRefs,
       interfaceDefs,
@@ -52,11 +52,11 @@ case class Hamuts(
       functionDefs)
   }
 
-  def addStructOriginatingFromHammer(structDef3: StructDefinition3): Hamuts = {
+  def addStructOriginatingFromHammer(structDefH: StructDefinitionH): Hamuts = {
     Hamuts(
       structRefsByRef2,
       structDefsByRef2,
-      structDefsById + (structDef3.structId -> structDef3),
+      structDefsById + (structDefH.structId -> structDefH),
       nextStructId,
       interfaceRefs,
       interfaceDefs,
@@ -64,19 +64,19 @@ case class Hamuts(
       functionDefs)
   }
 
-  def forwardDeclareInterface(interfaceRef2: InterfaceRef2, interfaceRef3: InterfaceRef3): Hamuts = {
+  def forwardDeclareInterface(interfaceRef2: InterfaceRef2, interfaceRefH: InterfaceRefH): Hamuts = {
     Hamuts(
       structRefsByRef2,
       structDefsByRef2,
       structDefsById,
       nextStructId,
-      interfaceRefs + (interfaceRef2 -> interfaceRef3),
+      interfaceRefs + (interfaceRef2 -> interfaceRefH),
       interfaceDefs,
       functionRefs,
       functionDefs)
   }
 
-  def addInterface(interfaceRef2: InterfaceRef2, interfaceDef3: InterfaceDefinition3): Hamuts = {
+  def addInterface(interfaceRef2: InterfaceRef2, interfaceDefH: InterfaceDefinitionH): Hamuts = {
     vassert(interfaceRefs.contains(interfaceRef2))
     Hamuts(
       structRefsByRef2,
@@ -84,12 +84,12 @@ case class Hamuts(
       structDefsById,
       nextStructId,
       interfaceRefs,
-      interfaceDefs + (interfaceRef2 -> interfaceDef3),
+      interfaceDefs + (interfaceRef2 -> interfaceDefH),
       functionRefs,
       functionDefs)
   }
 
-  def forwardDeclareFunction(functionRef2: Prototype2, functionRef3: FunctionRef3): Hamuts = {
+  def forwardDeclareFunction(functionRef2: Prototype2, functionRefH: FunctionRefH): Hamuts = {
     Hamuts(
       structRefsByRef2,
       structDefsByRef2,
@@ -97,11 +97,11 @@ case class Hamuts(
       nextStructId,
       interfaceRefs,
       interfaceDefs,
-      functionRefs + (functionRef2 -> functionRef3),
+      functionRefs + (functionRef2 -> functionRefH),
       functionDefs)
   }
 
-  def addFunction(functionRef2: Prototype2, functionDef3: Function3): Hamuts = {
+  def addFunction(functionRef2: Prototype2, functionDefH: FunctionH): Hamuts = {
     vassert(functionRefs.contains(functionRef2))
     Hamuts(
       structRefsByRef2,
@@ -111,7 +111,7 @@ case class Hamuts(
       interfaceRefs,
       interfaceDefs,
       functionRefs,
-      functionDefs + (functionRef2 -> functionDef3))
+      functionDefs + (functionRef2 -> functionDefH))
   }
 
   def getNextStructId(): (Hamuts, Int) = {

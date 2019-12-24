@@ -249,14 +249,6 @@ case class UnknownSizeArrayT2(array: RawArrayT2) extends Kind {
   }
 }
 
-case class FunctionT2(paramTypes: List[Coord], returnType: Coord) extends Kind {
-  override def order: Int = 13;
-
-  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
-    List(this).collect(func) ++ paramTypes.flatMap(_.all(func)) ++ returnType.all(func)
-  }
-}
-
 case class StructMember2(
     name: String,
     // In the case of address members, this refers to the variability of the pointee variable.
@@ -459,12 +451,6 @@ object ReferendComparator extends Ordering[Kind] {
         case Bool2() => 0
         case Str2() => 0
         case PackT2(innerTypes, underlyingStruct) => compare(underlyingStruct, b.asInstanceOf[PackT2].underlyingStruct)
-        case FunctionT2(paramTypes, returnType) => {
-          val diff = ReferenceListComparator.compare(paramTypes, b.asInstanceOf[FunctionT2].paramTypes);
-          if (diff != 0)
-            return diff;
-          ReferenceComparator.compare(returnType, b.asInstanceOf[FunctionT2].returnType)
-        }
         case StructRef2(thisFullName) => {
           val StructRef2(thatFullName) = b.asInstanceOf[StructRef2];
           FullNameComparator.compare(thisFullName, thatFullName)

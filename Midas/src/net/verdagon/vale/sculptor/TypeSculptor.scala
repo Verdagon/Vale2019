@@ -4,76 +4,76 @@ import net.verdagon.vale.hammer._
 import net.verdagon.vale.templar._
 
 object TypeSculptor {
-//  def getBaseLlvmType(tyype: BaseType3): String = {
+//  def getBaseLlvmType(tyype: BaseTypeH): String = {
 //    println("ignoring owner!")
 //    tyype match {
-//      case a @ Addressible3(_) => getAddressibleLlvmType(a)
-//      case p : Reference3 => getPointerLlvmType(p)
+//      case a @ AddressibleH(_) => getAddressibleLlvmType(a)
+//      case p : ReferenceH => getPointerLlvmType(p)
 //    }
 //  }
 
-//  def getMemberTypeLlvmType(tyype: IMemberType3): String = {
+//  def getMemberTypeLlvmType(tyype: IMemberTypeH): String = {
 //    tyype match {
-//      case ReferenceMemberType3(reference) => getReferenceLlvmType(tyype.reference)
-//      case AddressMemberType3(reference) => getReferenceLlvmType(tyype.reference) + "*"
+//      case ReferenceMemberTypeH(reference) => getReferenceLlvmType(tyype.reference)
+//      case AddressMemberTypeH(reference) => getReferenceLlvmType(tyype.reference) + "*"
 //    }
 //
 //  }
 
-  def getAddressRegisterLlvmType(tyype: AddressRegister3): String = {
+  def getAddressRegisterLlvmType(tyype: AddressRegisterH): String = {
     getReferenceLlvmType(tyype.reference) + "*"
   }
 
-  def getReferenceRegisterLlvmType(tyype: ReferenceRegister3): String = {
+  def getReferenceRegisterLlvmType(tyype: ReferenceRegisterH): String = {
     println("ignoring owner!")
     tyype match {
-      case ReferenceRegister3(Reference3(owning, innerType)) => getConcreteLlvmType(innerType) + "*"
+      case ReferenceRegisterH(ReferenceH(owning, innerType)) => getConcreteLlvmType(innerType) + "*"
     }
   }
 
-  def getReferenceLlvmType(reference: Reference3[Referend3]): String = {
+  def getReferenceLlvmType(reference: ReferenceH[ReferendH]): String = {
     getConcreteLlvmType(reference.innerType) + "*"
   }
 
-  def getConcreteLlvmType(tyype: Referend3): String = {
+  def getConcreteLlvmType(tyype: ReferendH): String = {
     tyype match {
-      case Int3() => "i64"
-      case Float3() => "double"
-      case Bool3() => "i1"
-      case Str3() => "%__Str"
-      case Void3() => "%__Void"
-      case FunctionT3(paramTypes, returnType) => {
+      case IntH() => "i64"
+      case FloatH() => "double"
+      case BoolH() => "i1"
+      case StrH() => "%__Str"
+      case VoidH() => "%__Void"
+      case FunctionTH(paramTypes, returnType) => {
         // Note how this is not going to inner, this is so we can
         // do i64(%mystruct*)
         getReferenceLlvmType(returnType) + "(" + paramTypes.map(getReferenceLlvmType).mkString(", ") + ")"
       }
-      case StructRef3(_, globalName) => {
+      case StructRefH(_, globalName) => {
         "%\"" + globalName + "\""
       }
-      case InterfaceRef3(interfaceId, globalName) => {
+      case InterfaceRefH(interfaceId, globalName) => {
         "%\"" + globalName + "\""
       }
     }
   }
 //
-//  def getFullName(tyype: Pointer3): String = {
+//  def getFullName(tyype: PointerH): String = {
 //    tyype match {
-//      case Pointer3(innerType) => {
+//      case PointerH(innerType) => {
 //        "ref." + getFullName(innerType)
 //      }
 //    }
 //  }
 //
-//  def getFullName(tyype: ConcreteValue3): String = {
+//  def getFullName(tyype: ConcreteValueH): String = {
 //    tyype match {
-//      case Int3() => "i64"
-//      case Float3() => "double"
-//      case Bool3() => "i1"
-//      case Str3() => "str"
-//      case FunctionT3(paramTypes, returnType) => {
+//      case IntH() => "i64"
+//      case FloatH() => "double"
+//      case BoolH() => "i1"
+//      case StrH() => "str"
+//      case FunctionTH(paramTypes, returnType) => {
 //        "func;" + getFullName(returnType) + ";" + paramTypes.size + paramTypes.map(getFullName).map(";" + _).mkString("")
 //      }
-//      case StructRef3(name) => name
+//      case StructRefH(name) => name
 //    }
 //  }
 //

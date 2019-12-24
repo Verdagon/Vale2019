@@ -190,7 +190,7 @@ case class Return2(
 }
 
 
-//case class CurriedFunc3(closureExpr: Expression3, funcName: String) extends Expression3
+//case class CurriedFuncH(closureExpr: ExpressionH, funcName: String) extends ExpressionH
 
 // when we make a closure, we make a struct full of pointers to all our variables
 // and the first element is our parent closure
@@ -396,24 +396,25 @@ case class AddressMemberLookup2(
   }
 }
 
-case class FunctionLookup2(prototype: Prototype2) extends ReferenceExpression2 {
-  override def resultRegister: ReferenceRegister2 =
-    ReferenceRegister2(Coord(Raw, prototype.functionType))
+//
+//case class FunctionLookup2(prototype: Prototype2) extends ReferenceExpression2 {
+//  override def resultRegister: ReferenceRegister2 =
+//    ReferenceRegister2(Coord(Raw, prototype.functionType))
+//
+//  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
+//    List(this).collect(func) ++ prototype.all(func)
+//  }
+//}
 
-  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
-    List(this).collect(func) ++ prototype.all(func)
-  }
-}
 case class InterfaceFunctionCall2(
     superFunctionBanner: FunctionBanner2,
-    functionType: Coord,
     resultReference: Coord,
     args: List[ReferenceExpression2]) extends ReferenceExpression2 {
   override def resultRegister: ReferenceRegister2 =
     ReferenceRegister2(resultReference)
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
-    List(this).collect(func) ++ superFunctionBanner.all(func) ++ functionType.all(func) ++ resultReference.all(func) ++ args.flatMap(_.all(func))
+    List(this).collect(func) ++ superFunctionBanner.all(func) ++ resultReference.all(func) ++ args.flatMap(_.all(func))
   }
 }
 
@@ -427,33 +428,14 @@ case class ExternFunctionCall2(
     List(this).collect(func) ++ args.flatMap(_.all(func))
   }
 
-  override def resultRegister = ReferenceRegister2(prototype2.functionType.returnType)
-}
-
-// This should never be executed, it's just a placeholder that will be replaced later.
-// For example, Array(4, (i){ i * 2 }) the ConstructArray2 contains a FunctionPointerCall
-// which has the closure struct as the first argument, and the index as the second. But,
-// the index isn't determined by an expression, it's determined by Vivem or Sculptor.
-// So, we put a placeholder there, knowing it should be replaced later on.
-case class Placeholder2(type2: Coord) extends ReferenceExpression2 {
-  override def resultRegister: ReferenceRegister2 = {
-    ReferenceRegister2(type2)
-  }
-  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
-    List(this).collect(func) ++ type2.all(func)
-  }
+  override def resultRegister = ReferenceRegister2(prototype2.returnType)
 }
 
 case class FunctionPointerCall2(
-    callable: ReferenceExpression2,
+    callable: Prototype2,
     args: List[ReferenceExpression2]) extends ReferenceExpression2 {
   override def resultRegister: ReferenceRegister2 = {
-    ReferenceRegister2(functionType.returnType)
-  }
-  def functionType: FunctionT2 = {
-    callable.resultRegister.reference.referend match {
-      case ft2 @ FunctionT2(_, returnType) => ft2
-    }
+    ReferenceRegister2(callable.returnType)
   }
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
@@ -520,7 +502,12 @@ case class Construct2(
 case class ConstructArray2(
     arrayType: UnknownSizeArrayT2,
     sizeExpr: ReferenceExpression2,
-    call: FunctionPointerCall2) extends ReferenceExpression2 {
+    generator: ReferenceExpression2) extends ReferenceExpression2 {
+  generator.referend match {
+    case InterfaceRef2(FullName2(List(NamePart2("IFunction", Some(List(CoordTemplata(Coord(Share, Int2())), _)))))) =>
+    case _ => vfail("Generator has to be an IFunction<Int, T>")
+  }
+
   override def resultRegister: ReferenceRegister2 = {
     ReferenceRegister2(
       Coord(
@@ -529,7 +516,7 @@ case class ConstructArray2(
   }
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
-    List(this).collect(func) ++ arrayType.all(func) ++ sizeExpr.all(func) ++ call.all(func)
+    List(this).collect(func) ++ arrayType.all(func) ++ sizeExpr.all(func) ++ generator.all(func)
   }
 }
 
@@ -540,11 +527,11 @@ case class ConstructArray2(
 case class DestroyArraySequence2(
     arrayExpr: ReferenceExpression2,
     arrayType: ArraySequenceT2,
-    call: FunctionPointerCall2) extends ReferenceExpression2 {
+    consumer: ReferenceExpression2) extends ReferenceExpression2 {
   override def resultRegister: ReferenceRegister2 = ReferenceRegister2(Coord(Raw, Void2()))
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
-    List(this).collect(func) ++ arrayType.all(func) ++ arrayExpr.all(func) ++ call.all(func)
+    List(this).collect(func) ++ arrayType.all(func) ++ arrayExpr.all(func) ++ consumer.all(func)
   }
 }
 

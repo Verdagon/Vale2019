@@ -160,13 +160,13 @@ object Roguelike {
 //        |    else { "." }
 //        |}
 //        |
-//        |struct Lam3 {
+//        |struct LamH {
 //        |  board: &Array:(mut, Array<mut, Str>);
 //        |  playerRow: Int;
 //        |  playerCol: Int;
 //        |}
-//        |impl Lam3 for IFunction1<mut, Int, Bool>;
-//        |fn __call(this: &Lam3 for IFunction1<mut, Int, Bool>, rowI: Int) Bool {
+//        |impl LamH for IFunction1<mut, Int, Bool>;
+//        |fn __call(this: &LamH for IFunction1<mut, Int, Bool>, rowI: Int) Bool {
 //        |  board = this.board;
 //        |  row = board.(rowI);
 //        |  lam4 = Lam4(rowI, row, this.playerRow, this.playerCol);
@@ -203,8 +203,8 @@ object Roguelike {
 //        |
 //        |  g! = true;
 //        |  while (running) {
-//        |    lam3 = Lam3(&board, playerRow, playerCol);
-//        |    Array<mut>(10, &lam3);
+//        |    lamH = LamH(&board, playerRow, playerCol);
+//        |    Array<mut>(10, &lamH);
 //        |
 //        |    key = __getch();
 //        |    println(key);

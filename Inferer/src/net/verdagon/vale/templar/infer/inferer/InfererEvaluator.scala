@@ -784,10 +784,10 @@ class InfererEvaluator[Env, State](
           case (InferEvaluateSuccess(rightTemplata, rightDeeplySatisfied)) => {
             // Left is unknown, but right is known. Use the thing from the right
             // and match it against the left.
-            val maybeResult3 =
+            val maybeResultH =
               makeMatcher().matchTemplataAgainstRulexTR(
                 env, state, inferences, rightTemplata, leftRule)
-            maybeResult3 match {
+            maybeResultH match {
               case imc @ InferMatchConflict(_, _, _) => {
                 // None from the match means something conflicted, bail!
                 return (InferEvaluateConflict(inferences.inferences, "Failed to match known right against unknown left!", List(imc)))
@@ -813,10 +813,10 @@ class InfererEvaluator[Env, State](
 
             // Right is unknown, but left is known. Use the thing from the left
             // and match it against the right.
-            val maybeInferences3 =
+            val maybeInferencesH =
               makeMatcher().matchTemplataAgainstRulexTR(
                 env, state, inferences, leftTemplata, rightRule)
-            maybeInferences3 match {
+            maybeInferencesH match {
               case imc @ InferMatchConflict(_, _, _) => {
                 // None from the match means something conflicted, bail!
                 return (InferEvaluateConflict(inferences.inferences, "Failed to match known left against unknown right!", List(imc)))

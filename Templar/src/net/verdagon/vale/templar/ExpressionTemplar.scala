@@ -531,17 +531,11 @@ object ExpressionTemplar {
         val (generatorExpr2, returnsFromGenerator) =
           evaluateAndCoerceToReferenceExpression(temputs, fate, generatorExpr1);
 
-        // Now, pretend we're calling it with an integer.
-        // That zero should be replaced by an index in later stages.
-        val (callExpr2) =
-          CallTemplar.evaluatePrefixCall(
-            temputs,
-            fate,
-            generatorExpr2,
-            List(),
-            Placeholder2(Coord(Share, Int2())))
-
-        val memberType2 = callExpr2.resultRegister.reference
+        val memberType2 =
+          generatorExpr2.referend match {
+            case InterfaceRef2(FullName2(List(NamePart2("IFunction", Some(List(CoordTemplata(Coord(Share, Int2())), CoordTemplata(element))))))) => element
+            case _ => vwat()
+          }
 
         val isConvertible =
           TemplataTemplar.isTypeTriviallyConvertible(temputs, memberType2, elementCoord)
@@ -562,7 +556,7 @@ object ExpressionTemplar {
           ConstructArray2(
             arrayType,
             sizeRefExpr2,
-            callExpr2)
+            generatorExpr2)
         (constructExpr2, returnsFromSize ++ returnsFromGenerator)
       }
       case LetAE(_, rulesA, typeByRune, pattern, sourceExpr1) => {
@@ -806,7 +800,7 @@ object ExpressionTemplar {
       case Float2() => Share
       case Str2() => Share
       case Void2() => Raw
-      case FunctionT2(_, _) => Raw
+//      case FunctionT2(_, _) => Raw
       case PackT2(_, understruct2) => {
         val mutability = Templar.getMutability(temputs, understruct2)
         if (mutability == Mutable) Borrow else Share

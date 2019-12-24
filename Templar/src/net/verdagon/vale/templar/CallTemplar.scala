@@ -8,7 +8,7 @@ import net.verdagon.vale.templar.ExpressionTemplar.makeTemporaryLocal
 import net.verdagon.vale.templar.OverloadTemplar.{ScoutExpectedFunctionFailure, ScoutExpectedFunctionSuccess}
 import net.verdagon.vale.templar.env.{FunctionEnvironment, FunctionEnvironmentBox, IEnvironment}
 import net.verdagon.vale.templar.function.FunctionTemplar
-import net.verdagon.vale.{vassert, vfail}
+import net.verdagon.vale.{vassert, vcurious, vfail}
 
 import scala.collection.immutable.List
 
@@ -65,29 +65,31 @@ object CallTemplar {
           }
         val argsExprs2 =
           TypeTemplar.convertExprs(
-            fate.snapshot, temputs, givenArgsExprs2, prototype.functionType.paramTypes)
+            fate.snapshot, temputs, givenArgsExprs2, prototype.paramTypes)
 
         CallTemplar.checkTypes(
           temputs,
-          prototype.functionType.paramTypes,
+          prototype.paramTypes,
           argsExprs2.map(a => a.resultRegister.reference),
           exact = true)
 
-        (FunctionPointerCall2(FunctionLookup2(prototype), argsExprs2))
+        (FunctionPointerCall2(prototype, argsExprs2))
       }
-      case ft @ FunctionT2(_, _) => {
-        val argsExprs2 =
-          TypeTemplar.convertExprs(
-            fate.snapshot, temputs, givenArgsExprs2, ft.paramTypes)
-
-        val argsPointerTypes2 = argsExprs2.map(_.resultRegister.expectReference().reference)
-
-        val callableType = callableExpr.resultRegister.reference.referend.asInstanceOf[FunctionT2]
-
-        checkTypes(temputs, callableType.paramTypes, argsPointerTypes2, exact = true);
-
-        (FunctionPointerCall2(callableExpr, argsExprs2))
-      }
+//      case ft @ FunctionT2(_, _) => {
+//        vcurious() // do we ever use this? do we ever deal with function pointers?
+//
+//        val argsExprs2 =
+//          TypeTemplar.convertExprs(
+//            fate.snapshot, temputs, givenArgsExprs2, ft.paramTypes)
+//
+//        val argsPointerTypes2 = argsExprs2.map(_.resultRegister.expectReference().reference)
+//
+//        val callableType = callableExpr.resultRegister.reference.referend.asInstanceOf[FunctionT2]
+//
+//        checkTypes(temputs, callableType.paramTypes, argsPointerTypes2, exact = true);
+//
+//        (FunctionPointerCall2(callableExpr, argsExprs2))
+//      }
     }
   }
 
@@ -125,15 +127,15 @@ object CallTemplar {
       }
     val argsExprs2 =
       TypeTemplar.convertExprs(
-        fate, temputs, givenArgsExprs2, prototype.functionType.paramTypes)
+        fate, temputs, givenArgsExprs2, prototype.paramTypes)
 
     CallTemplar.checkTypes(
       temputs,
-      prototype.functionType.paramTypes,
+      prototype.paramTypes,
       argsExprs2.map(a => a.resultRegister.reference),
       exact = true)
 
-    (FunctionPointerCall2(FunctionLookup2(prototype), argsExprs2))
+    (FunctionPointerCall2(prototype, argsExprs2))
   }
 
 
@@ -214,13 +216,13 @@ object CallTemplar {
     val actualArgsExprs2 = actualCallableExpr2 :: givenArgsExprs2
 
     val argTypes = actualArgsExprs2.map(_.resultRegister.reference)
-    if (argTypes != prototype2.functionType.paramTypes) {
-      vfail("arg param type mismatch. params: " + prototype2.functionType.paramTypes + " args: " + argTypes)
+    if (argTypes != prototype2.paramTypes) {
+      vfail("arg param type mismatch. params: " + prototype2.paramTypes + " args: " + argTypes)
     }
 
-    CallTemplar.checkTypes(temputs, prototype2.functionType.paramTypes, argTypes, exact = true)
+    CallTemplar.checkTypes(temputs, prototype2.paramTypes, argTypes, exact = true)
 
-    val resultingExpr2 = FunctionPointerCall2(FunctionLookup2(prototype2), actualArgsExprs2);
+    val resultingExpr2 = FunctionPointerCall2(prototype2, actualArgsExprs2);
 
     (resultingExpr2)
   }

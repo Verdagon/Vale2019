@@ -25,7 +25,7 @@ case class LocalMutateSE(name: String, expr: IExpressionSE) extends IExpressionS
 case class ExpressionLendSE(innerExpr1: IExpressionSE) extends IExpressionSE
 
 
-//case class CurriedFunc3(closureExpr: Expression3, funcName: String) extends Expression3
+//case class CurriedFuncH(closureExpr: ExpressionH, funcName: String) extends ExpressionH
 
 // when we make a closure, we make a struct full of pointers to all our variables
 // and the first element is our parent closure

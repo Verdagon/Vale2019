@@ -188,7 +188,6 @@ object FunctionTemplarCore {
         List(),
         Block2(List(InterfaceFunctionCall2(
           header.toBanner,
-          Coord(Raw, header.toPrototype.functionType),
           header.returnType,
           header.params.zipWithIndex.map({ case (param2, index) => ArgLookup2(index, param2.tyype) })))))
 
@@ -272,7 +271,7 @@ object FunctionTemplarCore {
         Block2(
           List(
             FunctionPointerCall2(
-              FunctionLookup2(structDestructor),
+              structDestructor,
               List(ArgLookup2(0, structType2))))))
 
     // If this fails, then the signature the FunctionTemplarMiddleLayer made for us doesn't

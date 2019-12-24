@@ -15,27 +15,27 @@ class VivemTests extends FunSuite with Matchers {
   test("Adding") {
 
     val main =
-      Function3(
-        Prototype3(0,FullName3(List(NamePart3("main", Some(List())))),List(),Reference3(Share,Int3())),
+      FunctionH(
+        PrototypeH(0,FullNameH(List(NamePartH("main", Some(List())))),List(),ReferenceH(Share,IntH())),
         false,
         false,
         true,
-        Block3(
+        BlockH(
           Vector(
-            ConstantI643("0",52),
-            ConstantI643("1",53),
-            ExternCall3("2", FunctionRef3(Prototype3(1000,FullName3(List(NamePart3("__addIntInt", Some(List())))),List(Reference3(Share,Int3()), Reference3(Share,Int3())),Reference3(Share,Int3()))), List(RegisterAccess3("0",Reference3(Share,Int3())), RegisterAccess3("1",Reference3(Share,Int3())))),
-            ConstantI643("3",54),
-            ExternCall3("4", FunctionRef3(Prototype3(1000,FullName3(List(NamePart3("__addIntInt", Some(List())))),List(Reference3(Share,Int3()), Reference3(Share,Int3())),Reference3(Share,Int3()))), List(RegisterAccess3("2",Reference3(Share,Int3())), RegisterAccess3("3",Reference3(Share,Int3())))),
-            ConstantI643("5",55),
-            ExternCall3("6", FunctionRef3(Prototype3(1000,FullName3(List(NamePart3("__addIntInt", Some(List())))),List(Reference3(Share,Int3()), Reference3(Share,Int3())),Reference3(Share,Int3()))), List(RegisterAccess3("4",Reference3(Share,Int3())), RegisterAccess3("5",Reference3(Share,Int3())))),
-            ConstantI643("7",56),
-            ExternCall3("8", FunctionRef3(Prototype3(1000,FullName3(List(NamePart3("__addIntInt", Some(List())))),List(Reference3(Share,Int3()), Reference3(Share,Int3())),Reference3(Share,Int3()))), List(RegisterAccess3("6",Reference3(Share,Int3())), RegisterAccess3("7",Reference3(Share,Int3()))))),
-          Reference3(Share,Int3())))
-    val program3 =
-      Program3(List(), List(), StructRef3(0,FullName3(List(NamePart3("__Pack", Some(List()))))), List(), List(main))
+            ConstantI64H("0",52),
+            ConstantI64H("1",53),
+            ExternCallH("2", FunctionRefH(PrototypeH(1000,FullNameH(List(NamePartH("__addIntInt", Some(List())))),List(ReferenceH(Share,IntH()), ReferenceH(Share,IntH())),ReferenceH(Share,IntH()))), List(RegisterAccessH("0",ReferenceH(Share,IntH())), RegisterAccessH("1",ReferenceH(Share,IntH())))),
+            ConstantI64H("3",54),
+            ExternCallH("4", FunctionRefH(PrototypeH(1000,FullNameH(List(NamePartH("__addIntInt", Some(List())))),List(ReferenceH(Share,IntH()), ReferenceH(Share,IntH())),ReferenceH(Share,IntH()))), List(RegisterAccessH("2",ReferenceH(Share,IntH())), RegisterAccessH("3",ReferenceH(Share,IntH())))),
+            ConstantI64H("5",55),
+            ExternCallH("6", FunctionRefH(PrototypeH(1000,FullNameH(List(NamePartH("__addIntInt", Some(List())))),List(ReferenceH(Share,IntH()), ReferenceH(Share,IntH())),ReferenceH(Share,IntH()))), List(RegisterAccessH("4",ReferenceH(Share,IntH())), RegisterAccessH("5",ReferenceH(Share,IntH())))),
+            ConstantI64H("7",56),
+            ExternCallH("8", FunctionRefH(PrototypeH(1000,FullNameH(List(NamePartH("__addIntInt", Some(List())))),List(ReferenceH(Share,IntH()), ReferenceH(Share,IntH())),ReferenceH(Share,IntH()))), List(RegisterAccessH("6",ReferenceH(Share,IntH())), RegisterAccessH("7",ReferenceH(Share,IntH()))))),
+          ReferenceH(Share,IntH())))
+    val programH =
+      ProgramH(List(), List(), StructRefH(0,FullNameH(List(NamePartH("__Pack", Some(List()))))), List(), List(main))
     val result =
-      Vivem.executeWithPrimitiveArgs(program3, Vector(), System.out, Vivem.emptyStdin, Vivem.nullStdout)
+      Vivem.executeWithPrimitiveArgs(programH, Vector(), System.out, Vivem.emptyStdin, Vivem.nullStdout)
     result shouldEqual Some(VonInt(270))
   }
 }

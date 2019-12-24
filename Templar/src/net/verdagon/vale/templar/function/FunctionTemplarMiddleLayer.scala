@@ -157,7 +157,7 @@ object FunctionTemplarMiddleLayer {
     val needleSignature = Signature2(innerEnv.fullName, paramTypes2)
     temputs.returnTypesBySignature.get(needleSignature) match {
       case Some(returnType2) => {
-        (Prototype2(innerEnv.fullName, FunctionT2(paramTypes2, returnType2)))
+        (Prototype2(innerEnv.fullName, paramTypes2, returnType2))
       }
       case None => {
         if (temputs.exactDeclaredSignatureExists(needleSignature)) {

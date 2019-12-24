@@ -2,7 +2,7 @@ package net.verdagon.vale.vivem
 
 import java.io.PrintStream
 
-import net.verdagon.vale.hammer.{Program3, Void3}
+import net.verdagon.vale.hammer.{ProgramH, VoidH}
 import net.verdagon.vale.templar.types.Share
 import net.verdagon.vale.{vassert, vfail}
 import net.verdagon.von.IVonData
@@ -11,7 +11,7 @@ case class PanicException() extends Throwable
 
 object Vivem {
   def executeWithPrimitiveArgs(
-      program3: Program3,
+      programH: ProgramH,
       externalArgumentReferends: Vector[PrimitiveReferendV],
       vivemDout: PrintStream,
       stdin: () => String,
@@ -21,11 +21,11 @@ object Vivem {
       externalArgumentReferends.map(argReferend => {
         heap.add(Share, argReferend);
       });
-    innerExecute(program3, argReferences, heap, vivemDout, stdin, stdout)
+    innerExecute(programH, argReferences, heap, vivemDout, stdin, stdout)
   }
 
   def executeWithHeap(
-      program3: Program3,
+      programH: ProgramH,
       inputHeap: Heap,
       inputArgumentReferences: Vector[ReferenceV],
       vivemDout: PrintStream,
@@ -33,7 +33,7 @@ object Vivem {
       stdout: String => Unit):
   Option[IVonData] = {
     vassert(inputHeap.countUnreachableAllocations(inputArgumentReferences) == 0)
-    innerExecute(program3, inputArgumentReferences, inputHeap, vivemDout, stdin, stdout)
+    innerExecute(programH, inputArgumentReferences, inputHeap, vivemDout, stdin, stdout)
   }
 
   def emptyStdin() = {
@@ -64,13 +64,13 @@ object Vivem {
   }
 
   def innerExecute(
-      program3: Program3,
+      programH: ProgramH,
       argumentReferences: Vector[ReferenceV],
       heap: Heap,
       vivemDout: PrintStream,
       stdin: () => String,
       stdout: String => Unit): Option[IVonData] = {
-    val main = program3.main
+    val main = programH.main
 
     val callId = CallId(0, main)
     val blockId = BlockId(callId, 0)
@@ -79,11 +79,11 @@ object Vivem {
     vivemDout.println()
 
     val maybeReturnRef =
-      FunctionVivem.executeFunction(program3, stdin, stdout, heap, argumentReferences, main)
+      FunctionVivem.executeFunction(programH, stdin, stdout, heap, argumentReferences, main)
 
     vivemDout.print("Ending program")
     (main.prototype.returnType.kind, maybeReturnRef) match {
-      case (Void3(), None) => {
+      case (VoidH(), None) => {
         vivemDout.println()
         println("Checking for leaks")
         heap.checkForLeaks()
@@ -96,7 +96,7 @@ object Vivem {
           returnRef.reference)
         val von = heap.toVon(returnRef.reference)
         ExpressionVivem.dropReferenceIfNonOwning(
-          program3, heap, stdout, stdin, blockId, returnRef.reference)
+          programH, heap, stdout, stdin, blockId, returnRef.reference)
         vivemDout.println()
         println("Checking for leaks")
         heap.checkForLeaks()

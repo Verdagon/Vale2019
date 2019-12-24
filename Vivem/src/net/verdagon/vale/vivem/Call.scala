@@ -1,6 +1,6 @@
 package net.verdagon.vale.vivem
 
-import net.verdagon.vale.hammer.{Reference3, Referend3}
+import net.verdagon.vale.hammer.{ReferenceH, ReferendH}
 import net.verdagon.vale.{vassert, vfail}
 
 import scala.collection.mutable
@@ -16,7 +16,7 @@ class Call(callId: CallId, in_args: Vector[ReferenceV]) {
   private val registersById = mutable.HashMap[RegisterId, Option[RegisterV]]()
   private val registerIdStack = mutable.Stack[RegisterId]()
 
-  def addLocal(varAddr: VariableAddressV, reference: ReferenceV, tyype: Reference3[Referend3]): Unit = {
+  def addLocal(varAddr: VariableAddressV, reference: ReferenceV, tyype: ReferenceH[ReferendH]): Unit = {
     vassert(varAddr.callId == callId)
     vassert(varAddr.local.height.localsHeight == localAddrStack.size)
     vassert(!locals.contains(varAddr))
@@ -28,7 +28,7 @@ class Call(callId: CallId, in_args: Vector[ReferenceV]) {
     locals(addr)
   }
 
-  def mutateLocal(varAddr: VariableAddressV, reference: ReferenceV, expectedType: Reference3[Referend3]): Unit = {
+  def mutateLocal(varAddr: VariableAddressV, reference: ReferenceV, expectedType: ReferenceH[ReferendH]): Unit = {
     locals(varAddr).reference = Some(reference)
   }
 

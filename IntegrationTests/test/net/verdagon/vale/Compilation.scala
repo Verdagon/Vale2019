@@ -2,7 +2,7 @@ package net.verdagon.vale
 
 import net.verdagon.vale.astronomer.{Astronomer, ProgramA}
 import net.verdagon.vale.carpenter.Carpenter
-import net.verdagon.vale.hammer.{Hammer, Program3}
+import net.verdagon.vale.hammer.{Hammer, ProgramH}
 import net.verdagon.vale.hinputs.Hinputs
 import net.verdagon.vale.parser.{Program0, VParser}
 import net.verdagon.vale.scout.{ProgramS, Scout}
@@ -16,7 +16,7 @@ class Compilation(code: String, useCommonEnv: Boolean = true) {
   var astroutsCache: Option[ProgramA] = None
   var temputsCache: Option[CompleteProgram2] = None
   var hinputsCache: Option[Hinputs] = None
-  var hamutsCache: Option[Program3] = None
+  var hamutsCache: Option[ProgramH] = None
 
   def getParsed(): Program0 = {
     parsedCache match {
@@ -84,7 +84,7 @@ class Compilation(code: String, useCommonEnv: Boolean = true) {
     }
   }
 
-  def getHamuts(): Program3 = {
+  def getHamuts(): ProgramH = {
     hamutsCache match {
       case Some(hamuts) => hamuts
       case None => {

@@ -83,7 +83,6 @@ class InfererEquator[Env, State](
       case KindTemplata(ArraySequenceT2(_, _)) =>
       case KindTemplata(PackT2(_, _)) =>
       case KindTemplata(UnknownSizeArrayT2(_)) =>
-      case KindTemplata(FunctionT2(_, _)) =>
       case KindTemplata(_) =>
       case InterfaceTemplata(_, _) =>
       case StructTemplata(_, _) =>

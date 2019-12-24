@@ -8,42 +8,42 @@ import net.verdagon.vale.{vassert, vassertSome, vfail, vimpl}
 object ExpressionVivem {
   sealed trait INodeExecuteResult
   case class NodeContinue(resultRegister: Option[RegisterId]) extends INodeExecuteResult
-  // None means Void3
+  // None means VoidH
   case class NodeReturn(returnRef: Option[ReturnV]) extends INodeExecuteResult
 
   def executeNode(
-      program3: Program3,
+      programH: ProgramH,
       stdin: (() => String),
       stdout: (String => Unit),
       heap: Heap,
       blockId: BlockId,
-      node: Node3):
+      node: NodeH):
   INodeExecuteResult = {
     val registerId = RegisterId(blockId, node.registerId)
     node match {
-      case Discard3(_, sourceRegister) => {
+      case DiscardH(_, sourceRegister) => {
         sourceRegister.expectedType.ownership match {
           case Borrow | Share => {
             val ref =
               heap.takeReferenceFromRegister(
                 RegisterId(blockId, sourceRegister.registerId),
                 sourceRegister.expectedType)
-            dropReference(program3, heap, stdout, stdin, blockId, ref)
+            dropReference(programH, heap, stdout, stdin, blockId, ref)
           }
         }
         NodeContinue(None)
       }
-      case ConstantVoid3(_) => {
+      case ConstantVoidH(_) => {
         // Do nothing, a void can never exist
         NodeContinue(None)
       }
-      case Placeholder3(_, tyype) => {
+      case PlaceholderH(_, tyype) => {
         // Do nothing, this produces nothing.
         // If anyone tries to use this, they'll find that we didn't put anything
         // in the register, and that's when there will be an error.
         NodeContinue(None)
       }
-      case Reinterpret3(_, sourceRegister, resultType) => {
+      case ReinterpretH(_, sourceRegister, resultType) => {
         val ref =
           heap.takeReferenceFromRegister(
             RegisterId(blockId, sourceRegister.registerId),
@@ -52,35 +52,35 @@ object ExpressionVivem {
         heap.setReferenceRegister(registerId, ref)
         NodeContinue(Some(registerId))
       }
-      case ConstantI643(_, value) => {
+      case ConstantI64H(_, value) => {
         heap.allocateIntoRegister(registerId, Share, IntV(value))
         NodeContinue(Some(registerId))
       }
-      case ConstantF643(_, value) => {
+      case ConstantF64H(_, value) => {
         heap.allocateIntoRegister(registerId, Share, FloatV(value))
         NodeContinue(Some(registerId))
       }
-      case ConstantStr3(_, value) => {
+      case ConstantStrH(_, value) => {
         heap.allocateIntoRegister(registerId, Share, StrV(value))
         NodeContinue(Some(registerId))
       }
-      case ConstantBool3(_, value) => {
+      case ConstantBoolH(_, value) => {
         heap.allocateIntoRegister(registerId, Share, BoolV(value))
         NodeContinue(Some(registerId))
       }
-      case Argument3(_, resultType, argumentIndex) => {
+      case ArgumentH(_, resultType, argumentIndex) => {
         heap.moveArgumentIntoRegister(registerId, argumentIndex, resultType)
         NodeContinue(Some(registerId))
       }
-      case Return3(_, sourceRegister) => {
+      case ReturnH(_, sourceRegister) => {
         heap.vivemDout.print("flort")
-        if (sourceRegister.expectedType.kind == Void3()) {
+        if (sourceRegister.expectedType.kind == VoidH()) {
           return NodeReturn(None)
         } else {
           return NodeReturn(Some(heap.returnFromRegister(RegisterId(blockId, sourceRegister.registerId), sourceRegister.expectedType)))
         }
       }
-      case CheckRefCount3(_, refRegister, category, numRegister) => {
+      case CheckRefCountH(_, refRegister, category, numRegister) => {
         val numReference = heap.takeReferenceFromRegister(RegisterId(blockId, numRegister.registerId), numRegister.expectedType)
         val refReference = heap.takeReferenceFromRegister(RegisterId(blockId, refRegister.registerId), refRegister.expectedType)
         val num =
@@ -89,10 +89,10 @@ object ExpressionVivem {
           }
         heap.ensureRefCount(refReference, category, num)
 
-        dropReferenceIfNonOwning(program3, heap, stdout, stdin, blockId, numReference)
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, blockId, numReference)
         NodeContinue(None)
       }
-//      case SoftLoad3(_, sourceRegister, targetOwnership) => {
+//      case SoftLoadH(_, sourceRegister, targetOwnership) => {
 //        val sourceRegisterId = RegisterId(blockId, sourceRegister.registerId)
 //        val address = heap.takeAddressFromRegister(sourceRegisterId, sourceRegister.expectedType)
 //        heap.vivemDout.print(" *")
@@ -110,8 +110,8 @@ object ExpressionVivem {
 //        }
 //        heap.maybeDeallocateAddressRegister(sourceRegisterId, address)
 //      }
-      case InlineBlock3(_, block3) => {
-        BlockVivem.executeBlock(program3, stdin, stdout, heap, blockId.callId, block3) match {
+      case InlineBlockH(_, blockH) => {
+        BlockVivem.executeBlock(programH, stdin, stdout, heap, blockId.callId, blockH) match {
           case BlockReturn(returnRef) => NodeReturn(returnRef)
           case BlockContinue(None) => NodeContinue(None)
           case BlockContinue(Some(resultRef)) => {
@@ -120,7 +120,7 @@ object ExpressionVivem {
           }
         }
       }
-      case Destructure3(_, structRegister, localTypes, locals) => {
+      case DestructureH(_, structRegister, localTypes, locals) => {
         val structReference = heap.takeReferenceFromRegister(RegisterId(blockId, structRegister.registerId), structRegister.expectedType)
         heap.ensureTotalRefCount(structReference, 0)
 
@@ -134,28 +134,28 @@ object ExpressionVivem {
         })
         NodeContinue(None)
       }
-      case ArrayLength3(_, arrayRegister) => {
+      case ArrayLengthH(_, arrayRegister) => {
         val arrayReference = heap.takeReferenceFromRegister(RegisterId(blockId, arrayRegister.registerId), arrayRegister.expectedType)
         val arr @ ArrayInstanceV(_, _, _, _) = heap.dereference(arrayReference)
 
         heap.allocateIntoRegister(registerId, Share, IntV(arr.getSize()))
         NodeContinue(Some(registerId))
       }
-      case Stackify3(_, sourceRegister, localIndex, name) => {
+      case StackifyH(_, sourceRegister, localIndex, name) => {
         val reference = heap.takeReferenceFromRegister(RegisterId(blockId, sourceRegister.registerId), sourceRegister.expectedType)
         val varAddr = heap.getVarAddress(blockId.callId, localIndex)
         heap.addLocal(varAddr, reference, sourceRegister.expectedType)
         heap.vivemDout.print(" v" + varAddr + "<-o" + reference.num)
         NodeContinue(None)
       }
-//      case LocalLookup3(_, localIndex, expectedType, name) => {
+//      case LocalLookupH(_, localIndex, expectedType, name) => {
 //        // Check that its there
 //        heap.getReferenceFromLocal(VariableAddressV(callId, localIndex), expectedType)
 //
 //        heap.setVariableAddressRegister(registerId, VariableAddressV(callId, localIndex))
 //      }
 
-      case LocalStore3(_, localIndex, sourceRegister, name) => {
+      case LocalStoreH(_, localIndex, sourceRegister, name) => {
         val varAddress = heap.getVarAddress(blockId.callId, localIndex)
         val reference = heap.takeReferenceFromRegister(RegisterId(blockId, sourceRegister.registerId), sourceRegister.expectedType)
         heap.vivemDout.print(" " + varAddress + "(\"" + name + "\")")
@@ -165,7 +165,7 @@ object ExpressionVivem {
         NodeContinue(Some(registerId))
       }
 
-      case MemberStore3(_, structRegister, memberIndex, sourceRegister, memberName) => {
+      case MemberStoreH(_, structRegister, memberIndex, sourceRegister, memberName) => {
         val structReference = heap.takeReferenceFromRegister(RegisterId(blockId, structRegister.registerId), structRegister.expectedType)
         val address = MemberAddressV(structReference.allocId, memberIndex)
         val reference = heap.takeReferenceFromRegister(RegisterId(blockId, sourceRegister.registerId), sourceRegister.expectedType)
@@ -176,7 +176,7 @@ object ExpressionVivem {
         NodeContinue(Some(registerId))
       }
 
-      case UnknownSizeArrayStore3(_, structRegister, indexRegister, sourceRegister) => {
+      case UnknownSizeArrayStoreH(_, structRegister, indexRegister, sourceRegister) => {
         val indexReference = heap.takeReferenceFromRegister(RegisterId(blockId, indexRegister.registerId), indexRegister.expectedType)
         val arrayReference = heap.takeReferenceFromRegister(RegisterId(blockId, structRegister.registerId), structRegister.expectedType)
         val IntV(elementIndex) = heap.dereference(indexReference)
@@ -188,11 +188,11 @@ object ExpressionVivem {
         val oldMemberReference = heap.mutateArray(address, reference, sourceRegister.expectedType)
         heap.setReferenceRegister(registerId, oldMemberReference)
 
-        dropReferenceIfNonOwning(program3, heap, stdout, stdin, blockId, indexReference)
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, blockId, indexReference)
         NodeContinue(Some(registerId))
       }
 
-      case KnownSizeArrayStore3(_, structRegister, indexRegister, sourceRegister) => {
+      case KnownSizeArrayStoreH(_, structRegister, indexRegister, sourceRegister) => {
         val indexReference = heap.takeReferenceFromRegister(RegisterId(blockId, indexRegister.registerId), indexRegister.expectedType)
         val arrayReference = heap.takeReferenceFromRegister(RegisterId(blockId, structRegister.registerId), structRegister.expectedType)
         val IntV(elementIndex) = heap.dereference(indexReference)
@@ -206,7 +206,7 @@ object ExpressionVivem {
         NodeContinue(Some(registerId))
       }
 
-      case LocalLoad3(_, localIndex, targetOwnership, expectedLocalType, expectedResultType, name) => {
+      case LocalLoadH(_, localIndex, targetOwnership, expectedLocalType, expectedResultType, name) => {
         vassert(targetOwnership != Own) // should have been Unstackified instead
         val varAddress = heap.getVarAddress(blockId.callId, localIndex)
         val reference = heap.getReferenceFromLocal(varAddress, expectedLocalType)
@@ -219,7 +219,7 @@ object ExpressionVivem {
         NodeContinue(Some(registerId))
       }
 
-      case Unstackify3(_, localIndex, expectedType) => {
+      case UnstackifyH(_, localIndex, expectedType) => {
         val varAddress = heap.getVarAddress(blockId.callId, localIndex)
         val reference = heap.getReferenceFromLocal(varAddress, expectedType)
         heap.vivemDout.print(" ^" + varAddress)
@@ -227,47 +227,47 @@ object ExpressionVivem {
         heap.removeLocal(varAddress, expectedType)
         NodeContinue(Some(registerId))
       }
-      case LoadFunction3(_, functionRef3) => {
-        val function3 =
-          program3.functions.find(_.prototype.functionId == functionRef3.prototype.functionId) match {
+      case LoadFunctionH(_, functionRefH) => {
+        val functionH =
+          programH.functions.find(_.prototype.functionId == functionRefH.prototype.functionId) match {
             case None => {
-              program3.externFunctions.find(_.prototype.functionId == functionRef3.prototype.functionId) match {
+              programH.externFunctions.find(_.prototype.functionId == functionRefH.prototype.functionId) match {
                 case Some(f) => f
                 case None => vfail("Function not found!")
               }
             }
             case Some(f) => f
           }
-        vassert(function3.prototype.functionType == functionRef3.functionType)
-        heap.allocateIntoRegister(registerId, Raw, FunctionReferendV(function3))
+        vassert(functionH.prototype.functionType == functionRefH.functionType)
+        heap.allocateIntoRegister(registerId, Raw, FunctionReferendV(functionH))
         NodeContinue(Some(registerId))
       }
-      case ExternCall3(_, functionRef3, argsRegisters) => {
-        val externFunction = FunctionVivem.getExternFunction(program3, functionRef3)
+      case ExternCallH(_, functionRefH, argsRegisters) => {
+        val externFunction = FunctionVivem.getExternFunction(programH, functionRefH)
         val argReferences =
           heap.takeReferencesFromRegistersInReverse(blockId, argsRegisters)
 
         val maybeResultReference =
           externFunction(
             new AdapterForExterns(
-              program3, heap, blockId, stdin, stdout,
+              programH, heap, blockId, stdin, stdout,
               (reference) => {
-                dropReferenceIfNonOwning(program3, heap, stdout, stdin, blockId, reference)
+                dropReferenceIfNonOwning(programH, heap, stdout, stdin, blockId, reference)
               }),
             argReferences.toVector)
 
         // Special case for externs; externs arent allowed to change ref counts at all
 //        argReferences.foreach(heap.maybeDeallocate)
 
-        (functionRef3.functionType.returnType.kind, maybeResultReference) match {
-          case (Void3(), None) => NodeContinue(None)
+        (functionRefH.functionType.returnType.kind, maybeResultReference) match {
+          case (VoidH(), None) => NodeContinue(None)
           case (_, Some(resultReference)) => {
             heap.setReferenceRegisterFromReturn(registerId, resultReference)
             NodeContinue(Some(registerId))
           }
         }
       }
-      case Call3(_, functionRegister, argsRegisters) => {
+      case CallH(_, functionRegister, argsRegisters) => {
         val (functionRef, function) =
           heap.takeFunctionReferenceFromRegister(RegisterId(blockId, functionRegister.registerId), functionRegister.expectedType.kind)
         val argReferences = heap.takeReferencesFromRegistersInReverse(blockId, argsRegisters)
@@ -276,27 +276,27 @@ object ExpressionVivem {
 
         val maybeReturnReference =
           FunctionVivem.executeFunction(
-            program3, stdin, stdout, heap, argReferences.toVector, function)
+            programH, stdin, stdout, heap, argReferences.toVector, function)
         heap.vivemDout.print("  " * blockId.blockHeight + "Getting return reference")
         (function.prototype.returnType.kind, maybeReturnReference) match {
-          case (Void3(), None) => NodeContinue(None)
+          case (VoidH(), None) => NodeContinue(None)
           case (_, Some(returnReference)) => {
             heap.setReferenceRegisterFromReturn(registerId, returnReference)
             NodeContinue(Some(registerId))
           }
         }
       }
-      case NewStruct3(_, sourceLines, structRef3) => {
-        val structDef3 = program3.structs.find(_.getRef == structRef3.kind).get
+      case NewStructH(_, sourceLines, structRefH) => {
+        val structDefH = programH.structs.find(_.getRef == structRefH.kind).get
 
         val memberReferences =
           heap.takeReferencesFromRegistersInReverse(blockId, sourceLines)
 
-        val reference = heap.newStruct(registerId, structDef3, structRef3, memberReferences)
+        val reference = heap.newStruct(registerId, structDefH, structRefH, memberReferences)
         heap.setReferenceRegister(registerId, reference)
         NodeContinue(Some(registerId))
       }
-      case NewArrayFromValues3(_, sourceRegisters, arrayRefType) => {
+      case NewArrayFromValuesH(_, sourceRegisters, arrayRefType) => {
         val refs = heap.takeReferencesFromRegistersInReverse(blockId, sourceRegisters)
 
         val (arrayReference, arrayInstance) =
@@ -308,7 +308,7 @@ object ExpressionVivem {
         NodeContinue(Some(registerId))
       }
 
-      case MemberLoad3(_, structRegister, memberIndex, targetOwnership, expectedMemberType, expectedResultType, memberName) => {
+      case MemberLoadH(_, structRegister, memberIndex, targetOwnership, expectedMemberType, expectedResultType, memberName) => {
         val structReference = heap.takeReferenceFromRegister(RegisterId(blockId, structRegister.registerId), structRegister.expectedType)
 
         val address = MemberAddressV(structReference.allocId, memberIndex)
@@ -322,14 +322,14 @@ object ExpressionVivem {
           expectedMemberType,
           targetOwnership)
 
-        dropReferenceIfNonOwning(program3, heap, stdout, stdin, blockId, structReference)
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, blockId, structReference)
         NodeContinue(Some(registerId))
       }
 
-      case UnknownSizeArrayLoad3(_, arrayRegister, indexRegister, resultType, targetOwnership) => {
+      case UnknownSizeArrayLoadH(_, arrayRegister, indexRegister, resultType, targetOwnership) => {
         val indexIntReference =
           heap.takeReferenceFromRegister(
-            RegisterId(blockId, indexRegister.registerId), Reference3(Share, Int3()))
+            RegisterId(blockId, indexRegister.registerId), ReferenceH(Share, IntH()))
         val arrayReference =
           heap.takeReferenceFromRegister(
             RegisterId(blockId, arrayRegister.registerId), arrayRegister.expectedType)
@@ -352,15 +352,15 @@ object ExpressionVivem {
             targetOwnership)
         }
 
-        dropReferenceIfNonOwning(program3, heap, stdout, stdin, blockId, indexIntReference)
-        dropReferenceIfNonOwning(program3, heap, stdout, stdin, blockId, arrayReference)
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, blockId, indexIntReference)
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, blockId, arrayReference)
         NodeContinue(Some(registerId))
       }
 
-      case KnownSizeArrayLoad3(_, arrayRegister, indexRegister, resultType, targetOwnership) => {
+      case KnownSizeArrayLoadH(_, arrayRegister, indexRegister, resultType, targetOwnership) => {
         val indexIntReference =
           heap.takeReferenceFromRegister(
-            RegisterId(blockId, indexRegister.registerId), Reference3(Share, Int3()))
+            RegisterId(blockId, indexRegister.registerId), ReferenceH(Share, IntH()))
         val arrayReference =
           heap.takeReferenceFromRegister(
             RegisterId(blockId, arrayRegister.registerId), arrayRegister.expectedType)
@@ -383,11 +383,11 @@ object ExpressionVivem {
             targetOwnership)
         }
 
-        dropReferenceIfNonOwning(program3, heap, stdout, stdin, blockId, indexIntReference)
-        dropReferenceIfNonOwning(program3, heap, stdout, stdin, blockId, arrayReference)
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, blockId, indexIntReference)
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, blockId, arrayReference)
         NodeContinue(Some(registerId))
       }
-      case siu @ StructToInterfaceUpcast3(_, sourceRegister, targetInterfaceRef) => {
+      case siu @ StructToInterfaceUpcastH(_, sourceRegister, targetInterfaceRef) => {
         val sourceReference = heap.takeReferenceFromRegister(RegisterId(blockId, sourceRegister.registerId), sourceRegister.expectedType);
         val ownership = sourceReference.ownership
 
@@ -401,31 +401,31 @@ object ExpressionVivem {
         heap.aliasIntoRegister(registerId, targetReference, siu.resultRef, ownership)
         NodeContinue(Some(registerId))
       }
-      case ic3 @ InterfaceCall3(_, argsRegisters, virtualParamIndex, interfaceRef3, interfaceId, indexInEdge, functionType) => {
+      case icH @ InterfaceCallH(_, argsRegisters, virtualParamIndex, interfaceRefH, interfaceId, indexInEdge, functionType) => {
         // undeviewed = not deviewed = the virtual param is still a view and we want it to
         // be a struct.
         val undeviewedArgReferences = heap.takeReferencesFromRegistersInReverse(blockId, argsRegisters)
 
         val interfaceReference = undeviewedArgReferences(virtualParamIndex)
 
-        val StructInstanceV(struct3, _) = heap.dereference(interfaceReference)
+        val StructInstanceV(structH, _) = heap.dereference(interfaceReference)
 
-        val edge = struct3.edges.find(_.interface == interfaceRef3).get
+        val edge = structH.edges.find(_.interface == interfaceRefH).get
 
         val ReferenceV(actualStruct, actualInterfaceKind, actualOwnership, allocNum) = interfaceReference
-        vassert(actualInterfaceKind.hamut == interfaceRef3)
+        vassert(actualInterfaceKind.hamut == interfaceRefH)
         val structReference = ReferenceV(actualStruct, actualStruct, actualOwnership, allocNum)
 
-        val prototype3 = edge.structPrototypesByInterfacePrototype.values.toList(indexInEdge)
-        val function3 = program3.functions.find(_.prototype == prototype3).get;
+        val prototypeH = edge.structPrototypesByInterfacePrototype.values.toList(indexInEdge)
+        val functionH = programH.functions.find(_.prototype == prototypeH).get;
 
-        val actualFunctionType3 = function3.prototype.functionType
-        val expectedFunctionType3 = functionType
-        // We would compare function3.type to functionType directly, but
-        // function3.type expects a struct and prototype3 expects an interface.
+        val actualFunctionTypeH = functionH.prototype.functionType
+        val expectedFunctionTypeH = functionType
+        // We would compare functionH.type to functionType directly, but
+        // functionH.type expects a struct and prototypeH expects an interface.
 
         // First, check that all the other params are correct.
-        undeviewedArgReferences.zipWithIndex.zip(actualFunctionType3.paramTypes).zip(expectedFunctionType3.paramTypes).foreach({
+        undeviewedArgReferences.zipWithIndex.zip(actualFunctionTypeH.paramTypes).zip(expectedFunctionTypeH.paramTypes).foreach({
           case (((argReference, index), actualFunctionParamType), expectedFunctionParamType) => {
             // Skip the interface line for now, we check it below
             if (index != virtualParamIndex) {
@@ -442,34 +442,34 @@ object ExpressionVivem {
         heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (icall)")
         val maybeReturnReference =
           FunctionVivem.executeFunction(
-            program3,
+            programH,
             stdin,
             stdout,
             heap,
             deviewedArgReferences.toVector,
-            function3)
-        (function3.prototype.returnType.kind, maybeReturnReference) match {
-          case (Void3(), None) => NodeContinue(None)
+            functionH)
+        (functionH.prototype.returnType.kind, maybeReturnReference) match {
+          case (VoidH(), None) => NodeContinue(None)
           case (_, Some(returnReference)) => {
             heap.setReferenceRegisterFromReturn(registerId, returnReference)
             NodeContinue(Some(registerId))
           }
         }
       }
-      case If3(_, conditionBlock, thenBlock, elseBlock) => {
-        val conditionBlockResult = BlockVivem.executeBlock(program3, stdin, stdout, heap, blockId.callId, conditionBlock)
+      case IfH(_, conditionBlock, thenBlock, elseBlock) => {
+        val conditionBlockResult = BlockVivem.executeBlock(programH, stdin, stdout, heap, blockId.callId, conditionBlock)
         val BlockContinue(Some(returnV)) = conditionBlockResult
         val conditionReference = heap.getReferenceFromReturn(returnV)
         val conditionReferend = heap.dereference(conditionReference)
         val BoolV(conditionValue) = conditionReferend;
 
-        dropReferenceIfNonOwning(program3, heap, stdout, stdin, blockId, conditionReference)
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, blockId, conditionReference)
 
         val blockResult =
           if (conditionValue == true) {
-            BlockVivem.executeBlock(program3, stdin, stdout, heap, blockId.callId, thenBlock)
+            BlockVivem.executeBlock(programH, stdin, stdout, heap, blockId.callId, thenBlock)
           } else {
-            BlockVivem.executeBlock(program3, stdin, stdout, heap, blockId.callId, elseBlock)
+            BlockVivem.executeBlock(programH, stdin, stdout, heap, blockId.callId, elseBlock)
           }
         blockResult match {
           case BlockReturn(returnRef) => NodeReturn(returnRef)
@@ -480,11 +480,11 @@ object ExpressionVivem {
           }
         }
       }
-      case While3(_, bodyBlock) => {
+      case WhileH(_, bodyBlock) => {
         var continue = true
         while (continue) {
           val conditionBlockResult =
-            BlockVivem.executeBlock(program3, stdin, stdout, heap, blockId.callId, bodyBlock)
+            BlockVivem.executeBlock(programH, stdin, stdout, heap, blockId.callId, bodyBlock)
 
           conditionBlockResult match {
             case BlockReturn(maybeReturnRef) => {
@@ -495,13 +495,13 @@ object ExpressionVivem {
               val conditionReferend = heap.dereference(conditionReference)
               val BoolV(conditionValue) = conditionReferend;
               continue = conditionValue
-              dropReference(program3, heap, stdout, stdin, blockId, conditionReference)
+              dropReference(programH, heap, stdout, stdin, blockId, conditionReference)
             }
           }
         }
         NodeContinue(None)
       }
-      case cac @ ConstructArrayCall3(
+      case cac @ ConstructUnknownSizeArrayH(
       _, sizeRegister,
       generatorFunctionRegister, generatorArgsRegistersIncludingPlaceholder,
       arrayRefType) => {
@@ -517,7 +517,7 @@ object ExpressionVivem {
           heap.takeFunctionReferenceFromRegister(
             RegisterId(blockId, generatorFunctionRegister.registerId), generatorFunctionRegister.expectedType.kind)
 
-        val sizeReference = heap.takeReferenceFromRegister(RegisterId(blockId, sizeRegister.registerId), Reference3(Share, Int3()))
+        val sizeReference = heap.takeReferenceFromRegister(RegisterId(blockId, sizeRegister.registerId), ReferenceH(Share, IntH()))
         val sizeReferend = heap.dereference(sizeReference)
         val IntV(size) = sizeReferend;
         val (arrayReference, arrayInstance) =
@@ -533,7 +533,7 @@ object ExpressionVivem {
           heap.vivemDout.println()
           val maybeReturnReference =
             FunctionVivem.executeFunction(
-              program3,
+              programH,
               stdin,
               stdout,
               heap,
@@ -565,7 +565,7 @@ object ExpressionVivem {
         NodeContinue(Some(registerId))
       }
 
-      case cac @ DestroyKnownSizeArray3(
+      case cac @ DestroyKnownSizeArrayH(
           _, arrayRegister, consumerFunctionRegister, consumerArgsRegistersIncludingPlaceholder) => {
 
         val consumerArgsRegistersNotIncludingPlaceholders =
@@ -595,7 +595,7 @@ object ExpressionVivem {
           heap.vivemDout.println()
           val maybeReturnReference =
             FunctionVivem.executeFunction(
-              program3,
+              programH,
               stdin,
               stdout,
               heap,
@@ -612,7 +612,7 @@ object ExpressionVivem {
         NodeContinue(None)
       }
 
-      case cac @ DestroyUnknownSizeArray3(
+      case cac @ DestroyUnknownSizeArrayH(
       _, arrayRegister, consumerFunctionRegister, consumerArgsRegistersIncludingPlaceholder) => {
 
         val consumerArgsRegistersNotIncludingPlaceholders =
@@ -643,7 +643,7 @@ object ExpressionVivem {
           heap.vivemDout.println()
           val maybeReturnReference =
             FunctionVivem.executeFunction(
-              program3,
+              programH,
               stdin,
               stdout,
               heap,
@@ -663,7 +663,7 @@ object ExpressionVivem {
   }
 
   def dropReferenceIfNonOwning(
-      program3: Program3,
+      programH: ProgramH,
       heap: Heap,
       stdout: String => Unit,
       stdin: () => String,
@@ -672,13 +672,13 @@ object ExpressionVivem {
     reference.ownership match {
       case Own =>
       case Borrow | Share => {
-        dropReference(program3, heap, stdout, stdin, blockId, reference)
+        dropReference(programH, heap, stdout, stdin, blockId, reference)
       }
     }
   }
 
   private def dropReference(
-      program3: Program3,
+      programH: ProgramH,
       heap: Heap,
       stdout: String => Unit,
       stdin: () => String,
@@ -686,34 +686,34 @@ object ExpressionVivem {
       reference: ReferenceV) = {
     if (heap.getTotalRefCount(reference) == 0) {
       reference.seenAsKind.hamut match {
-        case Int3() | Str3() | Bool3() | Float3() => {
+        case IntH() | StrH() | BoolH() | FloatH() => {
           heap.deallocate(reference)
         }
-        case (UnknownSizeArrayT3(_) | KnownSizeArrayT3(_, _) | StructRef3(_, _)) => {
+        case (UnknownSizeArrayTH(_) | KnownSizeArrayTH(_, _) | StructRefH(_, _)) => {
           // We're guaranteed the destructor's available.
-          val destructorFunction3 =
-            vassertSome(program3.functions.find({ function3 =>
-              function3.fullName.parts.last.humanName == CallTemplar.DESTRUCTOR_NAME &&
-                function3.prototype.params.size == 1 &&
-                function3.prototype.params.head == reference.actualCoord.hamut
+          val destructorFunctionH =
+            vassertSome(programH.functions.find({ functionH =>
+              functionH.fullName.parts.last.humanName == CallTemplar.DESTRUCTOR_NAME &&
+                functionH.prototype.params.size == 1 &&
+                functionH.prototype.params.head == reference.actualCoord.hamut
             }))
           heap.vivemDout.println()
           heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (call)")
           val maybeReturnReference =
             FunctionVivem.executeFunction(
-              program3, stdin, stdout, heap, Vector(reference), destructorFunction3)
+              programH, stdin, stdout, heap, Vector(reference), destructorFunctionH)
           heap.vivemDout.print("  " * blockId.blockHeight + "Getting return reference")
-          (destructorFunction3.prototype.returnType.kind, maybeReturnReference) match {
-            case (Void3(), None) =>
+          (destructorFunctionH.prototype.returnType.kind, maybeReturnReference) match {
+            case (VoidH(), None) =>
           }
         }
-        case doomed @ (InterfaceRef3(_, _)) => {
+        case doomed @ (InterfaceRefH(_, _)) => {
           // We're guaranteed the destructor's available.
-          val destructorFunction3 =
-            vassertSome(program3.functions.find({ function3 =>
-              function3.fullName.parts.last.humanName == CallTemplar.INTERFACE_DESTRUCTOR_NAME &&
-                function3.prototype.params.size == 1 &&
-                function3.prototype.params.head == reference.actualCoord.hamut
+          val destructorFunctionH =
+            vassertSome(programH.functions.find({ functionH =>
+              functionH.fullName.parts.last.humanName == CallTemplar.INTERFACE_DESTRUCTOR_NAME &&
+                functionH.prototype.params.size == 1 &&
+                functionH.prototype.params.head == reference.actualCoord.hamut
             }))
           heap.vivemDout.println()
           heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (call)")
@@ -723,10 +723,10 @@ object ExpressionVivem {
 
           val maybeReturnReference =
             FunctionVivem.executeFunction(
-              program3, stdin, stdout, heap, Vector(actualStructReference), destructorFunction3)
+              programH, stdin, stdout, heap, Vector(actualStructReference), destructorFunctionH)
           heap.vivemDout.print("  " * blockId.blockHeight + "Getting return reference")
-          (destructorFunction3.prototype.returnType.kind, maybeReturnReference) match {
-            case (Void3(), None) =>
+          (destructorFunctionH.prototype.returnType.kind, maybeReturnReference) match {
+            case (VoidH(), None) =>
           }
         }
       }

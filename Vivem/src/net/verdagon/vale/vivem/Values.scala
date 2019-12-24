@@ -7,8 +7,8 @@ import net.verdagon.vale.{vassert, vfail}
 
 // RR = Runtime Result. Don't use these to determine behavior, just use
 // these to check that things are as we expect.
-case class RRReference(hamut: Reference3[Referend3])
-case class RRReferend(hamut: Referend3)
+case class RRReference(hamut: ReferenceH[ReferendH])
+case class RRReferend(hamut: ReferendH)
 
 class Allocation(
     val reference: ReferenceV, // note that this cannot change
@@ -94,33 +94,33 @@ sealed trait ReferendV {
 }
 sealed trait PrimitiveReferendV extends ReferendV
 case class IntV(value: Int) extends PrimitiveReferendV {
-  override def tyype = RRReferend(Int3())
+  override def tyype = RRReferend(IntH())
 }
 case class VoidV() extends PrimitiveReferendV {
-  override def tyype = RRReferend(Void3())
+  override def tyype = RRReferend(VoidH())
 }
 case class BoolV(value: Boolean) extends PrimitiveReferendV {
-  override def tyype = RRReferend(Bool3())
+  override def tyype = RRReferend(BoolH())
 }
 case class FloatV(value: Float) extends PrimitiveReferendV {
-  override def tyype = RRReferend(Float3())
+  override def tyype = RRReferend(FloatH())
 }
 case class StrV(value: String) extends PrimitiveReferendV {
-  override def tyype = RRReferend(Str3())
+  override def tyype = RRReferend(StrH())
 }
 
-case class FunctionReferendV(function: Function3) extends ReferendV {
+case class FunctionReferendV(function: FunctionH) extends ReferendV {
   override def tyype = RRReferend(function.prototype.functionType)
 }
 
 case class StructInstanceV(
-    struct3: StructDefinition3,
+    structH: StructDefinitionH,
     private var members: Vector[ReferenceV]
 ) extends ReferendV {
-  override def tyype = RRReferend(struct3.getRef)
+  override def tyype = RRReferend(structH.getRef)
 
   def getReferenceMember(index: Int) = {
-    (struct3.members(index).tyype, members(index)) match {
+    (structH.members(index).tyype, members(index)) match {
       case (_, ref) => ref
     }
   }
@@ -131,12 +131,12 @@ case class StructInstanceV(
 }
 
 case class ArrayInstanceV(
-    type3: Reference3[Referend3],
-    elementType3: Reference3[Referend3],
+    typeH: ReferenceH[ReferendH],
+    elementTypeH: ReferenceH[ReferendH],
     private val size: Int,
     private var elements: Vector[ReferenceV]
 ) extends ReferendV {
-  override def tyype = RRReferend(type3.kind)
+  override def tyype = RRReferend(typeH.kind)
 
   def getElement(index: Int): ReferenceV = {
     // Make sure we're initialized
@@ -198,8 +198,8 @@ case class ReferenceV(
   num: Int
 ) {
   def allocId = AllocationId(RRReferend(actualKind.hamut), num)
-  def actualCoord: RRReference = RRReference(Reference3(ownership, actualKind.hamut))
-  def seenAsCoord: RRReference = RRReference(Reference3(ownership, seenAsKind.hamut))
+  def actualCoord: RRReference = RRReference(ReferenceH(ownership, actualKind.hamut))
+  def seenAsCoord: RRReference = RRReference(ReferenceH(ownership, seenAsKind.hamut))
 }
 
 sealed trait IObjectReferrer
@@ -223,7 +223,7 @@ case class ElementAddressV(arrayId: AllocationId, elementIndex: Int) {
 }
 
 // Used in tracking reference counts/maps.
-case class CallId(blockDepth: Int, function: Function3) {
+case class CallId(blockDepth: Int, function: FunctionH) {
   override def toString: String = "ƒ" + blockDepth + "/" + function.prototype.fullName.parts.head.humanName
 }
 case class RegisterId(blockId: BlockId, line: String)
@@ -231,7 +231,7 @@ case class ArgumentId(callId: CallId, index: Int)
 case class VariableV(
     id: VariableAddressV,
     var reference: Option[ReferenceV],
-    expectedType: Reference3[Referend3]) {
+    expectedType: ReferenceH[ReferendH]) {
   vassert(reference != None)
 }
 

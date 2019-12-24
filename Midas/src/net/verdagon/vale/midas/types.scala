@@ -1,6 +1,6 @@
 package net.verdagon.vale.midas
 
-import net.verdagon.vale.hammer.FunctionT3
+import net.verdagon.vale.hammer.FunctionTH
 import net.verdagon.vale.scout.{ImmutableP, MutabilityP, MutableP}
 import net.verdagon.vale.templar._
 
@@ -10,7 +10,7 @@ case class ReferenceRegister4(reference: Reference4) extends Register4
 
 trait Concrete4
 case class FunctionT4(
-    origin: FunctionT3,
+    origin: FunctionTH,
     paramTypes: List[Reference4],
     returnType: Reference4) extends Concrete4
 case class Int4() extends Concrete4

@@ -8,7 +8,7 @@ import net.verdagon.vale.{vassert, vassertSome, vcurious, vfail}
 
 object ExpressionHammer {
 
-  def newId(nodesByLine: Vector[Node3]): String = Hammer.newId(nodesByLine)
+  def newId(nodesByLine: Vector[NodeH]): String = Hammer.newId(nodesByLine)
 
   // stackHeight is the number of locals that have been declared in ancestor
   // blocks and previously in this block. It's used to figure out the index of
@@ -24,59 +24,59 @@ object ExpressionHammer {
       hamuts0: Hamuts,
       locals0: Locals,
       stackHeight0: StackHeight,
-      nodesByLine0: Vector[Node3],
+      nodesByLine0: Vector[NodeH],
       expr2: Expression2):
-      (Hamuts, Locals, StackHeight, Vector[Node3], Option[RegisterAccess3[Referend3]], List[Expression2]) = {
+      (Hamuts, Locals, StackHeight, Vector[NodeH], Option[RegisterAccessH[ReferendH]], List[Expression2]) = {
     expr2 match {
       case IntLiteral2(value) => {
         val (nodesByLine1, resultNode) =
-          addNode(nodesByLine0, ConstantI643(newId(nodesByLine0), value));
-        val access = RegisterAccess3[Referend3](resultNode.registerId, Reference3(Share, Int3()))
+          addNode(nodesByLine0, ConstantI64H(newId(nodesByLine0), value));
+        val access = RegisterAccessH[ReferendH](resultNode.registerId, ReferenceH(Share, IntH()))
         (hamuts0, locals0, stackHeight0, nodesByLine1, Some(access), List())
       }
       case VoidLiteral2() => {
         val (nodesByLine1, resultNode) =
-          addNode(nodesByLine0, ConstantVoid3(newId(nodesByLine0)));
+          addNode(nodesByLine0, ConstantVoidH(newId(nodesByLine0)));
         (hamuts0, locals0, stackHeight0, nodesByLine1, None, List())
       }
       case StrLiteral2(value) => {
         val (nodesByLine1, resultNode) =
-          addNode(nodesByLine0, ConstantStr3(newId(nodesByLine0), value));
-        val access = RegisterAccess3[Referend3](resultNode.registerId, Reference3(Share, Str3()))
+          addNode(nodesByLine0, ConstantStrH(newId(nodesByLine0), value));
+        val access = RegisterAccessH[ReferendH](resultNode.registerId, ReferenceH(Share, StrH()))
         (hamuts0, locals0, stackHeight0, nodesByLine1, Some(access), List())
       }
       case FloatLiteral2(value) => {
         val (nodesByLine1, resultNode) =
-            addNode(nodesByLine0, ConstantF643(newId(nodesByLine0), value));
-        val access = RegisterAccess3[Referend3](resultNode.registerId, Reference3(Share, Float3()))
+            addNode(nodesByLine0, ConstantF64H(newId(nodesByLine0), value));
+        val access = RegisterAccessH[ReferendH](resultNode.registerId, ReferenceH(Share, FloatH()))
         (hamuts0, locals0, stackHeight0, nodesByLine1, Some(access), List())
       }
       case BoolLiteral2(value) => {
         val (nodesByLine1, resultNode) =
-            addNode(nodesByLine0, ConstantBool3(newId(nodesByLine0), value));
-        val access = RegisterAccess3[Referend3](resultNode.registerId, Reference3(Share, Bool3()))
+            addNode(nodesByLine0, ConstantBoolH(newId(nodesByLine0), value));
+        val access = RegisterAccessH[ReferendH](resultNode.registerId, ReferenceH(Share, BoolH()))
         (hamuts0, locals0, stackHeight0, nodesByLine1, Some(access), List())
       }
       case let2 @ LetNormal2(_, _) => {
-        val (hamuts5, locals3, stackHeight1, nodesByLine5) =
+        val (hamuts5, localsH, stackHeight1, nodesByLine5) =
           LetHammer.translateLet(hinputs, hamuts0, locals0, stackHeight0, nodesByLine0, let2)
-        (hamuts5, locals3, stackHeight1, nodesByLine5, None, List())
+        (hamuts5, localsH, stackHeight1, nodesByLine5, None, List())
       }
       case let2 @ LetAndLend2(_, _) => {
-        val (hamuts5, locals3, stackHeight1, nodesByLine5, borrowAccess) =
+        val (hamuts5, localsH, stackHeight1, nodesByLine5, borrowAccess) =
           LetHammer.translateLetAndLend(hinputs, hamuts0, locals0, stackHeight0, nodesByLine0, let2)
-        (hamuts5, locals3, stackHeight1, nodesByLine5, Some(borrowAccess), List())
+        (hamuts5, localsH, stackHeight1, nodesByLine5, Some(borrowAccess), List())
       }
       case des2 @ Destructure2(_, _, _) => {
-        val (hamuts5, locals3, stackHeight1, nodesByLine5) =
+        val (hamuts5, localsH, stackHeight1, nodesByLine5) =
           LetHammer.translateDestructure(hinputs, hamuts0, locals0, stackHeight0, nodesByLine0, des2)
-        (hamuts5, locals3, stackHeight1, nodesByLine5, None, List())
+        (hamuts5, localsH, stackHeight1, nodesByLine5, None, List())
       }
       case unlet2 @ Unlet2(_) => {
-        val (hamuts5, locals3, stackHeight1, nodesByLine5, valueAccess) =
+        val (hamuts5, localsH, stackHeight1, nodesByLine5, valueAccess) =
           LetHammer.translateUnlet(
             hinputs, hamuts0, locals0, stackHeight0, nodesByLine0, unlet2)
-        (hamuts5, locals3, stackHeight1, nodesByLine5, Some(valueAccess), List())
+        (hamuts5, localsH, stackHeight1, nodesByLine5, Some(valueAccess), List())
       }
       case mutate2 @ Mutate2(_, _) => {
         val (hamuts7, locals5, stackHeight1, nodesByLine7, newEmptyPackStructNodeLine) =
@@ -84,29 +84,29 @@ object ExpressionHammer {
         (hamuts7, locals5, stackHeight1, nodesByLine7, Some(newEmptyPackStructNodeLine), List())
       }
       case b @ Block2(_) => {
-        val (hamuts1, locals1, block3, maybeBlockResultAccess) =
+        val (hamuts1, locals1, blockH, maybeBlockResultAccess) =
           BlockHammer.translateBlock(hinputs, hamuts0, locals0, stackHeight0.oneBlockHigher(), b)
         val (nodesByLine1, inlineBlockResultNode) =
-          addNode(nodesByLine0, InlineBlock3(newId(nodesByLine0), block3));
+          addNode(nodesByLine0, InlineBlockH(newId(nodesByLine0), blockH));
         val maybeAccess =
           maybeBlockResultAccess match {
             case None => None
             case Some(access) => {
-              Some(RegisterAccess3[Referend3](inlineBlockResultNode.registerId, maybeBlockResultAccess.get.expectedType))
+              Some(RegisterAccessH[ReferendH](inlineBlockResultNode.registerId, maybeBlockResultAccess.get.expectedType))
             }
           }
         (hamuts1, locals1, stackHeight0, nodesByLine1, maybeAccess, List())
       }
-      case FunctionLookup2(prototype2) => {
-        val (hamuts1, functionRef3) =
-          FunctionHammer.translateFunctionRef(hinputs, hamuts0, prototype2);
-        val (nodesByLine1, functionNode) =
-            addNode(
-              nodesByLine0,
-              LoadFunction3(newId(nodesByLine0), functionRef3))
-        val access = RegisterAccess3(functionNode.registerId, Reference3(Raw, functionRef3.functionType))
-        (hamuts1, locals0, stackHeight0, nodesByLine1, Some(access), List())
-      }
+//      case FunctionLookup2(prototype2) => {
+//        val (hamuts1, functionRefH) =
+//          FunctionHammer.translateFunctionRef(hinputs, hamuts0, prototype2);
+//        val (nodesByLine1, functionNode) =
+//            addNode(
+//              nodesByLine0,
+//              LoadFunctionH(newId(nodesByLine0), functionRefH))
+//        val access = RegisterAccessH(functionNode.registerId, ReferenceH(Raw, functionRefH.functionType))
+//        (hamuts1, locals0, stackHeight0, nodesByLine1, Some(access), List())
+//      }
       case funcPtrCall2 @ FunctionPointerCall2(callableExpr, args) => {
         val (hamuts7, locals2, stackHeight1, nodesByLine4, access) =
           CallHammer.translateFunctionPointerCall(
@@ -131,14 +131,14 @@ object ExpressionHammer {
       case PackE2(exprs, resultType, resultPackType) => {
         val (hamuts1, locals1, stackHeight1, nodesByLine7, resultLines, deferreds) =
           translateExpressions(hinputs, hamuts0, locals0, stackHeight0, nodesByLine0, exprs);
-        val (hamuts2, underlyingStructRef3) =
+        val (hamuts2, underlyingStructRefH) =
           StructHammer.translateStructRef(hinputs, hamuts1, resultPackType.underlyingStruct);
-        val (hamuts3, resultReference) =
+        val (hamutsH, resultReference) =
           TypeHammer.translateReference(hinputs, hamuts2, resultType)
-        vassert(resultReference.kind == underlyingStructRef3)
+        vassert(resultReference.kind == underlyingStructRefH)
 
         val newStructNode =
-          NewStruct3(
+          NewStructH(
             newId(nodesByLine7),
             resultLines,
             resultReference.expectStructReference())
@@ -146,9 +146,9 @@ object ExpressionHammer {
         val (nodesByLine8, _) = addNode(nodesByLine7, newStructNode);
 
         val (hamuts4, locals9, stackHeight2, nodesByLine9) =
-          translateDeferreds(hinputs, hamuts3, locals1, stackHeight1, nodesByLine8, deferreds)
+          translateDeferreds(hinputs, hamutsH, locals1, stackHeight1, nodesByLine8, deferreds)
 
-        val access = RegisterAccess3(newStructNode.registerId, resultReference)
+        val access = RegisterAccessH(newStructNode.registerId, resultReference)
         // Export locals from inside the pack
         (hamuts4, locals9, stackHeight2, nodesByLine9, Some(access), List())
       }
@@ -158,26 +158,26 @@ object ExpressionHammer {
           translate(hinputs, hamuts0, locals0, stackHeight0, nodesByLine0, arrayExpr2);
 
         val (nodesByLine2, lengthResultNode) =
-          addNode(nodesByLine1, ArrayLength3(newId(nodesByLine1), vassertSome(resultLine)));
+          addNode(nodesByLine1, ArrayLengthH(newId(nodesByLine1), vassertSome(resultLine)));
 
-        val (hamuts3, locals3, stackHeight3, nodesByLine3) =
+        val (hamutsH, localsH, stackHeightH, nodesByLineH) =
           translateDeferreds(hinputs, hamuts1, locals1, stackHeight1, nodesByLine2, deferreds)
 
-        val access = RegisterAccess3[Referend3](lengthResultNode.registerId, Reference3(Share, Int3()))
-        (hamuts3, locals3, stackHeight3, nodesByLine3, Some(access), List())
+        val access = RegisterAccessH[ReferendH](lengthResultNode.registerId, ReferenceH(Share, IntH()))
+        (hamutsH, localsH, stackHeightH, nodesByLineH, Some(access), List())
       }
 
       case TupleE2(exprs, resultType, resultPackType) => {
         val (hamuts1, locals1, stackHeight1, nodesByLine7, resultLines, deferreds) =
           translateExpressions(hinputs, hamuts0, locals0, stackHeight0, nodesByLine0, exprs);
-        val (hamuts2, underlyingStructRef3) =
+        val (hamuts2, underlyingStructRefH) =
           StructHammer.translateStructRef(hinputs, hamuts1, resultPackType.underlyingStruct);
-        val (hamuts3, resultReference) =
+        val (hamutsH, resultReference) =
           TypeHammer.translateReference(hinputs, hamuts2, resultType)
-        vassert(resultReference.kind == underlyingStructRef3)
+        vassert(resultReference.kind == underlyingStructRefH)
 
         val newStructNode =
-          NewStruct3(
+          NewStructH(
             newId(nodesByLine7),
             resultLines,
             resultReference.expectStructReference())
@@ -185,33 +185,33 @@ object ExpressionHammer {
         // Export locals from inside the pack
 
         val (hamuts4, locals2, stackHeight2, nodesByLine9) =
-          translateDeferreds(hinputs, hamuts3, locals1, stackHeight1, nodesByLine8, deferreds)
+          translateDeferreds(hinputs, hamutsH, locals1, stackHeight1, nodesByLine8, deferreds)
 
-        val access = RegisterAccess3(newStructNode.registerId, resultReference)
+        val access = RegisterAccessH(newStructNode.registerId, resultReference)
         (hamuts4, locals2, stackHeight2, nodesByLine9, Some(access), List())
       }
 
       case ArraySequenceE2(exprs, arrayReference2, arrayType2) => {
         val (hamuts1, locals1, stackHeight1, nodesByLine7, resultLines, deferreds) =
           translateExpressions(hinputs, hamuts0, locals0, stackHeight0, nodesByLine0, exprs);
-        val (hamuts2, underlyingArray3) =
+        val (hamuts2, underlyingArrayH) =
           TypeHammer.translateKnownSizeArray(hinputs, hamuts1, arrayType2);
 
-        val (hamuts3, arrayReference3) =
+        val (hamutsH, arrayReferenceH) =
           TypeHammer.translateReference(hinputs, hamuts2, arrayReference2)
-        vassert(arrayReference3.kind == underlyingArray3)
+        vassert(arrayReferenceH.kind == underlyingArrayH)
 
         val newStructNode =
-          NewArrayFromValues3(
+          NewArrayFromValuesH(
             newId(nodesByLine7),
             resultLines,
-            arrayReference3.expectKnownSizeArrayReference())
+            arrayReferenceH.expectKnownSizeArrayReference())
         val (nodesByLine8, _) = addNode(nodesByLine7, newStructNode);
 
         val (hamuts4, locals2, stackHeight2, nodesByLine9) =
-          translateDeferreds(hinputs, hamuts3, locals1, stackHeight1, nodesByLine8, deferreds)
+          translateDeferreds(hinputs, hamutsH, locals1, stackHeight1, nodesByLine8, deferreds)
 
-        val access = RegisterAccess3(newStructNode.registerId, arrayReference3)
+        val access = RegisterAccessH(newStructNode.registerId, arrayReferenceH)
         (hamuts4, locals2, stackHeight2, nodesByLine9, Some(access), List())
       }
 
@@ -219,43 +219,43 @@ object ExpressionHammer {
         val (hamuts1, locals1, stackHeight1, nodesByLine1, memberResultLines, deferreds) =
           translateExpressions(hinputs, hamuts0, locals0, stackHeight0, nodesByLine0, memberExprs);
 
-        val (hamuts2, resultType3) =
+        val (hamuts2, resultTypeH) =
           TypeHammer.translateReference(hinputs, hamuts1, resultType2)
 
 //        hinputs.program2.lookupStruct(resultStructType2)
-//        vassert(structDef2.getRef == resultType3.innerType)
+//        vassert(structDef2.getRef == resultTypeH.innerType)
 
         val newStructNode =
-          NewStruct3(
+          NewStructH(
             newId(nodesByLine1),
             memberResultLines,
-            resultType3.expectStructReference())
+            resultTypeH.expectStructReference())
 
         val (nodesByLine2, _) = addNode(nodesByLine1, newStructNode);
 
-        val (hamuts3, locals2, stackHeight2, nodesByLine3) =
+        val (hamutsH, locals2, stackHeight2, nodesByLineH) =
           translateDeferreds(hinputs, hamuts2, locals1, stackHeight1, nodesByLine2, deferreds)
 
-        val access = RegisterAccess3(newStructNode.registerId, resultType3)
-        (hamuts3, locals2, stackHeight2, nodesByLine3, Some(access), List())
+        val access = RegisterAccessH(newStructNode.registerId, resultTypeH)
+        (hamutsH, locals2, stackHeight2, nodesByLineH, Some(access), List())
       }
 
       case load2 @ SoftLoad2(_, _) => {
-        val (hamuts6, locals5, stackHeight1, nodesByLine6, loadedAccess3, deferreds) =
+        val (hamuts6, locals5, stackHeight1, nodesByLine6, loadedAccessH, deferreds) =
           LoadHammer.translateLoad(hinputs, hamuts0, locals0, stackHeight0, nodesByLine0, load2)
-        (hamuts6, locals5, stackHeight1, nodesByLine6, Some(loadedAccess3), deferreds)
+        (hamuts6, locals5, stackHeight1, nodesByLine6, Some(loadedAccessH), deferreds)
       }
 
       case lookup2 @ LocalLookup2(AddressibleLocalVariable2(_, _, _), _) => {
-        val (hamuts3, locals1, stackHeight1, nodesByLine2, loadBoxAccess) =
+        val (hamutsH, locals1, stackHeight1, nodesByLine2, loadBoxAccess) =
           LoadHammer.translateLocalAddress(hinputs, hamuts0, locals0, stackHeight0, nodesByLine0, lookup2)
-        (hamuts3, locals1, stackHeight1, nodesByLine2, Some(loadBoxAccess), List())
+        (hamutsH, locals1, stackHeight1, nodesByLine2, Some(loadBoxAccess), List())
       }
 
       case lookup2 @ AddressMemberLookup2(_, _, _, _) => {
-        val (hamuts3, locals1, stackHeight1, nodesByLine2, loadBoxAccess, deferreds) =
+        val (hamutsH, locals1, stackHeight1, nodesByLine2, loadBoxAccess, deferreds) =
           LoadHammer.translateMemberAddress(hinputs, hamuts0, locals0, stackHeight0, nodesByLine0, lookup2)
-        (hamuts3, locals1, stackHeight1, nodesByLine2, Some(loadBoxAccess), deferreds)
+        (hamutsH, locals1, stackHeight1, nodesByLine2, Some(loadBoxAccess), deferreds)
       }
 
       case if2 @ If2(_, _, _) => {
@@ -274,108 +274,110 @@ object ExpressionHammer {
       case TemplarReinterpret2(innerExpr, resultType2) => {
         // Check types; it's overkill because reinterprets are rather scary.
         val innerExprResultType2 = innerExpr.resultRegister.reference
-        val (hamuts1, innerExprResultType3) = TypeHammer.translateReference(hinputs, hamuts0, innerExprResultType2);
-        val (hamuts2, resultType3) = TypeHammer.translateReference(hinputs, hamuts1, resultType2);
-        if (innerExprResultType3.kind != Never3()) {
-          if (innerExprResultType3 != resultType3) {
-            vfail(innerExprResultType3  + " doesnt match " + resultType3);
+        val (hamuts1, innerExprResultTypeH) = TypeHammer.translateReference(hinputs, hamuts0, innerExprResultType2);
+        val (hamuts2, resultTypeH) = TypeHammer.translateReference(hinputs, hamuts1, resultType2);
+        if (innerExprResultTypeH.kind != NeverH()) {
+          if (innerExprResultTypeH != resultTypeH) {
+            vfail(innerExprResultTypeH  + " doesnt match " + resultTypeH);
           }
         }
 
-        val (hamuts3, locals1, stackHeight1, nodesByLine1, innerExprResultLine, deferreds) =
+        val (hamutsH, locals1, stackHeight1, nodesByLine1, innerExprResultLine, deferreds) =
           translate(hinputs, hamuts2, locals0, stackHeight0, nodesByLine0, innerExpr);
+
+        vcurious(innerExprResultTypeH == resultTypeH)
 
         val (nodesByLine2, resultNode) =
           addNode(
             nodesByLine1,
-            Reinterpret3(
+            ReinterpretH(
               newId(nodesByLine1),
               innerExprResultLine.get,
-              resultType3))
-        val access = RegisterAccess3(resultNode.registerId, resultType3)
+              resultTypeH))
+        val access = RegisterAccessH(resultNode.registerId, resultTypeH)
 
-        (hamuts3, locals1, stackHeight1, nodesByLine2, Some(access), deferreds)
+        (hamutsH, locals1, stackHeight1, nodesByLine2, Some(access), deferreds)
       }
 
       case CheckRefCount2(refExpr2, category, numExpr2) => {
         val (hamuts1, locals1, stackHeight1, nodesByLine1, Some(refExprResultLine), refExprDeferreds) =
           translate(hinputs, hamuts0, locals0, stackHeight0, nodesByLine0, refExpr2)
-        val (hamuts2, refExprResultType3) =
+        val (hamuts2, refExprResultTypeH) =
           TypeHammer.translateReference(hinputs, hamuts1, refExpr2.resultRegister.reference);
 
-        val (hamuts3, locals2, stackHeight2, nodesByLine2, Some(numExprResultLine), numExprDeferreds) =
+        val (hamutsH, locals2, stackHeight2, nodesByLine2, Some(numExprResultLine), numExprDeferreds) =
           translate(hinputs, hamuts2, locals1, stackHeight1, nodesByLine1, numExpr2)
-        val (hamuts4, numExprResultType3) =
-          TypeHammer.translateReference(hinputs, hamuts3, refExpr2.resultRegister.reference);
+        val (hamuts4, numExprResultTypeH) =
+          TypeHammer.translateReference(hinputs, hamutsH, refExpr2.resultRegister.reference);
 
-        val (nodesByLine3, _) =
+        val (nodesByLineH, _) =
           addNode(
             nodesByLine2,
-            CheckRefCount3(
+            CheckRefCountH(
               newId(nodesByLine2),
               refExprResultLine,
               category,
               numExprResultLine.expectIntAccess()))
 
-        val (hamuts5, locals3, stackHeight3, nodesByLine4) =
-          translateDeferreds(hinputs, hamuts4, locals2, stackHeight2, nodesByLine3, numExprDeferreds ++ refExprDeferreds)
+        val (hamuts5, localsH, stackHeightH, nodesByLine4) =
+          translateDeferreds(hinputs, hamuts4, locals2, stackHeight2, nodesByLineH, numExprDeferreds ++ refExprDeferreds)
 
-        (hamuts5, locals3, stackHeight3, nodesByLine4, None, List())
+        (hamuts5, localsH, stackHeightH, nodesByLine4, None, List())
       }
 
       case up @ InterfaceToInterfaceUpcast2(innerExpr, targetInterfaceRef2) => {
         val targetPointerType2 = up.resultRegister.reference;
         val sourcePointerType2 = innerExpr.resultRegister.reference
 
-        val (hamuts1, sourcePointerType3) =
+        val (hamuts1, sourcePointerTypeH) =
           TypeHammer.translateReference(hinputs, hamuts0, sourcePointerType2);
-        val (hamuts2, targetPointerType3) =
+        val (hamuts2, targetPointerTypeH) =
           TypeHammer.translateReference(hinputs, hamuts1, targetPointerType2);
 
-        val sourceStructRef3 = sourcePointerType3.kind.asInstanceOf[InterfaceRef3]
-        val targetInterfaceRef3 = targetPointerType3.kind.asInstanceOf[InterfaceRef3]
+        val sourceStructRefH = sourcePointerTypeH.kind.asInstanceOf[InterfaceRefH]
+        val targetInterfaceRefH = targetPointerTypeH.kind.asInstanceOf[InterfaceRefH]
 
-        val (hamuts3, locals1, stackHeight1, nodesByLine1, Some(innerExprResultLine), innerDeferreds) =
+        val (hamutsH, locals1, stackHeight1, nodesByLine1, Some(innerExprResultLine), innerDeferreds) =
           translate(hinputs, hamuts2, locals0, stackHeight0, nodesByLine0, innerExpr);
         // Upcasting an interface is technically a no-op with our language, but the sculptor
         // will still want to do it to do some checking in debug mode.
         val (nodesByLine2, upcastNode) =
           addNode(
             nodesByLine1,
-            InterfaceToInterfaceUpcast3(
+            InterfaceToInterfaceUpcastH(
               newId(nodesByLine1),
               innerExprResultLine.expectInterfaceAccess(),
-              targetInterfaceRef3));
-        val access = RegisterAccess3(upcastNode.registerId, targetPointerType3)
-        (hamuts3, locals1, stackHeight1, nodesByLine2, Some(access), innerDeferreds)
+              targetInterfaceRefH));
+        val access = RegisterAccessH(upcastNode.registerId, targetPointerTypeH)
+        (hamutsH, locals1, stackHeight1, nodesByLine2, Some(access), innerDeferreds)
       }
 
       case up @ StructToInterfaceUpcast2(innerExpr, targetInterfaceRef2) => {
         val targetPointerType2 = up.resultRegister.reference;
         val sourcePointerType2 = innerExpr.resultRegister.reference
 
-        val (hamuts1, sourcePointerType3) =
+        val (hamuts1, sourcePointerTypeH) =
           TypeHammer.translateReference(hinputs, hamuts0, sourcePointerType2);
-        val (hamuts2, targetPointerType3) =
+        val (hamuts2, targetPointerTypeH) =
           TypeHammer.translateReference(hinputs, hamuts1, targetPointerType2);
 
-        val sourceStructRef3 = sourcePointerType3.kind.asInstanceOf[StructRef3]
+        val sourceStructRefH = sourcePointerTypeH.kind.asInstanceOf[StructRefH]
 
-        val targetInterfaceRef3 = targetPointerType3.kind.asInstanceOf[InterfaceRef3]
+        val targetInterfaceRefH = targetPointerTypeH.kind.asInstanceOf[InterfaceRefH]
 
-        val (hamuts3, locals1, stackHeight1, nodesByLine1, Some(innerExprResultLine), innerDeferreds) =
+        val (hamutsH, locals1, stackHeight1, nodesByLine1, Some(innerExprResultLine), innerDeferreds) =
           translate(hinputs, hamuts2, locals0, stackHeight0, nodesByLine0, innerExpr);
         // Upcasting an interface is technically a no-op with our language, but the sculptor
         // will still want to do it to do some checking in debug mode.
         val (nodesByLine2, upcastNode) =
           addNode(
             nodesByLine1,
-            StructToInterfaceUpcast3(
+            StructToInterfaceUpcastH(
               newId(nodesByLine1),
               innerExprResultLine.expectStructAccess(),
-              targetInterfaceRef3));
-        val access = RegisterAccess3(upcastNode.registerId, targetPointerType3)
-        (hamuts3, locals1, stackHeight1, nodesByLine2, Some(access), innerDeferreds)
+              targetInterfaceRefH));
+        val access = RegisterAccessH(upcastNode.registerId, targetPointerTypeH)
+        (hamutsH, locals1, stackHeight1, nodesByLine2, Some(access), innerDeferreds)
       }
 
       case ExternFunctionCall2(prototype2, argsExprs2) => {
@@ -411,7 +413,7 @@ object ExpressionHammer {
         val (nodesByLine2, discardNode) =
           addNode(
             nodesByLine1,
-            Discard3(
+            DiscardH(
               newId(nodesByLine1),
               innerExprResultLine));
 
@@ -421,33 +423,33 @@ object ExpressionHammer {
         (hamuts4, locals2, stackHeight2, nodesByLine9, None, List())
       }
       case Return2(innerExpr) => {
-        val (hamuts1, type3) =
+        val (hamuts1, typeH) =
           TypeHammer.translateReference(hinputs, hamuts0, innerExpr.resultRegister.reference)
         val (hamuts2, locals2, stackHeight2, nodesByLine2, Some(innerExprResultLine), innerDeferreds) =
           translate(hinputs, hamuts1, locals0, stackHeight0, nodesByLine0, innerExpr);
         vcurious(innerDeferreds.isEmpty)
 
-        val (nodesByLine3, returnNode) =
+        val (nodesByLineH, returnNode) =
           addNode(
             nodesByLine2,
-            Return3(
+            ReturnH(
               newId(nodesByLine2),
               innerExprResultLine));
-        val access = RegisterAccess3(returnNode.registerId, type3)
+        val access = RegisterAccessH(returnNode.registerId, typeH)
 
-        val (hamuts4, locals3, stackHeight3, nodesByLine9) =
-          translateDeferreds(hinputs, hamuts2, locals2, stackHeight2, nodesByLine3, innerDeferreds)
+        val (hamuts4, localsH, stackHeightH, nodesByLine9) =
+          translateDeferreds(hinputs, hamuts2, locals2, stackHeight2, nodesByLineH, innerDeferreds)
 
-        (hamuts4, locals3, stackHeight3, nodesByLine9, Some(access), List())
+        (hamuts4, localsH, stackHeightH, nodesByLine9, Some(access), List())
       }
       case ArgLookup2(paramIndex, type2) => {
-        val (hamuts1, type3) =
+        val (hamuts1, typeH) =
           TypeHammer.translateReference(hinputs, hamuts0, type2)
         val (nodesByLine1, argNode) =
           ExpressionHammer.addNode(
             nodesByLine0,
-            Argument3(newId(nodesByLine0), type3, paramIndex))
-        val access = RegisterAccess3(argNode.registerId, type3)
+            ArgumentH(newId(nodesByLine0), typeH, paramIndex))
+        val access = RegisterAccessH(argNode.registerId, typeH)
         (hamuts1, locals0, stackHeight0, nodesByLine1, Some(access), List())
       }
 
@@ -481,32 +483,32 @@ object ExpressionHammer {
       hamuts0: Hamuts,
       locals0: Locals,
       stackHeight0: StackHeight,
-      nodesByLine0: Vector[Node3],
+      nodesByLine0: Vector[NodeH],
       deferreds: List[Expression2]):
-  (Hamuts, Locals, StackHeight, Vector[Node3]) = {
-    val (hamuts3, locals3, stackHeight1, nodesByLine3, deferredsResultLines, deferredDeferreds) =
+  (Hamuts, Locals, StackHeight, Vector[NodeH]) = {
+    val (hamutsH, localsH, stackHeight1, nodesByLineH, deferredsResultLines, deferredDeferreds) =
       translateMaybeReturningExpressions(hinputs, hamuts0, locals0, stackHeight0, nodesByLine0, deferreds)
     if (!deferredsResultLines.forall(_.isEmpty)) {
       // curiosity, why would a deferred ever have a result
       vfail("ehwot?")
     }
-    if (locals3.locals.size != locals0.locals.size) {
+    if (localsH.locals.size != locals0.locals.size) {
       // There shouldnt have been any locals introduced
       vfail("wat")
     }
     vassert(deferredDeferreds.isEmpty)
     // Don't need these, they should all be voids anyway
     val _ = deferredsResultLines
-    (hamuts3, locals3, stackHeight1, nodesByLine3)
+    (hamutsH, localsH, stackHeight1, nodesByLineH)
   }
 
   def translateMaybeReturningExpressions(
       hinputs: Hinputs, hamuts0: Hamuts,
       locals0: Locals,
       stackHeight0: StackHeight,
-      nodesByLine0: Vector[Node3],
+      nodesByLine0: Vector[NodeH],
       exprs2: List[Expression2]):
-  (Hamuts, Locals, StackHeight, Vector[Node3], List[Option[RegisterAccess3[Referend3]]], List[Expression2]) = {
+  (Hamuts, Locals, StackHeight, Vector[NodeH], List[Option[RegisterAccessH[ReferendH]]], List[Expression2]) = {
     exprs2 match {
       case Nil => (hamuts0, locals0, stackHeight0, nodesByLine0, List(), List())
       case firstExpr :: restExprs => {
@@ -525,9 +527,9 @@ object ExpressionHammer {
       hinputs: Hinputs, hamuts0: Hamuts,
       locals0: Locals,
       stackHeight0: StackHeight,
-      nodesByLine0: Vector[Node3],
+      nodesByLine0: Vector[NodeH],
       exprs2: List[Expression2]):
-  (Hamuts, Locals, StackHeight, Vector[Node3], List[RegisterAccess3[Referend3]], List[Expression2]) = {
+  (Hamuts, Locals, StackHeight, Vector[NodeH], List[RegisterAccessH[ReferendH]], List[Expression2]) = {
     exprs2 match {
       case Nil => (hamuts0, locals0, stackHeight0, nodesByLine0, List(), List())
       case firstExpr :: restExprs => {
@@ -542,22 +544,22 @@ object ExpressionHammer {
     }
   }
 
-  def addNode[T <: Node3](nodesByLine: Vector[Node3], node: T): (Vector[Node3], T) = {
+  def addNode[T <: NodeH](nodesByLine: Vector[NodeH], node: T): (Vector[NodeH], T) = {
     (nodesByLine :+ node, node)
   }
 
-  def makeEmptyPackStruct(hinputs: Hinputs, hamuts0: Hamuts, nodesByLine0: Vector[Node3]):
-  (Hamuts, Vector[Node3], RegisterAccess3[StructRef3]) = {
+  def makeEmptyPackStruct(hinputs: Hinputs, hamuts0: Hamuts, nodesByLine0: Vector[NodeH]):
+  (Hamuts, Vector[NodeH], RegisterAccessH[StructRefH]) = {
     val emptyPackType = PackTemplar.emptyPackType
-    val (hamuts1, underlyingStructRef3) =
+    val (hamuts1, underlyingStructRefH) =
       StructHammer.translateStructRef(hinputs, hamuts0, emptyPackType.underlyingStruct);
     val reference =
       hinputs.program2.lookupStruct(emptyPackType.underlyingStruct).mutability match {
-        case Mutable => Reference3(Own, underlyingStructRef3)
-        case Immutable => Reference3(Share, underlyingStructRef3)
+        case Mutable => ReferenceH(Own, underlyingStructRefH)
+        case Immutable => ReferenceH(Share, underlyingStructRefH)
       }
-    val newEmptyStructNode = NewStruct3(newId(nodesByLine0), List(), reference)
+    val newEmptyStructNode = NewStructH(newId(nodesByLine0), List(), reference)
     val (nodesByLine1, _) = addNode(nodesByLine0, newEmptyStructNode);
-    (hamuts1, nodesByLine1, RegisterAccess3(newEmptyStructNode.registerId, reference))
+    (hamuts1, nodesByLine1, RegisterAccessH(newEmptyStructNode.registerId, reference))
   }
 }

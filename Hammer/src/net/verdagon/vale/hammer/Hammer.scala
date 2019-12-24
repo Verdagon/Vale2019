@@ -4,8 +4,8 @@ import net.verdagon.vale.hinputs.Hinputs
 import net.verdagon.vale.templar.env.VariableId2
 import net.verdagon.vale.{vassert, vfail}
 
-case class VariableId3(
-  // Just to uniquify VariableId3 instances. No two variables in a Function3 will have
+case class VariableIdH(
+  // Just to uniquify VariableIdH instances. No two variables in a FunctionH will have
   // the same number.
   number: Int,
   // Just for debugging purposes
@@ -25,10 +25,10 @@ case class StackHeight(
 }
 
 case class Local(
-  // No two variables in a Function3 have the same id.
-  id: VariableId3,
+  // No two variables in a FunctionH have the same id.
+  id: VariableIdH,
 
-  // Multiple variables in a Function3 can have the same height. For example:
+  // Multiple variables in a FunctionH can have the same height. For example:
   // fn main() {
   //   {
   //     x = 4;
@@ -42,7 +42,7 @@ case class Local(
   // In LLVM, this could almost be thought of as where it is on the stack.
   height: StackHeight,
 
-  type3: Reference3[Referend3])
+  typeH: ReferenceH[ReferendH])
 
 // This represents the locals for the entire function.
 // Note, some locals will have the same index, that just means they're in
@@ -50,23 +50,23 @@ case class Local(
 case class Locals(
     // This doesn't have all the locals that are in the locals list, this just
     // has any locals added by templar.
-    templarLocals: Map[VariableId2, VariableId3],
+    templarLocals: Map[VariableId2, VariableIdH],
 
-    unstackifiedVars: Set[VariableId3],
+    unstackifiedVars: Set[VariableIdH],
 
     // This has all the locals for the function, a superset of templarLocals.
-    locals: Map[VariableId3, Local]) {
+    locals: Map[VariableIdH, Local]) {
 
   def addTemplarLocal(
     varId2: VariableId2,
     height: StackHeight,
-    tyype: Reference3[Referend3]):
+    tyype: ReferenceH[ReferendH]):
   (Locals, Local) = {
     if (templarLocals.contains(varId2)) {
       vfail("wot")
     }
     val newLocalIdNumber = locals.size
-    val newLocalId = VariableId3(newLocalIdNumber, Some(varId2.variableName))
+    val newLocalId = VariableIdH(newLocalIdNumber, Some(varId2.variableName))
     val newLocal = Local(newLocalId, height, tyype)
     val newLocals =
       Locals(
@@ -78,10 +78,10 @@ case class Locals(
 
   def addHammerLocal(
     height: StackHeight,
-    tyype: Reference3[Referend3]):
+    tyype: ReferenceH[ReferendH]):
   (Locals, Local) = {
     val newLocalIdNumber = locals.size
-    val newLocalId = VariableId3(newLocalIdNumber, None)
+    val newLocalId = VariableIdH(newLocalIdNumber, None)
     val newLocal = Local(newLocalId, height, tyype)
     val newLocals =
       Locals(
@@ -95,13 +95,13 @@ case class Locals(
     markUnstackified(templarLocals(varId2))
   }
 
-  def markUnstackified(varId3: VariableId3): Locals = {
+  def markUnstackified(varIdH: VariableIdH): Locals = {
     // Make sure it existed and wasnt already unstackified
-    vassert(locals.contains(varId3))
-    if (unstackifiedVars.contains(varId3)) {
+    vassert(locals.contains(varIdH))
+    if (unstackifiedVars.contains(varIdH)) {
       vfail("nooo")
     }
-    Locals(templarLocals, unstackifiedVars + varId3, locals)
+    Locals(templarLocals, unstackifiedVars + varIdH, locals)
   }
 
   def get(varId: VariableId2): Option[Local] = {
@@ -111,32 +111,32 @@ case class Locals(
     }
   }
 
-  def get(varId: VariableId3): Option[Local] = {
+  def get(varId: VariableIdH): Option[Local] = {
     locals.get(varId)
   }
 }
 
 object Hammer {
-  def translate(hinputs: Hinputs): Program3 = {
+  def translate(hinputs: Hinputs): ProgramH = {
     val hamuts0 = Hamuts(Map(), Map(), Map(), hinputs.structIds.values.max + 1, Map(), Map(), Map(), Map())
-    val (hamuts1, emptyPackStructRef3) =
+    val (hamuts1, emptyPackStructRefH) =
       StructHammer.translateStructRef(hinputs, hamuts0, hinputs.program2.emptyPackStructRef)
     val hamuts2 = StructHammer.translateInterfaces(hinputs, hamuts1);
-    val hamuts3 = StructHammer.translateStructs(hinputs, hamuts2)
+    val hamutsH = StructHammer.translateStructs(hinputs, hamuts2)
     val userFunctions = hinputs.program2.functions.filter(_.header.isUserFunction).toList
     val nonUserFunctions = hinputs.program2.functions.filter(!_.header.isUserFunction).toList
-    val (hamuts4, _) = FunctionHammer.translateFunctions(hinputs, hamuts3, userFunctions)
+    val (hamuts4, _) = FunctionHammer.translateFunctions(hinputs, hamutsH, userFunctions)
     val (hamuts5, _) = FunctionHammer.translateFunctions(hinputs, hamuts4, nonUserFunctions)
 
-    Program3(
+    ProgramH(
       hamuts5.interfaceDefs.values.toList,
       hamuts5.structDefsById.values.toList,
-      emptyPackStructRef3,
+      emptyPackStructRefH,
       List() /* externs */,
       hamuts5.functionDefs.values.toList)
   }
 
-  def newId(nodesByLine: Vector[Node3]) = {
+  def newId(nodesByLine: Vector[NodeH]) = {
     "" + nodesByLine.size
   }
 }

@@ -3,280 +3,471 @@ package net.verdagon.vale.hammer
 import net.verdagon.vale.hinputs.TetrisTable
 import net.verdagon.vale.scout.RefCountCategory
 import net.verdagon.vale.templar.types._
-import net.verdagon.vale.{vassert, vfail}
+import net.verdagon.vale.{vassert, vcurious, vfail}
 
 import scala.collection.immutable.ListMap
 
-trait IRegister3 {
-  def expectReferenceRegister(): ReferenceRegister3 = {
+trait IRegisterH {
+  def expectReferenceRegister(): ReferenceRegisterH = {
     this match {
-      case r @ ReferenceRegister3(_) => r
-      case AddressRegister3(_) => vfail("Expected a reference as a result, but got an address!")
+      case r @ ReferenceRegisterH(_) => r
+      case AddressRegisterH(_) => vfail("Expected a reference as a result, but got an address!")
     }
   }
-  def expectAddressRegister(): AddressRegister3 = {
+  def expectAddressRegister(): AddressRegisterH = {
     this match {
-      case a @ AddressRegister3(_) => a
-      case ReferenceRegister3(_) => vfail("Expected an address as a result, but got a reference!")
+      case a @ AddressRegisterH(_) => a
+      case ReferenceRegisterH(_) => vfail("Expected an address as a result, but got a reference!")
     }
   }
 }
-case class ReferenceRegister3(reference: Reference3[Referend3]) extends IRegister3
-case class AddressRegister3(reference: Reference3[Referend3]) extends IRegister3
+case class ReferenceRegisterH(reference: ReferenceH[ReferendH]) extends IRegisterH
+case class AddressRegisterH(reference: ReferenceH[ReferendH]) extends IRegisterH
 
-sealed trait Node3 {
+sealed trait NodeH {
   def registerId: String;
 }
 
-case class RegisterAccess3[+T <: Referend3](
+case class RegisterAccessH[+T <: ReferendH](
   registerId: String,
-  expectedType: Reference3[T]) {
+  expectedType: ReferenceH[T]) {
 
-  vassert(expectedType.kind != Void3())
+  vassert(expectedType.kind != VoidH())
 
-  def expectFunctionAccess(): RegisterAccess3[FunctionT3] = {
+  def expectStructAccess(): RegisterAccessH[StructRefH] = {
     this match {
-      case RegisterAccess3(registerId, Reference3(ownership, x @ FunctionT3(_, _))) => {
-        RegisterAccess3[FunctionT3](registerId, Reference3(ownership, x))
+      case RegisterAccessH(registerId, ReferenceH(ownership, x @ StructRefH(_, _))) => {
+        RegisterAccessH[StructRefH](registerId, ReferenceH(ownership, x))
       }
     }
   }
-  def expectStructAccess(): RegisterAccess3[StructRef3] = {
+  def expectInterfaceAccess(): RegisterAccessH[InterfaceRefH] = {
     this match {
-      case RegisterAccess3(registerId, Reference3(ownership, x @ StructRef3(_, _))) => {
-        RegisterAccess3[StructRef3](registerId, Reference3(ownership, x))
+      case RegisterAccessH(registerId, ReferenceH(ownership, x @ InterfaceRefH(_, _))) => {
+        RegisterAccessH[InterfaceRefH](registerId, ReferenceH(ownership, x))
       }
     }
   }
-  def expectInterfaceAccess(): RegisterAccess3[InterfaceRef3] = {
+  def expectUnknownSizeArrayAccess(): RegisterAccessH[UnknownSizeArrayTH] = {
     this match {
-      case RegisterAccess3(registerId, Reference3(ownership, x @ InterfaceRef3(_, _))) => {
-        RegisterAccess3[InterfaceRef3](registerId, Reference3(ownership, x))
+      case RegisterAccessH(registerId, ReferenceH(ownership, x @ UnknownSizeArrayTH(_))) => {
+        RegisterAccessH[UnknownSizeArrayTH](registerId, ReferenceH(ownership, x))
       }
     }
   }
-  def expectUnknownSizeArrayAccess(): RegisterAccess3[UnknownSizeArrayT3] = {
+  def expectKnownSizeArrayAccess(): RegisterAccessH[KnownSizeArrayTH] = {
     this match {
-      case RegisterAccess3(registerId, Reference3(ownership, x @ UnknownSizeArrayT3(_))) => {
-        RegisterAccess3[UnknownSizeArrayT3](registerId, Reference3(ownership, x))
+      case RegisterAccessH(registerId, ReferenceH(ownership, x @ KnownSizeArrayTH(_, _))) => {
+        RegisterAccessH[KnownSizeArrayTH](registerId, ReferenceH(ownership, x))
       }
     }
   }
-  def expectKnownSizeArrayAccess(): RegisterAccess3[KnownSizeArrayT3] = {
+  def expectIntAccess(): RegisterAccessH[IntH] = {
     this match {
-      case RegisterAccess3(registerId, Reference3(ownership, x @ KnownSizeArrayT3(_, _))) => {
-        RegisterAccess3[KnownSizeArrayT3](registerId, Reference3(ownership, x))
+      case RegisterAccessH(registerId, ReferenceH(ownership, x @ IntH())) => {
+        RegisterAccessH[IntH](registerId, ReferenceH(ownership, x))
       }
     }
   }
-  def expectIntAccess(): RegisterAccess3[Int3] = {
+  def expectBoolAccess(): RegisterAccessH[BoolH] = {
     this match {
-      case RegisterAccess3(registerId, Reference3(ownership, x @ Int3())) => {
-        RegisterAccess3[Int3](registerId, Reference3(ownership, x))
-      }
-    }
-  }
-  def expectBoolAccess(): RegisterAccess3[Bool3] = {
-    this match {
-      case RegisterAccess3(registerId, Reference3(ownership, x @ Bool3())) => {
-        RegisterAccess3[Bool3](registerId, Reference3(ownership, x))
+      case RegisterAccessH(registerId, ReferenceH(ownership, x @ BoolH())) => {
+        RegisterAccessH[BoolH](registerId, ReferenceH(ownership, x))
       }
     }
   }
 }
 
-case class LoadFunction3(
-    registerId: String,
-    functionRef3: FunctionRef3
-) extends Node3 {
-  def functionType: FunctionT3 = functionRef3.prototype.functionType
-  def resultRef = Reference3(Raw, functionType)
+// Creates a Void, which can be thought of as an empty struct, and puts it into a register.
+case class ConstantVoidH(
+  // The register ID to put the void into.
+  registerId: String
+) extends NodeH
+
+// Creates a boolean and puts it into a register.
+case class ConstantBoolH(
+  // The register ID to put the boolean into.
+  registerId: String,
+  // The value of the boolean.
+  value: Boolean
+) extends NodeH
+
+// Creates an integer and puts it into a register.
+case class ConstantI64H(
+  // The register ID to put the integer into.
+  registerId: String,
+  // The value of the integer.
+  value: Int
+) extends NodeH
+
+// Creates a string and puts it into a register.
+case class ConstantStrH(
+  // The register ID to put the string into.
+  registerId: String,
+  // The value of the string.
+  value: String
+) extends NodeH
+
+// Creates a float and puts it into a register.
+case class ConstantF64H(
+  // The register ID to put the float into.
+  registerId: String,
+  // The value of the float.
+  value: Float
+) extends NodeH
+
+// Grabs the argument and puts it into a register.
+// There can only be one of these per argument; this conceptually destroys
+// the containing argument and puts its value into the register.
+case class ArgumentH(
+  // The register ID to put the argument's value into.
+  registerId: String,
+  // The argument's type.
+  resultReference: ReferenceH[ReferendH],
+  // The index of the argument, starting at 0.
+  argumentIndex: Int
+) extends NodeH
+
+// Takes a value from a register (the "source" register) and puts it into a local
+// variable on the stack.
+case class StackifyH(
+  // Unused, ignore this. It's just here to conform to the NodeH trait.
+  registerId: String,
+  // The register to read a value from.
+  // As with any read from a register, this will invalidate the register.
+  sourceRegister: RegisterAccessH[ReferendH],
+  // Describes the local we're making.
+  local: Local,
+  // Name of the local variable. Unique per block.
+  name: String
+) extends NodeH
+
+// Takes a value from a local variable on the stack, and moves it into a register.
+// The local variable is now invalid, since its value has been taken out.
+// See LocalLoadH for a similar instruction that *doesnt* invalidate the local var.
+case class UnstackifyH(
+  // The register ID to put the local's value into.
+  registerId: String,
+  // Describes the local we're pulling from. This is equal to the corresponding
+  // StackifyH's `local` member.
+  local: Local,
+  // The type we expect to get out of the local. Should be equal to local.
+  // TODO: If the vcurious below doesn't panic, then let's get rid of this redundant member.
+  expectedType: ReferenceH[ReferendH]
+) extends NodeH {
+  // Panics if this is ever not the case.
+  vcurious(local.typeH == expectedType)
 }
 
-case class ConstantVoid3(registerId: String) extends Node3 {
-  def resultRef = Reference3(Raw, Void3())
-  def resultAccess = RegisterAccess3(registerId, resultRef)
-}
-
-case class ConstantBool3(registerId: String, value: Boolean) extends Node3 {
-  def resultRef = Reference3(Share, Bool3())
-}
-
-case class ConstantI643(registerId: String, value: Int) extends Node3 {
-  def resultRef = Reference3(Share, Int3())
-  def resultAccess = RegisterAccess3(registerId, resultRef)
-}
-
-case class ConstantStr3(registerId: String, value: String) extends Node3 {
-  def resultRef = Reference3(Share, Str3())
-}
-
-case class ConstantF643(registerId: String, value: Float) extends Node3 {
-  def resultRef = Reference3(Share, Float3())
-}
-
-case class Argument3(
-    registerId: String,
-    resultReference: Reference3[Referend3],
-    argumentIndex: Int
-) extends Node3
-
-case class Stackify3(
-    registerId: String,
-    sourceRegister: RegisterAccess3[Referend3],
-    local: Local,
-    name: String
-) extends Node3
-
-case class Unstackify3(
-    registerId: String,
-    local: Local,
-    expectedType: Reference3[Referend3]
-) extends Node3
-
-case class Destructure3(
-    registerId: String,
-    structRegister: RegisterAccess3[StructRef3],
-    localTypes: List[Reference3[Referend3]],
-    localIndices: Vector[Local]
-) extends Node3 {
+// Takes a struct from the given register, and destroys it.
+// All of its members are saved from the jaws of death, and put into the specified
+// local variables.
+// This creates those local variables, much as a StackifyH would, and puts into them
+// the values from the dying struct instance.
+case class DestructureH(
+  // Unused, ignore. Just here to conform to the NodeH trait.
+  registerId: String,
+  // The register to take the struct from.
+  // As with any read from a register, this will invalidate the register.
+  structRegister: RegisterAccessH[StructRefH],
+  // A list of types, one for each local variable we'll make.
+  // TODO: If the vcurious below doesn't panic, get rid of this redundant member.
+  localTypes: List[ReferenceH[ReferendH]],
+  // The locals to put the struct's members into.
+  localIndices: Vector[Local]
+) extends NodeH {
   vassert(localTypes.size == localIndices.size)
+  vcurious(localTypes == localIndices.map(_.typeH).toList)
 }
 
-case class StructToInterfaceUpcast3(
-    registerId: String,
-    sourceRegister: RegisterAccess3[StructRef3],
-    targetInterfaceRef: InterfaceRef3
-) extends Node3 {
-  def resultRef = Reference3(sourceRegister.expectedType.ownership, targetInterfaceRef)
-}
-
-case class InterfaceToInterfaceUpcast3(
-    registerId: String,
-    sourceRegister: RegisterAccess3[InterfaceRef3],
-    targetInterfaceRef: InterfaceRef3
-) extends Node3 {
-  def resultRef = Reference3(sourceRegister.expectedType.ownership, targetInterfaceRef)
-}
-
-case class Reinterpret3(
+// Takes a struct reference from the "source" register, and makes an interface reference
+// to it, as the "target" reference, and puts it into another register.
+case class StructToInterfaceUpcastH(
+  // The register ID to put the interface reference into.
   registerId: String,
-  refRegister: RegisterAccess3[Referend3],
-  resultType: Reference3[Referend3],
-) extends Node3
+  // The register to get the struct reference from.
+  // As with any read from a register, this will invalidate the register.
+  sourceRegister: RegisterAccessH[StructRefH],
+  // The type of interface to cast to.
+  targetInterfaceRef: InterfaceRefH
+) extends NodeH {
+  // The resulting type will have the same ownership as the source register had.
+  def resultRef = ReferenceH(sourceRegister.expectedType.ownership, targetInterfaceRef)
+}
 
-case class LocalStore3(
-    registerId: String,
-    local: Local,
-    sourceRegister: RegisterAccess3[Referend3],
-    localName: String
-) extends Node3
+// Takes an interface reference from the "source" register, and makes another reference
+// to it, as the "target" inference, and puts it into another register.
+case class InterfaceToInterfaceUpcastH(
+  // The register ID to put the target interface reference into.
+  registerId: String,
+  // The register to get the source interface reference from.
+  // As with any read from a register, this will invalidate the register.
+  sourceRegister: RegisterAccessH[InterfaceRefH],
+  // The type of interface to cast to.
+  targetInterfaceRef: InterfaceRefH
+) extends NodeH {
+  // The resulting type will have the same ownership as the source register had.
+  def resultRef = ReferenceH(sourceRegister.expectedType.ownership, targetInterfaceRef)
+}
 
-case class LocalLoad3(
-    registerId: String,
-    local: Local,
-    targetOwnership: Ownership,
-    expectedLocalType: Reference3[Referend3],
-    expectedResultType: Reference3[Referend3],
-    localName: String
-) extends Node3 {
+// TODO: Get rid of this, reinterprets should only be used between hammer-equivalent
+// types, which means that this shouldnt be a hammer instruction.
+case class ReinterpretH(
+  registerId: String,
+  refRegister: RegisterAccessH[ReferendH],
+  resultType: ReferenceH[ReferendH],
+) extends NodeH
+
+// Takes a reference from the given "source" register, and puts it into an *existing*
+// local variable.
+case class LocalStoreH(
+  // Unused, ignore. Only here to conform to the NodeH trait.
+  registerId: String,
+  // The existing local to store into.
+  local: Local,
+  // The register to get the source reference from.
+  // As with any read from a register, this will invalidate the register.
+  sourceRegister: RegisterAccessH[ReferendH],
+  // Name of the local variable, for debug purposes.
+  localName: String
+) extends NodeH
+
+// Takes a reference from the given local variable, and puts it into a new register.
+// This can never move a reference, only alias it. The instruction which can move a
+// reference is UnstackifyH.
+case class LocalLoadH(
+  // The register ID to put the target interface reference into.
+  registerId: String,
+  // The existing local to load from.
+  local: Local,
+  // The ownership of the reference to put into the register. This doesn't have to
+  // match the ownership of the reference from the local. For example, we might want
+  // to load a constraint reference from an owning local.
+  targetOwnership: Ownership,
+  // TODO: Get rid of this, it's reduntant.
+  expectedLocalType: ReferenceH[ReferendH],
+  // TODO: Get rid of this, it's reduntant.
+  expectedResultType: ReferenceH[ReferendH],
+  // Name of the local variable, for debug purposes.
+  localName: String
+) extends NodeH {
   vassert(expectedLocalType.kind == expectedResultType.kind)
   vassert(expectedResultType.ownership == targetOwnership)
 }
 
-case class MemberStore3(
-    registerId: String,
-    structRegister: RegisterAccess3[StructRef3],
-    memberIndex: Int,
-    sourceRegister: RegisterAccess3[Referend3],
-    memberName: String
-) extends Node3
+// Takes a reference from the given "source" register, and swaps it into the given
+// struct's member. The member's old reference is put into a new register.
+case class MemberStoreH(
+  // The register ID to put the member's old value into.
+  registerId: String,
+  // Register containing a reference to the struct whose member we will swap.
+  structRegister: RegisterAccessH[StructRefH],
+  // Which member to swap out, starting at 0.
+  memberIndex: Int,
+  // Register containing the new value for the struct's member.
+  // As with any read from a register, this will invalidate the register.
+  sourceRegister: RegisterAccessH[ReferendH],
+  // Name of the member, for debug purposes.
+  memberName: String
+) extends NodeH
 
-case class MemberLoad3(
-    registerId: String,
-    structRegister: RegisterAccess3[StructRef3],
-    memberIndex: Int,
-    targetOwnership: Ownership,
-    expectedMemberType: Reference3[Referend3],
-    expectedResultType: Reference3[Referend3],
-    memberName: String
-) extends Node3 {
+// Takes a reference from the given "struct" register, and copies it into a new
+// register. This can never move a reference, only alias it.
+case class MemberLoadH(
+  // The register ID to put the member's value into.
+  registerId: String,
+  // Register containing a reference to the struct whose member we will read.
+  // As with any read from a register, this will invalidate the register.
+  structRegister: RegisterAccessH[StructRefH],
+  // Which member to read from, starting at 0.
+  memberIndex: Int,
+  // The ownership to load as. For example, we might load a constraint reference from a
+  // owning Car reference member.
+  targetOwnership: Ownership,
+  // The type we expect the member to be. This can easily be looked up, but is provided
+  // here to be convenient for LLVM.
+  expectedMemberType: ReferenceH[ReferendH],
+  // The type of the resulting reference.
+  expectedResultType: ReferenceH[ReferendH],
+  // Member's name, for debug purposes.
+  memberName: String
+) extends NodeH {
   vassert(expectedMemberType.kind == expectedResultType.kind)
   vassert(expectedResultType.ownership == targetOwnership)
 }
 
-case class KnownSizeArrayStore3(
+// Creates an array whose size is fixed and known at compile time, and puts it into
+// a register.
+case class NewArrayFromValuesH(
+  // The register to put the array into.
   registerId: String,
-  arrayRegister: RegisterAccess3[KnownSizeArrayT3],
-  indexRegister: RegisterAccess3[Int3],
-  sourceRegister: RegisterAccess3[Referend3]
-) extends Node3
+  // The registers from which we'll get the values to put into the array.
+  // As with any read from a register, this will invalidate the registers.
+  sourceRegisters: List[RegisterAccessH[ReferendH]],
+  // The resulting type of the array.
+  // TODO: See if we can infer this from the types in the registers.
+  arrayRefType: ReferenceH[KnownSizeArrayTH]
+) extends NodeH
 
-case class UnknownSizeArrayStore3(
+// Loads from the "source" register and swaps it into the array from arrayRegister at
+// the position specified by the integer in indexRegister. The old value from the
+// array is moved out into registerId.
+// This is for the kind of array whose size we know at compile time, the kind that
+// doesn't need to carry around a size. For the corresponding instruction for the
+// unknown-size-at-compile-time array, see UnknownSizeArrayStoreH.
+case class KnownSizeArrayStoreH(
+  // The register to store the old value in.
   registerId: String,
-  arrayRegister: RegisterAccess3[UnknownSizeArrayT3],
-  indexRegister: RegisterAccess3[Int3],
-  sourceRegister: RegisterAccess3[Referend3]
-) extends Node3
+  // Register containing the array whose element we'll swap out.
+  // As with any read from a register, this will invalidate the register.
+  arrayRegister: RegisterAccessH[KnownSizeArrayTH],
+  // Register containing the index of the element we'll swap out.
+  // As with any read from a register, this will invalidate the register.
+  indexRegister: RegisterAccessH[IntH],
+  // Register containing the value we'll swap into the array.
+  // As with any read from a register, this will invalidate the register.
+  sourceRegister: RegisterAccessH[ReferendH]
+) extends NodeH
 
-case class UnknownSizeArrayLoad3(
-    registerId: String,
-    arrayRegister: RegisterAccess3[UnknownSizeArrayT3],
-    indexRegister: RegisterAccess3[Int3],
-    resultType: Reference3[Referend3],
-    targetOwnership: Ownership
-) extends Node3
+// Loads from the "source" register and swaps it into the array from arrayRegister at
+// the position specified by the integer in indexRegister. The old value from the
+// array is moved out into registerId.
+// This is for the kind of array whose size we don't know at compile time, the kind
+// that needs to carry around a size. For the corresponding instruction for the
+// known-size-at-compile-time array, see KnownSizeArrayStoreH.
+case class UnknownSizeArrayStoreH(
+  // The register to store the old value in.
+  registerId: String,
+  // Register containing the array whose element we'll swap out.
+  // As with any read from a register, this will invalidate the register.
+  arrayRegister: RegisterAccessH[UnknownSizeArrayTH],
+  // Register containing the index of the element we'll swap out.
+  // As with any read from a register, this will invalidate the register.
+  indexRegister: RegisterAccessH[IntH],
+  // Register containing the value we'll swap into the array.
+  // As with any read from a register, this will invalidate the register.
+  sourceRegister: RegisterAccessH[ReferendH]
+) extends NodeH
 
-case class KnownSizeArrayLoad3(
-    registerId: String,
-    arrayRegister: RegisterAccess3[KnownSizeArrayT3],
-    indexRegister: RegisterAccess3[Int3],
-    resultType: Reference3[Referend3],
-    targetOwnership: Ownership
-) extends Node3
+// Loads from the array in arrayRegister at the index in indexRegister, and stores
+// the result in registerId. This can never move a reference, only alias it.
+// This is for the kind of array whose size we don't know at compile time, the kind
+// that needs to carry around a size. For the corresponding instruction for the
+// known-size-at-compile-time array, see KnownSizeArrayLoadH.
+case class UnknownSizeArrayLoadH(
+  // The register to store the value in.
+  registerId: String,
+  // Register containing the array whose element we'll read.
+  // As with any read from a register, this will invalidate the register.
+  arrayRegister: RegisterAccessH[UnknownSizeArrayTH],
+  // Register containing the index of the element we'll read.
+  // As with any read from a register, this will invalidate the register.
+  indexRegister: RegisterAccessH[IntH],
+  // Resulting reference's type.
+  // TODO: Remove this, it's redundant with targetOwnership and the array's element type.
+  resultType: ReferenceH[ReferendH],
+  // The ownership to load as. For example, we might load a constraint reference from a
+  // owning Car reference element.
+  targetOwnership: Ownership
+) extends NodeH
 
-case class Call3(
-    registerId: String,
-    functionRegister: RegisterAccess3[FunctionT3],
-    argsRegisters: List[RegisterAccess3[Referend3]]
-) extends Node3 {
-  def resultType = functionRegister.expectedType.kind.returnType
-}
+// Loads from the array in arrayRegister at the index in indexRegister, and stores
+// the result in registerId. This can never move a reference, only alias it.
+// This is for the kind of array whose size we know at compile time, the kind that
+// doesn't need to carry around a size. For the corresponding instruction for the
+// known-size-at-compile-time array, see KnownSizeArrayStoreH.
+case class KnownSizeArrayLoadH(
+  // The register to store the value in.
+  registerId: String,
+  // Register containing the array whose element we'll read.
+  // As with any read from a register, this will invalidate the register.
+  arrayRegister: RegisterAccessH[KnownSizeArrayTH],
+  // Register containing the index of the element we'll read.
+  // As with any read from a register, this will invalidate the register.
+  indexRegister: RegisterAccessH[IntH],
+  // Resulting reference's type.
+  // TODO: Remove this, it's redundant with targetOwnership and the array's element type.
+  resultType: ReferenceH[ReferendH],
+  // The ownership to load as. For example, we might load a constraint reference from a
+  // owning Car reference element.
+  targetOwnership: Ownership
+) extends NodeH
 
-case class ExternCall3(
-    registerId: String,
-    functionRef3: FunctionRef3,
-    argsRegisters: List[RegisterAccess3[Referend3]]
-) extends Node3
+// Calls a function.
+case class CallH(
+  // The register to put the returned value into.
+  registerId: String,
+  // Identifies which function to call.
+  function: PrototypeH,
+  // Registers containing the arguments to pass to the function.
+  // As with any read from a register, this will invalidate the registers.
+  argsRegisters: List[RegisterAccessH[ReferendH]]
+) extends NodeH
 
-case class InterfaceCall3(
-    registerId: String,
-    argsRegisters: List[RegisterAccess3[Referend3]],
-    virtualParamIndex: Int,
-    InterfaceRef3: InterfaceRef3,
-    interfaceId: Int,
-    indexInEdge: Int,
-    functionType: FunctionT3
-) extends Node3 {
+// Calls a function on an interface.
+case class InterfaceCallH(
+  // The register to put the returned value into.
+  registerId: String,
+  // Registers containing the arguments to pass to the function.
+  // As with any read from a register, this will invalidate the registers.
+  argsRegisters: List[RegisterAccessH[ReferendH]],
+  // Which parameter has the interface whose table we'll read to get the function.
+  virtualParamIndex: Int,
+  // The type of the interface.
+  // TODO: Take this out, it's redundant, can get it from argsRegisters[virtualParamIndex]
+  interfaceRefH: InterfaceRefH,
+  // The ID of the interface.
+  // TODO: Take this out, it's redundant with interfaceRef's id.
+  interfaceId: Int,
+  // The index in the vtable for the function.
+  indexInEdge: Int,
+  // The function we expect to be calling. Note that this is the prototype for the abstract
+  // function, not the prototype for the function that will eventually be called. The
+  // difference is that this prototype will have an interface at the virtualParamIndex'th
+  // parameter, and the function that is eventually called will have a struct there.
+  functionType: PrototypeH
+) extends NodeH {
   vassert(indexInEdge >= 0)
 }
 
-case class If3(
-    registerId: String,
-    conditionBlock: Block3,
-    thenBlock: Block3,
-    elseBlock: Block3
-) extends Node3
+// An if-statement. It will get a boolean from running conditionBlock, and use it to either
+// call thenBlock or elseBlock. The result of the thenBlock or elseBlock will be put into
+// registerId.
+case class IfH(
+  // The register we'll put the then/else's result into.
+  registerId: String,
+  // The block for the condition. If this results in a true, we'll run thenBlock, otherwise
+  // we'll run elseBlock.
+  conditionBlock: BlockH,
+  // The block to run if conditionBlock results in a true. The result of this block will be
+  // put into registerId.
+  thenBlock: BlockH,
+  // The block to run if conditionBlock results in a false. The result of this block will be
+  // put into registerId.
+  elseBlock: BlockH
+) extends NodeH
 
-case class While3(registerId: String, bodyBlock: Block3) extends Node3
+// A while loop. Continuously runs bodyBlock until it returns false.
+case class WhileH(
+  // Unused, ignore. It's just here to conform to the NodeH trait.
+  registerId: String,
+  // The block to run until it returns false.
+  bodyBlock: BlockH
+) extends NodeH
 
-case class InlineBlock3(registerId: String, block: Block3) extends Node3 {
+// TODO: Get rid of this, merge it into BlockH.
+case class InlineBlockH(
+  registerId: String,
+  block: BlockH
+) extends NodeH
 
-}
-
-case class Block3(
-  nodes: Vector[Node3],
-  resultType: Reference3[Referend3]
+// A collection of instructions. The last one will be used as the block's result.
+case class BlockH(
+  // The instructions to run.
+  nodes: Vector[NodeH],
+  // The resulting type of the block.
+  // TODO: Get rid of this, it's redundant with the last node's result type.
+  resultType: ReferenceH[ReferendH]
 ) {
   vassert(nodes.nonEmpty)
   if (nodes.map(_.registerId).toSet.size != nodes.size) {
@@ -284,137 +475,180 @@ case class Block3(
   }
 }
 
-case class Return3(
+// Ends the current function and returns a reference. A function will always end
+// with a return statement.
+case class ReturnH(
+  // Unused, ignore. Only here to conform to the NodeH trait.
   registerId: String,
-  sourceRegister: RegisterAccess3[Referend3]
-) extends Node3
+  // The register to read from, whose value we'll return from the function.
+  // As with any read from a register, this will invalidate the register.
+  sourceRegister: RegisterAccessH[ReferendH]
+) extends NodeH
 
-
-case class ConstructArrayCall3(
-    registerId: String,
-    sizeRegister: RegisterAccess3[Int3],
-    generatorFunctionRegister: RegisterAccess3[FunctionT3],
-    generatorArgsRegisters: List[RegisterAccess3[Referend3]],
-    arrayRefType: Reference3[UnknownSizeArrayT3]
-) extends Node3 {
-  vassert(generatorFunctionRegister.expectedType.kind.returnType.kind != Void3())
+// Constructs an unknown-size array, whose length is the integer from sizeRegister,
+// whose values are generated from the function from generatorRegister. Puts the
+// result in a new register.
+case class ConstructUnknownSizeArrayH(
+  // The register we'll put the new array into.
+  registerId: String,
+  // Register containing the size of the new array.
+  // As with any read from a register, this will invalidate the register.
+  sizeRegister: RegisterAccessH[IntH],
+  // Register containing the IFunction<Int, T> interface reference which we'll
+  // call to generate each element of the array.
+  // More specifically, we'll call the "__call" function on the interface, which
+  // should be the only function on it.
+  // This is a constraint reference.
+  // As with any read from a register, this will invalidate the register.
+  generatorRegister: RegisterAccessH[InterfaceRefH],
+  // The resulting type of the array.
+  // TODO: Remove this, it's redundant with the generatorRegister's interface's
+  // only method's return type.
+  arrayRefType: ReferenceH[UnknownSizeArrayTH]
+) extends NodeH {
+  vassert(generatorRegister.expectedType.ownership == Borrow)
 }
 
-// The consumer function takes just the element
-case class DestroyKnownSizeArray3(
+// Destroys an array previously created with NewArrayFromValuesH.
+case class DestroyKnownSizeArrayH(
+  // Unused, ignore. Just here to conform to the NodeH trait.
   registerId: String,
-  arrayRegister: RegisterAccess3[KnownSizeArrayT3],
-  consumerFunctionRegister: RegisterAccess3[FunctionT3],
-  consumerArgsRegisters: List[RegisterAccess3[Referend3]]
-) extends Node3 {
-  vassert(consumerFunctionRegister.expectedType.kind.returnType.kind == Void3())
-}
+  // Register containing the array we'll destroy.
+  // This is an owning reference.
+  // As with any read from a register, this will invalidate the register.
+  arrayRegister: RegisterAccessH[KnownSizeArrayTH],
+  // Register containing the IFunction<T, Void> interface reference which we'll
+  // call to destroy each element of the array.
+  // More specifically, we'll call the "__call" function on the interface, which
+  // should be the only function on it.
+  // This is a constraint reference.
+  // As with any read from a register, this will invalidate the register.
+  consumerRegister: RegisterAccessH[InterfaceRefH]
+) extends NodeH
 
-// The consumer function takes just the element
-case class DestroyUnknownSizeArray3(
+// Destroys an array previously created with ConstructUnknownSizeArrayH.
+case class DestroyUnknownSizeArrayH(
+  // Unused, ignore. Just here to conform to the NodeH trait.
   registerId: String,
-  arrayRegister: RegisterAccess3[UnknownSizeArrayT3],
-  consumerFunctionRegister: RegisterAccess3[FunctionT3],
-  consumerArgsRegisters: List[RegisterAccess3[Referend3]],
-) extends Node3 {
-  vassert(consumerFunctionRegister.expectedType.kind.returnType.kind == Void3())
-}
+  // Register containing the array we'll destroy.
+  // This is an owning reference.
+  // As with any read from a register, this will invalidate the register.
+  arrayRegister: RegisterAccessH[UnknownSizeArrayTH],
+  // Register containing the IFunction<T, Void> interface reference which we'll
+  // call to destroy each element of the array.
+  // More specifically, we'll call the "__call" function on the interface, which
+  // should be the only function on it.
+  // This is a constraint reference.
+  // As with any read from a register, this will invalidate the register.
+  consumerRegister: RegisterAccessH[InterfaceRefH]
+) extends NodeH
 
-case class Placeholder3(
+// Creates a new struct instance.
+case class NewStructH(
+  // The register we'll put the reference into.
+  // This should be an owning reference (or shared, if the struct's immutable).
   registerId: String,
-  tyype: Reference3[Referend3]
-) extends Node3
+  // Registers containing the values we'll use as members of the new struct.
+  // As with any read from a register, this will invalidate the register.
+  sourceRegisters: List[RegisterAccessH[ReferendH]],
+  // The type of struct we'll create.
+  structRefType: ReferenceH[StructRefH]
+) extends NodeH
 
-case class NewStruct3(
+// Gets the length of an unknown-sized array.
+case class ArrayLengthH(
+  // The register we'll put the length into.
   registerId: String,
-  sourceRegisters: List[RegisterAccess3[Referend3]],
-  structRefType: Reference3[StructRef3]
-) extends Node3
+  // Register containing the array whose length we'll get.
+  // As with any read from a register, this will invalidate the register.
+  sourceRegister: RegisterAccessH[ReferendH],
+) extends NodeH
 
-case class ArrayLength3(
+// Only used for the VM, or a debug mode. Checks that the reference count
+// is as we expected.
+// This instruction can be safely ignored, it's mainly here for tests.
+case class CheckRefCountH(
+  // Unused, ignore. Just here to conform to the NodeH trait.
   registerId: String,
-  sourceRegisters: RegisterAccess3[Referend3],
-) extends Node3
+  // Register containing the reference whose ref count we'll measure.
+  refRegister: RegisterAccessH[ReferendH],
+  // The type of ref count to check.
+  category: RefCountCategory,
+  // Register containing a number, so we can assert it's equal to the object's
+  // ref count.
+  numRegister: RegisterAccessH[IntH]
+) extends NodeH
 
-case class NewArrayFromValues3(
+// Discards a register, making it invalid.
+// This instruction can be safely ignored. It's used by the VM to ensure that
+// we consistently discard all registers that were created, in the exact reverse
+// order they were created.
+case class DiscardH(
     registerId: String,
-    sourceRegisters: List[RegisterAccess3[Referend3]],
-    arrayRefType: Reference3[KnownSizeArrayT3]
-) extends Node3
+    sourceRegister: RegisterAccessH[ReferendH]
+) extends NodeH
 
-case class CheckRefCount3(
-    registerId: String,
-    refRegister: RegisterAccess3[Referend3],
-    category: RefCountCategory,
-    numRegister: RegisterAccess3[Int3]
-) extends Node3
+case class NamePartH(humanName: String, maybeTemplateArgs: Option[List[ITemplataH]])
+case class FullNameH(parts: List[NamePartH])
 
-case class Discard3(
-    registerId: String,
-    sourceRegister: RegisterAccess3[Referend3]
-) extends Node3
-
-case class NamePart3(humanName: String, maybeTemplateArgs: Option[List[ITemplata3]])
-case class FullName3(parts: List[NamePart3])
-
-case class Prototype3(
+case class PrototypeH(
     functionId: Int,
-    fullName: FullName3,
-    params: List[Reference3[Referend3]],
-    returnType: Reference3[Referend3]
+    fullName: FullNameH,
+    params: List[ReferenceH[ReferendH]],
+    returnType: ReferenceH[ReferendH]
 ) {
-  def functionType = FunctionT3(params, returnType)
+  def functionType = FunctionTH(params, returnType)
 }
 
-case class Function3(
-    prototype: Prototype3,
+case class FunctionH(
+    prototype: PrototypeH,
     isAbstract: Boolean,
     isExtern: Boolean,
     isUserFunction: Boolean,
-    block: Block3) {
-  def getRef = FunctionRef3(prototype)
+    block: BlockH) {
+  def getRef = FunctionRefH(prototype)
   def fullName = prototype.fullName
 }
 
 
-case class InterfaceDefinition3(
+case class InterfaceDefinitionH(
     interfaceId: Int,
-    fullName: FullName3,
+    fullName: FullNameH,
     mutability: Mutability,
-    superInterfaces: List[InterfaceRef3],
-    prototypes: List[Prototype3]) {
-  def getRef = InterfaceRef3(interfaceId, fullName)
+    superInterfaces: List[InterfaceRefH],
+    prototypes: List[PrototypeH]) {
+  def getRef = InterfaceRefH(interfaceId, fullName)
 }
 
-case class FunctionRef3(prototype: Prototype3) {
+case class FunctionRefH(prototype: PrototypeH) {
   def functionType = prototype.functionType
   def fullName = prototype.fullName
 }
 
-case class Edge3(
-    struct: StructRef3,
-    interface: InterfaceRef3,
-    structPrototypesByInterfacePrototype: ListMap[Prototype3, Prototype3])
+case class EdgeH(
+    struct: StructRefH,
+    interface: InterfaceRefH,
+    structPrototypesByInterfacePrototype: ListMap[PrototypeH, PrototypeH])
 
-case class ETable3(struct: StructRef3, table: TetrisTable[InterfaceRef3, InterfaceRef3])
+case class ETableH(struct: StructRefH, table: TetrisTable[InterfaceRefH, InterfaceRefH])
 
-case class StructMember3(
+case class StructMemberH(
     name: String,
     variability: Variability,
-    tyype: Reference3[Referend3])
+    tyype: ReferenceH[ReferendH])
 
-case class StructDefinition3(
+case class StructDefinitionH(
     structId: Int,
-    fullName: FullName3,
+    fullName: FullNameH,
     mutability: Mutability,
-    eTable: ETable3,
-    edges: List[Edge3],
-    members: List[StructMember3]) {
+    eTable: ETableH,
+    edges: List[EdgeH],
+    members: List[StructMemberH]) {
 
-  def getRef: StructRef3 = StructRef3(structId, fullName)
+  def getRef: StructRefH = StructRefH(structId, fullName)
 
   // These functions are tightly coupled with StructSculptor.declareStructInfo
-  def getInterfacePtrElementIndex(interfaceRef: InterfaceRef3): Int = {
+  def getInterfacePtrElementIndex(interfaceRef: InterfaceRefH): Int = {
     val index = edges.indexWhere(_.interface == interfaceRef)
     vassert(index >= 0)
     index
@@ -428,7 +662,7 @@ case class StructDefinition3(
     edges.size + 2 + memberIndex
   }
 
-  def getTypeAndIndex(memberName: String): (Reference3[Referend3], Int) = {
+  def getTypeAndIndex(memberName: String): (ReferenceH[ReferendH], Int) = {
     members.zipWithIndex.find(p => p._1.name.equals(memberName)) match {
       case None => vfail("wat " + this + " " + memberName)
       case Some((member, index)) => (member.tyype, index)
@@ -436,12 +670,12 @@ case class StructDefinition3(
   }
 }
 
-case class Program3(
-    interfaces: List[InterfaceDefinition3],
-    structs: List[StructDefinition3],
-    emptyPackStructRef: StructRef3,
-    externs: List[Prototype3],
-    functions: List[Function3]) {
+case class ProgramH(
+    interfaces: List[InterfaceDefinitionH],
+    structs: List[StructDefinitionH],
+    emptyPackStructRef: StructRefH,
+    externs: List[PrototypeH],
+    functions: List[FunctionH]) {
   def externFunctions = functions.filter(_.isExtern)
   def abstractFunctions = functions.filter(_.isAbstract)
   // Functions that are neither extern nor abstract

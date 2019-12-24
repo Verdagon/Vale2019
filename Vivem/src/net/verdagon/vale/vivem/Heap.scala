@@ -13,7 +13,7 @@ import scala.collection.mutable
 case class ReturnV(blockId: BlockId, reference: ReferenceV)
 
 class AdapterForExterns(
-    val program3: Program3,
+    val programH: ProgramH,
     private val heap: Heap,
     blockId: BlockId,
     val stdin: (() => String),
@@ -121,17 +121,17 @@ class Heap(in_vivemDout: PrintStream) {
   private val callIdStack = mutable.Stack[CallId]();
   private val callsById = mutable.HashMap[CallId, Call]()
 
-  def addLocal(varAddr: VariableAddressV, reference: ReferenceV, expectedType: Reference3[Referend3]) = {
+  def addLocal(varAddr: VariableAddressV, reference: ReferenceV, expectedType: ReferenceH[ReferendH]) = {
     val call = getCurrentCall(varAddr.callId)
     call.addLocal(varAddr, reference, expectedType)
     incrementReferenceRefCount(VariableToObjectReferrer(varAddr), reference)
   }
 
-  def getReference(varAddr: VariableAddressV, expectedType: Reference3[Referend3]) = {
+  def getReference(varAddr: VariableAddressV, expectedType: ReferenceH[ReferendH]) = {
     callsById(varAddr.callId).getLocal(varAddr).reference.get
   }
 
-  def removeLocal(varAddr: VariableAddressV, expectedType: Reference3[Referend3]) = {
+  def removeLocal(varAddr: VariableAddressV, expectedType: ReferenceH[ReferendH]) = {
     val variable = getLocal(varAddr)
     val actualReference = variable.reference.get
     checkReference(expectedType, actualReference)
@@ -139,7 +139,7 @@ class Heap(in_vivemDout: PrintStream) {
     variable.reference = None
   }
 
-  def getReferenceFromLocal(varAddr: VariableAddressV, expectedType: Reference3[Referend3]): ReferenceV = {
+  def getReferenceFromLocal(varAddr: VariableAddressV, expectedType: ReferenceH[ReferendH]): ReferenceV = {
     val variable = getLocal(varAddr)
     if (variable.expectedType != expectedType) {
       vfail("blort")
@@ -155,7 +155,7 @@ class Heap(in_vivemDout: PrintStream) {
     callsById(varAddr.callId).getLocal(varAddr)
   }
 
-  def mutateVariable(varAddress: VariableAddressV, reference: ReferenceV, expectedType: Reference3[Referend3]): ReferenceV = {
+  def mutateVariable(varAddress: VariableAddressV, reference: ReferenceV, expectedType: ReferenceH[ReferendH]): ReferenceV = {
     val variable = callsById(varAddress.callId).getLocal(varAddress)
     checkReference(expectedType, reference)
     checkReference(variable.expectedType, reference)
@@ -166,7 +166,7 @@ class Heap(in_vivemDout: PrintStream) {
     callsById(varAddress.callId).mutateLocal(varAddress, reference, expectedType)
     oldReference
   }
-  def mutateArray(elementAddress: ElementAddressV, reference: ReferenceV, expectedType: Reference3[Referend3]): ReferenceV = {
+  def mutateArray(elementAddress: ElementAddressV, reference: ReferenceV, expectedType: ReferenceH[ReferendH]): ReferenceV = {
     val ElementAddressV(arrayRef, elementIndex) = elementAddress
     objectsById.get(arrayRef).referend match {
       case ai @ ArrayInstanceV(_, _, _, _) => {
@@ -179,15 +179,15 @@ class Heap(in_vivemDout: PrintStream) {
       }
     }
   }
-  def mutateStruct(memberAddress: MemberAddressV, reference: ReferenceV, expectedType: Reference3[Referend3]):
+  def mutateStruct(memberAddress: MemberAddressV, reference: ReferenceV, expectedType: ReferenceH[ReferendH]):
   ReferenceV = {
     val MemberAddressV(objectId, fieldIndex) = memberAddress
     objectsById.get(objectId).referend match {
-      case si @ StructInstanceV(structDef3, members) => {
+      case si @ StructInstanceV(structDefH, members) => {
         val oldMemberReference = members(fieldIndex)
         decrementReferenceRefCount(MemberToObjectReferrer(memberAddress), oldMemberReference)
 //        maybeDeallocate(actualReference)
-        vassert(structDef3.members(fieldIndex).tyype == expectedType)
+        vassert(structDefH.members(fieldIndex).tyype == expectedType)
         // We only do this to check that it's non-empty. curiosity assert, do we gotta do somethin special if somethin was moved out
         si.getReferenceMember(fieldIndex)
         si.setReferenceMember(fieldIndex, reference)
@@ -197,7 +197,7 @@ class Heap(in_vivemDout: PrintStream) {
     }
   }
 //
-//  def blacklistElement(elementAddress: ElementAddressV, expectedType: Reference3[Referend3]): Unit = {
+//  def blacklistElement(elementAddress: ElementAddressV, expectedType: ReferenceH[ReferendH]): Unit = {
 //    objectsById.get(elementAddress.arrayId).referend match {
 //      case ai @ ArrayInstanceV(_, _, _) => {
 //        val ref = ai.getElement(elementAddress.elementIndex)
@@ -210,7 +210,7 @@ class Heap(in_vivemDout: PrintStream) {
 //    }
 //  }
 
-  def getReferenceFromStruct(address: MemberAddressV, expectedType: Reference3[Referend3]): ReferenceV = {
+  def getReferenceFromStruct(address: MemberAddressV, expectedType: ReferenceH[ReferendH]): ReferenceV = {
     val MemberAddressV(objectId, fieldIndex) = address
     objectsById.get(objectId).referend match {
       case StructInstanceV(_, members) => {
@@ -220,7 +220,7 @@ class Heap(in_vivemDout: PrintStream) {
       }
     }
   }
-  def getReferenceFromArray(address: ElementAddressV, expectedType: Reference3[Referend3]): ReferenceV = {
+  def getReferenceFromArray(address: ElementAddressV, expectedType: ReferenceH[ReferendH]): ReferenceV = {
     val ElementAddressV(objectId, elementIndex) = address
     objectsById.get(objectId).referend match {
       case ai @ ArrayInstanceV(_, _, _, _) => {
@@ -257,7 +257,7 @@ class Heap(in_vivemDout: PrintStream) {
   def destructure(reference: ReferenceV): Vector[ReferenceV] = {
     val allocation = dereference(reference)
     allocation match {
-      case StructInstanceV(structDef3, memberRefs) => {
+      case StructInstanceV(structDefH, memberRefs) => {
         memberRefs.zipWithIndex.foreach({ case (memberRef, index) =>
           decrementReferenceRefCount(MemberToObjectReferrer(MemberAddressV(reference.allocId, index)), memberRef)
         })
@@ -326,7 +326,7 @@ class Heap(in_vivemDout: PrintStream) {
     objectsById.add(ownership, referend)
   }
 
-  def alias(reference: ReferenceV, expectedType: Reference3[Referend3], targetOwnership: Ownership): ReferenceV = {
+  def alias(reference: ReferenceV, expectedType: ReferenceH[ReferendH], targetOwnership: Ownership): ReferenceV = {
     val ReferenceV(actualKind, oldSeenAsType, oldOwnership, objectId) = reference
     vassert((oldOwnership == Share) == (targetOwnership == Share))
     if (oldSeenAsType.hamut != expectedType.kind) {
@@ -381,9 +381,9 @@ class Heap(in_vivemDout: PrintStream) {
       case IntV(_) =>
       case BoolV(_) =>
       case FloatV(_) =>
-      case StructInstanceV(structDef3, members) => {
-        members.zip(structDef3.members).foreach({
-          case (reference, StructMember3(_, _, reference3)) => {
+      case StructInstanceV(structDefH, members) => {
+        members.zip(structDefH.members).foreach({
+          case (reference, StructMemberH(_, _, referenceH)) => {
             innerFindReachableAllocations(destinationMap, reference)
           }
         })
@@ -400,7 +400,7 @@ class Heap(in_vivemDout: PrintStream) {
     callsById(expectedCallId)
   }
 
-  def moveArgumentIntoRegister(registerId: RegisterId, argumentIndex: Int, expectedType: Reference3[Referend3]) = {
+  def moveArgumentIntoRegister(registerId: RegisterId, argumentIndex: Int, expectedType: ReferenceH[ReferendH]) = {
     val reference = getCurrentCall(registerId.blockId.callId).takeArgument(argumentIndex)
     checkReference(expectedType, reference)
     setReferenceRegister(registerId, reference) // this increments it
@@ -410,7 +410,7 @@ class Heap(in_vivemDout: PrintStream) {
     // Now, the register is the only one that has this reference.
   }
 
-  def returnFromRegister(registerId: RegisterId, expectedType: Reference3[Referend3]) = {
+  def returnFromRegister(registerId: RegisterId, expectedType: ReferenceH[ReferendH]) = {
     val ref = takeReferenceFromRegister(registerId, expectedType)
     incrementReferenceRefCount(
       ResultToObjectReferrer(registerId.blockId.callId),
@@ -426,7 +426,7 @@ class Heap(in_vivemDout: PrintStream) {
     ref
   }
 
-  def aliasIntoRegister(registerId: RegisterId, reference: ReferenceV, expectedType: Reference3[Referend3], targetOwnership: Ownership) = {
+  def aliasIntoRegister(registerId: RegisterId, reference: ReferenceV, expectedType: ReferenceH[ReferendH], targetOwnership: Ownership) = {
     val ref = alias(reference, expectedType, targetOwnership)
     setReferenceRegister(registerId, ref)
   }
@@ -438,9 +438,9 @@ class Heap(in_vivemDout: PrintStream) {
       case BoolV(value) => vivemDout.print(value)
       case StrV(value) => vivemDout.print(value)
       case FloatV(value) => vivemDout.print(value)
-      case FunctionReferendV(function3) => vivemDout.print(function3.fullName + "(...)")
-      case StructInstanceV(struct3, members) => vivemDout.print(struct3.fullName + "{" + members.map("o" + _.allocId.num).mkString(", ") + "}")
-      case ArrayInstanceV(type3, memberType3, size, elements) => vivemDout.print("array:" + size + ":" + memberType3 + "{" + elements.map("o" + _.allocId.num).mkString(", ") + "}")
+      case FunctionReferendV(functionH) => vivemDout.print(functionH.fullName + "(...)")
+      case StructInstanceV(structH, members) => vivemDout.print(structH.fullName + "{" + members.map("o" + _.allocId.num).mkString(", ") + "}")
+      case ArrayInstanceV(typeH, memberTypeH, size, elements) => vivemDout.print("array:" + size + ":" + memberTypeH + "{" + elements.map("o" + _.allocId.num).mkString(", ") + "}")
     }
   }
 
@@ -487,12 +487,12 @@ class Heap(in_vivemDout: PrintStream) {
 
   def newStruct(
       registerId: RegisterId,
-      structDef3: StructDefinition3,
-      structRef3: Reference3[StructRef3],
+      structDefH: StructDefinitionH,
+      structRefH: ReferenceH[StructRefH],
       memberReferences: List[ReferenceV]):
   ReferenceV = {
-    val instance = StructInstanceV(structDef3, memberReferences.toVector)
-    val reference = add(structRef3.ownership, instance)
+    val instance = StructInstanceV(structDefH, memberReferences.toVector)
+    val reference = add(structRefH.ownership, instance)
 
     memberReferences.zipWithIndex.foreach({ case (memberReference, index) =>
       incrementReferenceRefCount(
@@ -530,27 +530,27 @@ class Heap(in_vivemDout: PrintStream) {
 //    maybeDeallocate(ret.reference.allocId)
   }
 
-  def takeReferenceFromRegister(registerId: RegisterId, expectedType: Reference3[Referend3]) = {
+  def takeReferenceFromRegister(registerId: RegisterId, expectedType: ReferenceH[ReferendH]) = {
     val register = getCurrentCall(registerId.blockId.callId).takeRegister(registerId)
     val ref = checkReferenceRegister(expectedType, register).reference
     decrementReferenceRefCount(RegisterToObjectReferrer(registerId), ref)
     ref
   }
 
-  def takeReferencesFromRegistersInReverse(blockId: BlockId, registerIds: List[RegisterAccess3[Referend3]]): List[ReferenceV] = {
+  def takeReferencesFromRegistersInReverse(blockId: BlockId, registerIds: List[RegisterAccessH[ReferendH]]): List[ReferenceV] = {
     registerIds
         .reverse
         .map({
-          case RegisterAccess3(argRegisterId, expectedType) => {
+          case RegisterAccessH(argRegisterId, expectedType) => {
             takeReferenceFromRegister(RegisterId(blockId, argRegisterId), expectedType)
           }
         })
         .reverse
   }
 
-  def takeFunctionReferenceFromRegister(functionLine: RegisterId, expectedFunctionType: FunctionT3) = {
+  def takeFunctionReferenceFromRegister(functionLine: RegisterId, expectedFunctionType: FunctionTH) = {
     val functionReference =
-      takeReferenceFromRegister(functionLine, Reference3(Raw, expectedFunctionType))
+      takeReferenceFromRegister(functionLine, ReferenceH(Raw, expectedFunctionType))
     val functionReferend = checkFunctionReference(expectedFunctionType, functionReference)
     (functionReference, functionReferend.function)
   }
@@ -564,7 +564,7 @@ class Heap(in_vivemDout: PrintStream) {
   }
 
   def addUninitializedArray(
-      arrayRefType: Reference3[UnknownSizeArrayT3],
+      arrayRefType: ReferenceH[UnknownSizeArrayTH],
       size: Int):
   (ReferenceV, ArrayInstanceV) = {
     val instance = ArrayInstanceV(arrayRefType, arrayRefType.kind.rawArray.elementType, size, Vector())
@@ -573,7 +573,7 @@ class Heap(in_vivemDout: PrintStream) {
   }
 
   def addArray(
-    arrayRefType: Reference3[KnownSizeArrayT3],
+    arrayRefType: ReferenceH[KnownSizeArrayTH],
     memberRefs: List[ReferenceV]):
   (ReferenceV, ArrayInstanceV) = {
     val instance = ArrayInstanceV(arrayRefType, arrayRefType.kind.rawArray.elementType, memberRefs.size, memberRefs.toVector)
@@ -585,7 +585,7 @@ class Heap(in_vivemDout: PrintStream) {
   }
 
 
-  def checkReference(expectedType: Reference3[Referend3], actualReference: ReferenceV): Unit = {
+  def checkReference(expectedType: ReferenceH[ReferendH], actualReference: ReferenceV): Unit = {
     if (actualReference.seenAsCoord.hamut != expectedType) {
       vfail("Expected " + expectedType + " but was " + actualReference.seenAsCoord.hamut)
     }
@@ -594,44 +594,44 @@ class Heap(in_vivemDout: PrintStream) {
   }
 
 
-  def checkReferenceRegister(tyype: Reference3[Referend3], register: RegisterV): ReferenceRegisterV = {
+  def checkReferenceRegister(tyype: ReferenceH[ReferendH], register: RegisterV): ReferenceRegisterV = {
     val reg = register.expectReferenceRegister()
     checkReference(tyype, reg.reference)
     reg
   }
 
-  def checkReferend(expectedType: Referend3, actualReferend: ReferendV): Unit = {
+  def checkReferend(expectedType: ReferendH, actualReferend: ReferendV): Unit = {
     (actualReferend, expectedType) match {
-      case (IntV(_), Int3()) =>
-      case (BoolV(_), Bool3()) =>
-      case (StrV(_), Str3()) =>
-      case (FloatV(_), Float3()) =>
-      case (VoidV(), Void3()) =>
-      case (StructInstanceV(structDef3, _), structRef3 @ StructRef3(_, _)) => {
-        if (structDef3.getRef != structRef3) {
-          vfail("Expected " + structRef3 + " but was " + structDef3)
+      case (IntV(_), IntH()) =>
+      case (BoolV(_), BoolH()) =>
+      case (StrV(_), StrH()) =>
+      case (FloatV(_), FloatH()) =>
+      case (VoidV(), VoidH()) =>
+      case (StructInstanceV(structDefH, _), structRefH @ StructRefH(_, _)) => {
+        if (structDefH.getRef != structRefH) {
+          vfail("Expected " + structRefH + " but was " + structDefH)
         }
       }
-      case (ArrayInstanceV(type3, actualElementType3, _, _), array3 @ UnknownSizeArrayT3(_)) => {
-        if (type3.kind != array3) {
-          vfail("Expected " + array3 + " but was " + type3)
+      case (ArrayInstanceV(typeH, actualElementTypeH, _, _), arrayH @ UnknownSizeArrayTH(_)) => {
+        if (typeH.kind != arrayH) {
+          vfail("Expected " + arrayH + " but was " + typeH)
         }
       }
-      case (ArrayInstanceV(type3, actualElementType3, _, _), array3 @ KnownSizeArrayT3(_, _)) => {
-        if (type3.kind != array3) {
-          vfail("Expected " + array3 + " but was " + type3)
+      case (ArrayInstanceV(typeH, actualElementTypeH, _, _), arrayH @ KnownSizeArrayTH(_, _)) => {
+        if (typeH.kind != arrayH) {
+          vfail("Expected " + arrayH + " but was " + typeH)
         }
       }
-      case (FunctionReferendV(function3), ft3 @ FunctionT3(_, _)) => {
-        if (function3.prototype.functionType != ft3) {
-          vfail("Expected a " + ft3 + " but was a " + function3.prototype.functionType)
+      case (FunctionReferendV(functionH), ftH @ FunctionTH(_, _)) => {
+        if (functionH.prototype.functionType != ftH) {
+          vfail("Expected a " + ftH + " but was a " + functionH.prototype.functionType)
         }
       }
-      case (StructInstanceV(structDef3, _), ir3 @ InterfaceRef3(interfaceId3, _)) => {
+      case (StructInstanceV(structDefH, _), irH @ InterfaceRefH(interfaceIdH, _)) => {
         val structImplementsInterface =
-          structDef3.edges.exists(_.interface == ir3)
+          structDefH.edges.exists(_.interface == irH)
         if (!structImplementsInterface) {
-          vfail("Struct " + structDef3.getRef + " doesnt implement interface " + interfaceId3);
+          vfail("Struct " + structDefH.getRef + " doesnt implement interface " + interfaceIdH);
         }
       }
       case (a, b) => {
@@ -640,54 +640,54 @@ class Heap(in_vivemDout: PrintStream) {
     }
   }
 
-  def checkStructId(expectedStructType: StructRef3, expectedStructPointerType: Reference3[Referend3], register: RegisterV): AllocationId = {
+  def checkStructId(expectedStructType: StructRefH, expectedStructPointerType: ReferenceH[ReferendH], register: RegisterV): AllocationId = {
     val reference = checkReferenceRegister(expectedStructPointerType, register).reference
     dereference(reference) match {
-      case siv @ StructInstanceV(structDef3, _) => {
-        vassert(structDef3.getRef == expectedStructType)
+      case siv @ StructInstanceV(structDefH, _) => {
+        vassert(structDefH.getRef == expectedStructType)
       }
       case _ => vfail("Expected a struct but was " + register)
     }
     reference.allocId
   }
 
-  def checkStructReference(expectedStructType: StructRef3, expectedStructPointerType: Reference3[Referend3], register: RegisterV): StructInstanceV = {
+  def checkStructReference(expectedStructType: StructRefH, expectedStructPointerType: ReferenceH[ReferendH], register: RegisterV): StructInstanceV = {
     val reference = checkReferenceRegister(expectedStructPointerType, register).reference
     dereference(reference) match {
-      case siv @ StructInstanceV(structDef3, _) => {
-        vassert(structDef3.getRef == expectedStructType)
+      case siv @ StructInstanceV(structDefH, _) => {
+        vassert(structDefH.getRef == expectedStructType)
         siv
       }
       case _ => vfail("Expected a struct but was " + register)
     }
   }
 
-  def checkStructReference(expectedStructType: StructRef3, reference: ReferenceV): StructInstanceV = {
+  def checkStructReference(expectedStructType: StructRefH, reference: ReferenceV): StructInstanceV = {
     dereference(reference) match {
-      case siv @ StructInstanceV(structDef3, _) => {
-        vassert(structDef3.getRef == expectedStructType)
+      case siv @ StructInstanceV(structDefH, _) => {
+        vassert(structDefH.getRef == expectedStructType)
         siv
       }
       case _ => vfail("Expected a struct but was " + reference)
     }
   }
 
-  def checkFunctionReference(expectedFunctionType: FunctionT3, reference: ReferenceV): FunctionReferendV = {
+  def checkFunctionReference(expectedFunctionType: FunctionTH, reference: ReferenceV): FunctionReferendV = {
     dereference(reference) match {
-      case ufr @ FunctionReferendV(function3) => {
-        vassert(function3.prototype.functionType == expectedFunctionType)
+      case ufr @ FunctionReferendV(functionH) => {
+        vassert(functionH.prototype.functionType == expectedFunctionType)
         ufr
       }
       case _ => vfail("Expected a function but was " + reference)
     }
   }
 
-  def pushNewStackFrame(function3: Function3, args: Vector[ReferenceV]) = {
+  def pushNewStackFrame(functionH: FunctionH, args: Vector[ReferenceV]) = {
     vassert(callsById.size == callIdStack.size)
     val callId =
       CallId(
         if (callIdStack.nonEmpty) callIdStack.top.blockDepth + 1 else 0,
-        function3)
+        functionH)
     val call = new Call(callId, args)
     callsById.put(callId, call)
     callIdStack.push(callId)
@@ -722,16 +722,16 @@ class Heap(in_vivemDout: PrintStream) {
       case FloatV(value) => VonFloat(value)
       case BoolV(value) => VonBool(value)
       case StrV(value) => VonStr(value)
-      case ArrayInstanceV(type3, elementType3, size, elements) => {
+      case ArrayInstanceV(typeH, elementTypeH, size, elements) => {
         VonArray(None, elements.map(toVon))
       }
-      case StructInstanceV(struct3, members) => {
-        vassert(members.size == struct3.members.size)
+      case StructInstanceV(structH, members) => {
+        vassert(members.size == structH.members.size)
         VonObject(
-          struct3.fullName.parts.last.humanName,
+          structH.fullName.parts.last.humanName,
           None,
-          struct3.members.zip(members).zipWithIndex.map({ case ((member3, memberV), index) =>
-            VonMember(None, Some(member3.name), toVon(memberV))
+          structH.members.zip(members).zipWithIndex.map({ case ((memberH, memberV), index) =>
+            VonMember(None, Some(memberH.name), toVon(memberV))
           }).toVector)
       }
     }

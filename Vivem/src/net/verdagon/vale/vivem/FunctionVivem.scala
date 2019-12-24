@@ -5,17 +5,17 @@ import net.verdagon.vale.templar.types.{Raw, Share}
 
 object FunctionVivem {
   def executeFunction(
-      program3: Program3,
+      programH: ProgramH,
       stdin: (() => String),
       stdout: (String => Unit),
       heap: Heap,
       args: Vector[ReferenceV],
-      function3: Function3
+      functionH: FunctionH
   ): Option[ReturnV] = {
-    val callId = heap.pushNewStackFrame(function3, args)
+    val callId = heap.pushNewStackFrame(functionH, args)
 
 //    heap.vivemDout.println("About to execute:")
-//    function3.nodes.foreach(heap.vivemDout.println)
+//    functionH.nodes.foreach(heap.vivemDout.println)
 //    heap.vivemDout.println("/Function")
 
     heap.vivemDout.print("  " * callId.blockDepth + "Entering function " + callId)
@@ -31,7 +31,7 @@ object FunctionVivem {
     heap.vivemDout.println()
 
     val maybeReturn =
-      BlockVivem.executeBlock(program3, stdin, stdout, heap, callId, function3.block) match {
+      BlockVivem.executeBlock(programH, stdin, stdout, heap, callId, functionH.block) match {
         case BlockContinue(maybeRet) => maybeRet
         case BlockReturn(maybeRet) => maybeRet
       }
@@ -46,57 +46,57 @@ object FunctionVivem {
     maybeReturn
   }
 
-  def getExternFunction(program3: Program3, ref: FunctionRef3): (AdapterForExterns, Vector[ReferenceV]) => Option[ReturnV] = {
+  def getExternFunction(programH: ProgramH, ref: FunctionRefH): (AdapterForExterns, Vector[ReferenceV]) => Option[ReturnV] = {
     ref.prototype match {
-      case Prototype3(_, FullName3(List(NamePart3("__addIntInt", Some(List())))), List(Reference3(Share,Int3()), Reference3(Share,Int3())), Reference3(Share,Int3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__addIntInt", Some(List())))), List(ReferenceH(Share,IntH()), ReferenceH(Share,IntH())), ReferenceH(Share,IntH())) =>
         VivemExterns.addIntInt
-      case Prototype3(_, FullName3(List(NamePart3("__addFloatFloat", Some(List())))), List(Reference3(Share,Float3()), Reference3(Share,Float3())), Reference3(Share,Float3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__addFloatFloat", Some(List())))), List(ReferenceH(Share,FloatH()), ReferenceH(Share,FloatH())), ReferenceH(Share,FloatH())) =>
         VivemExterns.addFloatFloat
-      case Prototype3(_, FullName3(List(NamePart3("panic", Some(List())))), List(), Reference3(Raw,Never3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("panic", Some(List())))), List(), ReferenceH(Raw,NeverH())) =>
         VivemExterns.panic
-      case Prototype3(_, FullName3(List(NamePart3("__multiplyIntInt", Some(List())))), List(Reference3(Share,Int3()), Reference3(Share,Int3())), Reference3(Share,Int3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__multiplyIntInt", Some(List())))), List(ReferenceH(Share,IntH()), ReferenceH(Share,IntH())), ReferenceH(Share,IntH())) =>
         VivemExterns.multiplyIntInt
-      case Prototype3(_, FullName3(List(NamePart3("__multiplyFloatFloat", Some(List())))), List(Reference3(Share,Float3()), Reference3(Share,Float3())), Reference3(Share,Float3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__multiplyFloatFloat", Some(List())))), List(ReferenceH(Share,FloatH()), ReferenceH(Share,FloatH())), ReferenceH(Share,FloatH())) =>
         VivemExterns.multiplyFloatFloat
-      case Prototype3(_, FullName3(List(NamePart3("__subtractIntInt", Some(List())))), List(Reference3(Share,Int3()), Reference3(Share,Int3())), Reference3(Share,Int3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__subtractIntInt", Some(List())))), List(ReferenceH(Share,IntH()), ReferenceH(Share,IntH())), ReferenceH(Share,IntH())) =>
         VivemExterns.subtractIntInt
-      case Prototype3(_, FullName3(List(NamePart3("__subtractFloatFloat", Some(List())))), List(Reference3(Share,Float3()), Reference3(Share,Float3())), Reference3(Share,Float3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__subtractFloatFloat", Some(List())))), List(ReferenceH(Share,FloatH()), ReferenceH(Share,FloatH())), ReferenceH(Share,FloatH())) =>
         VivemExterns.subtractFloatFloat
-      case Prototype3(_, FullName3(List(NamePart3("__addStrStr", Some(List())))), List(Reference3(Share,Str3()), Reference3(Share,Str3())), Reference3(Share,Str3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__addStrStr", Some(List())))), List(ReferenceH(Share,StrH()), ReferenceH(Share,StrH())), ReferenceH(Share,StrH())) =>
         VivemExterns.addStrStr
-      case Prototype3(_, FullName3(List(NamePart3("__getch", Some(List())))),List(),Reference3(Share,Int3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__getch", Some(List())))),List(),ReferenceH(Share,IntH())) =>
         VivemExterns.getch
-      case Prototype3(_, FullName3(List(NamePart3("__sqrt", Some(List())))),List(Reference3(Share,Float3())),Reference3(Share,Float3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__sqrt", Some(List())))),List(ReferenceH(Share,FloatH())),ReferenceH(Share,FloatH())) =>
         VivemExterns.sqrt
-      case Prototype3(_, FullName3(List(NamePart3("__lessThanInt", Some(List())))), List(Reference3(Share,Int3()), Reference3(Share,Int3())), Reference3(Share,Bool3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__lessThanInt", Some(List())))), List(ReferenceH(Share,IntH()), ReferenceH(Share,IntH())), ReferenceH(Share,BoolH())) =>
         VivemExterns.lessThanInt
-      case Prototype3(_, FullName3(List(NamePart3("__lessThanFloat", Some(List())))), List(Reference3(Share,Float3()), Reference3(Share,Float3())), Reference3(Share,Bool3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__lessThanFloat", Some(List())))), List(ReferenceH(Share,FloatH()), ReferenceH(Share,FloatH())), ReferenceH(Share,BoolH())) =>
         VivemExterns.lessThanFloat
-      case Prototype3(_, FullName3(List(NamePart3("__greaterThanFloat", Some(List())))), List(Reference3(Share,Float3()), Reference3(Share,Float3())), Reference3(Share,Bool3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__greaterThanFloat", Some(List())))), List(ReferenceH(Share,FloatH()), ReferenceH(Share,FloatH())), ReferenceH(Share,BoolH())) =>
         VivemExterns.greaterThanFloat
-      case Prototype3(_, FullName3(List(NamePart3("__lessThanOrEqInt", Some(List())))), List(Reference3(Share,Int3()), Reference3(Share,Int3())), Reference3(Share,Bool3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__lessThanOrEqInt", Some(List())))), List(ReferenceH(Share,IntH()), ReferenceH(Share,IntH())), ReferenceH(Share,BoolH())) =>
         VivemExterns.lessThanOrEqInt
-      case Prototype3(_, FullName3(List(NamePart3("__greaterThanInt", Some(List())))), List(Reference3(Share,Int3()), Reference3(Share,Int3())), Reference3(Share,Bool3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__greaterThanInt", Some(List())))), List(ReferenceH(Share,IntH()), ReferenceH(Share,IntH())), ReferenceH(Share,BoolH())) =>
         VivemExterns.greaterThanInt
-      case Prototype3(_, FullName3(List(NamePart3("__greaterThanOrEqInt", Some(List())))), List(Reference3(Share,Int3()), Reference3(Share,Int3())), Reference3(Share,Bool3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__greaterThanOrEqInt", Some(List())))), List(ReferenceH(Share,IntH()), ReferenceH(Share,IntH())), ReferenceH(Share,BoolH())) =>
         VivemExterns.greaterThanOrEqInt
-      case Prototype3(_, FullName3(List(NamePart3("__eqIntInt", Some(List())))), List(Reference3(Share,Int3()), Reference3(Share,Int3())), Reference3(Share,Bool3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__eqIntInt", Some(List())))), List(ReferenceH(Share,IntH()), ReferenceH(Share,IntH())), ReferenceH(Share,BoolH())) =>
         VivemExterns.eqIntInt
-      case Prototype3(_, FullName3(List(NamePart3("__eqBoolBool", Some(List())))), List(Reference3(Share,Bool3()), Reference3(Share,Bool3())), Reference3(Share,Bool3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__eqBoolBool", Some(List())))), List(ReferenceH(Share,BoolH()), ReferenceH(Share,BoolH())), ReferenceH(Share,BoolH())) =>
         VivemExterns.eqBoolBool
-      case Prototype3(_, FullName3(List(NamePart3("__print", Some(List())))),List(Reference3(Share,Str3())), Reference3(Raw, Void3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__print", Some(List())))),List(ReferenceH(Share,StrH())), ReferenceH(Raw, VoidH())) =>
         VivemExterns.print
-      case Prototype3(_, FullName3(List(NamePart3("__not", Some(List())))),List(Reference3(Share,Bool3())),Reference3(Share,Bool3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__not", Some(List())))),List(ReferenceH(Share,BoolH())),ReferenceH(Share,BoolH())) =>
         VivemExterns.not
-      case Prototype3(_, FullName3(List(NamePart3("__castIntStr", Some(List())))),List(Reference3(Share,Int3())),Reference3(Share,Str3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__castIntStr", Some(List())))),List(ReferenceH(Share,IntH())),ReferenceH(Share,StrH())) =>
         VivemExterns.castIntStr
-      case Prototype3(_, FullName3(List(NamePart3("__castFloatStr", Some(List())))),List(Reference3(Share,Float3())),Reference3(Share,Str3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__castFloatStr", Some(List())))),List(ReferenceH(Share,FloatH())),ReferenceH(Share,StrH())) =>
         VivemExterns.castFloatStr
-      case Prototype3(_, FullName3(List(NamePart3("__castIntFloat", Some(List())))),List(Reference3(Share,Int3())),Reference3(Share,Float3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__castIntFloat", Some(List())))),List(ReferenceH(Share,IntH())),ReferenceH(Share,FloatH())) =>
         VivemExterns.castIntFloat
-      case Prototype3(_, FullName3(List(NamePart3("__and", Some(List())))),List(Reference3(Share,Bool3()), Reference3(Share,Bool3())),Reference3(Share,Bool3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__and", Some(List())))),List(ReferenceH(Share,BoolH()), ReferenceH(Share,BoolH())),ReferenceH(Share,BoolH())) =>
         VivemExterns.and
-      case Prototype3(_, FullName3(List(NamePart3("__mod", Some(List())))),List(Reference3(Share,Int3()), Reference3(Share,Int3())),Reference3(Share,Int3())) =>
+      case PrototypeH(_, FullNameH(List(NamePartH("__mod", Some(List())))),List(ReferenceH(Share,IntH()), ReferenceH(Share,IntH())),ReferenceH(Share,IntH())) =>
         VivemExterns.mod
     }
   }

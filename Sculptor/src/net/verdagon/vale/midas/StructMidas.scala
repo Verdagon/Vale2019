@@ -1,11 +1,11 @@
 package net.verdagon.vale.midas
 
 //case class Miduts(
-//    program3: Program3,
-//    translatedReferences: Map[Reference3, Reference4],
-//    translatedStructs: Map[StructRef3, StructDefinition4]) {
+//    programH: ProgramH,
+//    translatedReferences: Map[ReferenceH, Reference4],
+//    translatedStructs: Map[StructRefH, StructDefinition4]) {
 //  def addStruct(structDef4: StructDefinition4): Miduts = {
-//    Miduts(program3, translatedReferences, translatedStructs.updated(structDef4.origin.getRef, structDef4))
+//    Miduts(programH, translatedReferences, translatedStructs.updated(structDef4.origin.getRef, structDef4))
 //  }
 //}
 //
@@ -24,18 +24,18 @@ package net.verdagon.vale.midas
 //  def translateStructMember(
 //      miduts0: Miduts,
 //      structMutability: MutabilityP,
-//      member: StructMember3):
+//      member: StructMemberH):
 //  (Miduts, StructMember4) = {
-//    val StructMember3(name, type3) = member;
+//    val StructMemberH(name, typeH) = member;
 //
 //    val (miduts2, field4) =
-//      type3 match {
-//        case AddressMemberType3(pointer3) => {
-//          val (miduts1, reference4) = TypeMidas.translateReference(miduts0, structMutability, pointer3)
+//      typeH match {
+//        case AddressMemberTypeH(pointerH) => {
+//          val (miduts1, reference4) = TypeMidas.translateReference(miduts0, structMutability, pointerH)
 //          (miduts1, VariableAddressStructFieldType4(reference4))
 //        }
-//        case ReferenceMemberType3(reference3) => {
-//          val (miduts1, reference4) = TypeMidas.translateReference(miduts0, structMutability, reference3)
+//        case ReferenceMemberTypeH(referenceH) => {
+//          val (miduts1, reference4) = TypeMidas.translateReference(miduts0, structMutability, referenceH)
 //          (miduts1, ReferenceStructFieldType4(reference4))
 //        }
 //      }
@@ -43,13 +43,13 @@ package net.verdagon.vale.midas
 //    (miduts2, member4)
 //  }
 //
-//  def translateStructMembers(miduts0: Miduts, structMutability: MutabilityP, members: List[StructMember3]):
+//  def translateStructMembers(miduts0: Miduts, structMutability: MutabilityP, members: List[StructMemberH]):
 //  (Miduts, List[StructMember4]) = {
 //    members match {
 //      case Nil => (miduts0, Nil)
-//      case head3 :: tail3 => {
-//        val (miduts1, head4) = translateStructMember(miduts0, structMutability, head3)
-//        val (miduts2, tail4) = translateStructMembers(miduts1, structMutability, tail3)
+//      case headH :: tailH => {
+//        val (miduts1, head4) = translateStructMember(miduts0, structMutability, headH)
+//        val (miduts2, tail4) = translateStructMembers(miduts1, structMutability, tailH)
 //        (miduts2, head4 :: tail4)
 //      }
 //    }
@@ -57,35 +57,35 @@ package net.verdagon.vale.midas
 //
 //  def translateStruct(
 //      miduts0: Miduts,
-//      structDef3: StructDefinition3):
+//      structDefH: StructDefinitionH):
 //  (Miduts, StructDefinition4) = {
-//    miduts0.translatedStructs.get(structDef3.getRef) match {
+//    miduts0.translatedStructs.get(structDefH.getRef) match {
 //      case Some(structDef4) => (miduts0, structDef4)
 //      case None => {
-//        val StructDefinition3(structId, humanName, globalName, mutability, maybeBase3, eTable, edges, members3, methodRefs3) = structDef3;
+//        val StructDefinitionH(structId, humanName, globalName, mutability, maybeBaseH, eTable, edges, membersH, methodRefsH) = structDefH;
 //
 //        val (miduts1, maybeBase4) =
-//          maybeBase3 match {
+//          maybeBaseH match {
 //            case None => (miduts0, None)
-//            case Some(base3) => {
-//              val structDef3 = miduts0.program3.structs.find(_.getRef == base3).get
-//              val (miduts1X1, structDef4) = translateStruct(miduts0, structDef3)
+//            case Some(baseH) => {
+//              val structDefH = miduts0.programH.structs.find(_.getRef == baseH).get
+//              val (miduts1X1, structDef4) = translateStruct(miduts0, structDefH)
 //              (miduts1X1, Some(structDef4.getRef))
 //            }
 //          }
 //
-//        val (miduts2, members4) = translateStructMembers(miduts1, structDef3.mutability, members3)
-//        val (miduts3, methodRefs4) = FunctionMidas.translateFunctionRefs(miduts2, methodRefs3)
+//        val (miduts2, members4) = translateStructMembers(miduts1, structDefH.mutability, membersH)
+//        val (midutsH, methodRefs4) = FunctionMidas.translateFunctionRefs(miduts2, methodRefsH)
 //
-//        val memberBaseTypes3 = members3.map(_.tyype);
+//        val memberBaseTypesH = membersH.map(_.tyype);
 //        val (miduts7, size, align) =
-//          memberBaseTypes3.foldLeft((miduts3, 0, 1))({
-//            case ((miduts4, prevSize, prevAlign), memberBaseType3) => {
+//          memberBaseTypesH.foldLeft((midutsH, 0, 1))({
+//            case ((miduts4, prevSize, prevAlign), memberBaseTypeH) => {
 //              val (miduts6, thisMemberSize, thisMemberAlign) =
-//                memberBaseType3 match {
-//                  case AddressMemberType3(address) => (miduts4, 8, 8)
-//                  case ReferenceMemberType3(reference3) => {
-//                    val (miduts5, pointer4) = TypeMidas.translateReference(miduts4, structDef3.mutability, reference3)
+//                memberBaseTypeH match {
+//                  case AddressMemberTypeH(address) => (miduts4, 8, 8)
+//                  case ReferenceMemberTypeH(referenceH) => {
+//                    val (miduts5, pointer4) = TypeMidas.translateReference(miduts4, structDefH.mutability, referenceH)
 //                    (miduts5, pointer4.size, pointer4.align)
 //                  }
 //                }
@@ -107,7 +107,7 @@ package net.verdagon.vale.midas
 //
 //        val structDef4 =
 //          StructDefinition4(
-//            structDef3, maybeBase4, eTable4, edges4, members4, methodRefs4, size, align)
+//            structDefH, maybeBase4, eTable4, edges4, members4, methodRefs4, size, align)
 //        val miduts8 = miduts7.addStruct(structDef4)
 //        (miduts8, structDef4)
 //      }
@@ -115,14 +115,14 @@ package net.verdagon.vale.midas
 //  }
 //
 //  def translateInterfacePointer(
-//      miduts0: Miduts, contextMutability: MutabilityP, pointer3: Reference3):
+//      miduts0: Miduts, contextMutability: MutabilityP, pointerH: ReferenceH):
 //  (Miduts, InterfaceReference4) = {
-//    val Reference3(ownership, interfaceRef3 : InterfaceRef3) = pointer3
-//    val interface3 = miduts0.program3.interfaces.find(_.getRef == interfaceRef3).get
+//    val ReferenceH(ownership, interfaceRefH : InterfaceRefH) = pointerH
+//    val interfaceH = miduts0.programH.interfaces.find(_.getRef == interfaceRefH).get
 //
 //    println("hardcoded moved")
-//    val moved = true; // pointer3.moved;
-//    val mutability = interface3.mutability
+//    val moved = true; // pointerH.moved;
+//    val mutability = interfaceH.mutability
 //    // And ownership
 //    // And pointerFromImmutable
 //
@@ -136,31 +136,31 @@ package net.verdagon.vale.midas
 //      vassert(false); // Can't own an immutable
 //    }
 //
-//    val interfaceRef4 = InterfaceId4(interfaceRef3)
+//    val interfaceRef4 = InterfaceId4(interfaceRefH)
 //
 //    val reference4 =
 //      InterfaceReference4(interfaceRef4, ownership, mutability)
 //    (miduts0, reference4)
 //  }
 //
-//  def translateStructId(structId3: StructRef3): StructId4 = {
-//    StructId4(structId3)
+//  def translateStructId(structIdH: StructRefH): StructId4 = {
+//    StructId4(structIdH)
 //  }
 //
-//  def translateInterfaceId(interfaceId3: InterfaceRef3): InterfaceId4 = {
-//    InterfaceId4(interfaceId3)
+//  def translateInterfaceId(interfaceIdH: InterfaceRefH): InterfaceId4 = {
+//    InterfaceId4(interfaceIdH)
 //  }
 //
 //  def translateStructPointer(
-//      miduts0: Miduts, contextMutability: MutabilityP, pointer3: Reference3):
+//      miduts0: Miduts, contextMutability: MutabilityP, pointerH: ReferenceH):
 //  (Miduts, StructReference4) = {
-//    val Reference3(ownership, structRef3 : StructRef3) = pointer3
-//    val struct3 = miduts0.program3.structs.find(_.getRef == structRef3).get
+//    val ReferenceH(ownership, structRefH : StructRefH) = pointerH
+//    val structH = miduts0.programH.structs.find(_.getRef == structRefH).get
 //
-//    val (miduts1, structDef4) = StructMidas.translateStruct(miduts0, struct3)
+//    val (miduts1, structDef4) = StructMidas.translateStruct(miduts0, structH)
 //
 //    println("hardcoded moved")
-//    val moved = true; // pointer3.moved;
+//    val moved = true; // pointerH.moved;
 //    val mutability = structDef4.mutability
 //    val small = structDef4.size <= 32
 //    // and ownership

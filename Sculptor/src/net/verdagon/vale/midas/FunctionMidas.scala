@@ -1,71 +1,71 @@
 package net.verdagon.vale.midas
 
 //object FunctionMidas {
-//  def translateFunctionRefs(miduts0: Miduts, functionRefs3: List[FunctionRef3]):
+//  def translateFunctionRefs(miduts0: Miduts, functionRefsH: List[FunctionRefH]):
 //  (Miduts, List[FunctionRef4]) = {
-//    functionRefs3 match {
+//    functionRefsH match {
 //      case Nil => (miduts0, Nil)
-//      case head3 :: tail3 => {
-//        val (miduts1, head4) = translateFunctionRef(miduts0, head3)
-//        val (miduts2, tail4) = translateFunctionRefs(miduts1, tail3)
+//      case headH :: tailH => {
+//        val (miduts1, head4) = translateFunctionRef(miduts0, headH)
+//        val (miduts2, tail4) = translateFunctionRefs(miduts1, tailH)
 //        (miduts2, head4 :: tail4)
 //      }
 //    }
 //  }
 //
-//  def translateFunctions(miduts0: Miduts, functions3: List[Function3]):
+//  def translateFunctions(miduts0: Miduts, functionsH: List[FunctionH]):
 //  (Miduts, List[Function4]) = {
-//    functions3 match {
+//    functionsH match {
 //      case Nil => (miduts0, Nil)
-//      case head3 :: tail3 => {
-//        val (miduts1, head4) = translateFunction(miduts0, head3)
-//        val (miduts2, tail4) = translateFunctions(miduts1, tail3)
+//      case headH :: tailH => {
+//        val (miduts1, head4) = translateFunction(miduts0, headH)
+//        val (miduts2, tail4) = translateFunctions(miduts1, tailH)
 //        (miduts2, head4 :: tail4)
 //      }
 //    }
 //  }
 //
-//  def translateFunction(miduts0: Miduts, function3: Function3):
+//  def translateFunction(miduts0: Miduts, functionH: FunctionH):
 //  (Miduts, Function4) = {
-//    val Function3(prototype3, isAbstract, isExtern, nodes3) = function3
-//    val (miduts1, prototype4) = translatePrototype(miduts0, prototype3)
-//    val (miduts2, _, _, nodes4) = translateNodes(miduts1, Map(), 1001, nodes3.toList)
+//    val FunctionH(prototypeH, isAbstract, isExtern, nodesH) = functionH
+//    val (miduts1, prototype4) = translatePrototype(miduts0, prototypeH)
+//    val (miduts2, _, _, nodes4) = translateNodes(miduts1, Map(), 1001, nodesH.toList)
 //
-//    val function4 = Function4(function3, prototype4, isAbstract, isExtern, nodes4.toArray)
+//    val function4 = Function4(functionH, prototype4, isAbstract, isExtern, nodes4.toArray)
 //    (miduts2, function4)
 //  }
 //
-//  def translateFunctionRef(miduts0: Miduts, functionRef3: FunctionRef3):
+//  def translateFunctionRef(miduts0: Miduts, functionRefH: FunctionRefH):
 //  (Miduts, FunctionRef4) = {
-//    val (miduts1, prototype4) = translatePrototype(miduts0, functionRef3.prototype)
-//    val functionRef4 = FunctionRef4(functionRef3, prototype4)
+//    val (miduts1, prototype4) = translatePrototype(miduts0, functionRefH.prototype)
+//    val functionRef4 = FunctionRef4(functionRefH, prototype4)
 //    (miduts1, functionRef4)
 //  }
 //
-//  def translatePrototype(miduts0: Miduts, prototype3: Prototype3):
+//  def translatePrototype(miduts0: Miduts, prototypeH: PrototypeH):
 //  (Miduts, Prototype4) = {
-//    val Prototype3(temput, functionId, humanName, paramTypes3, returnType3) = prototype3;
+//    val PrototypeH(temput, functionId, humanName, paramTypesH, returnTypeH) = prototypeH;
 //    val stackMutability = MutableP // All stack frames can be mutated
 //    val (miduts1, paramTypes4) =
-//      TypeMidas.translateReferences(miduts0, stackMutability, paramTypes3)
+//      TypeMidas.translateReferences(miduts0, stackMutability, paramTypesH)
 //    val (miduts2, returnType4) =
-//      TypeMidas.translateReference(miduts1, stackMutability, returnType3)
-//    (miduts2, Prototype4(prototype3, humanName, paramTypes4, returnType4))
+//      TypeMidas.translateReference(miduts1, stackMutability, returnTypeH)
+//    (miduts2, Prototype4(prototypeH, humanName, paramTypes4, returnType4))
 //  }
 //
 //  def translateNodes(
 //      miduts0: Miduts,
 //      lineMap0: Map[Int, Int],
 //      nextLine0: Int,
-//      nodes3: List[Node3]):
+//      nodesH: List[NodeH]):
 //  (Miduts, Map[Int, Int], Int, List[Node4]) = {
-//    nodes3 match {
+//    nodesH match {
 //      case Nil => (miduts0, lineMap0, nextLine0, Nil)
-//      case head3 :: tail3 => {
+//      case headH :: tailH => {
 //        val (miduts1, lineMaSP, nextLine1, head4) =
-//          translateNode(miduts0, lineMap0, nextLine0, head3)
+//          translateNode(miduts0, lineMap0, nextLine0, headH)
 //        val (miduts2, lineMap2, nextLine2, tail4) =
-//          translateNodes(miduts1, lineMaSP, nextLine1, tail3)
+//          translateNodes(miduts1, lineMaSP, nextLine1, tailH)
 //        (miduts2, lineMap2, nextLine2, head4 ++ tail4)
 //      }
 //    }
@@ -75,42 +75,42 @@ package net.verdagon.vale.midas
 //      miduts0: Miduts,
 //      lineMap0: Map[String, Int],
 //      nextLine0: String,
-//      node3: Node3):
+//      nodeH: NodeH):
 //  (Miduts, Map[String, Int], String, List[Node4]) = {
-//    node3 match {
-//      case And3(line3, leftLine, rightLine) => {
+//    nodeH match {
+//      case AndH(lineH, leftLine, rightLine) => {
 //        val node4 = And4(nextLine0, lineMap0(leftLine), lineMap0(rightLine))
-//        val lineMaSP = lineMap0.updated(line3, nextLine0)
+//        val lineMaSP = lineMap0.updated(lineH, nextLine0)
 //        (miduts0, lineMaSP, nextLine0 + 1, List(node4))
 //      }
-//      case Argument3(line3, resultType3, argumentIndex) => {
-//        val (miduts1, resultType4) = TypeMidas.translateReference(miduts0, contextMutability = MutableP, resultType3)
+//      case ArgumentH(lineH, resultTypeH, argumentIndex) => {
+//        val (miduts1, resultType4) = TypeMidas.translateReference(miduts0, contextMutability = MutableP, resultTypeH)
 //        val node4 = Argument4(nextLine0, argumentIndex, resultType4)
-//        val lineMaSP = lineMap0.updated(line3, nextLine0)
+//        val lineMaSP = lineMap0.updated(lineH, nextLine0)
 //        (miduts1, lineMaSP, nextLine0 + 1, List(node4))
 //      }
-//      case Branch3(line3, conditionLine, trueDestinationLine, falseDestinationLine) => {
+//      case BranchH(lineH, conditionLine, trueDestinationLine, falseDestinationLine) => {
 //        val node4 = Branch4(nextLine0, conditionLine, trueDestinationLine, falseDestinationLine)
-//        val lineMaSP = lineMap0.updated(line3, nextLine0)
+//        val lineMaSP = lineMap0.updated(lineH, nextLine0)
 //        (miduts0, lineMaSP, nextLine0 + 1, List(node4))
 //      }
-//      case Call3(line3, resultType3, functionLine, functionType, argLines, paramTypes3) => {
-//        val (miduts1, paramTypes4) = TypeMidas.translateReferences(miduts0, contextMutability = MutableP, paramTypes3)
-//        val (miduts2, resultType4) = TypeMidas.translateReference(miduts1, contextMutability = MutableP, resultType3)
+//      case CallH(lineH, resultTypeH, functionLine, functionType, argLines, paramTypesH) => {
+//        val (miduts1, paramTypes4) = TypeMidas.translateReferences(miduts0, contextMutability = MutableP, paramTypesH)
+//        val (miduts2, resultType4) = TypeMidas.translateReference(miduts1, contextMutability = MutableP, resultTypeH)
 //        val node4 = Call4(nextLine0, functionLine, argLines.map(lineMap0), paramTypes4, resultType4)
-//        val lineMaSP = lineMap0.updated(line3, nextLine0)
+//        val lineMaSP = lineMap0.updated(lineH, nextLine0)
 //        (miduts2, lineMaSP, nextLine0 + 1, List(node4))
 //      }
-//      case ClosureStructLookup3(line3, resultType3, sourceLine, sourceLineType, structId3, memberIndex) => {
-//        val structId4 = StructMidas.translateStructId(structId3)
+//      case ClosureStructLookupH(lineH, resultTypeH, sourceLine, sourceLineType, structIdH, memberIndex) => {
+//        val structId4 = StructMidas.translateStructId(structIdH)
 //
 //        val stackMutability = MutableP // All stack frames can be mutated
 //        val (miduts1, resultType4) =
-//          TypeMidas.translateReference(miduts0, stackMutability, resultType3)
+//          TypeMidas.translateReference(miduts0, stackMutability, resultTypeH)
 //
 //        // All this isn't really needed, its just used for the assert.
-//        val struct3 = miduts1.program3.structs.find(_.getRef == structId3).get
-//        val (miduts2, struct4) = StructMidas.translateStruct(miduts1, struct3)
+//        val structH = miduts1.programH.structs.find(_.getRef == structIdH).get
+//        val (miduts2, struct4) = StructMidas.translateStruct(miduts1, structH)
 //        val memberType4 =
 //          struct4.members(memberIndex).fieldType match {
 //            case ReferenceStructFieldType4(reference4) => {
@@ -121,28 +121,28 @@ package net.verdagon.vale.midas
 //        vassert(memberType4 == resultType4)
 //
 //        val node4 = ClosureStructLookup4(nextLine0, sourceLine, structId4, memberIndex, resultType4)
-//        val lineMaSP = lineMap0.updated(line3, nextLine0)
+//        val lineMaSP = lineMap0.updated(lineH, nextLine0)
 //        (miduts2, lineMaSP, nextLine0 + 1, List(node4))
 //      }
-//      case ConstantBool3(line3, value) => {
+//      case ConstantBoolH(lineH, value) => {
 //        val node4 = ConstantBool4(nextLine0, value)
-//        val lineMaSP = lineMap0.updated(line3, nextLine0)
+//        val lineMaSP = lineMap0.updated(lineH, nextLine0)
 //        (miduts0, lineMaSP, nextLine0 + 1, List(node4))
 //      }
-//      case ConstantF643(line3, value) => {
+//      case ConstantF64H(lineH, value) => {
 //        val node4 = ConstantF644(nextLine0, value)
-//        val lineMaSP = lineMap0.updated(line3, nextLine0)
+//        val lineMaSP = lineMap0.updated(lineH, nextLine0)
 //        (miduts0, lineMaSP, nextLine0 + 1, List(node4))
 //      }
-//      case ConstantI643(line3, value) => {
+//      case ConstantI64H(lineH, value) => {
 //        val node4 = ConstantI644(nextLine0, value)
-//        val lineMaSP = lineMap0.updated(line3, nextLine0)
+//        val lineMaSP = lineMap0.updated(lineH, nextLine0)
 //        (miduts0, lineMaSP, nextLine0 + 1, List(node4))
 //      }
-//      case NewMutableStruct3(line3, structId3, sourceLines) => {
+//      case NewMutableStructH(lineH, structIdH, sourceLines) => {
 //        val stackMutability = MutableP // Stacks can always be mutated
 //        val (miduts1, structReference4) =
-//          StructMidas.translateStructPointer(miduts0, stackMutability, Reference3(Own, structId3))
+//          StructMidas.translateStructPointer(miduts0, stackMutability, ReferenceH(Own, structIdH))
 //        val node4 =
 //          structReference4 match {
 //            case isr4 @ InlineStructReference4(id, ownership, mutability, size, align) => {
@@ -152,13 +152,13 @@ package net.verdagon.vale.midas
 //              NewHeapStruct4(nextLine0, fsr4, sourceLines.map(lineMap0))
 //            }
 //          }
-//        val lineMaSP = lineMap0.updated(line3, nextLine0)
+//        val lineMaSP = lineMap0.updated(lineH, nextLine0)
 //        (miduts1, lineMaSP, nextLine0 + 1, List(node4))
 //      }
-//      case DestroyStruct3(line3, sourceLine, structId3, sourceType3) => {
+//      case DestroyStructH(lineH, sourceLine, structIdH, sourceTypeH) => {
 //        val stackMutability = MutableP // Stacks can always be mutated
 //        val (miduts1, structReference4) =
-//          StructMidas.translateStructPointer(miduts0, stackMutability, sourceType3)
+//          StructMidas.translateStructPointer(miduts0, stackMutability, sourceTypeH)
 //        structReference4 match {
 //          case isr4 @ InlineStructReference4(id, ownership, mutability, size, align) => {
 //            // Do nothing, it's in a register
@@ -167,54 +167,54 @@ package net.verdagon.vale.midas
 //          case fsr4 @ FarStructReference4(id, ownership, mutability) => {
 //            // Give that sucker some INDISCRIMINATE JUSTICE
 //            val node4 = Free4(nextLine0, lineMap0(sourceLine))
-//            val lineMaSP = lineMap0.updated(line3, nextLine0)
+//            val lineMaSP = lineMap0.updated(lineH, nextLine0)
 //            (miduts1, lineMaSP, nextLine0 + 1, List(node4))
 //          }
 //        }
 //      }
-//      case InterfaceToInterfaceUpcast3(line3, sourceInterfaceRef, targetInterfaceRef, resultType3, sourceLine) => {
+//      case InterfaceToInterfaceUpcastH(lineH, sourceInterfaceRef, targetInterfaceRef, resultTypeH, sourceLine) => {
 //        vfail("not yet")
 //      }
-//      case Jump3(line3, destinationLine) => {
+//      case JumpH(lineH, destinationLine) => {
 //        vfail("not yet")
 //      }
-//      case Label3(line) => {
+//      case LabelH(line) => {
 //        vfail("not yet")
 //      }
-//      case LoadExternFunction3(line3, functionRef3) => {
+//      case LoadExternFunctionH(lineH, functionRefH) => {
 //        vfail("not yet")
 //      }
-//      case LoadFunction3(line3, functionRef3) => {
+//      case LoadFunctionH(lineH, functionRefH) => {
 //        vfail("not yet")
 //      }
-//      case LocalLookup3(line3, varType3, sourceLine, name) => {
+//      case LocalLookupH(lineH, varTypeH, sourceLine, name) => {
 //        vfail("not yet")
 //      }
-//      case Or3(line3, leftLine, rightLine) => {
+//      case OrH(lineH, leftLine, rightLine) => {
 //        vfail("not yet")
 //      }
-//      case Panic3(line) => {
+//      case PanicH(line) => {
 //        vfail("not yet")
 //      }
-//      case Phi3(line3, resultType3, cases) => {
+//      case PhiH(lineH, resultTypeH, cases) => {
 //        vfail("not yet")
 //      }
-//      case Return3(line3, sourceLine, returnType3) => {
+//      case ReturnH(lineH, sourceLine, returnTypeH) => {
 //        vfail("not yet")
 //      }
-//      case SoftLoad3(line3, resultType3, sourceLine, sourceLineType) => {
+//      case SoftLoadH(lineH, resultTypeH, sourceLine, sourceLineType) => {
 //        vfail("not yet")
 //      }
-//      case Stackify3(line3, sourceLine, varType3, name) => {
+//      case StackifyH(lineH, sourceLine, varTypeH, name) => {
 //        vfail("not yet")
 //      }
-//      case Store3(line3, type3, destinationLine, valueLine) => {
+//      case StoreH(lineH, typeH, destinationLine, valueLine) => {
 //        vfail("not yet")
 //      }
-//      case StructLookup3(line3, sourceLine, sourceLineType, structType3, memberIndex, resultType3) => {
+//      case StructLookupH(lineH, sourceLine, sourceLineType, structTypeH, memberIndex, resultTypeH) => {
 //        vfail("not yet")
 //      }
-//      case StructToInterfaceUpcast3(line3, sourceStructRef, targetInterfaceRef, resultType3, sourceLine, sourceLineType) => {
+//      case StructToInterfaceUpcastH(lineH, sourceStructRef, targetInterfaceRef, resultTypeH, sourceLine, sourceLineType) => {
 //        vfail("not yet")
 //      }
 //    }

@@ -189,4 +189,8 @@ object StructTemplar {
       case _ => (false)
     }
   }
+
+  def prototypeToIFunctionSubclass(env: IEnvironment, temputs: TemputsBox, prototype: Prototype2): StructRef2 = {
+    vimpl()
+  }
 }

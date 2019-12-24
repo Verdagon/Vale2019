@@ -7,72 +7,72 @@ import net.verdagon.vale.vfail
 
 object TypeHammer {
   def translateMembers(hinputs: Hinputs, hamuts0: Hamuts, members: List[StructMember2]):
-  (Hamuts, List[StructMember3]) = {
+  (Hamuts, List[StructMemberH]) = {
     members match {
       case Nil => (hamuts0, Nil)
       case headMember2 :: tailMembers2 => {
-        val (hamuts1, headMember3) = translateMember(hinputs, hamuts0, headMember2)
-        val (hamuts2, tailMembers3) = translateMembers(hinputs, hamuts1, tailMembers2)
-        (hamuts2, headMember3 :: tailMembers3)
+        val (hamuts1, headMemberH) = translateMember(hinputs, hamuts0, headMember2)
+        val (hamuts2, tailMembersH) = translateMembers(hinputs, hamuts1, tailMembers2)
+        (hamuts2, headMemberH :: tailMembersH)
       }
     }
   }
 
   def translateMember(hinputs: Hinputs, hamuts: Hamuts, member2: StructMember2):
-  (Hamuts, StructMember3) = {
-    val (hamuts3, member3) =
+  (Hamuts, StructMemberH) = {
+    val (hamutsH, memberH) =
       member2.tyype match {
         case ReferenceMemberType2(coord) => {
           TypeHammer.translateReference(hinputs, hamuts, coord)
         }
         case AddressMemberType2(coord) => {
-          val (hamuts1, reference3) =
+          val (hamuts1, referenceH) =
             TypeHammer.translateReference(hinputs, hamuts, coord)
-          val (hamuts2, boxStructRef3) =
-            StructHammer.makeBox(hinputs, hamuts1, member2.variability, coord, reference3)
+          val (hamuts2, boxStructRefH) =
+            StructHammer.makeBox(hinputs, hamuts1, member2.variability, coord, referenceH)
           // The stack owns the box, closure structs just borrow it.
-          (hamuts2, Reference3(Borrow, boxStructRef3))
+          (hamuts2, ReferenceH(Borrow, boxStructRefH))
         }
       }
-    (hamuts3, StructMember3(member2.name, member2.variability, member3))
+    (hamutsH, StructMemberH(member2.name, member2.variability, memberH))
   }
 
 //
 //  def translateType(hinputs: Hinputs, hamuts: Hamuts, tyype: BaseType2):
-//  (Hamuts, BaseType3) = {
+//  (Hamuts, BaseTypeH) = {
 //    tyype match {
 //      case Addressible2(innerType) => {
-//        val (hamuts1, pointer3) = translatePointer(hinputs, hamuts, innerType)
-//        (hamuts1, Addressible3(pointer3))
+//        val (hamuts1, pointerH) = translatePointer(hinputs, hamuts, innerType)
+//        (hamuts1, AddressibleH(pointerH))
 //      }
 //      case Coord(ownership, innerType) => {
-//        val (hamuts1, pointer3) = translate(hinputs, hamuts, innerType)
-//        (hamuts1, Pointer3(ownership, pointer3))
+//        val (hamuts1, pointerH) = translate(hinputs, hamuts, innerType)
+//        (hamuts1, PointerH(ownership, pointerH))
 //      }
 //    }
 //  }
 
-  //  def translatePointer(tyype: Coord): Pointer3 = {
+  //  def translatePointer(tyype: Coord): PointerH = {
   //  }
 
   def translateFunction(
       hinputs: Hinputs, hamuts0: Hamuts, tyype: FunctionT2):
-  (Hamuts, FunctionT3) = {
+  (Hamuts, FunctionTH) = {
     val FunctionT2(paramTypes, returnType) = tyype;
-    val (hamuts1, returnType3) = translateReference(hinputs, hamuts0, tyype.returnType)
-    val (hamuts2, paramTypes3) = translateReferences(hinputs, hamuts1, tyype.paramTypes)
-    (hamuts2, FunctionT3(paramTypes3, returnType3))
+    val (hamuts1, returnTypeH) = translateReference(hinputs, hamuts0, tyype.returnType)
+    val (hamuts2, paramTypesH) = translateReferences(hinputs, hamuts1, tyype.paramTypes)
+    (hamuts2, FunctionTH(paramTypesH, returnTypeH))
   }
 
   def translateKind(hinputs: Hinputs, hamuts0: Hamuts, tyype: Kind):
-  (Hamuts, Referend3) = {
+  (Hamuts, ReferendH) = {
     tyype match {
-      case Never2() => (hamuts0, Never3())
-      case Int2() => (hamuts0, Int3())
-      case Bool2() => (hamuts0, Bool3())
-      case Float2() => (hamuts0, Float3())
-      case Str2() => (hamuts0, Str3())
-      case Void2() => (hamuts0, Void3())
+      case Never2() => (hamuts0, NeverH())
+      case Int2() => (hamuts0, IntH())
+      case Bool2() => (hamuts0, BoolH())
+      case Float2() => (hamuts0, FloatH())
+      case Str2() => (hamuts0, StrH())
+      case Void2() => (hamuts0, VoidH())
       case t : FunctionT2 => translateFunction(hinputs, hamuts0, t)
       case s@ StructRef2(_) => StructHammer.translateStructRef(hinputs, hamuts0, s)
 
@@ -99,47 +99,47 @@ object TypeHammer {
       hinputs: Hinputs,
       hamuts0: Hamuts,
       coord: Coord):
-  (Hamuts, Reference3[Referend3]) = {
+  (Hamuts, ReferenceH[ReferendH]) = {
     val Coord(ownership, innerType) = coord;
-    val (hamuts1, inner3) = translateKind(hinputs, hamuts0, innerType);
-    (hamuts1, Reference3(ownership, inner3))
+    val (hamuts1, innerH) = translateKind(hinputs, hamuts0, innerType);
+    (hamuts1, ReferenceH(ownership, innerH))
   }
 
   def translateReferences(
       hinputs: Hinputs,
       hamuts0: Hamuts,
       references2: List[Coord]):
-  (Hamuts, List[Reference3[Referend3]]) = {
+  (Hamuts, List[ReferenceH[ReferendH]]) = {
     references2 match {
       case Nil => (hamuts0, Nil)
       case headReference2 :: tailPointers2 => {
-        val (hamuts1, headPointer3) = translateReference(hinputs, hamuts0, headReference2)
-        val (hamuts2, tailPointers3) = translateReferences(hinputs, hamuts1, tailPointers2)
-        (hamuts2, headPointer3 :: tailPointers3)
+        val (hamuts1, headPointerH) = translateReference(hinputs, hamuts0, headReference2)
+        val (hamuts2, tailPointersH) = translateReferences(hinputs, hamuts1, tailPointers2)
+        (hamuts2, headPointerH :: tailPointersH)
       }
     }
   }
 
-//  def checkReference(baseType3: BaseType3): Reference3 = {
-//    baseType3 match {
-//      case Addressible3(_) => vfail("Expected a pointer, was an addressible!")
-//      case p @ Reference3(_, _) => p
+//  def checkReference(baseTypeH: BaseTypeH): ReferenceH = {
+//    baseTypeH match {
+//      case AddressibleH(_) => vfail("Expected a pointer, was an addressible!")
+//      case p @ ReferenceH(_, _) => p
 //    }
 //  }
 
-  def checkConversion(expected: Reference3[Referend3], actual: Reference3[Referend3]): Unit = {
+  def checkConversion(expected: ReferenceH[ReferendH], actual: ReferenceH[ReferendH]): Unit = {
     if (actual != expected) {
       vfail("Expected a " + expected + " but was a " + actual);
     }
   }
 
   def translateKnownSizeArray(hinputs: Hinputs, hamuts0: Hamuts, type2: ArraySequenceT2) = {
-    val (hamuts1, memberReference3) = TypeHammer.translateReference(hinputs, hamuts0, type2.array.memberType)
-    (hamuts1, KnownSizeArrayT3(type2.size, RawArrayT3(memberReference3)))
+    val (hamuts1, memberReferenceH) = TypeHammer.translateReference(hinputs, hamuts0, type2.array.memberType)
+    (hamuts1, KnownSizeArrayTH(type2.size, RawArrayTH(memberReferenceH)))
   }
 
   def translateUnknownSizeArray(hinputs: Hinputs, hamuts0: Hamuts, type2: UnknownSizeArrayT2) = {
-    val (hamuts1, memberReference3) = TypeHammer.translateReference(hinputs, hamuts0, type2.array.memberType)
-    (hamuts1, UnknownSizeArrayT3(RawArrayT3(memberReference3)))
+    val (hamuts1, memberReferenceH) = TypeHammer.translateReference(hinputs, hamuts0, type2.array.memberType)
+    (hamuts1, UnknownSizeArrayTH(RawArrayTH(memberReferenceH)))
   }
 }

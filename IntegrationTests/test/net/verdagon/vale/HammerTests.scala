@@ -46,7 +46,7 @@ class HammerTests extends FunSuite with Matchers {
 
     val mySome = hamuts.structs.find(_.fullName.parts.last.humanName == "MySome").get;
     vassert(mySome.members.size == 1);
-    vassert(mySome.members.head.tyype == Reference3[Int3](Share, Int3()))
+    vassert(mySome.members.head.tyype == ReferenceH[IntH](Share, IntH()))
 
     val myNone = hamuts.structs.find(_.fullName.parts.last.humanName == "MyNone").get;
     vassert(myNone.members.isEmpty);
