@@ -1,6 +1,7 @@
 package net.verdagon.vale.hammer
 
 import net.verdagon.vale.hinputs.Hinputs
+import net.verdagon.vale.metal._
 import net.verdagon.vale.scout.CodeLocation
 import net.verdagon.vale.templar.env.{IEnvironment, NamespaceEnvironment}
 import net.verdagon.vale.templar.templata._
@@ -13,8 +14,8 @@ object NameHammer {
   def translateName(hinputs: Hinputs, hamuts0: Hamuts, fullName2: FullName2): (Hamuts, FullNameH) = {
     val (hamuts20, stepsH) =
       fullName2.steps.foldLeft((hamuts0, List[NamePartH]()))({
-        case ((hamutsH, previousNamePartsH), namePart2) => {
-          val (hamuts5, namePartH) = translateNamePart(hinputs, hamutsH, namePart2)
+        case ((hamuts3, previousNamePartsH), namePart2) => {
+          val (hamuts5, namePartH) = translateNamePart(hinputs, hamuts3, namePart2)
           (hamuts5, previousNamePartsH :+ namePartH)
         }
       })
@@ -50,29 +51,29 @@ object NameHammer {
       case ArrayTemplateTemplata() => (hamuts0, ArrayTemplateTemplataH())
       case FunctionTemplata(outerEnv, function) => {
         val (hamuts1, outerEnvNameH) = translateName(hinputs, hamuts0, outerEnv.fullName)
-        (hamuts1, FunctionTemplataH(outerEnvNameH, function.name, function.codeLocation))
+        (hamuts1, FunctionTemplataH(outerEnvNameH, function.name, Conversions.evaluateCodeLocation(function.codeLocation)))
       }
       case StructTemplata(outerEnv, struct) => {
         val (hamuts1, outerEnvNameH) = translateName(hinputs, hamuts0, outerEnv.fullName)
-        (hamuts1, StructTemplataH(outerEnvNameH, struct.name, struct.codeLocation))
+        (hamuts1, StructTemplataH(outerEnvNameH, struct.name, Conversions.evaluateCodeLocation(struct.codeLocation)))
       }
       case InterfaceTemplata(outerEnv, struct) => {
         val (hamuts1, outerEnvNameH) = translateName(hinputs, hamuts0, outerEnv.fullName)
-        (hamuts1, InterfaceTemplataH(outerEnvNameH, struct.name, struct.codeLocation))
+        (hamuts1, InterfaceTemplataH(outerEnvNameH, struct.name, Conversions.evaluateCodeLocation(struct.codeLocation)))
       }
       case ImplTemplata(outerEnv, impl) => {
         val (hamuts1, outerEnvNameH) = translateName(hinputs, hamuts0, outerEnv.fullName)
-        (hamuts1, ImplTemplataH(outerEnvNameH, impl.codeLocation))
+        (hamuts1, ImplTemplataH(outerEnvNameH, Conversions.evaluateCodeLocation(impl.codeLocation)))
       }
       case ExternFunctionTemplata(header) => {
         val (hamuts1, outerEnvNameH) = translateName(hinputs, hamuts0, header.fullName)
         (hamuts1, ExternFunctionTemplataH(outerEnvNameH))
       }
-      case OwnershipTemplata(ownership) => (hamuts0, OwnershipTemplataH(ownership))
-      case VariabilityTemplata(variability) => (hamuts0, VariabilityTemplataH(variability))
-      case MutabilityTemplata(mutability) => (hamuts0, MutabilityTemplataH(mutability))
-      case PermissionTemplata(mutability) => (hamuts0, PermissionTemplataH(mutability))
-      case LocationTemplata(mutability) => (hamuts0, LocationTemplataH(mutability))
+      case OwnershipTemplata(ownership) => (hamuts0, OwnershipTemplataH(Conversions.evaluateOwnership(ownership)))
+      case VariabilityTemplata(variability) => (hamuts0, VariabilityTemplataH(Conversions.evaluateVariability(variability)))
+      case MutabilityTemplata(mutability) => (hamuts0, MutabilityTemplataH(Conversions.evaluateMutability(mutability)))
+      case PermissionTemplata(permission) => (hamuts0, PermissionTemplataH(Conversions.evaluatePermission(permission)))
+      case LocationTemplata(location) => (hamuts0, LocationTemplataH(Conversions.evaluateLocation(location)))
       case BooleanTemplata(value) => (hamuts0, BooleanTemplataH(value))
       case IntegerTemplata(value) => (hamuts0, IntegerTemplataH(value))
     }

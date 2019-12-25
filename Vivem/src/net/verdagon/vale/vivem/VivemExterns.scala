@@ -1,6 +1,6 @@
 package net.verdagon.vale.vivem
 
-import net.verdagon.vale.templar.types.{Raw, Share}
+import net.verdagon.vale.metal.Share
 import net.verdagon.vale.vassert
 
 object VivemExterns {

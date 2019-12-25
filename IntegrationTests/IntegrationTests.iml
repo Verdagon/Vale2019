@@ -24,5 +24,6 @@
     <orderEntry type="module" module-name="Inferer" />
     <orderEntry type="module" module-name="Samples" />
     <orderEntry type="module" module-name="Astronomer" />
+    <orderEntry type="module" module-name="Metal" />
   </component>
 </module>

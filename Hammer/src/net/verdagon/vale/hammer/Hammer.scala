@@ -1,8 +1,14 @@
 package net.verdagon.vale.hammer
 
 import net.verdagon.vale.hinputs.Hinputs
+import net.verdagon.vale.metal._
 import net.verdagon.vale.templar.env.VariableId2
 import net.verdagon.vale.{vassert, vfail}
+
+case class FunctionRefH(prototype: PrototypeH) {
+  //  def functionType = prototype.functionType
+  def fullName = prototype.fullName
+}
 
 // This represents the locals for the entire function.
 // Note, some locals will have the same index, that just means they're in
@@ -78,19 +84,19 @@ case class Locals(
 
 object Hammer {
   def translate(hinputs: Hinputs): ProgramH = {
-    val hamuts0 = Hamuts(Map(), Map(), Map(), hinputs.structIds.values.max + 1, Map(), Map(), Map(), Map())
+    val hamuts0 = Hamuts(Map(), Map(), List(), Map(), Map(), Map(), Map())
     val (hamuts1, emptyPackStructRefH) =
       StructHammer.translateStructRef(hinputs, hamuts0, hinputs.program2.emptyPackStructRef)
     val hamuts2 = StructHammer.translateInterfaces(hinputs, hamuts1);
-    val hamutsH = StructHammer.translateStructs(hinputs, hamuts2)
+    val hamuts3 = StructHammer.translateStructs(hinputs, hamuts2)
     val userFunctions = hinputs.program2.functions.filter(_.header.isUserFunction).toList
     val nonUserFunctions = hinputs.program2.functions.filter(!_.header.isUserFunction).toList
-    val (hamuts4, _) = FunctionHammer.translateFunctions(hinputs, hamutsH, userFunctions)
+    val (hamuts4, _) = FunctionHammer.translateFunctions(hinputs, hamuts3, userFunctions)
     val (hamuts5, _) = FunctionHammer.translateFunctions(hinputs, hamuts4, nonUserFunctions)
 
     ProgramH(
       hamuts5.interfaceDefs.values.toList,
-      hamuts5.structDefsById.values.toList,
+      hamuts5.structDefsByRef2.values.toList,
       emptyPackStructRefH,
       List() /* externs */,
       hamuts5.functionDefs.values.toList)

@@ -4,6 +4,7 @@ import net.verdagon.vale.astronomer._
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.parser._
+import net.verdagon.vale.{scout => s}
 import net.verdagon.vale.scout._
 import net.verdagon.vale.scout.patterns.{AbstractSP, AtomSP, OverrideSP}
 import net.verdagon.vale.scout.rules._
@@ -39,7 +40,7 @@ object BuiltInFunctions {
         CallTemplar.DESTRUCTOR_NAME,
         FunctionEnvEntry(
           FunctionA(
-            CodeLocation(CallTemplar.DESTRUCTOR_NAME + ".builtin.vale", 0, 0),
+            s.CodeLocation(CallTemplar.DESTRUCTOR_NAME + ".builtin.vale", 0, 0),
             CallTemplar.DESTRUCTOR_NAME,
             List(),
             0,
@@ -120,7 +121,7 @@ object BuiltInFunctions {
     currentlyConstructingEnv
       .addFunction(
         FunctionA(
-          CodeLocation(CallTemplar.INTERFACE_DESTRUCTOR_NAME + ".builtin.vale", 0, 0),
+          s.CodeLocation(CallTemplar.INTERFACE_DESTRUCTOR_NAME + ".builtin.vale", 0, 0),
           CallTemplar.INTERFACE_DESTRUCTOR_NAME,
           List(),
           0,
@@ -184,7 +185,7 @@ object BuiltInFunctions {
     currentlyConstructingEnv
       .addFunction(
         FunctionA(
-          CodeLocation(CallTemplar.INTERFACE_DESTRUCTOR_NAME + ".builtin.vale", 0, 1),
+          s.CodeLocation(CallTemplar.INTERFACE_DESTRUCTOR_NAME + ".builtin.vale", 0, 1),
           CallTemplar.INTERFACE_DESTRUCTOR_NAME,
           List(),
           0,
@@ -260,7 +261,7 @@ object BuiltInFunctions {
       currentlyConstructingEnv
         .addFunction(
           FunctionA(
-            CodeLocation(CallTemplar.DROP_FUNCTION_NAME + ".builtin.vale", 0, 0),
+            s.CodeLocation(CallTemplar.DROP_FUNCTION_NAME + ".builtin.vale", 0, 0),
             CallTemplar.DROP_FUNCTION_NAME,
             List(),
             0,
@@ -301,7 +302,7 @@ object BuiltInFunctions {
     currentlyConstructingEnv
       .addFunction(
         FunctionA(
-          CodeLocation("len.builtin.vale", 0, 0),
+          s.CodeLocation("len.builtin.vale", 0, 0),
           "len",
           List(),
           0,
@@ -339,7 +340,7 @@ object BuiltInFunctions {
                     LocalLoadAE("arr", false))))))))
       .addFunction(
         FunctionA(
-          CodeLocation("len.builtin.vale", 0, 1),
+          s.CodeLocation("len.builtin.vale", 0, 1),
           "len",
           List(),
           0,
@@ -383,7 +384,7 @@ object BuiltInFunctions {
     currentlyConstructingEnv
       .addFunction(
         FunctionA(
-          CodeLocation("panic.builtin.vale", 0, 0),
+          s.CodeLocation("panic.builtin.vale", 0, 0),
           "panic",
           List(),
           0,

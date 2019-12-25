@@ -2,9 +2,11 @@ package net.verdagon.vale.vivem
 
 import java.io.PrintStream
 
-import net.verdagon.vale.hammer._
-import net.verdagon.vale.scout.RefCountCategory
-import net.verdagon.vale.templar.types.{Ownership, Raw, Share}
+import net.verdagon.vale.metal._
+
+//import net.verdagon.vale.hammer._
+//import net.verdagon.vale.scout.RefCountCategory
+//import net.verdagon.vale.templar.types.{Ownership, Raw, Share}
 import net.verdagon.vale.{vassert, vcurious, vfail, vimpl}
 import net.verdagon.von._
 
@@ -438,7 +440,6 @@ class Heap(in_vivemDout: PrintStream) {
       case BoolV(value) => vivemDout.print(value)
       case StrV(value) => vivemDout.print(value)
       case FloatV(value) => vivemDout.print(value)
-      case FunctionReferendV(functionH) => vivemDout.print(functionH.fullName + "(...)")
       case StructInstanceV(structH, members) => vivemDout.print(structH.fullName + "{" + members.map("o" + _.allocId.num).mkString(", ") + "}")
       case ArrayInstanceV(typeH, memberTypeH, size, elements) => vivemDout.print("array:" + size + ":" + memberTypeH + "{" + elements.map("o" + _.allocId.num).mkString(", ") + "}")
     }
@@ -548,13 +549,6 @@ class Heap(in_vivemDout: PrintStream) {
         .reverse
   }
 
-  def takeFunctionReferenceFromRegister(functionLine: RegisterId, expectedFunctionType: FunctionTH) = {
-    val functionReference =
-      takeReferenceFromRegister(functionLine, ReferenceH(Raw, expectedFunctionType))
-    val functionReferend = checkFunctionReference(expectedFunctionType, functionReference)
-    (functionReference, functionReferend.function)
-  }
-
   def allocateIntoRegister(registerId: RegisterId, ownership: Ownership, referend: ReferendV): ReferenceV = {
     val ref = add(ownership, referend)
     vivemDout.print(" o" + ref.allocId.num + "=")
@@ -607,7 +601,7 @@ class Heap(in_vivemDout: PrintStream) {
       case (StrV(_), StrH()) =>
       case (FloatV(_), FloatH()) =>
       case (VoidV(), VoidH()) =>
-      case (StructInstanceV(structDefH, _), structRefH @ StructRefH(_, _)) => {
+      case (StructInstanceV(structDefH, _), structRefH @ StructRefH(_)) => {
         if (structDefH.getRef != structRefH) {
           vfail("Expected " + structRefH + " but was " + structDefH)
         }
@@ -622,16 +616,11 @@ class Heap(in_vivemDout: PrintStream) {
           vfail("Expected " + arrayH + " but was " + typeH)
         }
       }
-      case (FunctionReferendV(functionH), ftH @ FunctionTH(_, _)) => {
-        if (functionH.prototype.functionType != ftH) {
-          vfail("Expected a " + ftH + " but was a " + functionH.prototype.functionType)
-        }
-      }
-      case (StructInstanceV(structDefH, _), irH @ InterfaceRefH(interfaceIdH, _)) => {
+      case (StructInstanceV(structDefH, _), irH @ InterfaceRefH(_)) => {
         val structImplementsInterface =
           structDefH.edges.exists(_.interface == irH)
         if (!structImplementsInterface) {
-          vfail("Struct " + structDefH.getRef + " doesnt implement interface " + interfaceIdH);
+          vfail("Struct " + structDefH.getRef + " doesnt implement interface " + irH);
         }
       }
       case (a, b) => {
@@ -669,16 +658,6 @@ class Heap(in_vivemDout: PrintStream) {
         siv
       }
       case _ => vfail("Expected a struct but was " + reference)
-    }
-  }
-
-  def checkFunctionReference(expectedFunctionType: FunctionTH, reference: ReferenceV): FunctionReferendV = {
-    dereference(reference) match {
-      case ufr @ FunctionReferendV(functionH) => {
-        vassert(functionH.prototype.functionType == expectedFunctionType)
-        ufr
-      }
-      case _ => vfail("Expected a function but was " + reference)
     }
   }
 

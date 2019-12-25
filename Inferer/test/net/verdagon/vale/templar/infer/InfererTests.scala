@@ -4,6 +4,7 @@ import net.verdagon.vale.astronomer._
 import net.verdagon.vale.astronomer.ruletyper.IRuleTyperEvaluatorDelegate
 import net.verdagon.vale.parser._
 import net.verdagon.vale.scout._
+import net.verdagon.vale.{scout => s}
 import net.verdagon.vale.scout.patterns.{AbstractSP, AtomSP}
 import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.templata._
@@ -108,12 +109,12 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
   def makeCannedEnvironment(): SimpleEnvironment = {
     SimpleEnvironment(
       Map(
-        "ImmInterface" -> InterfaceEnvEntry(InterfaceA(CodeLocation("ImmInterface.vale", 0, 0), List(), "ImmInterface", ImmutableP, Some(ImmutableP), KindTemplataType, List(), Map(), List())),
+        "ImmInterface" -> InterfaceEnvEntry(InterfaceA(s.CodeLocation("ImmInterface.vale", 0, 0), List(), "ImmInterface", ImmutableP, Some(ImmutableP), KindTemplataType, List(), Map(), List())),
         "Array" -> TemplataEnvEntry(ArrayTemplateTemplata()),
-        "MutTStruct" -> StructEnvEntry(StructA(CodeLocation("MutTStruct.vale", 0, 0), List(), "MutTStruct", MutableP, Some(MutableP), TemplateTemplataType(List(CoordTemplataType), KindTemplataType), List("T"), Map("T" -> CoordTemplataType), List(), List())),
-        "MutTInterface" -> InterfaceEnvEntry(InterfaceA(CodeLocation("MutTInterface.vale", 0, 0), List(), "MutTInterface", MutableP, Some(MutableP), TemplateTemplataType(List(CoordTemplataType), KindTemplataType), List("T"), Map("T" -> CoordTemplataType), List())),
-        "MutStruct" -> StructEnvEntry(StructA(CodeLocation("MutStruct.vale", 0, 0), List(), "MutStruct", MutableP, Some(MutableP), KindTemplataType, List(), Map(), List(), List())),
-        "MutInterface" -> InterfaceEnvEntry(InterfaceA(CodeLocation("MutInterface.vale", 0, 0), List(), "MutInterface", MutableP, Some(MutableP), KindTemplataType, List(), Map(), List())),
+        "MutTStruct" -> StructEnvEntry(StructA(s.CodeLocation("MutTStruct.vale", 0, 0), List(), "MutTStruct", MutableP, Some(MutableP), TemplateTemplataType(List(CoordTemplataType), KindTemplataType), List("T"), Map("T" -> CoordTemplataType), List(), List())),
+        "MutTInterface" -> InterfaceEnvEntry(InterfaceA(s.CodeLocation("MutTInterface.vale", 0, 0), List(), "MutTInterface", MutableP, Some(MutableP), TemplateTemplataType(List(CoordTemplataType), KindTemplataType), List("T"), Map("T" -> CoordTemplataType), List())),
+        "MutStruct" -> StructEnvEntry(StructA(s.CodeLocation("MutStruct.vale", 0, 0), List(), "MutStruct", MutableP, Some(MutableP), KindTemplataType, List(), Map(), List(), List())),
+        "MutInterface" -> InterfaceEnvEntry(InterfaceA(s.CodeLocation("MutInterface.vale", 0, 0), List(), "MutInterface", MutableP, Some(MutableP), KindTemplataType, List(), Map(), List())),
         "MutStructBorrow" -> TemplataEnvEntry(CoordTemplata(Coord(Borrow, StructRef2(FullName2(List(NamePart2("MutStruct", Some(List())))))))),
         "MutArraySequenceOf4Int" -> TemplataEnvEntry(KindTemplata(ArraySequenceT2(4, RawArrayT2(Coord(Share, Int2()), Mutable)))),
         "Void" -> TemplataEnvEntry(KindTemplata(Void2())),

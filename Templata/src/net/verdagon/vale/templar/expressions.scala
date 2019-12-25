@@ -1,6 +1,5 @@
 package net.verdagon.vale.templar
 
-import net.verdagon.vale.scout.RefCountCategory
 import net.verdagon.vale.templar.env.{ILocalVariable2, ReferenceLocalVariable2, VariableId2}
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar.types._
@@ -407,14 +406,14 @@ case class AddressMemberLookup2(
 //}
 
 case class InterfaceFunctionCall2(
-    superFunctionBanner: FunctionBanner2,
+    superFunctionHeader: FunctionHeader2,
     resultReference: Coord,
     args: List[ReferenceExpression2]) extends ReferenceExpression2 {
   override def resultRegister: ReferenceRegister2 =
     ReferenceRegister2(resultReference)
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
-    List(this).collect(func) ++ superFunctionBanner.all(func) ++ resultReference.all(func) ++ args.flatMap(_.all(func))
+    List(this).collect(func) ++ superFunctionHeader.all(func) ++ resultReference.all(func) ++ args.flatMap(_.all(func))
   }
 }
 
@@ -431,7 +430,7 @@ case class ExternFunctionCall2(
   override def resultRegister = ReferenceRegister2(prototype2.returnType)
 }
 
-case class FunctionPointerCall2(
+case class FunctionCall2(
     callable: Prototype2,
     args: List[ReferenceExpression2]) extends ReferenceExpression2 {
   override def resultRegister: ReferenceRegister2 = {
@@ -535,31 +534,27 @@ case class DestroyArraySequence2(
   }
 }
 
-// Note: the functionpointercall's last argument is a Placeholder2,
-// it's up to later stages to replace that with an actual index
 case class DestroyUnknownSizeArray2(
     arrayExpr: ReferenceExpression2,
     arrayType: UnknownSizeArrayT2,
-    call: FunctionPointerCall2) extends ReferenceExpression2 {
+    consumer: ReferenceExpression2) extends ReferenceExpression2 {
   override def resultRegister: ReferenceRegister2 = ReferenceRegister2(Coord(Raw, Void2()))
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
-    List(this).collect(func) ++ arrayType.all(func) ++ arrayExpr.all(func) ++ call.all(func)
+    List(this).collect(func) ++ arrayType.all(func) ++ arrayExpr.all(func) ++ consumer.all(func)
   }
 }
 
-// Note: the functionpointercall's last argument is a Placeholder2,
-// it's up to later stages to replace that with an actual index
 case class DrainArraySequence2(
     arrayExpr: ReferenceExpression2,
     arrayType: ArraySequenceT2,
     resultArraySeqType: ArraySequenceT2,
     resultArraySeqRefType: Coord,
-    call: FunctionPointerCall2) extends ReferenceExpression2 {
+    consumer: ReferenceExpression2) extends ReferenceExpression2 {
   override def resultRegister: ReferenceRegister2 = ReferenceRegister2(resultArraySeqRefType)
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
-    List(this).collect(func) ++ arrayType.all(func) ++ arrayExpr.all(func) ++ call.all(func)
+    List(this).collect(func) ++ arrayType.all(func) ++ arrayExpr.all(func) ++ consumer.all(func)
   }
 }
 
@@ -570,7 +565,7 @@ case class DrainUnknownSizeArray2(
     arrayType: UnknownSizeArrayT2,
     resultArraySeqType: UnknownSizeArrayT2,
     resultArraySeqRefType: Coord,
-    call: FunctionPointerCall2) extends ReferenceExpression2 {
+    call: FunctionCall2) extends ReferenceExpression2 {
   override def resultRegister: ReferenceRegister2 = ReferenceRegister2(resultArraySeqRefType)
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
@@ -660,7 +655,7 @@ case class Destructure2(
 
 case class CheckRefCount2(
     refExpr: ReferenceExpression2,
-    category: RefCountCategory,
+    category: types.RefCountCategory,
     numExpr: ReferenceExpression2) extends ReferenceExpression2 {
   override def resultRegister = ReferenceRegister2(Coord(Raw, Void2()))
 

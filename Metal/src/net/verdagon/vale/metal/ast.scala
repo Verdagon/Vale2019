@@ -31,13 +31,12 @@ case class ProgramH(
 }
 
 case class StructDefinitionH(
-    structId: Int,
     fullName: FullNameH,
     mutability: Mutability,
     edges: List[EdgeH],
     members: List[StructMemberH]) {
 
-  def getRef: StructRefH = StructRefH(structId, fullName)
+  def getRef: StructRefH = StructRefH(fullName)
 
   // These functions are tightly coupled with StructSculptor.declareStructInfo
   def getInterfacePtrElementIndex(interfaceRef: InterfaceRefH): Int = {
@@ -68,12 +67,11 @@ case class StructMemberH(
   tyype: ReferenceH[ReferendH])
 
 case class InterfaceDefinitionH(
-  interfaceId: Int,
   fullName: FullNameH,
   mutability: Mutability,
   superInterfaces: List[InterfaceRefH],
   prototypes: List[PrototypeH]) {
-  def getRef = InterfaceRefH(interfaceId, fullName)
+  def getRef = InterfaceRefH(fullName)
 }
 
 // Represents how a struct implements an interface.
@@ -89,21 +87,14 @@ case class FunctionH(
   isExtern: Boolean,
   isUserFunction: Boolean,
   block: BlockH) {
-  def getRef = FunctionRefH(prototype)
   def fullName = prototype.fullName
 }
 
 case class PrototypeH(
-  functionId: Int,
   fullName: FullNameH,
   params: List[ReferenceH[ReferendH]],
   returnType: ReferenceH[ReferendH]
 )
-
-case class FunctionRefH(prototype: PrototypeH) {
-//  def functionType = prototype.functionType
-  def fullName = prototype.fullName
-}
 
 case class NamePartH(humanName: String, maybeTemplateArgs: Option[List[ITemplataH]])
 case class FullNameH(parts: List[NamePartH])

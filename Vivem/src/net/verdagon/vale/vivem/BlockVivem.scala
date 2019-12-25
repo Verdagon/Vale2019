@@ -1,7 +1,7 @@
 package net.verdagon.vale.vivem
 
-import net.verdagon.vale.hammer.{BlockH, ProgramH, ReferenceH, VoidH}
-import net.verdagon.vale.templar.types.{Ownership, Raw, Share}
+import net.verdagon.vale.metal.{BlockH, ProgramH, ReferenceH, VoidH}
+import net.verdagon.vale.{metal => m}
 import net.verdagon.vale.{vassert, vfail}
 import net.verdagon.vale.vivem.ExpressionVivem.{NodeContinue, NodeReturn}
 
@@ -66,7 +66,7 @@ object BlockVivem {
       if (currentLine == blockH.nodes.size) {
         val blockResult =
           (maybeResultRegisterId, blockH.resultType) match {
-            case (None, ReferenceH(Raw, VoidH())) => {
+            case (None, ReferenceH(m.Raw, VoidH())) => {
               BlockContinue(None)
             }
             case (Some(resultRegisterId), expectedType) => {

@@ -24,7 +24,7 @@ object CallTemplar {
       callableExpr: ReferenceExpression2,
       explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
       givenArgsExprs2: List[ReferenceExpression2]):
-  (FunctionPointerCall2) = {
+  (FunctionCall2) = {
     callableExpr.resultRegister.reference.referend match {
       case Never2() | Bool2() => {
         vfail("wot " + callableExpr.resultRegister.reference.referend)
@@ -73,7 +73,7 @@ object CallTemplar {
           argsExprs2.map(a => a.resultRegister.reference),
           exact = true)
 
-        (FunctionPointerCall2(prototype, argsExprs2))
+        (FunctionCall2(prototype, argsExprs2))
       }
 //      case ft @ FunctionT2(_, _) => {
 //        vcurious() // do we ever use this? do we ever deal with function pointers?
@@ -99,7 +99,7 @@ object CallTemplar {
     functionName: String,
     explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
     givenArgsExprs2: List[ReferenceExpression2]):
-  (FunctionPointerCall2) = {
+  (FunctionCall2) = {
     val unconvertedArgsPointerTypes2 =
       givenArgsExprs2.map(_.resultRegister.expectReference().reference)
 
@@ -135,7 +135,7 @@ object CallTemplar {
       argsExprs2.map(a => a.resultRegister.reference),
       exact = true)
 
-    (FunctionPointerCall2(prototype, argsExprs2))
+    (FunctionCall2(prototype, argsExprs2))
   }
 
 
@@ -159,7 +159,7 @@ object CallTemplar {
       explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
       givenCallableUnborrowedExpr2: ReferenceExpression2,
       givenArgsExprs2: List[ReferenceExpression2]):
-      (FunctionPointerCall2) = {
+      (FunctionCall2) = {
     val env =
       citizenRef match {
         case sr @ StructRef2(_) => temputs.envByStructRef(sr)
@@ -222,7 +222,7 @@ object CallTemplar {
 
     CallTemplar.checkTypes(temputs, prototype2.paramTypes, argTypes, exact = true)
 
-    val resultingExpr2 = FunctionPointerCall2(prototype2, actualArgsExprs2);
+    val resultingExpr2 = FunctionCall2(prototype2, actualArgsExprs2);
 
     (resultingExpr2)
   }
@@ -275,7 +275,7 @@ object CallTemplar {
       callableExpr2: Expression2,
       explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
       argsExpr2: Expression2):
-  (FunctionPointerCall2) = {
+  (FunctionCall2) = {
     val (callableReferenceExpr2) =
       ExpressionTemplar.coerceToReferenceExpression(fate, callableExpr2)
     val (argsRefExpr2) =
@@ -298,7 +298,7 @@ object CallTemplar {
     functionName: String,
     explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
     argsExpr2: Expression2):
-  (FunctionPointerCall2) = {
+  (FunctionCall2) = {
     val (argsRefExpr2) =
       ExpressionTemplar.coerceToReferenceExpression(fate, argsExpr2);
     val unpackedArgsExprs =

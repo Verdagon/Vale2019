@@ -1,6 +1,8 @@
 package net.verdagon.vale
 
 import net.verdagon.vale.hammer._
+import net.verdagon.vale.metal.{IntH, ReferenceH}
+import net.verdagon.vale.{metal => m}
 import net.verdagon.vale.templar.types.Share
 import org.scalatest.{FunSuite, Matchers}
 
@@ -46,54 +48,10 @@ class HammerTests extends FunSuite with Matchers {
 
     val mySome = hamuts.structs.find(_.fullName.parts.last.humanName == "MySome").get;
     vassert(mySome.members.size == 1);
-    vassert(mySome.members.head.tyype == ReferenceH[IntH](Share, IntH()))
+    vassert(mySome.members.head.tyype == ReferenceH[IntH](m.Share, IntH()))
 
     val myNone = hamuts.structs.find(_.fullName.parts.last.humanName == "MyNone").get;
     vassert(myNone.members.isEmpty);
-  }
-
-  test("Generated etables are size 1") {
-    val compile = new Compilation(
-      """
-        |interface MyOption<#T> imm rules(#T: Ref) { }
-        |struct MyNone<#T> imm rules(#T: Ref) { }
-        |impl MyNone<#T> for MyOption<#T>;
-        |struct MySome<#T> imm rules(#T: Ref) { value: #T; }
-        |impl MySome<#T> for MyOption<#T>;
-        |
-        |fn main(a: *MySome<*Int>, b: *MyNone<*Int>) {}
-      """.stripMargin)
-    val hamuts = compile.getHamuts()
-    hamuts.structs
-        .filter(s => s.fullName.parts.last.humanName == "MySome" || s.fullName.parts.last.humanName == "MyNone")
-        .foreach(struct => {
-          vassert(struct.eTable.table.directory.size == 1)
-          vassert(struct.eTable.table.combinedBuckets.size == 1)
-          vassert(struct.eTable.table.combinedBuckets(0).get._2 == hamuts.interfaces(0).getRef)
-        })
-  }
-
-  test("Directory for 4 interfaces is still size 1") {
-    val compile = new Compilation(
-      """
-        |interface Blark {}
-        |interface Bloop {}
-        |interface Blorg {}
-        |interface Blerp {}
-        |struct MyStruct {}
-        |impl MyStruct for Blark;
-        |impl MyStruct for Bloop;
-        |impl MyStruct for Blorg;
-        |impl MyStruct for Blerp;
-      """.stripMargin)
-    val hamuts = compile.getHamuts()
-    val struct = hamuts.structs.find(_.fullName.parts.last.humanName == "MyStruct").get;
-    // Our tetris table uses ceil(N/4) directory size, bumped up to the next power of 2. If this doesnt work, perhaps investigate rounding issues...
-    vassert(struct.eTable.table.directory.size == 1);
-
-    hamuts.interfaces.foreach(interface => {
-      vassert(struct.eTable.table.combinedBuckets.flatMap(_.toList.map(_._2)).contains(interface.getRef))
-    })
   }
 
   test("Virtual and override functions make it into hamuts") {

@@ -347,9 +347,6 @@ case class InterfaceCallH(
   // The type of the interface.
   // TODO: Take this out, it's redundant, can get it from argsRegisters[virtualParamIndex]
   interfaceRefH: InterfaceRefH,
-  // The ID of the interface.
-  // TODO: Take this out, it's redundant with interfaceRef's id.
-  interfaceId: Int,
   // The index in the vtable for the function.
   indexInEdge: Int,
   // The function we expect to be calling. Note that this is the prototype for the abstract
@@ -539,14 +536,14 @@ case class RegisterAccessH[+T <: ReferendH](
 
   def expectStructAccess(): RegisterAccessH[StructRefH] = {
     this match {
-      case RegisterAccessH(registerId, ReferenceH(ownership, x @ StructRefH(_, _))) => {
+      case RegisterAccessH(registerId, ReferenceH(ownership, x @ StructRefH(_))) => {
         RegisterAccessH[StructRefH](registerId, ReferenceH(ownership, x))
       }
     }
   }
   def expectInterfaceAccess(): RegisterAccessH[InterfaceRefH] = {
     this match {
-      case RegisterAccessH(registerId, ReferenceH(ownership, x @ InterfaceRefH(_, _))) => {
+      case RegisterAccessH(registerId, ReferenceH(ownership, x @ InterfaceRefH(_))) => {
         RegisterAccessH[InterfaceRefH](registerId, ReferenceH(ownership, x))
       }
     }

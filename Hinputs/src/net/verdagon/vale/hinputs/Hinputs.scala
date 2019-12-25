@@ -9,9 +9,4 @@ case class ETable2(struct: StructRef2, table: TetrisTable[InterfaceRef2, Interfa
 case class Hinputs(
   program2: CompleteProgram2,
   edgeBlueprintsByInterface: Map[InterfaceRef2, InterfaceEdgeBlueprint],
-  edgeBlueprintsByInterfaceId: Map[Int, InterfaceEdgeBlueprint],
-  edges: Set[Edge2],
-  functionIds: Map[Signature2, Int],
-  structIds: Map[StructRef2, Int],
-  interfaceIds: Map[InterfaceRef2, Int],
-  eTables: Map[StructRef2, ETable2])
+  edges: Set[Edge2])

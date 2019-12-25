@@ -1,5 +1,7 @@
 package net.verdagon.vale.hammer
 
+import net.verdagon.vale.metal._
+import net.verdagon.vale.{metal => m}
 import net.verdagon.vale.scout.CodeLocation
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.vimpl
@@ -54,7 +56,7 @@ object VonHammer {
   }
 
   def vonfiyStruct(struct: StructDefinitionH): IVonData = {
-    val StructDefinitionH(_, fullName, mutability, _, edges, members) = struct
+    val StructDefinitionH(_, fullName, mutability, edges, members) = struct
 
     VonObject(
       "Struct",
@@ -66,32 +68,32 @@ object VonHammer {
         VonMember(None, Some("members"), VonArray(None, members.map(vonifyStructMember).toVector))))
   }
 
-  def vonifyMutability(mutability: Mutability): IVonData = {
+  def vonifyMutability(mutability: m.Mutability): IVonData = {
     mutability match {
-      case Immutable => VonObject("Immutable", None, Vector())
-      case Mutable => VonObject("Mutable", None, Vector())
+      case m.Immutable => VonObject("Immutable", None, Vector())
+      case m.Mutable => VonObject("Mutable", None, Vector())
     }
   }
 
-  def vonifyPermission(permission: Permission): IVonData = {
+  def vonifyPermission(permission: m.Permission): IVonData = {
     permission match {
-      case Readonly => VonObject("Readonly", None, Vector())
-      case Readwrite => VonObject("Readwrite", None, Vector())
-      case ExclusiveReadwrite => VonObject("ExclusiveReadwrite", None, Vector())
+      case m.Readonly => VonObject("Readonly", None, Vector())
+      case m.Readwrite => VonObject("Readwrite", None, Vector())
+      case m.ExclusiveReadwrite => VonObject("ExclusiveReadwrite", None, Vector())
     }
   }
 
-  def vonifyLocation(location: Location): IVonData = {
+  def vonifyLocation(location: m.Location): IVonData = {
     location match {
-      case Inline => VonObject("Inline", None, Vector())
-      case Yonder => VonObject("Yonder", None, Vector())
+      case m.Inline => VonObject("Inline", None, Vector())
+      case m.Yonder => VonObject("Yonder", None, Vector())
     }
   }
 
-  def vonifyVariability(variability: Variability): IVonData = {
+  def vonifyVariability(variability: m.Variability): IVonData = {
     variability match {
-      case Varying => VonObject("Varying", None, Vector())
-      case Final => VonObject("Final", None, Vector())
+      case m.Varying => VonObject("Varying", None, Vector())
+      case m.Final => VonObject("Final", None, Vector())
     }
   }
 
@@ -137,12 +139,12 @@ object VonHammer {
             })))))
   }
 
-  def vonifyOwnership(ownership: Ownership): IVonData = {
+  def vonifyOwnership(ownership: m.Ownership): IVonData = {
     ownership match {
-      case Raw => VonObject("Raw", None, Vector())
-      case Own => VonObject("Own", None, Vector())
-      case Borrow => VonObject("Borrow", None, Vector())
-      case Share => VonObject("Share", None, Vector())
+      case m.Raw => VonObject("Raw", None, Vector())
+      case m.Own => VonObject("Own", None, Vector())
+      case m.Borrow => VonObject("Borrow", None, Vector())
+      case m.Share => VonObject("Share", None, Vector())
     }
   }
 
@@ -167,17 +169,6 @@ object VonHammer {
       case FloatH() => VonObject("FloatH", None, Vector())
       case ir @ InterfaceRefH(_, _) => vonifyInterfaceRef(ir)
       case sr @ StructRefH(_, _) => vonifyStructRef(sr)
-      case FunctionTH(paramTypes, returnType) => {
-        VonObject(
-          "FunctionTH",
-          None,
-          Vector(
-            VonMember(
-              None,
-              Some("paramTypes"),
-              VonArray(None, paramTypes.map(vonifyCoord).toVector)),
-            VonMember(None, Some("returnType"), vonifyCoord(returnType))))
-      }
       case UnknownSizeArrayTH(rawArray) => {
         VonObject(
           "UnknownSizeArray",
@@ -231,14 +222,6 @@ object VonHammer {
 
   def vonifyNode(node: NodeH): IVonData = {
     node match {
-      case LoadFunctionH(registerId, functionRefH) => {
-        VonObject(
-          "LoadFunction",
-          None,
-          Vector(
-            VonMember(None, Some("registerId"), VonStr(registerId)),
-            VonMember(None, Some("functionRef"), vonifyFunctionRef(functionRefH))))
-      }
       case ConstantVoidH(registerId) => {
         VonObject(
           "ConstantI64",
@@ -370,16 +353,7 @@ object VonHammer {
           None,
           Vector(
             VonMember(None, Some("registerId"), VonStr(registerId)),
-            VonMember(None, Some("functionRegister"), vonifyRegisterAccess(functionRegister)),
-            VonMember(None, Some("argRegisters"), VonArray(None, argsRegisters.toVector.map(vonifyRegisterAccess)))))
-      }
-      case ExternCallH(registerId, functionRefH, argsRegisters) => {
-        VonObject(
-          "ExternCall",
-          None,
-          Vector(
-            VonMember(None, Some("registerId"), VonStr(registerId)),
-            VonMember(None, Some("functionRef"), vonifyFunctionRef(functionRefH)),
+            VonMember(None, Some("function"), vonifyPrototype(functionRegister)),
             VonMember(None, Some("argRegisters"), VonArray(None, argsRegisters.toVector.map(vonifyRegisterAccess)))))
       }
       case InterfaceCallH(registerId, argsRegisters, virtualParamIndex, interfaceRefH, interfaceId, indexInEdge, functionType) => {
@@ -555,8 +529,8 @@ object VonHammer {
     }
   }
 
-  def vonifyCodeLocation(codeLocation: CodeLocation): IVonData = {
-    val CodeLocation(file, line, char) = codeLocation
+  def vonifyCodeLocation(codeLocation: m.CodeLocation): IVonData = {
+    val m.CodeLocation(file, line, char) = codeLocation
     VonObject(
       "CodeLocation",
       None,

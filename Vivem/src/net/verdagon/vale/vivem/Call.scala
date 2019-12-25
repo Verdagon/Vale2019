@@ -1,6 +1,6 @@
 package net.verdagon.vale.vivem
 
-import net.verdagon.vale.hammer.{ReferenceH, ReferendH}
+import net.verdagon.vale.metal.{ReferenceH, ReferendH}
 import net.verdagon.vale.{vassert, vfail}
 
 import scala.collection.mutable

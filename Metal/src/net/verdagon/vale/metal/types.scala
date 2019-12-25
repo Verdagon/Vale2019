@@ -59,7 +59,7 @@ case class ReferenceH[+T <: ReferendH](ownership: Ownership, kind: T) {
   // points at struct.
   def expectStructReference() = {
     kind match {
-      case atH @ StructRefH(_, _) => ReferenceH[StructRefH](ownership, atH)
+      case atH @ StructRefH(_) => ReferenceH[StructRefH](ownership, atH)
     }
   }
 }
@@ -78,19 +78,11 @@ case class FloatH() extends ReferendH
 case class NeverH() extends ReferendH
 
 case class InterfaceRefH(
-  // Unique integer identifier for the interface.
-  // TODO: Get rid of this, it will make things very hard if we ever decide to
-  // do dynamic linking.
-  interfaceId: Int,
   // Unique identifier for the interface.
   fullName: FullNameH
 ) extends ReferendH
 
 case class StructRefH(
-  // Unique integer identifier for the interface.
-  // TODO: Get rid of this, it will make things very hard if we ever decide to
-  // do dynamic linking.
-  structId: Int,
   // Unique identifier for the interface.
   fullName: FullNameH
 ) extends ReferendH

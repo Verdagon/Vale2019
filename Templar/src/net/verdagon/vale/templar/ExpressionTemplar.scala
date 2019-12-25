@@ -385,7 +385,7 @@ object ExpressionTemplar {
           evaluateAndCoerceToReferenceExpression(temputs, fate, refExpr1);
         val (numExpr2, returnsFromNum) =
           evaluateAndCoerceToReferenceExpression(temputs, fate, numExpr1);
-        (CheckRefCount2(refExpr2, category, numExpr2), returnsFromRef ++ returnsFromNum)
+        (CheckRefCount2(refExpr2, Conversions.evaluateRefCountCategory(category), numExpr2), returnsFromRef ++ returnsFromNum)
       }
       case TemplateSpecifiedLookupAE(name, templateArgs1) => {
         // So far, we only allow these when they're immediately called like functions

@@ -1,10 +1,11 @@
 package net.verdagon.vale.hammer
 
 import net.verdagon.vale.hinputs.Hinputs
+import net.verdagon.vale.metal._
+import net.verdagon.vale.{metal => m}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.env.VariableId2
 import net.verdagon.vale.templar.templata.{FunctionHeader2, Prototype2}
-import net.verdagon.vale.templar.types.{FunctionT2, Raw}
 import net.verdagon.vale.{vassert, vassertSome, vfail}
 
 object FunctionHammer {
@@ -40,7 +41,7 @@ object FunctionHammer {
         val stackHeight = StackHeight(0, 0, 0)
         val (hamuts6, _, bodyH, maybeResultAccess) =
           BlockHammer.translateBlock(hinputs, hamuts2, locals0, stackHeight, body)
-        val resultCoord = maybeResultAccess.map(_.expectedType).getOrElse(ReferenceH(Raw, VoidH()))
+        val resultCoord = maybeResultAccess.map(_.expectedType).getOrElse(ReferenceH(m.Raw, VoidH()))
         if (resultCoord != prototypeH.returnType) {
           vfail()
         }
@@ -71,13 +72,12 @@ object FunctionHammer {
       hinputs: Hinputs, hamuts0: Hamuts,
       prototype2: Prototype2):
   (Hamuts, PrototypeH) = {
-    val Prototype2(fullName2, FunctionT2(params2, returnType2)) = prototype2;
+    val Prototype2(fullName2, params2, returnType2) = prototype2;
     val (hamuts1, paramsTypesH) = TypeHammer.translateReferences(hinputs, hamuts0, params2)
     val (hamuts2, returnTypeH) = TypeHammer.translateReference(hinputs, hamuts1, returnType2)
-    val functionNumber = vassertSome(hinputs.functionIds.get(prototype2.toSignature))
-    val (hamutsH, fullNameH) = NameHammer.translateName(hinputs, hamuts2, fullName2)
-    val prototypeH = PrototypeH(functionNumber, fullNameH, paramsTypesH, returnTypeH)
-    (hamutsH, prototypeH)
+    val (hamuts3, fullNameH) = NameHammer.translateName(hinputs, hamuts2, fullName2)
+    val prototypeH = PrototypeH(fullNameH, paramsTypesH, returnTypeH)
+    (hamuts3, prototypeH)
   }
 
   def translateFunctionRef(

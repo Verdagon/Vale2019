@@ -146,7 +146,7 @@ import net.verdagon.vale.templar.Own
 //      case NewMutableStructH(lineH, structIdH, sourceLines) => {
 //        val stackMutability = MutableP // Stacks can always be mutated
 //        val (miduts1, structReference4) =
-//          StructMidas.translateStructPointer(miduts0, stackMutability, ReferenceH(Own, structIdH))
+//          StructMidas.translateStructPointer(miduts0, stackMutability, ReferenceH(m.Own, structIdH))
 //        val node4 =
 //          structReference4 match {
 //            case isr4 @ InlineStructReference4(id, ownership, mutability, size, align) => {

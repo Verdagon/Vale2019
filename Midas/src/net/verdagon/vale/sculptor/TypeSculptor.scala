@@ -27,7 +27,7 @@ object TypeSculptor {
   def getReferenceRegisterLlvmType(tyype: ReferenceRegisterH): String = {
     println("ignoring owner!")
     tyype match {
-      case ReferenceRegisterH(ReferenceH(owning, innerType)) => getConcreteLlvmType(innerType) + "*"
+      case ReferenceRegisterH(ReferenceH(m.Owning, innerType)) => getConcreteLlvmType(innerType) + "*"
     }
   }
 

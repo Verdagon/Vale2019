@@ -156,7 +156,7 @@ class ClosureTests extends FunSuite with Matchers {
     })
 
     // Make sure we call the function somewhere
-    main.onlyOf(classOf[FunctionPointerCall2])
+    main.onlyOf(classOf[FunctionCall2])
 
 
     val lambda = temputs.functions.find(_.header.fullName.steps.last.humanName == "main:lam1").get;

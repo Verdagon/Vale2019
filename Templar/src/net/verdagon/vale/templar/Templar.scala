@@ -4,6 +4,7 @@ import net.verdagon.vale._
 import net.verdagon.vale.astronomer._
 import net.verdagon.vale.parser._
 import net.verdagon.vale.scout._
+import net.verdagon.vale.{scout => s}
 import net.verdagon.vale.scout.patterns.{AbstractSP, AtomSP}
 import net.verdagon.vale.scout.rules._
 import net.verdagon.vale.templar.OverloadTemplar.{ScoutExpectedFunctionFailure, ScoutExpectedFunctionSuccess}
@@ -44,7 +45,7 @@ object Templar {
           "IFunction1",
           InterfaceEnvEntry(
             InterfaceA(
-              CodeLocation("IFunction1.builtin.vale", 0, 0),
+              s.CodeLocation("IFunction1.builtin.vale", 0, 0),
               List(),
               "IFunction1",
               MutableP,
@@ -61,7 +62,7 @@ object Templar {
                 TemplexAR(RuneAT("R", CoordTemplataType))))))
           .addFunction(
             FunctionA(
-              CodeLocation("IFunction1.builtin.vale", 0, 1),
+              s.CodeLocation("IFunction1.builtin.vale", 0, 1),
               "__call", List(), 0, true,
               TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType, CoordTemplataType), FunctionTemplataType),
               List("M", "P1", "R"),

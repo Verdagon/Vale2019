@@ -49,8 +49,8 @@ class OwnershipTests extends FunSuite with Matchers {
       """.stripMargin)
 
     val main = compile.getTemputs().lookupFunction("main")
-    main.only({ case FunctionLookup2(functionName("destructor")) => })
-    main.all({ case FunctionPointerCall2(_, _) => }).size shouldEqual 2
+    main.only({ case FunctionCall2(functionName("destructor"), _) => })
+    main.all({ case FunctionCall2(_, _) => }).size shouldEqual 2
 
     compile.evalForStdout(Vector()) shouldEqual "Destroying!\n"
   }
@@ -71,7 +71,7 @@ class OwnershipTests extends FunSuite with Matchers {
       """.stripMargin)
 
     val main = compile.getTemputs().lookupFunction("main")
-    main.only({ case FunctionLookup2(functionName("destructor")) => })
+    main.only({ case FunctionCall2(functionName("destructor"), _) => })
 
     compile.evalForReferendAndStdout(Vector()) shouldEqual (VonInt(10), "Destroying!\n")
   }
@@ -92,8 +92,8 @@ class OwnershipTests extends FunSuite with Matchers {
       """.stripMargin)
 
     val main = compile.getTemputs().lookupFunction("main")
-    main.only({ case FunctionLookup2(functionName("destructor")) => })
-    main.all({ case FunctionPointerCall2(_, _) => }).size shouldEqual 2
+    main.only({ case FunctionCall2(functionName("destructor"), _) => })
+    main.all({ case FunctionCall2(_, _) => }).size shouldEqual 2
 
     compile.evalForStdout(Vector()) shouldEqual "Destroying!\n"
   }
@@ -123,18 +123,18 @@ class OwnershipTests extends FunSuite with Matchers {
     // Destructor should only be calling println, NOT the destructor (itself)
     val destructor = temputs.lookupUserFunction("destructor")
     // The only function lookup should be println
-    destructor.only({ case FunctionLookup2(functionName("println")) => })
+    destructor.only({ case FunctionCall2(functionName("println"), _) => })
     // Only one call (the above println)
-    destructor.all({ case FunctionPointerCall2(_, _) => }).size shouldEqual 1
+    destructor.all({ case FunctionCall2(_, _) => }).size shouldEqual 1
 
     // moo should be calling the destructor
     val moo = temputs.lookupFunction("moo")
-    moo.only({ case FunctionLookup2(functionName("destructor")) => })
-    moo.only({ case FunctionPointerCall2(_, _) => })
+    moo.only({ case FunctionCall2(functionName("destructor"), _) => })
+    moo.only({ case FunctionCall2(_, _) => })
 
     // main should not be calling the destructor
     val main = temputs.lookupFunction("main")
-    main.all({ case FunctionLookup2(functionName("destructor")) => true }).size shouldEqual 0
+    main.all({ case FunctionCall2(functionName("destructor"), _) => true }).size shouldEqual 0
 
     compile.evalForStdout(Vector()) shouldEqual "Destroying!\n"
   }
@@ -156,8 +156,8 @@ class OwnershipTests extends FunSuite with Matchers {
       """.stripMargin)
 
     val main = compile.getTemputs().lookupFunction("main")
-    main.only({ case FunctionLookup2(functionName("destructor")) => })
-    main.all({ case FunctionPointerCall2(_, _) => }).size shouldEqual 2
+    main.only({ case FunctionCall2(functionName("destructor"), _) => })
+    main.all({ case FunctionCall2(_, _) => }).size shouldEqual 2
 
     compile.evalForReferendAndStdout(Vector()) shouldEqual (VonInt(10), "Destroying!\n")
   }

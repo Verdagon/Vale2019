@@ -3,6 +3,8 @@ package net.verdagon.vale.templar.templata
 import net.verdagon.vale.astronomer._
 import net.verdagon.vale.parser._
 import net.verdagon.vale.scout.rules._
+import net.verdagon.vale.{scout => s}
+import net.verdagon.vale.templar.{types => t}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.vimpl
 
@@ -42,6 +44,14 @@ object Conversions {
       case BorrowP => Borrow
       case ShareP => Share
       case RawP => Raw
+    }
+  }
+
+  def evaluateRefCountCategory(refCountCategory: s.RefCountCategory): t.RefCountCategory = {
+    refCountCategory match {
+      case s.MemberRefCount => t.MemberRefCount
+      case s.VariableRefCount => t.VariableRefCount
+      case s.RegisterRefCount => t.RegisterRefCount
     }
   }
 

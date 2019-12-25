@@ -187,7 +187,7 @@ object FunctionTemplarCore {
         header,
         List(),
         Block2(List(InterfaceFunctionCall2(
-          header.toBanner,
+          header,
           header.returnType,
           header.params.zipWithIndex.map({ case (param2, index) => ArgLookup2(index, param2.tyype) })))))
 
@@ -270,7 +270,7 @@ object FunctionTemplarCore {
         List(),
         Block2(
           List(
-            FunctionPointerCall2(
+            FunctionCall2(
               structDestructor,
               List(ArgLookup2(0, structType2))))))
 

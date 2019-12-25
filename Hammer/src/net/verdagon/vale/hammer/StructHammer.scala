@@ -1,6 +1,8 @@
 package net.verdagon.vale.hammer
 
 import net.verdagon.vale.hinputs.{ETable2, Hinputs, TetrisTable}
+import net.verdagon.vale.metal.{Mutable => _, Variability => _, Varying => _, _}
+import net.verdagon.vale.{metal => m}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.templata.CoordTemplata
 import net.verdagon.vale.templar.types._
@@ -45,7 +47,7 @@ object StructHammer {
       case None => {
         val (hamuts1, fullNameH) = NameHammer.translateName(hinputs, hamuts0, interfaceRef2.fullName)
         // This is the only place besides InterfaceDefinitionH that can make a InterfaceRefH
-        val temporaryInterfaceRefH = InterfaceRefH(hinputs.interfaceIds(interfaceRef2), fullNameH);
+        val temporaryInterfaceRefH = InterfaceRefH(fullNameH);
         val hamuts2 = hamuts1.forwardDeclareInterface(interfaceRef2, temporaryInterfaceRefH)
         val interfaceDef2 = hinputs.program2.lookupInterface(interfaceRef2);
 
@@ -57,16 +59,15 @@ object StructHammer {
             hinputs.program2.lookupFunction(superFamilyRootBanner.toSignature).get.header.toPrototype
           })
 
-        val (hamutsH, prototypesH) = FunctionHammer.translatePrototypes(hinputs, hamuts2, prototypes2)
+        val (hamuts3, prototypesH) = FunctionHammer.translatePrototypes(hinputs, hamuts2, prototypes2)
 
         val interfaceDefH =
           InterfaceDefinitionH(
-            temporaryInterfaceRefH.interfaceId,
             fullNameH,
-            interfaceDef2.mutability,
+            Conversions.evaluateMutability(interfaceDef2.mutability),
             List() /* super interfaces */,
             prototypesH)
-        val hamuts4 = hamutsH.addInterface(interfaceRef2, interfaceDefH)
+        val hamuts4 = hamuts3.addInterface(interfaceRef2, interfaceDefH)
         vassert(interfaceDefH.getRef == temporaryInterfaceRefH)
         (hamuts4, interfaceDefH.getRef)
       }
@@ -89,36 +90,23 @@ object StructHammer {
     hamuts0.structRefsByRef2.get(structRef2) match {
       case Some(structRefH) => (hamuts0, structRefH)
       case None => {
-        val structId = hinputs.structIds(structRef2)
         val (hamuts1, fullNameH) = NameHammer.translateName(hinputs, hamuts0, structRef2.fullName)
         // This is the only place besides StructDefinitionH that can make a StructRefH
-        val temporaryStructRefH = StructRefH(structId, fullNameH);
+        val temporaryStructRefH = StructRefH(fullNameH);
         val hamuts2 = hamuts1.forwardDeclareStruct(structRef2, temporaryStructRefH)
         val structDef2 = hinputs.program2.lookupStruct(structRef2);
-        val (hamutsH, membersH) =
+        val (hamuts3, membersH) =
           TypeHammer.translateMembers(hinputs, hamuts2, structDef2.members)
 
-        val (hamuts4, edgesH) = translateEdgesForStruct(hinputs, hamutsH, temporaryStructRefH, structRef2)
-
-        val (hamuts5, eTableH) =
-          hinputs.eTables.get(structRef2) match {
-            case None => {
-              (hamuts4, makeEmptyETable(hinputs, temporaryStructRefH))
-            }
-            case Some(eTable2) => {
-              translateETable(hinputs, hamuts4, eTable2, temporaryStructRefH)
-            }
-          };
+        val (hamuts4, edgesH) = translateEdgesForStruct(hinputs, hamuts3, temporaryStructRefH, structRef2)
 
         val structDefH =
           StructDefinitionH(
-            structId,
             fullNameH,
-            structDef2.mutability,
-            eTableH,
+            Conversions.evaluateMutability(structDef2.mutability),
             edgesH,
             membersH);
-        val hamuts6 = hamuts5.addStructOriginatingFromTemplar(structRef2, structDefH)
+        val hamuts6 = hamuts4.addStructOriginatingFromTemplar(structRef2, structDefH)
         vassert(structDefH.getRef == temporaryStructRefH)
         (hamuts6, structDefH.getRef)
       }
@@ -129,81 +117,29 @@ object StructHammer {
   (Hamuts, StructRefH) = {
     val boxFullName2 = FullName2(List(NamePart2(BOX_HUMAN_NAME, Some(List(CoordTemplata(type2))))))
     val (hamuts0b, boxFullNameH) = NameHammer.translateName(hinputs, hamuts0a, boxFullName2)
-    hamuts0b.structDefsById.find(_._2.fullName == boxFullNameH) match {
+    hamuts0b.structDefsByRef2.find(_._2.fullName == boxFullNameH) match {
       case Some((_, structDefH)) => (hamuts0b, structDefH.getRef)
       case None => {
-        val (hamuts1, structId) = hamuts0b.getNextStructId()
-        vassert(!hamuts1.structDefsById.contains(structId))
-
-        val temporaryStructRefH = StructRefH(structId, boxFullNameH);
+        val temporaryStructRefH = StructRefH(boxFullNameH);
 
         // We don't actually care about the given variability, because even if it's final, we still need
         // the box to contain a varying reference, see VCBAAF.
         val _ = conceptualVariability
         val actualVariability = Varying
 
-        val memberH = StructMemberH(BOX_MEMBER_NAME, actualVariability, typeH)
+        val memberH = StructMemberH(BOX_MEMBER_NAME, Conversions.evaluateVariability(actualVariability), typeH)
 
         val structDefH =
           StructDefinitionH(
-            structId,
             boxFullNameH,
-            Mutable,
-            ETableH(temporaryStructRefH, TetrisTable[InterfaceRefH, InterfaceRefH]((_ => 0), Array(), Array())),
+            m.Mutable,
             List(),
             List(memberH));
-        val hamuts5 = hamuts1.addStructOriginatingFromHammer(structDefH)
+        val hamuts5 = hamuts0b.addStructOriginatingFromHammer(structDefH)
         vassert(structDefH.getRef == temporaryStructRefH)
         (hamuts5, structDefH.getRef)
       }
     }
-  }
-
-  private def makeEmptyETable(
-      hinputs: Hinputs,
-      temporaryStructRefH: StructRefH):
-  ETableH = {
-    ETableH(
-      temporaryStructRefH,
-      TetrisTable[InterfaceRefH, InterfaceRefH](
-        interfaceRefH => interfaceRefH.interfaceId,
-        Array(None),
-        Array()))
-  }
-
-  private def translateETable(
-      hinputs: Hinputs,
-      hamuts0: Hamuts,
-      eTable2: ETable2,
-      temporaryStructRefH: StructRefH):
-  (Hamuts, ETableH) = {
-
-    val interfaceRefs2 =
-      eTable2.table.combinedBuckets.toList.flatMap(
-        _.toList.flatMap(entry => List(entry._1, entry._2)))
-
-    val (hamuts1, interfaceRefsH) =
-      StructHammer.translateInterfaceRefs(hinputs, hamuts0, interfaceRefs2)
-
-    val interfaceRefs3ByInterfaceRef2 =
-      interfaceRefs2.zip(interfaceRefsH).toMap
-
-    val eTableH =
-      ETableH(
-        temporaryStructRefH,
-        TetrisTable[InterfaceRefH, InterfaceRefH](
-          interfaceRefH => interfaceRefH.interfaceId,
-          eTable2.table.directory,
-          eTable2.table.combinedBuckets.map({
-            case None => None
-            case Some((keyInterfaceRef2, valueInterfaceRef2)) => {
-              vassert(keyInterfaceRef2 == valueInterfaceRef2)
-              val interfaceRefH = interfaceRefs3ByInterfaceRef2(keyInterfaceRef2)
-              Some((interfaceRefH, interfaceRefH))
-            }
-          })))
-
-    (hamuts1, eTableH)
   }
 
   private def translateEdgesForStruct(
@@ -227,8 +163,8 @@ object StructHammer {
         val (hamuts1, interfaceRefH) = StructHammer.translateInterfaceRef(hinputs, hamuts0, interfaceRef2)
         val interfaceDefH = hamuts0.interfaceDefs(interfaceRef2)
         val (hamuts2, headEdgeH) = translateEdge(hinputs, hamuts1, structRefH, interfaceDefH, headEdge2)
-        val (hamutsH, tailEdgesH) = translateEdgesForStruct(hinputs, hamuts2, structRefH, tailEdges2)
-        (hamutsH, headEdgeH :: tailEdgesH)
+        val (hamuts3, tailEdgesH) = translateEdgesForStruct(hinputs, hamuts2, structRefH, tailEdges2)
+        (hamuts3, headEdgeH :: tailEdgesH)
       }
     }
   }

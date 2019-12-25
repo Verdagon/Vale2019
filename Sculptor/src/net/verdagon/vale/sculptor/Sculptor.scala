@@ -51,7 +51,7 @@ object Sculptor {
             // assuming name is "+"
             // i64(i64, i64)*
             println("hardcoding owning")
-            val funcType = TypeSculptor.getReferenceLlvmType(ReferenceH(Borrow, functionRefH.functionType));
+            val funcType = TypeSculptor.getReferenceLlvmType(ReferenceH(m.Borrow, functionRefH.functionType));
             // %line6 = bitcast i64(i64, i64)* @"+" to i64(i64, i64)*
             val globalName = functionRefH.globalName
             saveStart + "bitcast " + funcType + " @\"" + globalName + "\" to " + funcType + "\n"
@@ -60,7 +60,7 @@ object Sculptor {
 //            // assuming name is "+"
 //            // i64(i64, i64)*
 //            println("hardcoding owning")
-//            val funcType = TypeSculptor.getReferenceLlvmType(ReferenceH(Borrow, functionRefH.functionType));
+//            val funcType = TypeSculptor.getReferenceLlvmType(ReferenceH(m.Borrow, functionRefH.functionType));
 //            val globalName = functionRefH.globalName
 //            // %line6 = bitcast i64(i64, i64)* @"+" to i64(i64, i64)*
 //            saveStart + "bitcast " + funcType + " @\"" + globalName + "\" to " + funcType + "\n"
@@ -116,12 +116,12 @@ object Sculptor {
 //            saveStart + "icmp eq " + typeName + " %line" + leftLine + ", %line" + rightLine + "\n"
 //          }
 //          case AndH(line, leftLine, rightLine) => {
-//            val typeName = TypeSculptor.getReferenceLlvmType(ReferenceH(Own, BoolH()))
+//            val typeName = TypeSculptor.getReferenceLlvmType(ReferenceH(m.Own, BoolH()))
 //            // todo: dereference
 //            saveStart + "and " + typeName + " %line" + leftLine + ", %line" + rightLine + "\n"
 //          }
 //          case OrH(line, leftLine, rightLine) => {
-//            val typeName = TypeSculptor.getReferenceLlvmType(ReferenceH(Own, BoolH()))
+//            val typeName = TypeSculptor.getReferenceLlvmType(ReferenceH(m.Own, BoolH()))
 //            // todo: dereference
 //            saveStart + "or " + typeName + " %line" + leftLine + ", %line" + rightLine + "\n"
 //          }

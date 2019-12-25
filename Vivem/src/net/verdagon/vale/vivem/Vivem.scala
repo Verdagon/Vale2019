@@ -2,8 +2,7 @@ package net.verdagon.vale.vivem
 
 import java.io.PrintStream
 
-import net.verdagon.vale.hammer.{ProgramH, VoidH}
-import net.verdagon.vale.templar.types.Share
+import net.verdagon.vale.metal.{ProgramH, Share, VoidH}
 import net.verdagon.vale.{vassert, vfail}
 import net.verdagon.von.IVonData
 

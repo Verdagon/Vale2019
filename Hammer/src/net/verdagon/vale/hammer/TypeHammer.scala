@@ -1,6 +1,8 @@
 package net.verdagon.vale.hammer
 
 import net.verdagon.vale.hinputs.Hinputs
+import net.verdagon.vale.metal._
+import net.verdagon.vale.{metal => m}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.vfail
@@ -20,7 +22,7 @@ object TypeHammer {
 
   def translateMember(hinputs: Hinputs, hamuts: Hamuts, member2: StructMember2):
   (Hamuts, StructMemberH) = {
-    val (hamutsH, memberH) =
+    val (hamuts3, memberH) =
       member2.tyype match {
         case ReferenceMemberType2(coord) => {
           TypeHammer.translateReference(hinputs, hamuts, coord)
@@ -31,10 +33,10 @@ object TypeHammer {
           val (hamuts2, boxStructRefH) =
             StructHammer.makeBox(hinputs, hamuts1, member2.variability, coord, referenceH)
           // The stack owns the box, closure structs just borrow it.
-          (hamuts2, ReferenceH(Borrow, boxStructRefH))
+          (hamuts2, ReferenceH(m.Borrow, boxStructRefH))
         }
       }
-    (hamutsH, StructMemberH(member2.name, member2.variability, memberH))
+    (hamuts3, StructMemberH(member2.name, Conversions.evaluateVariability(member2.variability), memberH))
   }
 
 //
@@ -55,15 +57,6 @@ object TypeHammer {
   //  def translatePointer(tyype: Coord): PointerH = {
   //  }
 
-  def translateFunction(
-      hinputs: Hinputs, hamuts0: Hamuts, tyype: FunctionT2):
-  (Hamuts, FunctionTH) = {
-    val FunctionT2(paramTypes, returnType) = tyype;
-    val (hamuts1, returnTypeH) = translateReference(hinputs, hamuts0, tyype.returnType)
-    val (hamuts2, paramTypesH) = translateReferences(hinputs, hamuts1, tyype.paramTypes)
-    (hamuts2, FunctionTH(paramTypesH, returnTypeH))
-  }
-
   def translateKind(hinputs: Hinputs, hamuts0: Hamuts, tyype: Kind):
   (Hamuts, ReferendH) = {
     tyype match {
@@ -73,7 +66,6 @@ object TypeHammer {
       case Float2() => (hamuts0, FloatH())
       case Str2() => (hamuts0, StrH())
       case Void2() => (hamuts0, VoidH())
-      case t : FunctionT2 => translateFunction(hinputs, hamuts0, t)
       case s@ StructRef2(_) => StructHammer.translateStructRef(hinputs, hamuts0, s)
 
       case i @ InterfaceRef2(_) => StructHammer.translateInterfaceRef(hinputs, hamuts0, i)
@@ -102,7 +94,7 @@ object TypeHammer {
   (Hamuts, ReferenceH[ReferendH]) = {
     val Coord(ownership, innerType) = coord;
     val (hamuts1, innerH) = translateKind(hinputs, hamuts0, innerType);
-    (hamuts1, ReferenceH(ownership, innerH))
+    (hamuts1, ReferenceH(Conversions.evaluateOwnership(ownership), innerH))
   }
 
   def translateReferences(

@@ -1,9 +1,7 @@
 package net.verdagon.vale.vivem
 
-import net.verdagon.vale.hammer._
-import net.verdagon.vale.templar._
-import net.verdagon.vale.templar.types.{Borrow, Own, Raw, Share}
-import net.verdagon.vale.{vassert, vassertSome, vfail, vimpl}
+import net.verdagon.vale.metal._
+import net.verdagon.vale.{vassert, vassertSome, vfail, vimpl, vwat, metal => m}
 
 object ExpressionVivem {
   sealed trait INodeExecuteResult
@@ -35,12 +33,6 @@ object ExpressionVivem {
       }
       case ConstantVoidH(_) => {
         // Do nothing, a void can never exist
-        NodeContinue(None)
-      }
-      case PlaceholderH(_, tyype) => {
-        // Do nothing, this produces nothing.
-        // If anyone tries to use this, they'll find that we didn't put anything
-        // in the register, and that's when there will be an error.
         NodeContinue(None)
       }
       case ReinterpretH(_, sourceRegister, resultType) => {
@@ -227,22 +219,7 @@ object ExpressionVivem {
         heap.removeLocal(varAddress, expectedType)
         NodeContinue(Some(registerId))
       }
-      case LoadFunctionH(_, functionRefH) => {
-        val functionH =
-          programH.functions.find(_.prototype.functionId == functionRefH.prototype.functionId) match {
-            case None => {
-              programH.externFunctions.find(_.prototype.functionId == functionRefH.prototype.functionId) match {
-                case Some(f) => f
-                case None => vfail("Function not found!")
-              }
-            }
-            case Some(f) => f
-          }
-        vassert(functionH.prototype.functionType == functionRefH.functionType)
-        heap.allocateIntoRegister(registerId, Raw, FunctionReferendV(functionH))
-        NodeContinue(Some(registerId))
-      }
-      case ExternCallH(_, functionRefH, argsRegisters) => {
+      case CallH(_, functionRefH, argsRegisters) => {
         val externFunction = FunctionVivem.getExternFunction(programH, functionRefH)
         val argReferences =
           heap.takeReferencesFromRegistersInReverse(blockId, argsRegisters)
@@ -259,7 +236,7 @@ object ExpressionVivem {
         // Special case for externs; externs arent allowed to change ref counts at all
 //        argReferences.foreach(heap.maybeDeallocate)
 
-        (functionRefH.functionType.returnType.kind, maybeResultReference) match {
+        (functionRefH.returnType.kind, maybeResultReference) match {
           case (VoidH(), None) => NodeContinue(None)
           case (_, Some(resultReference)) => {
             heap.setReferenceRegisterFromReturn(registerId, resultReference)
@@ -267,18 +244,19 @@ object ExpressionVivem {
           }
         }
       }
-      case CallH(_, functionRegister, argsRegisters) => {
-        val (functionRef, function) =
-          heap.takeFunctionReferenceFromRegister(RegisterId(blockId, functionRegister.registerId), functionRegister.expectedType.kind)
+      case CallH(_, functionRef, argsRegisters) => {
         val argReferences = heap.takeReferencesFromRegistersInReverse(blockId, argsRegisters)
         heap.vivemDout.println()
         heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (call)")
+
+        val function =
+          programH.functions.find(_.prototype == functionRef).get
 
         val maybeReturnReference =
           FunctionVivem.executeFunction(
             programH, stdin, stdout, heap, argReferences.toVector, function)
         heap.vivemDout.print("  " * blockId.blockHeight + "Getting return reference")
-        (function.prototype.returnType.kind, maybeReturnReference) match {
+        (functionRef.returnType.kind, maybeReturnReference) match {
           case (VoidH(), None) => NodeContinue(None)
           case (_, Some(returnReference)) => {
             heap.setReferenceRegisterFromReturn(registerId, returnReference)
@@ -329,7 +307,7 @@ object ExpressionVivem {
       case UnknownSizeArrayLoadH(_, arrayRegister, indexRegister, resultType, targetOwnership) => {
         val indexIntReference =
           heap.takeReferenceFromRegister(
-            RegisterId(blockId, indexRegister.registerId), ReferenceH(Share, IntH()))
+            RegisterId(blockId, indexRegister.registerId), ReferenceH(m.Share, IntH()))
         val arrayReference =
           heap.takeReferenceFromRegister(
             RegisterId(blockId, arrayRegister.registerId), arrayRegister.expectedType)
@@ -360,7 +338,7 @@ object ExpressionVivem {
       case KnownSizeArrayLoadH(_, arrayRegister, indexRegister, resultType, targetOwnership) => {
         val indexIntReference =
           heap.takeReferenceFromRegister(
-            RegisterId(blockId, indexRegister.registerId), ReferenceH(Share, IntH()))
+            RegisterId(blockId, indexRegister.registerId), ReferenceH(m.Share, IntH()))
         val arrayReference =
           heap.takeReferenceFromRegister(
             RegisterId(blockId, arrayRegister.registerId), arrayRegister.expectedType)
@@ -402,52 +380,17 @@ object ExpressionVivem {
         NodeContinue(Some(registerId))
       }
       case icH @ InterfaceCallH(_, argsRegisters, virtualParamIndex, interfaceRefH, interfaceId, indexInEdge, functionType) => {
+
         // undeviewed = not deviewed = the virtual param is still a view and we want it to
         // be a struct.
         val undeviewedArgReferences = heap.takeReferencesFromRegistersInReverse(blockId, argsRegisters)
 
-        val interfaceReference = undeviewedArgReferences(virtualParamIndex)
-
-        val StructInstanceV(structH, _) = heap.dereference(interfaceReference)
-
-        val edge = structH.edges.find(_.interface == interfaceRefH).get
-
-        val ReferenceV(actualStruct, actualInterfaceKind, actualOwnership, allocNum) = interfaceReference
-        vassert(actualInterfaceKind.hamut == interfaceRefH)
-        val structReference = ReferenceV(actualStruct, actualStruct, actualOwnership, allocNum)
-
-        val prototypeH = edge.structPrototypesByInterfacePrototype.values.toList(indexInEdge)
-        val functionH = programH.functions.find(_.prototype == prototypeH).get;
-
-        val actualFunctionTypeH = functionH.prototype.functionType
-        val expectedFunctionTypeH = functionType
-        // We would compare functionH.type to functionType directly, but
-        // functionH.type expects a struct and prototypeH expects an interface.
-
-        // First, check that all the other params are correct.
-        undeviewedArgReferences.zipWithIndex.zip(actualFunctionTypeH.paramTypes).zip(expectedFunctionTypeH.paramTypes).foreach({
-          case (((argReference, index), actualFunctionParamType), expectedFunctionParamType) => {
-            // Skip the interface line for now, we check it below
-            if (index != virtualParamIndex) {
-              heap.checkReference(actualFunctionParamType, argReference)
-              heap.checkReference(expectedFunctionParamType, argReference)
-              vassert(actualFunctionParamType == expectedFunctionParamType)
-            }
-          }
-        })
-
-        val deviewedArgReferences = undeviewedArgReferences.updated(virtualParamIndex, structReference)
-
         heap.vivemDout.println()
         heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (icall)")
-        val maybeReturnReference =
-          FunctionVivem.executeFunction(
-            programH,
-            stdin,
-            stdout,
-            heap,
-            deviewedArgReferences.toVector,
-            functionH)
+
+        val (functionH, maybeReturnReference) =
+          executeInterfaceFunction(programH, stdin, stdout, heap, undeviewedArgReferences, virtualParamIndex, interfaceRefH, indexInEdge, functionType)
+
         (functionH.prototype.returnType.kind, maybeReturnReference) match {
           case (VoidH(), None) => NodeContinue(None)
           case (_, Some(returnReference)) => {
@@ -501,23 +444,12 @@ object ExpressionVivem {
         }
         NodeContinue(None)
       }
-      case cac @ ConstructUnknownSizeArrayH(
-      _, sizeRegister,
-      generatorFunctionRegister, generatorArgsRegistersIncludingPlaceholder,
-      arrayRefType) => {
+      case cac @ ConstructUnknownSizeArrayH(_, sizeRegister, generatorInterfaceRegister, arrayRefType) => {
+        val generatorInterfaceRef =
+          heap.takeReferenceFromRegister(
+            RegisterId(blockId, generatorInterfaceRegister.registerId), generatorInterfaceRegister.expectedType)
 
-        val generatorArgsRegistersNotIncludingPlaceholders =
-          generatorArgsRegistersIncludingPlaceholder.init
-
-        val generatorArgReferencesNotIncludingIndex =
-          heap.takeReferencesFromRegistersInReverse(
-            blockId, generatorArgsRegistersNotIncludingPlaceholders)
-
-        val (generatorFunctionRef, generatorFunction) =
-          heap.takeFunctionReferenceFromRegister(
-            RegisterId(blockId, generatorFunctionRegister.registerId), generatorFunctionRegister.expectedType.kind)
-
-        val sizeReference = heap.takeReferenceFromRegister(RegisterId(blockId, sizeRegister.registerId), ReferenceH(Share, IntH()))
+        val sizeReference = heap.takeReferenceFromRegister(RegisterId(blockId, sizeRegister.registerId), ReferenceH(m.Share, IntH()))
         val sizeReferend = heap.dereference(sizeReference)
         val IntV(size) = sizeReferend;
         val (arrayReference, arrayInstance) =
@@ -528,17 +460,35 @@ object ExpressionVivem {
           heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (generator)")
 
           val indexReference = heap.allocateTransient(Share, IntV(i))
-          val thisIterationGeneratorArgReferences = generatorArgReferencesNotIncludingIndex :+ indexReference
+
+          // We're assuming here that theres only 1 method in the interface.
+          val indexInEdge = 0
+          // We're assuming that it takes self then the index int as arguments.
+          val virtualParamIndex = 0
+
+          val generatorPrototypeH =
+            PrototypeH(
+              FullNameH(List(NamePartH("__call", None))),
+              List(generatorInterfaceRegister.expectedType, ReferenceH(Share, IntH())),
+              arrayRefType.kind.rawArray.elementType)
 
           heap.vivemDout.println()
-          val maybeReturnReference =
-            FunctionVivem.executeFunction(
+
+          heap.vivemDout.println()
+          heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (icall)")
+
+          val (functionH, maybeReturnReference) =
+            executeInterfaceFunction(
               programH,
               stdin,
               stdout,
               heap,
-              thisIterationGeneratorArgReferences.toVector,
-              generatorFunction)
+              List(generatorInterfaceRef, indexReference),
+              virtualParamIndex,
+              generatorInterfaceRegister.expectedType.kind,
+              indexInEdge,
+              generatorPrototypeH)
+
           heap.vivemDout.print("  " * blockId.blockHeight + "Getting return reference")
 
           vassert(maybeReturnReference.nonEmpty)
@@ -565,17 +515,10 @@ object ExpressionVivem {
         NodeContinue(Some(registerId))
       }
 
-      case cac @ DestroyKnownSizeArrayH(
-          _, arrayRegister, consumerFunctionRegister, consumerArgsRegistersIncludingPlaceholder) => {
-
-        val consumerArgsRegistersNotIncludingPlaceholders =
-          consumerArgsRegistersIncludingPlaceholder.init
-        val consumerArgReferencesNotIncludingPlaceholders =
-          heap.takeReferencesFromRegistersInReverse(blockId, consumerArgsRegistersNotIncludingPlaceholders)
-
-        val (consumerFunctionRef, consumerFunction) =
-          heap.takeFunctionReferenceFromRegister(
-            RegisterId(blockId, consumerFunctionRegister.registerId), consumerFunctionRegister.expectedType.kind)
+      case DestroyKnownSizeArrayH(_, arrayRegister, consumerInterfaceRegister) => {
+        val consumerInterfaceRef =
+          heap.takeReferenceFromRegister(
+            RegisterId(blockId, consumerInterfaceRegister.registerId), consumerInterfaceRegister.expectedType)
 
         val arrayReference =
           heap.takeReferenceFromRegister(RegisterId(blockId, arrayRegister.registerId), arrayRegister.expectedType)
@@ -588,20 +531,35 @@ object ExpressionVivem {
           heap.vivemDout.println()
           heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (consumer)")
 
-          val elementReference = heap.deinitializeArrayElement(arrayReference, i)
-          val thisIterationConsumerArgReferences =
-            consumerArgReferencesNotIncludingPlaceholders :+ elementReference
+          val indexReference = heap.allocateTransient(Share, IntV(i))
+
+          // We're assuming here that theres only 1 method in the interface.
+          val indexInEdge = 0
+          // We're assuming that it takes self then the index int as arguments.
+          val virtualParamIndex = 0
+
+          val consumerPrototypeH =
+            PrototypeH(
+              FullNameH(List(NamePartH("__call", None))),
+              List(consumerInterfaceRegister.expectedType, ReferenceH(Share, IntH())),
+              arrayRegister.expectedType.kind.rawArray.elementType)
 
           heap.vivemDout.println()
-          val maybeReturnReference =
-            FunctionVivem.executeFunction(
+
+          heap.vivemDout.println()
+          heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (icall)")
+
+          val (functionH, maybeReturnReference) =
+            executeInterfaceFunction(
               programH,
               stdin,
               stdout,
               heap,
-              thisIterationConsumerArgReferences.toVector,
-              consumerFunction)
-          heap.vivemDout.print("  " * blockId.blockHeight + "Getting return reference")
+              List(consumerInterfaceRef, indexReference),
+              virtualParamIndex,
+              consumerInterfaceRegister.expectedType.kind,
+              indexInEdge,
+              consumerPrototypeH)
 
           // This instruction is specifically about NOT producing a new array. The return
           // better be empty.
@@ -612,17 +570,10 @@ object ExpressionVivem {
         NodeContinue(None)
       }
 
-      case cac @ DestroyUnknownSizeArrayH(
-      _, arrayRegister, consumerFunctionRegister, consumerArgsRegistersIncludingPlaceholder) => {
-
-        val consumerArgsRegistersNotIncludingPlaceholders =
-          consumerArgsRegistersIncludingPlaceholder.init
-        val consumerArgReferencesNotIncludingPlaceholders =
-          heap.takeReferencesFromRegistersInReverse(blockId, consumerArgsRegistersNotIncludingPlaceholders)
-
-        val (consumerFunctionRef, consumerFunction) =
-          heap.takeFunctionReferenceFromRegister(
-            RegisterId(blockId, consumerFunctionRegister.registerId), consumerFunctionRegister.expectedType.kind)
+      case cac @ DestroyUnknownSizeArrayH(_, arrayRegister, consumerInterfaceRegister) => {
+        val consumerInterfaceRef =
+          heap.takeReferenceFromRegister(
+            RegisterId(blockId, consumerInterfaceRegister.registerId), consumerInterfaceRegister.expectedType)
 
         val arrayReference =
           heap.takeReferenceFromRegister(RegisterId(blockId, arrayRegister.registerId), arrayRegister.expectedType)
@@ -636,20 +587,35 @@ object ExpressionVivem {
           heap.vivemDout.println()
           heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (consumer)")
 
-          val elementReference = heap.deinitializeArrayElement(arrayReference, i)
-          val thisIterationConsumerArgReferences =
-            consumerArgReferencesNotIncludingPlaceholders :+ elementReference
+          val indexReference = heap.allocateTransient(Share, IntV(i))
+
+          // We're assuming here that theres only 1 method in the interface.
+          val indexInEdge = 0
+          // We're assuming that it takes self then the index int as arguments.
+          val virtualParamIndex = 0
+
+          val consumerPrototypeH =
+            PrototypeH(
+              FullNameH(List(NamePartH("__call", None))),
+              List(consumerInterfaceRegister.expectedType, ReferenceH(Share, IntH())),
+              arrayRegister.expectedType.kind.rawArray.elementType)
 
           heap.vivemDout.println()
-          val maybeReturnReference =
-            FunctionVivem.executeFunction(
+
+          heap.vivemDout.println()
+          heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (icall)")
+
+          val (functionH, maybeReturnReference) =
+            executeInterfaceFunction(
               programH,
               stdin,
               stdout,
               heap,
-              thisIterationConsumerArgReferences.toVector,
-              consumerFunction)
-          heap.vivemDout.print("  " * blockId.blockHeight + "Getting return reference")
+              List(consumerInterfaceRef, indexReference),
+              virtualParamIndex,
+              consumerInterfaceRegister.expectedType.kind,
+              indexInEdge,
+              consumerPrototypeH)
 
           // This instruction is specifically about NOT producing a new array. The return
           // better be empty.
@@ -660,6 +626,60 @@ object ExpressionVivem {
         NodeContinue(None)
       }
     }
+  }
+
+  private def executeInterfaceFunction(
+      programH: ProgramH,
+      stdin: () => String,
+      stdout: String => Unit,
+      heap: Heap,
+      undeviewedArgReferences: List[ReferenceV],
+      virtualParamIndex: Int,
+      interfaceRefH: InterfaceRefH,
+      indexInEdge: Int,
+      functionType: PrototypeH) = {
+
+    val interfaceReference = undeviewedArgReferences(virtualParamIndex)
+
+    val StructInstanceV(structH, _) = heap.dereference(interfaceReference)
+
+    val edge = structH.edges.find(_.interface == interfaceRefH).get
+
+    val ReferenceV(actualStruct, actualInterfaceKind, actualOwnership, allocNum) = interfaceReference
+    vassert(actualInterfaceKind.hamut == interfaceRefH)
+    val structReference = ReferenceV(actualStruct, actualStruct, actualOwnership, allocNum)
+
+    val prototypeH = edge.structPrototypesByInterfacePrototype.values.toList(indexInEdge)
+    val functionH = programH.functions.find(_.prototype == prototypeH).get;
+
+    val actualPrototype = functionH.prototype
+    val expectedPrototype = functionType
+    // We would compare functionH.type to functionType directly, but
+    // functionH.type expects a struct and prototypeH expects an interface.
+
+    // First, check that all the other params are correct.
+    undeviewedArgReferences.zipWithIndex.zip(actualPrototype.params).zip(expectedPrototype.params).foreach({
+      case (((argReference, index), actualFunctionParamType), expectedFunctionParamType) => {
+        // Skip the interface line for now, we check it below
+        if (index != virtualParamIndex) {
+          heap.checkReference(actualFunctionParamType, argReference)
+          heap.checkReference(expectedFunctionParamType, argReference)
+          vassert(actualFunctionParamType == expectedFunctionParamType)
+        }
+      }
+    })
+
+    val deviewedArgReferences = undeviewedArgReferences.updated(virtualParamIndex, structReference)
+
+    val maybeReturnReference =
+      FunctionVivem.executeFunction(
+        programH,
+        stdin,
+        stdout,
+        heap,
+        deviewedArgReferences.toVector,
+        functionH)
+    (functionH, maybeReturnReference)
   }
 
   def dropReferenceIfNonOwning(
@@ -683,51 +703,40 @@ object ExpressionVivem {
       stdout: String => Unit,
       stdin: () => String,
       blockId: BlockId,
-      reference: ReferenceV) = {
+      reference: ReferenceV):
+  Unit = {
     if (heap.getTotalRefCount(reference) == 0) {
-      reference.seenAsKind.hamut match {
-        case IntH() | StrH() | BoolH() | FloatH() => {
-          heap.deallocate(reference)
-        }
-        case (UnknownSizeArrayTH(_) | KnownSizeArrayTH(_, _) | StructRefH(_, _)) => {
-          // We're guaranteed the destructor's available.
-          val destructorFunctionH =
-            vassertSome(programH.functions.find({ functionH =>
-              functionH.fullName.parts.last.humanName == CallTemplar.DESTRUCTOR_NAME &&
-                functionH.prototype.params.size == 1 &&
-                functionH.prototype.params.head == reference.actualCoord.hamut
-            }))
-          heap.vivemDout.println()
-          heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (call)")
-          val maybeReturnReference =
-            FunctionVivem.executeFunction(
-              programH, stdin, stdout, heap, Vector(reference), destructorFunctionH)
-          heap.vivemDout.print("  " * blockId.blockHeight + "Getting return reference")
-          (destructorFunctionH.prototype.returnType.kind, maybeReturnReference) match {
-            case (VoidH(), None) =>
+      // If it's a share ref, then use runtime information to crawl through and decrement
+      // ref counts.
+      reference.ownership match {
+        case Share => {
+          reference.actualKind.hamut match {
+            case InterfaceRefH(_, _) => {
+              // We don't expect this because we asked for the actualKind, not the seenAsKind.
+              vwat()
+            }
+            case IntH() | StrH() | BoolH() | FloatH() => List()
+            case StructRefH(_, _) => {
+              // Deallocates the thing.
+              val references = heap.destructure(reference)
+              references.foreach(dropReference(programH, heap, stdout, stdin, blockId, _))
+            }
+            case UnknownSizeArrayTH(_) => {
+              val ArrayInstanceV(_, _, _, elements) = heap.dereference(reference)
+              val references = elements.indices.map(heap.deinitializeArrayElement(reference, _))
+              heap.deallocate(reference)
+              references.foreach(dropReference(programH, heap, stdout, stdin, blockId, _))
+            }
+            case KnownSizeArrayTH(_, _) => {
+              val ArrayInstanceV(_, _, _, elements) = heap.dereference(reference)
+              val references = elements.indices.map(heap.deinitializeArrayElement(reference, _))
+              heap.deallocate(reference)
+              references.foreach(dropReference(programH, heap, stdout, stdin, blockId, _))
+            }
           }
         }
-        case doomed @ (InterfaceRefH(_, _)) => {
-          // We're guaranteed the destructor's available.
-          val destructorFunctionH =
-            vassertSome(programH.functions.find({ functionH =>
-              functionH.fullName.parts.last.humanName == CallTemplar.INTERFACE_DESTRUCTOR_NAME &&
-                functionH.prototype.params.size == 1 &&
-                functionH.prototype.params.head == reference.actualCoord.hamut
-            }))
-          heap.vivemDout.println()
-          heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (call)")
-
-          // debt: figure out why this is duplicating the interface calling
-          val actualStructReference = ReferenceV(reference.actualKind, reference.actualKind, reference.ownership, reference.num)
-
-          val maybeReturnReference =
-            FunctionVivem.executeFunction(
-              programH, stdin, stdout, heap, Vector(actualStructReference), destructorFunctionH)
-          heap.vivemDout.print("  " * blockId.blockHeight + "Getting return reference")
-          (destructorFunctionH.prototype.returnType.kind, maybeReturnReference) match {
-            case (VoidH(), None) =>
-          }
+        case Own => {
+          vimpl()
         }
       }
     }

@@ -2,8 +2,9 @@ package net.verdagon.vale
 
 import net.verdagon.vale.astronomer.{Astronomer, ProgramA}
 import net.verdagon.vale.carpenter.Carpenter
-import net.verdagon.vale.hammer.{Hammer, ProgramH}
+import net.verdagon.vale.hammer.Hammer
 import net.verdagon.vale.hinputs.Hinputs
+import net.verdagon.vale.metal.ProgramH
 import net.verdagon.vale.parser.{Program0, VParser}
 import net.verdagon.vale.scout.{ProgramS, Scout}
 import net.verdagon.vale.templar.{CommonEnv, CompleteProgram2, Program2, Templar}

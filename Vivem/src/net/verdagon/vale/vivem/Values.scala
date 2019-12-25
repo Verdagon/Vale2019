@@ -1,8 +1,9 @@
 package net.verdagon.vale.vivem
 
-import net.verdagon.vale.hammer._
-import net.verdagon.vale.scout.{MemberRefCount, RefCountCategory, RegisterRefCount, VariableRefCount}
-import net.verdagon.vale.templar.types.Ownership
+//import net.verdagon.vale.hammer._
+//import net.verdagon.vale.scout.{MemberRefCount, RefCountCategory, RegisterRefCount, VariableRefCount}
+//import net.verdagon.vale.templar.types.Ownership
+import net.verdagon.vale.metal._
 import net.verdagon.vale.{vassert, vfail}
 
 // RR = Runtime Result. Don't use these to determine behavior, just use
@@ -107,10 +108,6 @@ case class FloatV(value: Float) extends PrimitiveReferendV {
 }
 case class StrV(value: String) extends PrimitiveReferendV {
   override def tyype = RRReferend(StrH())
-}
-
-case class FunctionReferendV(function: FunctionH) extends ReferendV {
-  override def tyype = RRReferend(function.prototype.functionType)
 }
 
 case class StructInstanceV(

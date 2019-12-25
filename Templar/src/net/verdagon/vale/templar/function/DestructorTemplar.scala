@@ -139,7 +139,7 @@ object DestructorTemplar {
                 getArrayDestructor(fate.snapshot, temputs, r)
               }
             }
-          FunctionPointerCall2(destructorPrototype, List(undestructedExpr2))
+          FunctionCall2(destructorPrototype, List(undestructedExpr2))
         }
         case Coord(Borrow, _) => (Discard2(undestructedExpr2))
         case Coord(Share, _) => {
@@ -318,6 +318,10 @@ object DestructorTemplar {
     val elementDropFunctionPrototype =
       getDropFunction(env, temputs, array.array.memberType)
 
+    val elementDropFunctionAsIFunction = StructTemplar.prototypeToIFunctionSubclass(env, temputs, elementDropFunctionPrototype)
+
+    val elementDropFunctionExpression = Construct2(elementDropFunctionAsIFunction, Coord(Own, elementDropFunctionAsIFunction), List())
+
     val function2 =
       Function2(
         FunctionHeader2(
@@ -333,9 +337,7 @@ object DestructorTemplar {
             DestroyUnknownSizeArray2(
               ArgLookup2(0, arrayRefType2),
               array,
-              FunctionPointerCall2(
-                elementDropFunctionPrototype,
-                List(Placeholder2(array.array.memberType)))))))
+              elementDropFunctionExpression))))
 
       temputs.declareFunctionReturnType(function2.header.toSignature, function2.header.returnType)
       temputs.addFunction(function2)
