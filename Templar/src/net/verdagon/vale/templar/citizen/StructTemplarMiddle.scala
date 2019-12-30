@@ -45,8 +45,6 @@ object StructTemplarMiddle {
       StructTemplarCore.makeInterface(
         localEnv, temputs, interfaceS, coercedFinalTemplateArgs2);
 
-    temputs
-
 // Now that we have an env, we can use it for the internal methods.
 //      interfaceS.internalMethods.foldLeft(temputs)({
 //        case (function) => {
@@ -77,5 +75,28 @@ object StructTemplarMiddle {
     prefix: String):
   (StructRef2, Mutability) = {
     StructTemplarCore.makeSeqOrPackUnderstruct(env, temputs, memberTypes2, prefix)
+  }
+
+  // Makes an anonymous substruct of the given interface, with the given lambdas as its members.
+  def makeAnonymousSubstruct(
+    outerEnv: IEnvironment,
+    temputs: TemputsBox,
+    maybeConstructorOriginFunctionA: Option[FunctionA],
+    functionFullName: FullName2,
+    interfaceRef: InterfaceRef2,
+    lambdas: List[Coord]):
+  (StructRef2, Mutability, FunctionHeader2) = {
+    StructTemplarCore.makeAnonymousSubstruct(outerEnv, temputs, maybeConstructorOriginFunctionA, functionFullName, interfaceRef, lambdas)
+  }
+
+  // Makes an anonymous substruct of the given interface, which just forwards its method to the given prototype.
+  def prototypeToAnonymousSubstruct(
+    outerEnv: IEnvironment,
+    temputs: TemputsBox,
+    interfaceRef: InterfaceRef2,
+    prototype: Prototype2):
+  StructRef2 = {
+    StructTemplarCore.prototypeToAnonymousSubstruct(
+      outerEnv, temputs, interfaceRef, prototype)
   }
 }

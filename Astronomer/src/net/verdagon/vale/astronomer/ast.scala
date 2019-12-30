@@ -22,7 +22,7 @@ case class ProgramA(
     val matches = interfaces.find(_.name == name)
     vassert(matches.size == 1)
     matches.head match {
-      case i @ InterfaceA(_, _, _, _, _, _, _, _, _) => i
+      case i @ InterfaceA(_, _, _, _, _, _, _, _, _, _) => i
     }
   }
   def lookupStruct(name: String) = {
@@ -40,7 +40,7 @@ trait TypeDefinitionA {
 }
 
 case class StructA(
-    codeLocation: CodeLocation,
+    codeLocation: CodeLocationS,
     namespace: List[String],
     name: String,
     mutability: MutabilityP,
@@ -64,7 +64,7 @@ case class StructMemberA(
     typeRune: String)
 
 case class ImplA(
-    codeLocation: CodeLocation,
+    codeLocation: CodeLocationS,
     rules: List[IRulexAR],
     typeByRune: Map[String, ITemplataType],
     structKindRune: String,
@@ -78,7 +78,7 @@ case class ImplA(
 //  aliaseeRune: String)
 
 case class InterfaceA(
-    codeLocation: CodeLocation,
+    codeLocation: CodeLocationS,
     namespace: List[String],
     name: String,
     mutability: MutabilityP,
@@ -86,7 +86,9 @@ case class InterfaceA(
     tyype: ITemplataType,
     identifyingRunes: List[String],
     typeByRune: Map[String, ITemplataType],
-    rules: List[IRulexAR]) {
+    rules: List[IRulexAR],
+    // See IMRFDI
+    internalMethods: List[FunctionA]) {
   def isTemplate: Boolean = tyype match {
     case KindTemplataType => false
     case TemplateTemplataType(_, _) => true
@@ -125,7 +127,7 @@ object structName {
 
 // Underlying class for all XYZFunctionS types
 case class FunctionA(
-    codeLocation: CodeLocation,
+    codeLocation: CodeLocationS,
     name: String,
     namespace: List[String],
     lambdaNumber: Int, // 0 if at top level

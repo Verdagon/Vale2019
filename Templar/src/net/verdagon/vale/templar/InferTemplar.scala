@@ -121,6 +121,20 @@ object InferTemplar {
       override def getStructTemplataType(st: StructTemplata): ITemplataType = {
         st.originStruct.tyype
       }
+
+      override def structIsClosure(state: TemputsBox, structRef: StructRef2): Boolean = {
+        val structDef = state.structDefsByRef(structRef)
+        structDef.isClosure
+      }
+
+      // A simple interface is one that has only one method
+      def getSimpleInterfaceMethod(state: TemputsBox, interfaceRef: InterfaceRef2): Prototype2 = {
+        val interfaceDef2 = state.lookupInterface(interfaceRef)
+        if (interfaceDef2.internalMethods.size != 1) {
+          vfail("Interface is not simple!")
+        }
+        interfaceDef2.internalMethods.head.toPrototype
+      }
     }
   }
 

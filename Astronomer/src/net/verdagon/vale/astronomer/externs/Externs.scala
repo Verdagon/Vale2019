@@ -3,7 +3,7 @@ package net.verdagon.vale.astronomer.externs
 import net.verdagon.vale.astronomer._
 import net.verdagon.vale.parser.{CaptureP, FinalP}
 import net.verdagon.vale.scout.patterns.AtomSP
-import net.verdagon.vale.scout.{CodeLocation, ParameterS}
+import net.verdagon.vale.scout.{CodeLocationS, ParameterS}
 
 import scala.collection.immutable.List
 

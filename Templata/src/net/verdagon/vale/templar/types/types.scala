@@ -9,9 +9,14 @@ import net.verdagon.vale.{vassert, vcurious, vfail}
 import scala.collection.immutable.List
 
 // See NOTAN and ESNTA for why we need this optional template args at every step.
-case class NamePart2(humanName: String, templateArgs: Option[List[ITemplata]]) extends Queriable2 {
+case class NamePart2(
+    humanName: String,
+    templateArgs: Option[List[ITemplata]],
+    parameters: Option[List[Coord]],
+    codeLocation: Option[CodeLocation2]
+) extends Queriable2 {
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
-    List(this).collect(func) ++ templateArgs.toList.flatMap(_.flatMap(_.all(func)))
+    List(this).collect(func) ++ templateArgs.toList.flatMap(_.flatMap(_.all(func))) ++ parameters.toList.flatMap(_.flatMap(_.all(func))) ++ codeLocation.toList.flatMap(_.all(func))
   }
 }
 case class FullName2(steps: List[NamePart2]) extends Queriable2 {
@@ -294,9 +299,11 @@ trait CitizenDefinition2 {
 
 // We include templateArgTypes to aid in looking this up... same reason we have name
 case class StructDefinition2(
-    fullName: FullName2,
-    mutability: Mutability,
-    members: List[StructMember2]) extends CitizenDefinition2 with Queriable2 {
+  fullName: FullName2,
+  mutability: Mutability,
+  members: List[StructMember2],
+  isClosure: Boolean
+) extends CitizenDefinition2 with Queriable2 {
 
   // debt: move this to somewhere else. let's allow packs to have packs, just nothing else.
 //  all({
@@ -338,9 +345,9 @@ case class StructDefinition2(
 case class InterfaceDefinition2(
     fullName: FullName2,
     mutability: Mutability,
-    //// This does not include abstract functions declared outside the interface.
-    //// See IMRFDI for why we need to remember only the internal methods here.
-    //internalMethods: List[FunctionHeader2]
+    // This does not include abstract functions declared outside the interface.
+    // See IMRFDI for why we need to remember only the internal methods here.
+    internalMethods: List[FunctionHeader2]
 ) extends CitizenDefinition2 with Queriable2 {
   override def getRef = InterfaceRef2(fullName)
 

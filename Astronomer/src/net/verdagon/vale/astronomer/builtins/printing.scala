@@ -8,7 +8,7 @@ import net.verdagon.vale.scout.patterns.AtomSP
 object Printing {
   val printlnStr =
     FunctionA(
-      CodeLocation("printlnStr.stl.vale", 0, 0),
+      CodeLocationS("printlnStr.stl.vale", 0, 0),
       "println",
       List("println(:Str)"),
       0,
@@ -40,7 +40,7 @@ object Printing {
 
   val printlnInt =
     FunctionA(
-      CodeLocation("printlnInt.stl.vale", 0, 0),
+      CodeLocationS("printlnInt.stl.vale", 0, 0),
       "println",
       List("println(:Int)"),
       0, false,
@@ -69,7 +69,7 @@ object Printing {
                         LocalLoadAE("line", false))))))))))))
   val printInt =
     FunctionA(
-      CodeLocation("printInt.stl.vale", 0, 0),
+      CodeLocationS("printInt.stl.vale", 0, 0),
       "print",
       List("print(:Int)"),
       0,

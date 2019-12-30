@@ -58,6 +58,10 @@ trait IInfererDelegate[Env, State] {
   def getMemberCoords(state: State, structRef: StructRef2): List[Coord]
 
   def citizenIsFromTemplate(state: State, citizen: CitizenRef2, template: ITemplata): (Boolean)
+
+  def structIsClosure(state: State, structRef: StructRef2): Boolean
+
+  def getSimpleInterfaceMethod(state: State, interfaceRef: InterfaceRef2): Prototype2
 }
 
 // This is the public API for the outside world to use the Infer code.
@@ -165,6 +169,14 @@ object Inferer {
 
       override def citizenIsFromTemplate(state: State, citizen: CitizenRef2, template: ITemplata): (Boolean) = {
         delegate.citizenIsFromTemplate(state, citizen, template)
+      }
+
+      override def structIsClosure(state: State, structRef: StructRef2): Boolean = {
+        delegate.structIsClosure(state, structRef)
+      }
+
+      override def getSimpleInterfaceMethod(state: State, interfaceRef: InterfaceRef2): Prototype2 = {
+        delegate.getSimpleInterfaceMethod(state, interfaceRef)
       }
     }
   }

@@ -268,7 +268,7 @@ object DestructorTemplar {
     vimpl("turn this into just a regular destructor template function? dont see why its special.")
 
     val templatas = List(CoordTemplata(sequenceRefType2))
-    val destructorFullName = FullName2(List(NamePart2("destructor", Some(templatas))))
+    val destructorFullName = FullName2(List(NamePart2("destructor", Some(templatas), None, None)))
 
     val arrayOwnership = if (sequence.array.mutability == Mutable) Own else Share
     val arrayBorrowOwnership = if (sequence.array.mutability == Mutable) Borrow else Share
@@ -276,9 +276,16 @@ object DestructorTemplar {
 
     val elementDropFunctionPrototype = getDropFunction(env, temputs, sequence.array.memberType)
 
-    val elementDropFunctionAsIFunction = StructTemplar.prototypeToIFunctionSubclass(env, temputs, elementDropFunctionPrototype)
+    val (elementDropFunctionAsIFunctionSubstructStructRef, ifunction1InterfaceRef) =
+      StructTemplar.prototypeToAnonymousIFunctionSubstruct(env, temputs, elementDropFunctionPrototype)
 
-    val elementDropFunctionExpression = Construct2(elementDropFunctionAsIFunction, Coord(Own, elementDropFunctionAsIFunction), List())
+    val ifunctionExpression =
+      StructToInterfaceUpcast2(
+        Construct2(
+          elementDropFunctionAsIFunctionSubstructStructRef,
+          Coord(Own, elementDropFunctionAsIFunctionSubstructStructRef),
+          List()),
+        ifunction1InterfaceRef)
 
     val function2 =
       Function2(
@@ -295,11 +302,11 @@ object DestructorTemplar {
             DestroyArraySequence2(
               ArgLookup2(0, arrayRefType),
               sequence,
-              elementDropFunctionExpression))))
+              ifunctionExpression))))
 
     temputs.declareFunctionReturnType(function2.header.toSignature, function2.header.returnType)
     temputs.addFunction(function2)
-    (function2.header)
+    function2.header
   }
 
   def generateUnknownSizeArrayDestructor(
@@ -310,17 +317,23 @@ object DestructorTemplar {
       array: UnknownSizeArrayT2):
   (FunctionHeader2) = {
     val templatas = List(CoordTemplata(arrayRefType2))
-    val destructorFullName = FullName2(List(NamePart2("destructor", Some(templatas))))
+    val destructorFullName = FullName2(List(NamePart2("destructor", Some(templatas), None, None)))
 
     val arrayOwnership = if (array.array.mutability == Mutable) Own else Share
     val arrayBorrowOwnership = if (array.array.mutability == Mutable) Borrow else Share
 
-    val elementDropFunctionPrototype =
-      getDropFunction(env, temputs, array.array.memberType)
+    val elementDropFunctionPrototype = getDropFunction(env, temputs, array.array.memberType)
 
-    val elementDropFunctionAsIFunction = StructTemplar.prototypeToIFunctionSubclass(env, temputs, elementDropFunctionPrototype)
+    val (elementDropFunctionAsIFunctionSubstructStructRef, ifunction1InterfaceRef) =
+      StructTemplar.prototypeToAnonymousIFunctionSubstruct(env, temputs, elementDropFunctionPrototype)
 
-    val elementDropFunctionExpression = Construct2(elementDropFunctionAsIFunction, Coord(Own, elementDropFunctionAsIFunction), List())
+    val ifunctionExpression =
+      StructToInterfaceUpcast2(
+        Construct2(
+          elementDropFunctionAsIFunctionSubstructStructRef,
+          Coord(Own, elementDropFunctionAsIFunctionSubstructStructRef),
+          List()),
+        ifunction1InterfaceRef)
 
     val function2 =
       Function2(
@@ -337,7 +350,7 @@ object DestructorTemplar {
             DestroyUnknownSizeArray2(
               ArgLookup2(0, arrayRefType2),
               array,
-              elementDropFunctionExpression))))
+              ifunctionExpression))))
 
       temputs.declareFunctionReturnType(function2.header.toSignature, function2.header.returnType)
       temputs.addFunction(function2)

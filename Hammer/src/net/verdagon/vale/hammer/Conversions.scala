@@ -8,8 +8,8 @@ import net.verdagon.vale.{metal => m}
 import net.verdagon.vale.{vimpl, scout => s}
 
 object Conversions {
-  def evaluateCodeLocation(loc: s.CodeLocation): m.CodeLocation = {
-    val s.CodeLocation(file, line, col) = loc
+  def evaluateCodeLocation(loc: s.CodeLocationS): m.CodeLocation = {
+    val s.CodeLocationS(file, line, col) = loc
     m.CodeLocation(file, line, col)
   }
 

@@ -40,7 +40,7 @@ object BuiltInFunctions {
         CallTemplar.DESTRUCTOR_NAME,
         FunctionEnvEntry(
           FunctionA(
-            s.CodeLocation(CallTemplar.DESTRUCTOR_NAME + ".builtin.vale", 0, 0),
+            s.CodeLocationS(CallTemplar.DESTRUCTOR_NAME + ".builtin.vale", 0, 0),
             CallTemplar.DESTRUCTOR_NAME,
             List(),
             0,
@@ -121,7 +121,7 @@ object BuiltInFunctions {
     currentlyConstructingEnv
       .addFunction(
         FunctionA(
-          s.CodeLocation(CallTemplar.INTERFACE_DESTRUCTOR_NAME + ".builtin.vale", 0, 0),
+          s.CodeLocationS(CallTemplar.INTERFACE_DESTRUCTOR_NAME + ".builtin.vale", 0, 0),
           CallTemplar.INTERFACE_DESTRUCTOR_NAME,
           List(),
           0,
@@ -185,7 +185,7 @@ object BuiltInFunctions {
     currentlyConstructingEnv
       .addFunction(
         FunctionA(
-          s.CodeLocation(CallTemplar.INTERFACE_DESTRUCTOR_NAME + ".builtin.vale", 0, 1),
+          s.CodeLocationS(CallTemplar.INTERFACE_DESTRUCTOR_NAME + ".builtin.vale", 0, 1),
           CallTemplar.INTERFACE_DESTRUCTOR_NAME,
           List(),
           0,
@@ -261,7 +261,7 @@ object BuiltInFunctions {
       currentlyConstructingEnv
         .addFunction(
           FunctionA(
-            s.CodeLocation(CallTemplar.DROP_FUNCTION_NAME + ".builtin.vale", 0, 0),
+            s.CodeLocationS(CallTemplar.DROP_FUNCTION_NAME + ".builtin.vale", 0, 0),
             CallTemplar.DROP_FUNCTION_NAME,
             List(),
             0,
@@ -302,7 +302,7 @@ object BuiltInFunctions {
     currentlyConstructingEnv
       .addFunction(
         FunctionA(
-          s.CodeLocation("len.builtin.vale", 0, 0),
+          s.CodeLocationS("len.builtin.vale", 0, 0),
           "len",
           List(),
           0,
@@ -340,7 +340,7 @@ object BuiltInFunctions {
                     LocalLoadAE("arr", false))))))))
       .addFunction(
         FunctionA(
-          s.CodeLocation("len.builtin.vale", 0, 1),
+          s.CodeLocationS("len.builtin.vale", 0, 1),
           "len",
           List(),
           0,
@@ -384,7 +384,7 @@ object BuiltInFunctions {
     currentlyConstructingEnv
       .addFunction(
         FunctionA(
-          s.CodeLocation("panic.builtin.vale", 0, 0),
+          s.CodeLocationS("panic.builtin.vale", 0, 0),
           "panic",
           List(),
           0,

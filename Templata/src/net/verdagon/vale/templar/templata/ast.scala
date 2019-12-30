@@ -195,3 +195,13 @@ case class Prototype2(
     List(this).collect(func) ++ paramTypes.flatMap(_.all(func)) ++ returnType.all(func)
   }
 }
+
+case class CodeLocation2(
+    file: String,
+    line: Int,
+    char: Int
+) extends Queriable2 {
+  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
+    List(this).collect(func)
+  }
+}

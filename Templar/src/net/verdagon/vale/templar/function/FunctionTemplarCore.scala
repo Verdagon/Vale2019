@@ -5,6 +5,7 @@ import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.scout._
 import net.verdagon.vale.templar._
+import net.verdagon.vale.templar.citizen.{ImplTemplar, StructTemplar}
 import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.templata.TemplataTemplar
 import net.verdagon.vale.{vassert, vassertSome, vcurious, vfail}
@@ -137,7 +138,11 @@ object FunctionTemplarCore {
             val header =
               generator.generate(
                 innerEnv, temputs, Some(function1), params2, maybeRetCoord)
-            vassert(header.toSignature == signature2)
+            if (header.toSignature != signature2) {
+              vfail("Generator made a function whose signature doesn't match the expected one!\n" +
+              "Expected:  " + signature2 + "\n" +
+              "Generated: " + header.toSignature)
+            }
             (header)
           }
         }
@@ -198,47 +203,75 @@ object FunctionTemplarCore {
     (header)
   }
 
-  def makeConstructor(
-    temputs: TemputsBox,
-    maybeOriginFunction1: Option[FunctionA],
-    structDef: StructDefinition2):
-  (FunctionHeader2) = {
-    val constructorParams =
-      structDef.members.map({
-        case StructMember2(name, _, ReferenceMemberType2(reference)) => {
-          Parameter2(name, None, reference)
-        }
-      })
-    val constructorReturnOwnership = if (structDef.mutability == Mutable) Own else Share
-    val constructorReturnType = Coord(constructorReturnOwnership, structDef.getRef)
-    // not virtual because how could a constructor be virtual
-    val constructor2 =
-      Function2(
-        FunctionHeader2(
-          structDef.fullName,
-          0,
-          false, false,
-          constructorParams,
-          constructorReturnType,
-          maybeOriginFunction1),
-        List(),
-        Block2(
-          List(
-            Construct2(
-              structDef.getRef,
-              Coord(if (structDef.mutability == Mutable) Own else Share, structDef.getRef),
-              constructorParams.zipWithIndex.map({ case (p, index) => ArgLookup2(index, p.tyype) })))))
-
-    // we cant make the destructor here because they might have a user defined one somewhere
-
-      temputs
-        .declareFunctionReturnType(constructor2.header.toSignature, constructor2.header.returnType)
-      temputs.addFunction(constructor2);
-
-    vassert(temputs.exactDeclaredSignatureExists(constructor2.header.fullName, constructor2.header.toBanner.paramTypes))
-
-    (constructor2.header)
-  }
+//
+//  def makeInterfaceConstructor(
+//    env: FunctionEnvironmentBox,
+//    temputs: TemputsBox,
+//    maybeOriginFunction1: Option[FunctionA],
+//    callLocation: CodeLocation2,
+//    interfaceDef: InterfaceDefinition2,
+//    argCoords: List[Parameter2]):
+//  (FunctionHeader2) = {
+//    vassert(interfaceDef.internalMethods.size == argCoords.size)
+//
+//    val (constructorParams, functions) =
+//      interfaceDef.internalMethods.zip(argCoords).zipWithIndex.map({ case ((functionHeader, argCoord), index) =>
+//        // Someday we can use concepts to make sure that these match up nicely, instead of checking here.
+//
+//        // Not sure if we need exact here, conservatively assuming true.
+//        val exact = true
+//        val prototype =
+//          OverloadTemplar.scoutExpectedFunctionForPrototype(
+//            env.functionEnvironment,
+//            temputs,
+//            CallTemplar.CALL_FUNCTION_NAME,
+//            List(),
+//            functionHeader.params.map(_.tyype).map(ParamFilter(_, None)),
+//            exact)
+//        val parameter = Parameter2(Scout.methodRunePrefix + index, None, argCoord.tyype)
+//        (parameter, prototype)
+//      }).unzip
+//    val constructorReturnOwnership = if (interfaceDef.mutability == Mutable) Own else Share
+//    val constructorReturnType = Coord(constructorReturnOwnership, interfaceDef.getRef)
+//
+//
+//    val anonymousSubstructRef =
+//      StructTemplar.makeAnonymousSubstruct(
+//        env.functionEnvironment,
+//        temputs,
+//
+//        argCoords.map(_.tyype),
+//        // passing this in so it can define the impl in a way thats in the environment
+//        interfaceDef.getRef)
+//
+//    // not virtual because how could a constructor be virtual
+//    val constructor2 =
+//      Function2(
+//        FunctionHeader2(
+//          interfaceDef.fullName,
+//          0,
+//          false, false,
+//          constructorParams,
+//          constructorReturnType,
+//          maybeOriginFunction1),
+//        List(),
+//        Block2(
+//          List(
+//            Construct2(
+//              structDef.getRef,
+//              Coord(if (structDef.mutability == Mutable) Own else Share, structDef.getRef),
+//              constructorParams.zipWithIndex.map({ case (p, index) => ArgLookup2(index, p.tyype) })))))
+//
+//    // we cant make the destructor here because they might have a user defined one somewhere
+//
+//    temputs
+//      .declareFunctionReturnType(constructor2.header.toSignature, constructor2.header.returnType)
+//    temputs.addFunction(constructor2);
+//
+//    vassert(temputs.exactDeclaredSignatureExists(constructor2.header.fullName, constructor2.header.toBanner.paramTypes))
+//
+//    (constructor2.header)
+//  }
 
   def makeImplDestructor(
     env: IEnvironment,
@@ -261,7 +294,9 @@ object FunctionTemplarCore {
             List(
               NamePart2(
                 CallTemplar.INTERFACE_DESTRUCTOR_NAME,
-                Some(List(CoordTemplata(structType2), KindTemplata(interfaceRef2)))))),
+                Some(List(CoordTemplata(structType2), KindTemplata(interfaceRef2))),
+                None,
+                None))),
           0,
           false, false,
           List(Parameter2("this", Some(Override2(interfaceRef2)), structType2)),

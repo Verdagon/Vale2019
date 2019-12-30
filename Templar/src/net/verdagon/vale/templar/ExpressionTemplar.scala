@@ -445,7 +445,7 @@ object ExpressionTemplar {
             }
             case TupleT2(_, structRef) => {
               temputs.lookupStruct(structRef) match {
-                case structDef @ StructDefinition2(_, _, _) => {
+                case structDef @ StructDefinition2(_, _, _, _) => {
                   val memberType = structDef.getMember(memberName).tyype.expectReferenceMember().reference;
                   ReferenceMemberLookup2(containerExpr2, memberName, memberType)
                 }
@@ -533,8 +533,8 @@ object ExpressionTemplar {
 
         val memberType2 =
           generatorExpr2.referend match {
-            case InterfaceRef2(FullName2(List(NamePart2("IFunction", Some(List(CoordTemplata(Coord(Share, Int2())), CoordTemplata(element))))))) => element
-            case _ => vwat()
+            case InterfaceRef2(FullName2(List(NamePart2("IFunction1", Some(List(MutabilityTemplata(_), CoordTemplata(Coord(Share, Int2())), CoordTemplata(element))), None, None)))) => element
+            case other => vwat(other.toString)
           }
 
         val isConvertible =

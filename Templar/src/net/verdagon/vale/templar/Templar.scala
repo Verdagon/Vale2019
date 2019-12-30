@@ -39,57 +39,60 @@ object Templar {
     val (env1, functionGeneratorByName1) = BuiltInFunctions.addBuiltInFunctions(env0, functionGeneratorByName0)
     val functionGeneratorByName2 = functionGeneratorByName1 ++ StructTemplar.getFunctionGenerators()
 
+    val ifunction1InterfaceA =
+      InterfaceA(
+        s.CodeLocationS("IFunction1.builtin.vale", 0, 0),
+        List(),
+        "IFunction1",
+        MutableP,
+        Some(MutableP),
+        TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType, CoordTemplataType), KindTemplataType),
+        List("IFunctionM", "IFunctionP1", "IFunctionR"),
+        Map(
+          "IFunctionM" -> MutabilityTemplataType,
+          "IFunctionP1" -> CoordTemplataType,
+          "IFunctionR" -> CoordTemplataType),
+        List(
+          TemplexAR(RuneAT("IFunctionM", MutabilityTemplataType)),
+          TemplexAR(RuneAT("IFunctionP1", CoordTemplataType)),
+          TemplexAR(RuneAT("IFunctionR", CoordTemplataType))),
+        List(
+          FunctionA(
+            s.CodeLocationS("IFunction1.builtin.vale", 0, 1),
+            "__call", List(), 0, true,
+            FunctionTemplataType,
+            List(),
+            Map(
+              "CallM" -> MutabilityTemplataType,
+              "CallP1" -> CoordTemplataType,
+              "CallR" -> CoordTemplataType,
+              "CallThisK" -> CoordTemplataType),
+            List(
+              ParameterS(AtomSP(Some(CaptureP("this", FinalP)), Some(AbstractSP), "CallBorrowThis", None)),
+              ParameterS(AtomSP(Some(CaptureP("p1", FinalP)), None, "CallP1", None))),
+            Some("CallR"),
+            List(
+              EqualsAR(TemplexAR(RuneAT("CallM", MutabilityTemplataType)), TemplexAR(NameAT("IFunctionM", MutabilityTemplataType))),
+              EqualsAR(TemplexAR(RuneAT("CallP1", CoordTemplataType)), TemplexAR(NameAT("IFunctionP1", CoordTemplataType))),
+              EqualsAR(TemplexAR(RuneAT("CallR", CoordTemplataType)), TemplexAR(NameAT("IFunctionR", CoordTemplataType))),
+              EqualsAR(
+                TemplexAR(RuneAT("CallThisK", CoordTemplataType)),
+                TemplexAR(
+                  CallAT(
+                    NameAT("IFunction1", TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType, CoordTemplataType), KindTemplataType)),
+                    List(
+                      NameAT("IFunctionM", MutabilityTemplataType),
+                      NameAT("IFunctionP1", CoordTemplataType),
+                      NameAT("IFunctionR", CoordTemplataType)),
+                    CoordTemplataType))),
+              EqualsAR(
+                TemplexAR(RuneAT("CallBorrowThis", CoordTemplataType)),
+                TemplexAR(OwnershippedAT(BorrowP, RuneAT("CallThisK", CoordTemplataType))))),
+            AbstractBodyA)))
     val env2 =
       env1
-        .addEntry(
-          "IFunction1",
-          InterfaceEnvEntry(
-            InterfaceA(
-              s.CodeLocation("IFunction1.builtin.vale", 0, 0),
-              List(),
-              "IFunction1",
-              MutableP,
-              Some(MutableP),
-              TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType, CoordTemplataType), KindTemplataType),
-              List("M", "P1", "R"),
-              Map(
-                "M" -> MutabilityTemplataType,
-                "P1" -> CoordTemplataType,
-                "R" -> CoordTemplataType),
-              List(
-                TemplexAR(RuneAT("M", MutabilityTemplataType)),
-                TemplexAR(RuneAT("P1", CoordTemplataType)),
-                TemplexAR(RuneAT("R", CoordTemplataType))))))
-          .addFunction(
-            FunctionA(
-              s.CodeLocation("IFunction1.builtin.vale", 0, 1),
-              "__call", List(), 0, true,
-              TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType, CoordTemplataType), FunctionTemplataType),
-              List("M", "P1", "R"),
-              Map(
-                "M" -> MutabilityTemplataType,
-                "P1" -> CoordTemplataType,
-                "R" -> CoordTemplataType,
-                "ThisK" -> CoordTemplataType),
-              List(
-                ParameterS(AtomSP(Some(CaptureP("this", FinalP)), Some(AbstractSP), "BorrowThis", None)),
-                ParameterS(AtomSP(Some(CaptureP("p1", FinalP)), None, "P1", None))),
-              Some("R"),
-              List(
-                EqualsAR(
-                  TemplexAR(RuneAT("ThisK", CoordTemplataType)),
-                  TemplexAR(
-                    CallAT(
-                      NameAT("IFunction1", TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType, CoordTemplataType), KindTemplataType)),
-                      List(
-                        RuneAT("M", MutabilityTemplataType),
-                        RuneAT("P1", CoordTemplataType),
-                        RuneAT("R", CoordTemplataType)),
-                      CoordTemplataType))),
-                EqualsAR(
-                  TemplexAR(RuneAT("BorrowThis", CoordTemplataType)),
-                  TemplexAR(OwnershippedAT(BorrowP, RuneAT("ThisK", CoordTemplataType))))),
-              AbstractBodyA))
+        .addEntry("IFunction1", InterfaceEnvEntry(ifunction1InterfaceA))
+        .addFunction(StructTemplar.getInterfaceConstructor(ifunction1InterfaceA))
 
     // This has to come before the structs and interfaces because part of evaluating a
     // struct or interface is figuring out what it extends.
@@ -105,9 +108,17 @@ object Templar {
             .addFunction(StructTemplar.getConstructor(s))
         }
       })
-    val env7 =
+    val env9 =
       interfacesA.foldLeft(env5)({
-        case (env6, i) => env6.addEntry(i.name, InterfaceEnvEntry(i))
+        case (env6, interfaceA) => {
+          val env7 =
+            env6
+              .addEntry(interfaceA.name, InterfaceEnvEntry(interfaceA))
+              .addFunction(StructTemplar.getInterfaceConstructor(interfaceA))
+          interfaceA.internalMethods.foldLeft(env7)({
+            case (env8, internalMethodA) => env8.addFunction(internalMethodA)
+          })
+        }
       })
 
 //    val env9 =
@@ -117,7 +128,6 @@ object Templar {
 //            Map((name -> headers.map(header => TemplataEnvEntry(ExternFunctionTemplata(header))))))
 //        }
 //      })
-    val env9 = env7
 
     val env11 =
       functions1.foldLeft(env9)({
@@ -161,7 +171,7 @@ object Templar {
       })
 
       interfacesA.foreach({
-        case (interfaceS @ InterfaceA(_, _, _, _, _, _, _, _, _)) => {
+        case (interfaceS @ InterfaceA(_, _, _, _, _, _, _, _, _, _)) => {
           if (interfaceS.isTemplate) {
             // Do nothing, it's a template
           } else {

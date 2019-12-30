@@ -56,13 +56,13 @@ case class ProgramS(
   }
 }
 
-case class CodeLocation(
+case class CodeLocationS(
   file: String,
   line: Int,
   char: Int)
 
 case class StructS(
-    codeLocation: CodeLocation,
+    codeLocation: CodeLocationS,
     namespace: List[String],
     name: String,
     mutability: MutabilityP,
@@ -80,7 +80,7 @@ case class StructMemberS(
     typeRune: String)
 
 case class ImplS(
-    codeLocation: CodeLocation,
+    codeLocation: CodeLocationS,
     rules: List[IRulexSR],
     allRunes: Set[String],
     isTemplate: Boolean,
@@ -88,7 +88,7 @@ case class ImplS(
     interfaceKindRune: String)
 
 case class InterfaceS(
-    codeLocation: CodeLocation,
+    codeLocation: CodeLocationS,
     namespace: List[String],
     name: String,
     mutability: MutabilityP,
@@ -97,7 +97,9 @@ case class InterfaceS(
     allRunes: Set[String],
     maybePredictedType: Option[ITypeSR],
     isTemplate: Boolean,
-    rules: List[IRulexSR])
+    rules: List[IRulexSR],
+    // See IMRFDI
+    internalMethods: List[FunctionS])
 
 object interfaceSName {
   // The extraction method (mandatory)
@@ -152,7 +154,7 @@ case class CodeBody1(body1: BodySE) extends IBody1
 
 // Underlying class for all XYZFunctionS types
 case class FunctionS(
-    codeLocation: CodeLocation,
+    codeLocation: CodeLocationS,
     name: String,
     namespace: List[String],
     lambdaNumber: Int, // 0 if at top level

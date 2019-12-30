@@ -15,7 +15,7 @@ object FunctionTemplarEnvLayer {
   def evaluateOrdinaryLightFunctionFromNonCallForBanner(
     containingEnv: IEnvironment, temputs: TemputsBox, function1: FunctionA):
   (FunctionBanner2) = {
-    val functionFullName = FullName2(containingEnv.fullName.steps :+ NamePart2(function1.name, None))
+    val functionFullName = FullName2(containingEnv.fullName.steps :+ NamePart2(function1.name, None, None, None))
     val funcOuterEnv =
       FunctionEnvironmentBox(FunctionEnvironment(containingEnv, functionFullName, function1, Map(), None, Set(), 0, List(), Set()))
     FunctionTemplarClosureOrLightLayer.evaluateOrdinaryLightFunctionFromNonCallForBanner(
@@ -31,7 +31,7 @@ object FunctionTemplarEnvLayer {
       alreadySpecifiedTemplateArgs: List[ITemplata],
       paramFilters: List[ParamFilter]):
   (IEvaluateFunctionResult[FunctionBanner2]) = {
-    val functionFullName = FullName2(containingEnv.fullName.steps :+ NamePart2(functionS.name, None))
+    val functionFullName = FullName2(containingEnv.fullName.steps :+ NamePart2(functionS.name, None, None, None))
 
     val funcOuterEnv =
       FunctionEnvironmentBox(FunctionEnvironment(containingEnv, functionFullName, functionS, Map(), None, Set(), 0, List(), Set()))
@@ -55,7 +55,7 @@ object FunctionTemplarEnvLayer {
     argTypes2: List[ParamFilter]):
   (IEvaluateFunctionResult[FunctionBanner2]) = {
 
-    val functionFullName = FullName2(containingEnv.fullName.steps :+ NamePart2(functionS.name, None))
+    val functionFullName = FullName2(containingEnv.fullName.steps :+ NamePart2(functionS.name, None, None, None))
     val funcOuterEnv =
       FunctionEnvironmentBox(FunctionEnvironment(containingEnv, functionFullName, functionS, Map(), None, Set(), 0, List(), Set()))
 
@@ -76,7 +76,7 @@ object FunctionTemplarEnvLayer {
     closureStructRef: StructRef2,
     functionS: FunctionA):
   (FunctionBanner2) = {
-    val functionFullName = FullName2(containingEnv.fullName.steps :+ NamePart2(functionS.name, None))
+    val functionFullName = FullName2(containingEnv.fullName.steps :+ NamePart2(functionS.name, None, None, None))
     val funcOuterEnv =
       FunctionEnvironmentBox(FunctionEnvironment(containingEnv, functionFullName, functionS, Map(), None, Set(), 0, List(), Set()))
 
@@ -93,7 +93,7 @@ object FunctionTemplarEnvLayer {
       closureStructRef: StructRef2,
       functionS: FunctionA):
   (FunctionHeader2) = {
-    val functionFullName = FullName2(containingEnv.fullName.steps :+ NamePart2(functionS.name, None))
+    val functionFullName = FullName2(containingEnv.fullName.steps :+ NamePart2(functionS.name, None, None, None))
     val funcOuterEnv =
       FunctionEnvironmentBox(FunctionEnvironment(containingEnv, functionFullName, functionS, Map(), None, Set(), 0, List(), Set()))
 
@@ -109,7 +109,7 @@ object FunctionTemplarEnvLayer {
       temputs: TemputsBox,
       function1: FunctionA):
   (FunctionHeader2) = {
-    val functionFullName = FullName2(containingEnv.fullName.steps :+ NamePart2(function1.name, None))
+    val functionFullName = FullName2(containingEnv.fullName.steps :+ NamePart2(function1.name, None, None, None))
     val funcOuterEnv =
       FunctionEnvironmentBox(FunctionEnvironment(containingEnv, functionFullName, function1, Map(), None, Set(), 0, List(), Set()))
     FunctionTemplarClosureOrLightLayer.evaluateOrdinaryLightFunctionFromNonCallForHeader(
@@ -126,7 +126,7 @@ object FunctionTemplarEnvLayer {
     temputs: TemputsBox,
     function1: FunctionA):
   (Prototype2) = {
-    val functionFullName = FullName2(containingEnv.fullName.steps :+ NamePart2(function1.name, None))
+    val functionFullName = FullName2(containingEnv.fullName.steps :+ NamePart2(function1.name, None, None, None))
     val funcOuterEnv =
       FunctionEnvironmentBox(FunctionEnvironment(containingEnv, functionFullName, function1, Map(), None, Set(), 0, List(), Set()))
     FunctionTemplarClosureOrLightLayer.evaluateOrdinaryLightFunctionFromNonCallForPrototype(
@@ -161,7 +161,7 @@ object FunctionTemplarEnvLayer {
       explicitTemplateArgs: List[ITemplata],
       args: List[ParamFilter]):
   (IEvaluateFunctionResult[Prototype2]) = {
-    val functionFullName = FullName2(containingEnv.fullName.steps :+ NamePart2(functionS.name, None))
+    val functionFullName = FullName2(containingEnv.fullName.steps :+ NamePart2(functionS.name, None, None, None))
     val funcOuterEnv =
       FunctionEnvironmentBox(FunctionEnvironment(containingEnv, functionFullName, functionS, Map(), None, Set(), 0, List(), Set()))
     FunctionTemplarClosureOrLightLayer.evaluateTemplatedLightFunctionFromCallForPrototype2(
@@ -177,7 +177,7 @@ object FunctionTemplarEnvLayer {
     argTypes2: List[ParamFilter]):
   (IEvaluateFunctionResult[Prototype2]) = {
 
-    val functionFullName = FullName2(containingEnv.fullName.steps :+ NamePart2(functionS.name, None))
+    val functionFullName = FullName2(containingEnv.fullName.steps :+ NamePart2(functionS.name, None, None, None))
     val funcOuterEnv =
       FunctionEnvironmentBox(FunctionEnvironment(containingEnv, functionFullName, functionS, Map(), None, Set(), 0, List(), Set()))
 
@@ -190,5 +190,4 @@ object FunctionTemplarEnvLayer {
       funcOuterEnv, temputs, closureStructRef, functionS,
       alreadySpecifiedTemplateArgs, argTypes2)
   }
-
 }

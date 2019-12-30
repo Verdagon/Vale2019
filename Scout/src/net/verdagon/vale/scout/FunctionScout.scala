@@ -75,6 +75,8 @@ object FunctionScout {
   // In a closure's environment, we also have this. This lets us easily know
   // what the StructRef for a given closure is.
   val CLOSURE_STRUCT_ENV_ENTRY_NAME = "__Closure"
+  // Name of anonymous substructs. They're more identified by their CodeLocation though.
+  val ANONYMOUS_SUBSTRUCT_NAME = "__AnonymousSubstruct"
 
   def fillParams(patterns: List[PatternPP]): List[PatternPP] = {
     patterns.zipWithIndex.map({ case (pattern, paramIndex) =>
@@ -127,7 +129,7 @@ object FunctionScout {
       maybeRetPPT,
       maybeBody0
     ) = functionP;
-    val codeLocation = CodeLocation("userInput.vale", functionP.pos.line, functionP.pos.column)
+    val codeLocation = CodeLocationS("userInput.vale", functionP.pos.line, functionP.pos.column)
 
     val filledParamsP = fillParams(unfilledParamsP)
 
@@ -234,7 +236,7 @@ object FunctionScout {
       lambdaFunction0: FunctionP):
   (FunctionS, VariableUses) = {
     val FunctionP(_, false, false, isUserFunction, userSpecifiedIdentifyingRunes, List(), unfilledParamsP, maybeRetPT, Some(body0)) = lambdaFunction0;
-    val codeLocation = CodeLocation("userInput.vale", lambdaFunction0.pos.line, lambdaFunction0.pos.column)
+    val codeLocation = CodeLocationS("userInput.vale", lambdaFunction0.pos.line, lambdaFunction0.pos.column)
 
     val filledParamsP = fillParams(unfilledParamsP)
 
@@ -448,7 +450,7 @@ object FunctionScout {
       unfilledParamsP,
       maybeReturnType,
       None) = functionP;
-    val codeLocation = CodeLocation("userInput.vale", functionP.pos.line, functionP.pos.column)
+    val codeLocation = CodeLocationS("userInput.vale", functionP.pos.line, functionP.pos.column)
 
     val filledParamsP = fillParams(unfilledParamsP)
 

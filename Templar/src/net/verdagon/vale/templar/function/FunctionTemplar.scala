@@ -89,6 +89,29 @@ object FunctionTemplar {
     (structRef)
   }
 
+  def evaluateOrdinaryFunctionFromNonCallForHeader(
+    temputs: TemputsBox,
+    functionTemplata: FunctionTemplata):
+  FunctionHeader2 = {
+    val FunctionTemplata(env, function1) = functionTemplata
+    if (function1.isLight) {
+      evaluateOrdinaryLightFunctionFromNonCallForHeader(
+        env, temputs, function1)
+    } else {
+      val Some(KindTemplata(closureStructRef @ StructRef2(_))) =
+        env.getNearestTemplataWithName(
+          FunctionScout.CLOSURE_STRUCT_ENV_ENTRY_NAME,
+          Set(TemplataLookupContext))
+      val header =
+        evaluateOrdinaryClosureFunctionFromNonCallForHeader(
+          env, temputs, closureStructRef, function1)
+      header
+    }
+  }
+
+  // We would want only the prototype instead of the entire header if, for example,
+  // we were calling the function. This is necessary for a recursive function like
+  // fn main():Int{main()}
   def evaluateOrdinaryFunctionFromNonCallForPrototype(
     temputs: TemputsBox,
     functionTemplata: FunctionTemplata):
@@ -238,7 +261,7 @@ object FunctionTemplar {
     functionTemplata: FunctionTemplata,
     explicitTemplateArgs: List[ITemplata],
     args: List[ParamFilter]):
-  (IEvaluateFunctionResult[Prototype2]) = {
+  IEvaluateFunctionResult[Prototype2] = {
     val FunctionTemplata(env, function) = functionTemplata
     if (function.isLight()) {
       evaluateTemplatedLightFunctionFromCallForPrototype(
@@ -255,7 +278,7 @@ object FunctionTemplar {
       function: FunctionA,
       explicitTemplateArgs: List[ITemplata],
       args: List[ParamFilter]):
-  (IEvaluateFunctionResult[Prototype2]) = {
+  IEvaluateFunctionResult[Prototype2] = {
     FunctionTemplarEnvLayer.evaluateTemplatedLightFunctionFromCallForPrototype(
         env, temputs, function, explicitTemplateArgs, args)
   }
@@ -266,7 +289,7 @@ object FunctionTemplar {
     function: FunctionA,
     explicitTemplateArgs: List[ITemplata],
     args: List[ParamFilter]):
-  (IEvaluateFunctionResult[Prototype2]) = {
+  IEvaluateFunctionResult[Prototype2] = {
     val Some(KindTemplata(closureStructRef @ StructRef2(_))) =
       env.getNearestTemplataWithName(
         FunctionScout.CLOSURE_STRUCT_ENV_ENTRY_NAME,

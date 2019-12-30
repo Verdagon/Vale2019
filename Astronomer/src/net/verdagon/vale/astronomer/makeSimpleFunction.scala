@@ -1,6 +1,6 @@
 package net.verdagon.vale.astronomer
 
-import net.verdagon.vale.scout.CodeLocation
+import net.verdagon.vale.scout.CodeLocationS
 import net.verdagon.vale.astronomer.externs.Externs._
 
 object makeSimpleFunction {
@@ -25,7 +25,7 @@ object makeSimpleFunction {
     val allRules = simpleCoordRuneAR("R", retType) :: paramRules
 
     FunctionA(
-      CodeLocation(functionName + ".builtin.vale", 0, 0),
+      CodeLocationS(functionName + ".builtin.vale", 0, 0),
       functionName,
       List(),
       0,

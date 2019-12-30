@@ -633,7 +633,7 @@ case class Edge2(
   methods: List[Prototype2])
 
 object Program2 {
-  val emptyPackStructRef = StructRef2(FullName2(List(NamePart2("__Pack", Some(List())))))
+  val emptyPackStructRef = StructRef2(FullName2(List(NamePart2("__Pack", Some(List()), None, None))))
 }
 
 //trait Program2 {

@@ -108,15 +108,6 @@ case class ImplTemplata(
   }
 }
 
-case class ExternFunctionTemplata(header: FunctionHeader2) extends ITemplata {
-  override def order: Int = 1337
-  override def tyype: ITemplataType = vfail()
-
-  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
-    List(this).collect(func) ++ header.all(func)
-  }
-}
-
 case class OwnershipTemplata(ownership: Ownership) extends ITemplata {
   override def order: Int = 10;
   override def tyype: ITemplataType = OwnershipTemplataType
@@ -172,5 +163,30 @@ case class IntegerTemplata(value: Integer) extends ITemplata {
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func)
+  }
+}
+
+// ExternFunction/ImplTemplata are here because for example when we create an anonymous interface
+// substruct, we want to add its forwarding functions and its impl to the environment, but it's
+// very difficult to add the ImplA and FunctionA for those. So, we allow having temputs like
+// these directly in the environment.
+// These should probably be renamed from Extern to something else... they could be supplied
+// by plugins, but theyre also used internally.
+
+case class ExternFunctionTemplata(header: FunctionHeader2) extends ITemplata {
+  override def order: Int = 1337
+  override def tyype: ITemplataType = vfail()
+
+  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
+    List(this).collect(func) ++ header.all(func)
+  }
+}
+
+case class ExternImplTemplata(struct: StructRef2, interface: InterfaceRef2) extends ITemplata {
+  override def order: Int = 1338
+  override def tyype: ITemplataType = vfail()
+
+  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
+    List(this).collect(func) ++ struct.all(func) ++ interface.all(func)
   }
 }

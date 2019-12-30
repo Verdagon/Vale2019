@@ -51,18 +51,18 @@ object Scout {
   def scoutProgram(program: Program0): ProgramS = {
     val Program0(structsP, interfacesP, implsP, functions0) = program;
     val structsS = scoutStructs(structsP);
-    val (interfacesS, methods) = scoutInterfaces(interfacesP);
+    val interfacesS = scoutInterfaces(interfacesP);
     val implsS = scoutImpls(implsP);
     ProgramS(
       structsS,
       interfacesS,
       implsS,
-      functions0.map(FunctionScout.scoutTopLevelFunction) ++ methods)
+      functions0.map(FunctionScout.scoutTopLevelFunction))
   }
 
   private def scoutImpl(impl0: ImplP): ImplS = {
     val ImplP(templateRulesP, struct, interface) = impl0
-    val codeLocation = CodeLocation("userInput.vale", impl0.pos.line, impl0.pos.column)
+    val codeLocation = CodeLocationS("userInput.vale", impl0.pos.line, impl0.pos.column)
 
     val initialRulesAndRunes =
       InitialRulesAndRunes(List(), templateRulesP, List(), None)
@@ -95,7 +95,7 @@ object Scout {
 
   private def scoutStructs(structsP: List[StructP]): List[StructS] = {
     structsP.map({ case head @ StructP(structName, mutability, maybeIdentifyingRunes, rulesP, members) =>
-      val codeLocation = CodeLocation("userInput.vale", head.pos.line, head.pos.column)
+      val codeLocation = CodeLocationS("userInput.vale", head.pos.line, head.pos.column)
 
       println("put identifying runes from params' top levels in!")
 
@@ -147,53 +147,50 @@ object Scout {
     })
   }
 
-  private def scoutInterfaces(interfacesP: List[InterfaceP]): (List[InterfaceS], List[FunctionS]) = {
-    val interfacesAndMethods =
-      interfacesP.map({ case headP @ InterfaceP(name, mutability, maybeIdentifyingRunes, rulesP, members) =>
-        val codeLocation = CodeLocation("userInput.vale", headP.pos.line, headP.pos.column)
+  private def scoutInterfaces(interfacesP: List[InterfaceP]): List[InterfaceS] = {
+    interfacesP.map({ case headP @ InterfaceP(name, mutability, maybeIdentifyingRunes, rulesP, internalMethodsP) =>
+      val codeLocation = CodeLocationS("userInput.vale", headP.pos.line, headP.pos.column)
 
-        val identifyingRunes = maybeIdentifyingRunes.getOrElse(List())
+      val identifyingRunes = maybeIdentifyingRunes.getOrElse(List())
 
-        val rulesS = RuleScout.translateRulexes(rulesP)
+      val rulesS = RuleScout.translateRulexes(rulesP)
 
-        val allRunes = PredictorEvaluator.getAllRunes(identifyingRunes, rulesS, List(), None)
-        val Conclusions(knowableValueRunes, predictedTypeByRune) =
-          PredictorEvaluator.solve(rulesS, List())
-        val isTemplate = knowableValueRunes != allRunes
+      val allRunes = PredictorEvaluator.getAllRunes(identifyingRunes, rulesS, List(), None)
+      val Conclusions(knowableValueRunes, predictedTypeByRune) =
+        PredictorEvaluator.solve(rulesS, List())
+      val isTemplate = knowableValueRunes != allRunes
 
-        val maybePredictedType =
-          if (isTemplate) {
-            if ((identifyingRunes.toSet -- predictedTypeByRune.keySet).isEmpty) {
-              Some(TemplateTypeSR(identifyingRunes.map(predictedTypeByRune), KindTypeSR))
-            } else {
-              None
-            }
+      val maybePredictedType =
+        if (isTemplate) {
+          if ((identifyingRunes.toSet -- predictedTypeByRune.keySet).isEmpty) {
+            Some(TemplateTypeSR(identifyingRunes.map(predictedTypeByRune), KindTypeSR))
           } else {
-            Some(KindTypeSR)
+            None
           }
+        } else {
+          Some(KindTypeSR)
+        }
 
-        val maybePredictedMutability = Some(mutability)
+      val maybePredictedMutability = Some(mutability)
 
-        val interfaceS =
-          InterfaceS(
-            codeLocation,
-            List(),
-            name,
-            mutability,
-            maybePredictedMutability,
-            identifyingRunes,
-            allRunes,
-            maybePredictedType,
-            isTemplate,
-            rulesS)
+      val internalMethodsS = internalMethodsP.map(FunctionScout.scoutInterfaceMember)
 
-        val methodsS = members.map(FunctionScout.scoutInterfaceMember)
+      val interfaceS =
+        InterfaceS(
+          codeLocation,
+          List(),
+          name,
+          mutability,
+          maybePredictedMutability,
+          identifyingRunes,
+          allRunes,
+          maybePredictedType,
+          isTemplate,
+          rulesS,
+          internalMethodsS)
 
-        (interfaceS, methodsS)
-      })
-    val interfacesS = interfacesAndMethods.map(_._1)
-    val methodsS = interfacesAndMethods.flatMap(_._2)
-    (interfacesS, methodsS)
+      interfaceS
+    })
   }
 
 

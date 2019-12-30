@@ -2,7 +2,7 @@ package net.verdagon.vale.hammer
 
 import net.verdagon.vale.metal._
 import net.verdagon.vale.{metal => m}
-import net.verdagon.vale.scout.CodeLocation
+import net.verdagon.vale.scout.CodeLocationS
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.vimpl
 import net.verdagon.von._

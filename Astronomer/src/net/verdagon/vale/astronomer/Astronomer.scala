@@ -41,22 +41,22 @@ case class Environment(
 }
 
 case class AstroutsBox(var astrouts: Astrouts) {
-  def getImpl(codeLocation: CodeLocation) = {
+  def getImpl(codeLocation: CodeLocationS) = {
     astrouts.impls.get(codeLocation)
   }
-  def getStruct(codeLocation: CodeLocation) = {
+  def getStruct(codeLocation: CodeLocationS) = {
     astrouts.structs.get(codeLocation)
   }
-  def getInterface(codeLocation: CodeLocation) = {
+  def getInterface(codeLocation: CodeLocationS) = {
     astrouts.interfaces.get(codeLocation)
   }
 }
 
 case class Astrouts(
-  structs: Map[CodeLocation, StructA],
-  interfaces: Map[CodeLocation, InterfaceA],
-  impls: Map[CodeLocation, ImplA],
-  functions: Map[CodeLocation, FunctionA])
+  structs: Map[CodeLocationS, StructA],
+  interfaces: Map[CodeLocationS, InterfaceA],
+  impls: Map[CodeLocationS, ImplA],
+  functions: Map[CodeLocationS, FunctionA])
 
 object Astronomer {
   val primitives =
@@ -203,7 +203,7 @@ object Astronomer {
   }
 
   def translateInterface(astrouts: AstroutsBox, env: Environment, interfaceS: InterfaceS): InterfaceA = {
-    val InterfaceS(interface1Id, namespace, name, mutability, maybePredictedMutability, identifyingRunes, allRunes, predictedTypeByRune, isTemplate, rules) = interfaceS
+    val InterfaceS(interface1Id, namespace, name, mutability, maybePredictedMutability, identifyingRunes, allRunes, predictedTypeByRune, isTemplate, rules, internalMethodsS) = interfaceS
 
     // predictedTypeByRune is used by the rule typer delegate to short-circuit infinite recursion
     // in types like List, see RTMHTPS.
@@ -227,6 +227,8 @@ object Astronomer {
         KindTemplataType
       }
 
+    val internalMethodsA = internalMethodsS.map(translateFunction(astrouts, env, _))
+
     val interfaceA =
       InterfaceA(
         interface1Id,
@@ -237,7 +239,8 @@ object Astronomer {
         tyype,
         identifyingRunes,
         conclusions.typeByRune,
-        rulesA)
+        rulesA,
+        internalMethodsA)
     interfaceA
   }
 

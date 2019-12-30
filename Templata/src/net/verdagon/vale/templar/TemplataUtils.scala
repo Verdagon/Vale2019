@@ -5,7 +5,7 @@ import net.verdagon.vale.templar.types.{FullName2, NamePart2}
 
 object simpleName {
   def apply(name: String): FullName2 = {
-    FullName2(List(NamePart2(name, Some(List()))))
+    FullName2(List(NamePart2(name, Some(List()), None, None)))
   }
   def unapply(fullName: FullName2): Option[String] = {
     fullName.steps.lastOption.map(_.humanName)

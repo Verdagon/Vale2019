@@ -8,7 +8,7 @@ import net.verdagon.vale.scout.patterns.AtomSP
 object NotEquals {
   val function =
     FunctionA(
-      CodeLocation("notEquals.stl.vale", 0, 0),
+      CodeLocationS("notEquals.stl.vale", 0, 0),
       "!=",
       List("!="),
       0,

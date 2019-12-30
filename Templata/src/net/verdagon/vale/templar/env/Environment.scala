@@ -138,7 +138,6 @@ object EnvironmentUtils {
           case InterfaceTemplata(_, _) => contexts.contains(TemplataLookupContext)
           case ArrayTemplateTemplata() => contexts.contains(TemplataLookupContext)
           case BooleanTemplata(_) => true
-          case ExternFunctionTemplata(_) => contexts.contains(ExpressionLookupContext)
           case FunctionTemplata(_, _) => contexts.contains(ExpressionLookupContext)
           case ImplTemplata(_, _) => contexts.contains(ExpressionLookupContext)
           case IntegerTemplata(_) => true
@@ -147,6 +146,8 @@ object EnvironmentUtils {
           case OwnershipTemplata(_) => contexts.contains(TemplataLookupContext)
           case PermissionTemplata(_) => contexts.contains(TemplataLookupContext)
           case VariabilityTemplata(_) => contexts.contains(TemplataLookupContext)
+          case ExternImplTemplata(_, _) => contexts.contains(TemplataLookupContext)
+          case ExternFunctionTemplata(_) => contexts.contains(ExpressionLookupContext)
         }
       }
     }

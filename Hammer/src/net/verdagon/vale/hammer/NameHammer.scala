@@ -2,7 +2,7 @@ package net.verdagon.vale.hammer
 
 import net.verdagon.vale.hinputs.Hinputs
 import net.verdagon.vale.metal._
-import net.verdagon.vale.scout.CodeLocation
+import net.verdagon.vale.scout.CodeLocationS
 import net.verdagon.vale.templar.env.{IEnvironment, NamespaceEnvironment}
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar.types._

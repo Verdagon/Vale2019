@@ -503,8 +503,8 @@ case class ConstructArray2(
     sizeExpr: ReferenceExpression2,
     generator: ReferenceExpression2) extends ReferenceExpression2 {
   generator.referend match {
-    case InterfaceRef2(FullName2(List(NamePart2("IFunction", Some(List(CoordTemplata(Coord(Share, Int2())), _)))))) =>
-    case _ => vfail("Generator has to be an IFunction<Int, T>")
+    case InterfaceRef2(FullName2(List(NamePart2("IFunction1", Some(List(_, CoordTemplata(Coord(Share, Int2())), _)), _, _)))) =>
+    case _ => vfail("Generator has to be an IFunction1<_, Int, T>")
   }
 
   override def resultRegister: ReferenceRegister2 = {

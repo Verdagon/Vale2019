@@ -20,7 +20,7 @@ object StructTemplarTemplateArgsLayer {
     structS: StructA,
     templateArgs: List[ITemplata]):
   (StructRef2) = {
-    val fullName = FullName2(env.fullName.steps :+ NamePart2(structS.name, Some(templateArgs)))
+    val fullName = FullName2(env.fullName.steps :+ NamePart2(structS.name, Some(templateArgs), None, None))
 
     temputs.structDeclared(fullName) match {
       case Some(structRef2) => {
@@ -76,7 +76,7 @@ object StructTemplarTemplateArgsLayer {
     interfaceS: InterfaceA,
     templateArgs: List[ITemplata]):
   (InterfaceRef2) = {
-    val fullName = FullName2(env.fullName.steps :+ NamePart2(interfaceS.name, Some(templateArgs)))
+    val fullName = FullName2(env.fullName.steps :+ NamePart2(interfaceS.name, Some(templateArgs), None, None))
 
     temputs.interfaceDeclared(fullName) match {
       case Some(interfaceRef2) => {
@@ -140,5 +140,28 @@ object StructTemplarTemplateArgsLayer {
   def makeSeqOrPackUnderstruct(env: NamespaceEnvironment, temputs: TemputsBox, memberTypes2: List[Coord], prefix: String):
   (StructRef2, Mutability) = {
     StructTemplarMiddle.makeSeqOrPackUnderstruct(env, temputs, memberTypes2, prefix)
+  }
+
+  // Makes an anonymous substruct of the given interface, with the given lambdas as its members.
+  def makeAnonymousSubstruct(
+    outerEnv: IEnvironment,
+    temputs: TemputsBox,
+    maybeConstructorOriginFunctionA: Option[FunctionA],
+    functionFullName: FullName2,
+    interfaceRef: InterfaceRef2,
+    lambdas: List[Coord]):
+  (StructRef2, Mutability, FunctionHeader2) = {
+    StructTemplarMiddle.makeAnonymousSubstruct(outerEnv, temputs, maybeConstructorOriginFunctionA, functionFullName, interfaceRef, lambdas)
+  }
+
+  // Makes an anonymous substruct of the given interface, which just forwards its method to the given prototype.
+  def prototypeToAnonymousSubstruct(
+    outerEnv: IEnvironment,
+    temputs: TemputsBox,
+    interfaceRef: InterfaceRef2,
+    prototype: Prototype2):
+  StructRef2 = {
+    StructTemplarMiddle.prototypeToAnonymousSubstruct(
+      outerEnv, temputs, interfaceRef, prototype)
   }
 }

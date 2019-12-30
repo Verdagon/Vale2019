@@ -38,8 +38,8 @@ object ImplTemplar {
       }
       case InferSolveSuccess(inferences) => {
         inferences.templatasByRune(interfaceKindRune) match {
-          case KindTemplata(interfaceKind @ InterfaceRef2(_)) => {
-            (Some(interfaceKind))
+          case KindTemplata(interfaceRef @ InterfaceRef2(_)) => {
+            (Some(interfaceRef))
           }
           case it @ InterfaceTemplata(_, _) => {
             val interfaceRef =
@@ -61,16 +61,10 @@ object ImplTemplar {
         case ir @ InterfaceRef2(_) => vassertSome(temputs.envByInterfaceRef.get(ir))
       }
     citizenEnv.getAllTemplatasWithName(Templar.IMPL_NAME, Set(TemplataLookupContext, ExpressionLookupContext))
-      .collect({
-        case i @ ImplTemplata(_, _) => i
-        case _ => vwat()
-      })
-      .foldLeft((List[InterfaceRef2]()))({
-        case ((previousResults), ImplTemplata(implEnv, impl)) => {
-          val newResults =
-            getMaybeImplementedInterface(implEnv, temputs, childCitizenRef, impl);
-          (previousResults ++ newResults)
-        }
+      .flatMap({
+        case ImplTemplata(implEnv, impl) => getMaybeImplementedInterface(implEnv, temputs, childCitizenRef, impl).toList
+        case ExternImplTemplata(structRef, interfaceRef) => if (structRef == childCitizenRef) List(interfaceRef) else List()
+        case other => vwat(other.toString)
       })
   }
 

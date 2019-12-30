@@ -31,6 +31,10 @@ private[infer] trait IInfererEvaluatorDelegate[Env, State] {
   def getMemberCoords(state: State, structRef: StructRef2): List[Coord]
 
   def citizenIsFromTemplate(state: State, citizen: CitizenRef2, template: ITemplata): (Boolean)
+
+  def structIsClosure(state: State, structRef: StructRef2): Boolean
+
+  def getSimpleInterfaceMethod(state: State, interfaceRef: InterfaceRef2): Prototype2
 }
 
 // Given enough user specified template params and param inputs, we should be able to
@@ -86,7 +90,15 @@ class InfererEvaluator[Env, State](
         case None => List()
         case Some(paramInputs) => {
           if (paramAtoms.size != paramInputs.size) {
-            return (InferSolveFailure(typeByRune, directInputs, maybeParamInputs, inferences.inferences, "Expected " + paramAtoms.size + " args but got " + paramInputs.size, List()))
+            return InferSolveFailure(
+              typeByRune,
+              directInputs,
+              maybeParamInputs,
+              inferences.inferences,
+              "Expected " + paramAtoms.size + " args but got " + paramInputs.size + "\n" +
+              "Expected:\n" + paramAtoms.zipWithIndex.map({ case (paramAtom, i) => "  " + i + " " + paramAtom }).mkString("\n") + "\n" +
+              "Got:\n" + paramInputs.zipWithIndex.map({ case (paramInput, i) => "  " + i + " " + paramInput }).mkString("\n"),
+              List())
           }
           paramAtoms.zip(paramInputs).zipWithIndex.flatMap({
             case (((paramAtom, paramFilterInstance), paramIndex)) => {
@@ -297,7 +309,7 @@ class InfererEvaluator[Env, State](
                     alternateUniverseInferencesBox.addConclusion(rune, possibility)
                     solveUntilSettled(env, state, rules, typeByRune, alternateUniverseInferencesBox) match {
                       case (isf @ InferEvaluateConflict(_, _, _)) => {
-                        println("it didnt work!")
+                        println("it didnt work! reason: " + isf)
                         (isf :: previousFailures, None)
                       }
                       case (iss @ InferEvaluateSuccess(_, _)) => {
@@ -1019,12 +1031,20 @@ class InfererEvaluator[Env, State](
           delegate.lookupMemberTypes(state, kind, expectedNumMembers)
         }
 
-        override def citizenIsFromTemplate(state: State, citizen: CitizenRef2, template: ITemplata): (Boolean) = {
+        override def citizenIsFromTemplate(state: State, citizen: CitizenRef2, template: ITemplata): Boolean = {
           delegate.citizenIsFromTemplate(state, citizen, template)
         }
 
-        override def getAncestorInterfaces(temputs: State, descendantCitizenRef: CitizenRef2): (Set[InterfaceRef2]) = {
+        override def getAncestorInterfaces(temputs: State, descendantCitizenRef: CitizenRef2): Set[InterfaceRef2] = {
           delegate.getAncestorInterfaces(temputs, descendantCitizenRef)
+        }
+
+        override def structIsClosure(state: State, structRef: StructRef2): Boolean = {
+          delegate.structIsClosure(state, structRef)
+        }
+
+        def getSimpleInterfaceMethod(state: State, interfaceRef: InterfaceRef2): Prototype2 = {
+          delegate.getSimpleInterfaceMethod(state, interfaceRef)
         }
       })
   }

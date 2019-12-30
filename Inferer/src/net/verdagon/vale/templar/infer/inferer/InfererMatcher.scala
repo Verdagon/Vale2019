@@ -29,10 +29,13 @@ trait IInfererMatcherDelegate[Env, State] {
     ancestorInterfaceRef: InterfaceRef2):
   (Option[Int])
 
-  def citizenIsFromTemplate(state: State, citizen: CitizenRef2, template: ITemplata): (Boolean)
+  def citizenIsFromTemplate(state: State, citizen: CitizenRef2, template: ITemplata): Boolean
 
-  def getAncestorInterfaces(temputs: State, descendantCitizenRef: CitizenRef2):
-  (Set[InterfaceRef2])
+  def getAncestorInterfaces(temputs: State, descendantCitizenRef: CitizenRef2): Set[InterfaceRef2]
+
+  def structIsClosure(state: State, structRef: StructRef2): Boolean
+
+  def getSimpleInterfaceMethod(state: State, interfaceRef: InterfaceRef2): Prototype2
 }
 
 class InfererMatcher[Env, State](
@@ -193,7 +196,7 @@ class InfererMatcher[Env, State](
     inferences: InferencesBox,
     call: CallAT,
     actualCitizen: CitizenRef2):
-  (IInferMatchResult) = {
+  IInferMatchResult = {
     evaluate(env, state, inferences, TemplexAR(call.template)) match {
       case (iec @ InferEvaluateConflict(_, _, _)) => return (InferMatchConflict(inferences.inferences, "Couldn't evaluate template!", List(iec)))
       case (InferEvaluateUnknown(_)) => {
@@ -203,29 +206,28 @@ class InfererMatcher[Env, State](
       case (InferEvaluateSuccess(callTemplateTemplata, templateDeeplySatisfied)) => {
         // debt: TEST THIS!
 
-        delegate.citizenIsFromTemplate(state, actualCitizen, callTemplateTemplata) match {
-          case (false) => return (InferMatchConflict(inferences.inferences, "Given citizen didn't come from expected template!\nCitizen: " + actualCitizen + "\nTemplate: " + callTemplateTemplata, List()))
-          case (true) => state
-        }
+        if (delegate.citizenIsFromTemplate(state, actualCitizen, callTemplateTemplata)) {
+          val expectedArgs = call.args
+          if (actualCitizen.fullName.steps.size > 1) {
+            vimpl()
+          }
+          val actualArgs = actualCitizen.fullName.steps.last.templateArgs.get
 
-        val expectedArgs = call.args
-        if (actualCitizen.fullName.steps.size > 1) {
-          vimpl()
-        }
-        val actualArgs = actualCitizen.fullName.steps.last.templateArgs.get
-
-        // Check to see that the actual template args match the expected template args
-        val argsDeeplySatisfied =
-          expectedArgs.zip(actualArgs).foldLeft((true))({
-            case ((deeplySatisfiedSoFar), (expectedArg, actualArg)) => {
-              matchTemplataAgainstTemplexAR(env, state, inferences, actualArg, expectedArg) match {
-                case (imc @ InferMatchConflict(_, _, _)) => return (imc)
-                case (InferMatchSuccess(deeplySatisfied)) => (deeplySatisfiedSoFar && deeplySatisfied)
+          // Check to see that the actual template args match the expected template args
+          val argsDeeplySatisfied =
+            expectedArgs.zip(actualArgs).foldLeft((true))({
+              case ((deeplySatisfiedSoFar), (expectedArg, actualArg)) => {
+                matchTemplataAgainstTemplexAR(env, state, inferences, actualArg, expectedArg) match {
+                  case (imc @ InferMatchConflict(_, _, _)) => return (imc)
+                  case (InferMatchSuccess(deeplySatisfied)) => (deeplySatisfiedSoFar && deeplySatisfied)
+                }
               }
-            }
-          })
-        // If the function is the same, and the args are the same... it's the same.
-        (InferMatchSuccess(templateDeeplySatisfied && argsDeeplySatisfied))
+            })
+          // If the function is the same, and the args are the same... it's the same.
+          InferMatchSuccess(templateDeeplySatisfied && argsDeeplySatisfied)
+        } else {
+          return InferMatchConflict(inferences.inferences, "Given citizen didn't come from expected template!\nCitizen: " + actualCitizen + "\nTemplate: " + callTemplateTemplata, List())
+        }
       }
     }
   }
@@ -348,39 +350,103 @@ class InfererMatcher[Env, State](
           return (InferMatchConflict(inferences.inferences, s"Doesn't match type! Expected ${expectedType} but received ${actualTemplata}", List()))
         }
         matchTemplataAgainstRuneSP(env, state, inferences, actualTemplata, rune, expectedType) match {
-          case (imc @ InferMatchConflict(_, _, _)) => return (imc)
-          case (imc @ InferMatchSuccess(_)) => (imc)
+          case imc @ InferMatchConflict(_, _, _) => return imc
+          case ims @ InferMatchSuccess(_) => ims
         }
       }
-      case (ct @ CallAT(_, _, _), CoordTemplata(Coord(_, cit @ StructRef2(_)))) => {
+      case (ct @ CallAT(_, _, _), CoordTemplata(Coord(_, structRef @ StructRef2(_)))) => {
         vassert(instance.tyype == ct.resultType)
-        matchCitizenAgainstCallTT(
-          env, state, inferences, ct, cit)
+
+//        if (delegate.structIsClosure(state, structRef)) {
+//          // If it's a closure, see if we can conform it to the receiving interface.
+//
+//          // We can make this smarter later, but for now, require that we have enough information
+//          // up-front to completely know what the receiving thing is.
+//          evaluate(env, state, inferences, TemplexAR(ct)) match {
+//            case InferEvaluateSuccess(templata, deeplySatisfied) => {
+//              vassert(deeplySatisfied)
+//              templata match {
+//                case CoordTemplata(coord) => vimpl()
+//                case _ => vwat()
+//              }
+//            }
+//            case InferEvaluateUnknown(_) => {
+//              vimpl("Shortcalling inferring not implemented yet!")
+//            }
+//            case iec @ InferEvaluateConflict(_, _, _) => InferMatchConflict(inferences.inferences, "Conflict in shortcall", List(iec))
+//          }
+//        } else {
+          // If its not a closure, then there's nothing special to do here.
+
+          matchCitizenAgainstCallTT(env, state, inferences, ct, structRef)
+//        }
+
+
+        // this will get us... the FunctionA for the interface.
+        //              val interfaceMethod =
+        //                delegate.getSimpleInterfaceMethod(state, callTemplateTemplata)
+        // Now let's make a little sub-world to try and figure out its runes.
+        // We know one of its rune parameters so we can supply the int there...
+        // Then we'll realize we know all the function parameters, but not the return
+        // type, so we'll try evaluating the function.
+        // We'll then get the return type of the function, and then set the rune.
+        // Then we'll know the full IFunction1, and can proceed to glory.
       }
       case (ct @ CallAT(_, _, _), CoordTemplata(Coord(_, cit @ InterfaceRef2(_)))) => {
         vassert(instance.tyype == ct.resultType)
-        matchCitizenAgainstCallTT(
-          env, state, inferences, ct, cit)
+        matchCitizenAgainstCallTT(env, state, inferences, ct, cit)
       }
-      case (ct @ CallAT(_, _, _), KindTemplata(cit @ StructRef2(_))) => {
+      case (ct @ CallAT(_, _, _), KindTemplata(structRef @ StructRef2(_))) => {
         vassert(instance.tyype == ct.resultType)
-        matchCitizenAgainstCallTT(
-          env, state, inferences, ct, cit)
+
+//        if (delegate.structIsClosure(state, structRef)) {
+//          // If it's a closure, see if we can conform it to the receiving interface.
+//
+//          // We can make this smarter later, but for now, require that we have enough information
+//          // up-front to completely know what the receiving thing is.
+//          evaluate(env, state, inferences, TemplexAR(ct)) match {
+//            case InferEvaluateSuccess(templata, deeplySatisfied) => {
+//              vassert(deeplySatisfied)
+//              templata match {
+//                case CoordTemplata(coord) => vimpl()
+//                case _ => vwat()
+//              }
+//            }
+//            case InferEvaluateUnknown(_) => {
+//              vimpl("Shortcalling inferring not implemented yet!")
+//            }
+//            case iec @ InferEvaluateConflict(_, _, _) => InferMatchConflict(inferences.inferences, "Conflict in shortcall", List(iec))
+//          }
+//        } else {
+          // If its not a closure, then there's nothing special to do here.
+
+          matchCitizenAgainstCallTT(env, state, inferences, ct, structRef)
+//        }
+
+
+        // this will get us... the FunctionA for the interface.
+        //              val interfaceMethod =
+        //                delegate.getSimpleInterfaceMethod(state, callTemplateTemplata)
+        // Now let's make a little sub-world to try and figure out its runes.
+        // We know one of its rune parameters so we can supply the int there...
+        // Then we'll realize we know all the function parameters, but not the return
+        // type, so we'll try evaluating the function.
+        // We'll then get the return type of the function, and then set the rune.
+        // Then we'll know the full IFunction1, and can proceed to glory.
       }
       case (ct @ CallAT(_, _, _), KindTemplata(cit @ InterfaceRef2(_))) => {
         vassert(instance.tyype == ct.resultType)
-        matchCitizenAgainstCallTT(
-          env, state, inferences, ct, cit)
+        matchCitizenAgainstCallTT(env, state, inferences, ct, cit)
       }
       case (CallAT(expectedTemplate, expectedArgs, resultType), KindTemplata(UnknownSizeArrayT2(RawArrayT2(elementArg,mutability)))) => {
         vassert(instance.tyype == resultType)
         matchArrayAgainstCallTT(
           env, state, inferences, expectedTemplate, expectedArgs, List(MutabilityTemplata(mutability), CoordTemplata(elementArg)))
       }
-      case (CallAT(expectedTemplate, expectedArgs, resultType), KindTemplata(ArraySequenceT2(size, RawArrayT2(elementArg,mutability)))) => {
+      case (CallAT(_, _, _), KindTemplata(ArraySequenceT2(_, RawArrayT2(_, _)))) => {
         return (InferMatchConflict(inferences.inferences, "Can't match array sequence against anything, no such rule exists", List()))
       }
-      case (CallAT(expectedTemplate, expectedArgs, resultType), CoordTemplata(Coord(_, ArraySequenceT2(_, _)))) => {
+      case (CallAT(_, _, _), CoordTemplata(Coord(_, ArraySequenceT2(_, _)))) => {
         return (InferMatchConflict(inferences.inferences, "Can't match array sequence against anything, no such rule exists", List()))
       }
       case (CallAT(expectedTemplate, expectedArgs, resultType), CoordTemplata(Coord(instanceOwnership, UnknownSizeArrayT2(RawArrayT2(elementArg,mutability))))) => {
