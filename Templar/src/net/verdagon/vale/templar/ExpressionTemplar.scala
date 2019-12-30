@@ -773,10 +773,9 @@ object ExpressionTemplar {
     val closureCoord =
       TemplataTemplar.pointifyReferend(temputs, closureStructRef2, Own)
 
-    val constructExpr2 =
-      makeClosureStructConstructExpression(temputs, fate, closureStructRef2)
+    val constructExpr2 = makeClosureStructConstructExpression(temputs, fate, closureStructRef2)
+    vassert(constructExpr2.resultRegister.reference == closureCoord)
     // The result of a constructor is always an own or a share.
-    val resultExpr2 = TemplarReinterpret2(constructExpr2, closureCoord)
 
     // The below code was here, but i see no reason we need to put it in a temporary and lend it out.
     // shouldnt this be done automatically if we try to call the function which accepts a borrow?
@@ -789,7 +788,7 @@ object ExpressionTemplar {
 //    val deferExpr2 = Defer2(letExpr2, dropExpr)
 //    (temputs, fate, deferExpr2)
 
-    (resultExpr2)
+    constructExpr2
   }
 
   def getBorrowOwnership(temputs: TemputsBox, referend: Kind):

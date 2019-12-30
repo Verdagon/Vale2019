@@ -470,6 +470,8 @@ case class Tuple2(
 case class TemplarReinterpret2(
     expr: ReferenceExpression2,
     resultReference: Coord) extends ReferenceExpression2 {
+  vassert(expr.resultRegister.reference != resultReference)
+
   override def resultRegister = ReferenceRegister2(resultReference)
 
   // Unless it's a Never...

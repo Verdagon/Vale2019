@@ -35,13 +35,8 @@ object ExpressionVivem {
         // Do nothing, a void can never exist
         NodeContinue(None)
       }
-      case ReinterpretH(_, sourceRegister, resultType) => {
-        val ref =
-          heap.takeReferenceFromRegister(
-            RegisterId(blockId, sourceRegister.registerId),
-            sourceRegister.expectedType)
-        vassert(ref.seenAsCoord.hamut == resultType)
-        heap.setReferenceRegister(registerId, ref)
+      case UnreachableH(_) => {
+        vfail()
         NodeContinue(Some(registerId))
       }
       case ConstantI64H(_, value) => {

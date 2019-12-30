@@ -286,14 +286,13 @@ object ExpressionHammer {
         val (innerExprResultLine, deferreds) =
           translate(hinputs, hamuts, locals, stackHeight, nodesByLine, innerExpr);
 
-        vcurious(innerExprResultTypeH == resultTypeH)
+        vcurious(innerExprResultTypeH.kind == NeverH() || resultTypeH.kind == NeverH())
+//        vcurious(innerExprResultTypeH == resultTypeH)
 
         val resultNode =
           nodesByLine.addNode(
-            ReinterpretH(
-              nodesByLine.nextId(),
-              innerExprResultLine.get,
-              resultTypeH))
+            UnreachableH(
+              nodesByLine.nextId()))
         val access = RegisterAccessH(resultNode.registerId, resultTypeH)
 
         (Some(access), deferreds)

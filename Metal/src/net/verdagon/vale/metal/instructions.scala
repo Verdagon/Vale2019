@@ -141,13 +141,9 @@ case class InterfaceToInterfaceUpcastH(
   def resultRef = ReferenceH(sourceRegister.expectedType.ownership, targetInterfaceRef)
 }
 
-// TODO: Get rid of this, reinterprets should only be used between hammer-equivalent
-// types, which means that this shouldnt be a hammer instruction.
-case class ReinterpretH(
-  registerId: String,
-  refRegister: RegisterAccessH[ReferendH],
-  resultType: ReferenceH[ReferendH],
-) extends NodeH
+case class UnreachableH(registerId: String) extends NodeH {
+  def resultType = ReferenceH(Raw, NeverH())
+}
 
 // Takes a reference from the given "source" register, and puts it into an *existing*
 // local variable.

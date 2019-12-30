@@ -210,8 +210,8 @@ object CallTemplar {
 
     val mutability = Templar.getMutability(temputs, citizenRef)
     val ownership = if (mutability == Mutable) Borrow else Share
-    val actualCallableExpr2 =
-      TemplarReinterpret2(givenCallableBorrowExpr2, Coord(ownership, citizenRef))
+    vassert(givenCallableBorrowExpr2.resultRegister.reference == Coord(ownership, citizenRef))
+    val actualCallableExpr2 = givenCallableBorrowExpr2
 
     val actualArgsExprs2 = actualCallableExpr2 :: givenArgsExprs2
 
