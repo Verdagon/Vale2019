@@ -219,48 +219,50 @@ object ExpressionVivem {
         heap.removeLocal(varAddress, expectedType)
         NodeContinue(Some(registerId))
       }
-      case CallH(_, functionRefH, argsRegisters) => {
-        val externFunction = FunctionVivem.getExternFunction(programH, functionRefH)
-        val argReferences =
-          heap.takeReferencesFromRegistersInReverse(blockId, argsRegisters)
-
-        val maybeResultReference =
-          externFunction(
-            new AdapterForExterns(
-              programH, heap, blockId, stdin, stdout,
-              (reference) => {
-                dropReferenceIfNonOwning(programH, heap, stdout, stdin, blockId, reference)
-              }),
-            argReferences.toVector)
-
-        // Special case for externs; externs arent allowed to change ref counts at all
-//        argReferences.foreach(heap.maybeDeallocate)
-
-        (functionRefH.returnType.kind, maybeResultReference) match {
-          case (VoidH(), None) => NodeContinue(None)
-          case (_, Some(resultReference)) => {
-            heap.setReferenceRegisterFromReturn(registerId, resultReference)
-            NodeContinue(Some(registerId))
-          }
-        }
-      }
       case CallH(_, functionRef, argsRegisters) => {
-        val argReferences = heap.takeReferencesFromRegistersInReverse(blockId, argsRegisters)
-        heap.vivemDout.println()
-        heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (call)")
+        if (programH.functions.find(_.prototype == functionRef).get.isExtern) {
 
-        val function =
-          programH.functions.find(_.prototype == functionRef).get
+          val externFunction = FunctionVivem.getExternFunction(programH, functionRef)
+          val argReferences =
+            heap.takeReferencesFromRegistersInReverse(blockId, argsRegisters)
 
-        val maybeReturnReference =
-          FunctionVivem.executeFunction(
-            programH, stdin, stdout, heap, argReferences.toVector, function)
-        heap.vivemDout.print("  " * blockId.blockHeight + "Getting return reference")
-        (functionRef.returnType.kind, maybeReturnReference) match {
-          case (VoidH(), None) => NodeContinue(None)
-          case (_, Some(returnReference)) => {
-            heap.setReferenceRegisterFromReturn(registerId, returnReference)
-            NodeContinue(Some(registerId))
+          val maybeResultReference =
+            externFunction(
+              new AdapterForExterns(
+                programH, heap, blockId, stdin, stdout,
+                (reference) => {
+                  dropReferenceIfNonOwning(programH, heap, stdout, stdin, blockId, reference)
+                }),
+              argReferences.toVector)
+
+          // Special case for externs; externs arent allowed to change ref counts at all
+          //        argReferences.foreach(heap.maybeDeallocate)
+
+          (functionRef.returnType.kind, maybeResultReference) match {
+            case (VoidH(), None) => NodeContinue(None)
+            case (_, Some(resultReference)) => {
+              heap.setReferenceRegisterFromReturn(registerId, resultReference)
+              NodeContinue(Some(registerId))
+            }
+          }
+        } else {
+          val argReferences = heap.takeReferencesFromRegistersInReverse(blockId, argsRegisters)
+          heap.vivemDout.println()
+          heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (call)")
+
+          val function =
+            programH.functions.find(_.prototype == functionRef).get
+
+          val maybeReturnReference =
+            FunctionVivem.executeFunction(
+              programH, stdin, stdout, heap, argReferences.toVector, function)
+          heap.vivemDout.print("  " * blockId.blockHeight + "Getting return reference")
+          (functionRef.returnType.kind, maybeReturnReference) match {
+            case (VoidH(), None) => NodeContinue(None)
+            case (_, Some(returnReference)) => {
+              heap.setReferenceRegisterFromReturn(registerId, returnReference)
+              NodeContinue(Some(registerId))
+            }
           }
         }
       }
@@ -379,7 +381,7 @@ object ExpressionVivem {
         heap.aliasIntoRegister(registerId, targetReference, siu.resultRef, ownership)
         NodeContinue(Some(registerId))
       }
-      case icH @ InterfaceCallH(_, argsRegisters, virtualParamIndex, interfaceRefH, interfaceId, indexInEdge, functionType) => {
+      case icH @ InterfaceCallH(_, argsRegisters, virtualParamIndex, interfaceRefH, indexInEdge, functionType) => {
 
         // undeviewed = not deviewed = the virtual param is still a view and we want it to
         // be a struct.
@@ -468,7 +470,7 @@ object ExpressionVivem {
 
           val generatorPrototypeH =
             PrototypeH(
-              FullNameH(List(NamePartH("__call", None))),
+              FullNameH(List(NamePartH("__call", None, None, None))),
               List(generatorInterfaceRegister.expectedType, ReferenceH(Share, IntH())),
               arrayRefType.kind.rawArray.elementType)
 
@@ -540,7 +542,7 @@ object ExpressionVivem {
 
           val consumerPrototypeH =
             PrototypeH(
-              FullNameH(List(NamePartH("__call", None))),
+              FullNameH(List(NamePartH("__call", None, None, None))),
               List(consumerInterfaceRegister.expectedType, ReferenceH(Share, IntH())),
               arrayRegister.expectedType.kind.rawArray.elementType)
 
@@ -596,7 +598,7 @@ object ExpressionVivem {
 
           val consumerPrototypeH =
             PrototypeH(
-              FullNameH(List(NamePartH("__call", None))),
+              FullNameH(List(NamePartH("__call", None, None, None))),
               List(consumerInterfaceRegister.expectedType, ReferenceH(Share, IntH())),
               arrayRegister.expectedType.kind.rawArray.elementType)
 
@@ -711,12 +713,14 @@ object ExpressionVivem {
       reference.ownership match {
         case Share => {
           reference.actualKind.hamut match {
-            case InterfaceRefH(_, _) => {
+            case InterfaceRefH(_) => {
               // We don't expect this because we asked for the actualKind, not the seenAsKind.
               vwat()
             }
-            case IntH() | StrH() | BoolH() | FloatH() => List()
-            case StructRefH(_, _) => {
+            case IntH() | StrH() | BoolH() | FloatH() => {
+              heap.deallocate(reference)
+            }
+            case StructRefH(_) => {
               // Deallocates the thing.
               val references = heap.destructure(reference)
               references.foreach(dropReference(programH, heap, stdout, stdin, blockId, _))

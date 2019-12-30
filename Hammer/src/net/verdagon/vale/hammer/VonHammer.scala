@@ -23,7 +23,7 @@ object VonHammer {
   }
 
   def vonifyStructRef(ref: StructRefH): IVonData = {
-    val StructRefH(_, fullName) = ref
+    val StructRefH(fullName) = ref
 
     VonObject(
       "StructId",
@@ -33,7 +33,7 @@ object VonHammer {
   }
 
   def vonifyInterfaceRef(ref: InterfaceRefH): IVonData = {
-    val InterfaceRefH(_, fullName) = ref
+    val InterfaceRefH(fullName) = ref
 
     VonObject(
       "InterfaceId",
@@ -43,7 +43,7 @@ object VonHammer {
   }
 
   def vonfiyInterface(interface: InterfaceDefinitionH): IVonData = {
-    val InterfaceDefinitionH(_, fullName, mutability, superInterfaces, prototypes) = interface
+    val InterfaceDefinitionH(fullName, mutability, superInterfaces, prototypes) = interface
 
     VonObject(
       "Interface",
@@ -56,7 +56,7 @@ object VonHammer {
   }
 
   def vonfiyStruct(struct: StructDefinitionH): IVonData = {
-    val StructDefinitionH(_, fullName, mutability, edges, members) = struct
+    val StructDefinitionH(fullName, mutability, edges, members) = struct
 
     VonObject(
       "Struct",
@@ -98,7 +98,7 @@ object VonHammer {
   }
 
   def vonifyPrototype(prototype: PrototypeH): IVonData = {
-    val PrototypeH(_, fullName, params, returnType) = prototype
+    val PrototypeH(fullName, params, returnType) = prototype
 
     VonObject(
       "Prototype",
@@ -167,8 +167,8 @@ object VonHammer {
       case StrH() => VonObject("StrH", None, Vector())
       case VoidH() => VonObject("VoidH", None, Vector())
       case FloatH() => VonObject("FloatH", None, Vector())
-      case ir @ InterfaceRefH(_, _) => vonifyInterfaceRef(ir)
-      case sr @ StructRefH(_, _) => vonifyStructRef(sr)
+      case ir @ InterfaceRefH(_) => vonifyInterfaceRef(ir)
+      case sr @ StructRefH(_) => vonifyStructRef(sr)
       case UnknownSizeArrayTH(rawArray) => {
         VonObject(
           "UnknownSizeArray",
@@ -356,7 +356,7 @@ object VonHammer {
             VonMember(None, Some("function"), vonifyPrototype(functionRegister)),
             VonMember(None, Some("argRegisters"), VonArray(None, argsRegisters.toVector.map(vonifyRegisterAccess)))))
       }
-      case InterfaceCallH(registerId, argsRegisters, virtualParamIndex, interfaceRefH, interfaceId, indexInEdge, functionType) => {
+      case InterfaceCallH(registerId, argsRegisters, virtualParamIndex, interfaceRefH, indexInEdge, functionType) => {
         vimpl()
       }
       case IfH(registerId, conditionBlock, thenBlock, elseBlock) => {

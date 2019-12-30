@@ -96,5 +96,14 @@ case class PrototypeH(
   returnType: ReferenceH[ReferendH]
 )
 
-case class NamePartH(humanName: String, maybeTemplateArgs: Option[List[ITemplataH]])
+case class NamePartH(
+  humanName: String,
+  maybeTemplateArgs: Option[List[ITemplataH]],
+  parameters: Option[List[ReferenceH[ReferendH]]],
+  codeLocation: Option[CodeLocationH])
 case class FullNameH(parts: List[NamePartH])
+
+case class CodeLocationH(
+  file: String,
+  line: Int,
+  char: Int)

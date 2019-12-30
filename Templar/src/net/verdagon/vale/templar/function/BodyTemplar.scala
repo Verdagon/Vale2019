@@ -109,7 +109,7 @@ object BodyTemplar {
 
     funcOuterEnv.addScoutedLocals(body1.block.locals)
 
-    val (letExprs2) =
+    val letExprs2 =
       evaluateLets(funcOuterEnv, temputs, params1, params2);
 
     val (postLetUnresultifiedUndestructedExpressions, returnsFromInside) =
@@ -120,10 +120,10 @@ object BodyTemplar {
     val (undestructedExpressions, maybeResultLocalVariable) =
       BlockTemplar.resultifyExpressions(funcOuterEnv, unresultifiedUndestructedExpressions)
 
-    val (expressions) =
+    val expressions =
       BlockTemplar.unletUnmovedVariablesIntroducedSince(temputs, startingFuncOuterEnv, funcOuterEnv, maybeResultLocalVariable, undestructedExpressions)
 
-    val (expressionsWithResult) =
+    val expressionsWithResult =
       BlockTemplar.maybeAddUnlet(funcOuterEnv, expressions, maybeResultLocalVariable)
 
     if (isDestructor) {
@@ -152,7 +152,7 @@ object BodyTemplar {
   (List[ReferenceExpression2]) = {
     val paramLookups2 =
       params2.zipWithIndex.map({ case (p, index) => ArgLookup2(index, p.tyype) })
-    val (letExprs2) =
+    val letExprs2 =
       PatternTemplar.nonCheckingTranslateList(
         temputs, fate, params1.map(_.pattern), paramLookups2);
 

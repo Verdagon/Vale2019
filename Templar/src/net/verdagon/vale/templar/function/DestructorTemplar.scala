@@ -116,7 +116,7 @@ object DestructorTemplar {
       temputs: TemputsBox,
       undestructedExpr2: ReferenceExpression2):
   (ReferenceExpression2) = {
-    val (resultExpr2) =
+    val resultExpr2 =
       undestructedExpr2.resultRegister.reference match {
         case Coord(Raw, _) => {
           undestructedExpr2.resultRegister.reference.referend match {
@@ -237,10 +237,10 @@ object DestructorTemplar {
       })
 
     val destroyedUnletStruct = Destructure2(structArgument, structRef, memberLocalVariables)
-    val (destructMemberExprs) =
+    val destructMemberExprs =
       memberLocalVariables.map({
         case (variable) => {
-          val (destructMemberExpr) = drop(innerEnv, temputs, Unlet2(variable))
+          val destructMemberExpr = drop(innerEnv, temputs, Unlet2(variable))
           destructMemberExpr
         }
       })

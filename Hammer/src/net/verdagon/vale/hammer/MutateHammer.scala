@@ -1,6 +1,6 @@
 package net.verdagon.vale.hammer
 
-import net.verdagon.vale.hammer.ExpressionHammer.{addNode, newId, translate, translateDeferreds}
+import net.verdagon.vale.hammer.ExpressionHammer.{ translate, translateDeferreds}
 import net.verdagon.vale.hinputs.Hinputs
 import net.verdagon.vale.metal.{Borrow => _, Variability => _, _}
 import net.verdagon.vale.{metal => m}
@@ -13,117 +13,115 @@ object MutateHammer {
 
   def translateMutate(
       hinputs: Hinputs,
-      hamuts0: Hamuts,
-      locals0: Locals,
-      stackHeight0: StackHeight,
-      nodesByLine0: Vector[NodeH],
+      hamuts: HamutsBox,
+      locals: LocalsBox,
+      stackHeight: StackHeightBox,
+      nodesByLine: NodesBox,
       mutate2: Mutate2):
-  (Hamuts, Locals, StackHeight, Vector[NodeH], RegisterAccessH[ReferendH]) = {
+  (RegisterAccessH[ReferendH]) = {
     val Mutate2(destinationExpr2, sourceExpr2) = mutate2
 
-    val (hamuts1, locals1, stackHeight1, nodesByLine1, Some(sourceExprResultLine), sourceDeferreds) =
-      translate(hinputs, hamuts0, locals0, stackHeight0, nodesByLine0, sourceExpr2);
-    val (hamuts2, sourceResultPointerTypeH) =
-      TypeHammer.translateReference(hinputs, hamuts1, sourceExpr2.resultRegister.reference)
+    val (Some(sourceExprResultLine), sourceDeferreds) =
+      translate(hinputs, hamuts, locals, stackHeight, nodesByLine, sourceExpr2);
+    val (sourceResultPointerTypeH) =
+      TypeHammer.translateReference(hinputs, hamuts, sourceExpr2.resultRegister.reference)
 
-    val (hamuts5, locals5, stackHeight2, nodesByLine5, oldValueAccess, destinationDeferreds) =
+    val (oldValueAccess, destinationDeferreds) =
       destinationExpr2 match {
         case LocalLookup2(ReferenceLocalVariable2(varId, variability, reference), varType2) => {
-          translateMundaneLocalMutate(hamuts2, locals1, stackHeight1, nodesByLine1, sourceExprResultLine, varId)
+          translateMundaneLocalMutate(hamuts, locals, stackHeight, nodesByLine, sourceExprResultLine, varId)
         }
         case LocalLookup2(AddressibleLocalVariable2(varId, variability, reference), varType2) => {
-          translateAddressibleLocalMutate(hinputs, hamuts2, locals1, stackHeight1, nodesByLine1, sourceExprResultLine, sourceResultPointerTypeH, varId, variability, reference)
+          translateAddressibleLocalMutate(hinputs, hamuts, locals, stackHeight, nodesByLine, sourceExprResultLine, sourceResultPointerTypeH, varId, variability, reference)
         }
         case ReferenceMemberLookup2(structExpr2, memberName, memberType2) => {
-          translateMundaneMemberMutate(hinputs, hamuts2, locals1, stackHeight1, nodesByLine1, sourceExprResultLine, structExpr2, memberName)
+          translateMundaneMemberMutate(hinputs, hamuts, locals, stackHeight, nodesByLine, sourceExprResultLine, structExpr2, memberName)
         }
         case AddressMemberLookup2(structExpr2, memberName, varName, memberType2) => {
-          translateAddressibleMemberMutate(hinputs, hamuts2, locals1, stackHeight1, nodesByLine1, sourceExprResultLine, structExpr2, memberName)
+          translateAddressibleMemberMutate(hinputs, hamuts, locals, stackHeight, nodesByLine, sourceExprResultLine, structExpr2, memberName)
         }
         case ArraySequenceLookup2(arrayExpr2, arrayType, indexExpr2) => {
-          translateMundaneKnownSizeArrayMutate(hinputs, hamuts2, locals1, stackHeight1, nodesByLine1, sourceExprResultLine, arrayExpr2, indexExpr2)
+          translateMundaneKnownSizeArrayMutate(hinputs, hamuts, locals, stackHeight, nodesByLine, sourceExprResultLine, arrayExpr2, indexExpr2)
         }
         case UnknownSizeArrayLookup2(arrayExpr2, arrayType, indexExpr2) => {
-          translateMundaneUnknownSizeArrayMutate(hinputs, hamuts2, locals1, stackHeight1, nodesByLine1, sourceExprResultLine, arrayExpr2, indexExpr2)
+          translateMundaneUnknownSizeArrayMutate(hinputs, hamuts, locals, stackHeight, nodesByLine, sourceExprResultLine, arrayExpr2, indexExpr2)
         }
       }
 
-    val (hamuts6, locals6, stackHeight3, nodesByLine6) =
-      translateDeferreds(hinputs, hamuts5, locals5, stackHeight2, nodesByLine5, sourceDeferreds ++ destinationDeferreds)
 
-    (hamuts6, locals6, stackHeight3, nodesByLine6, oldValueAccess)
+      translateDeferreds(hinputs, hamuts, locals, stackHeight, nodesByLine, sourceDeferreds ++ destinationDeferreds)
+
+    (oldValueAccess)
   }
 
   private def translateMundaneUnknownSizeArrayMutate(
       hinputs: Hinputs,
-      hamuts2: Hamuts,
-      locals0: Locals,
-      stackHeight0: StackHeight,
-      nodesByLine0: Vector[NodeH],
+      hamuts: HamutsBox,
+      locals: LocalsBox,
+      stackHeight: StackHeightBox,
+      nodesByLine: NodesBox,
       sourceExprResultLine: RegisterAccessH[ReferendH],
       arrayExpr2: ReferenceExpression2,
       indexExpr2: ReferenceExpression2
-  ): (Hamuts, Locals, StackHeight, Vector[NodeH], RegisterAccessH[ReferendH], List[Expression2]) = {
-    val (hamuts3, locals1, stackHeight1, nodesByLine1, Some(destinationResultLine), destinationDeferreds) =
-      translate(hinputs, hamuts2, locals0, stackHeight0, nodesByLine0, arrayExpr2);
-    val (hamuts4, locals2, stackHeight2, nodesByLine2, Some(indexExprResultLine), indexDeferreds) =
-      translate(hinputs, hamuts3, locals1, stackHeight1, nodesByLine1, indexExpr2);
+  ): (RegisterAccessH[ReferendH], List[Expression2]) = {
+    val (Some(destinationResultLine), destinationDeferreds) =
+      translate(hinputs, hamuts, locals, stackHeight, nodesByLine, arrayExpr2);
+    val (Some(indexExprResultLine), indexDeferreds) =
+      translate(hinputs, hamuts, locals, stackHeight, nodesByLine, indexExpr2);
     // We're storing into a regular reference element of an array.
-    val (nodesByLine3, storeNode) =
-      addNode(
-        nodesByLine2,
+    val storeNode =
+      nodesByLine.addNode(
         UnknownSizeArrayStoreH(
-          newId(nodesByLine2),
+          nodesByLine.nextId(),
           destinationResultLine.expectUnknownSizeArrayAccess(),
           indexExprResultLine.expectIntAccess(),
           sourceExprResultLine))
 
     val oldValueAccess = RegisterAccessH(storeNode.registerId, sourceExprResultLine.expectedType)
 
-    (hamuts4, locals2, stackHeight2, nodesByLine3, oldValueAccess, destinationDeferreds ++ indexDeferreds)
+    (oldValueAccess, destinationDeferreds ++ indexDeferreds)
   }
 
   private def translateMundaneKnownSizeArrayMutate(
     hinputs: Hinputs,
-    hamuts2: Hamuts,
-    locals0: Locals,
-    stackHeight0: StackHeight,
-    nodesByLine0: Vector[NodeH],
+    hamuts: HamutsBox,
+    locals: LocalsBox,
+    stackHeight: StackHeightBox,
+    nodesByLine: NodesBox,
     sourceExprResultLine: RegisterAccessH[ReferendH],
     arrayExpr2: ReferenceExpression2,
     indexExpr2: ReferenceExpression2
-  ): (Hamuts, Locals, StackHeight, Vector[NodeH], RegisterAccessH[ReferendH], List[Expression2]) = {
-    val (hamuts3, locals1, stackHeight1, nodesByLine1, Some(destinationResultLine), destinationDeferreds) =
-      translate(hinputs, hamuts2, locals0, stackHeight0, nodesByLine0, arrayExpr2);
-    val (hamuts4, locals2, stackHeight2, nodesByLine2, Some(indexExprResultLine), indexDeferreds) =
-      translate(hinputs, hamuts3, locals1, stackHeight1, nodesByLine1, indexExpr2);
+  ): (RegisterAccessH[ReferendH], List[Expression2]) = {
+    val (Some(destinationResultLine), destinationDeferreds) =
+      translate(hinputs, hamuts, locals, stackHeight, nodesByLine, arrayExpr2);
+    val (Some(indexExprResultLine), indexDeferreds) =
+      translate(hinputs, hamuts, locals, stackHeight, nodesByLine, indexExpr2);
     // We're storing into a regular reference element of an array.
-    val (nodesByLine3, storeNode) =
-      addNode(
-        nodesByLine2,
+    val storeNode =
+      nodesByLine.addNode(
         KnownSizeArrayStoreH(
-          newId(nodesByLine2),
+          nodesByLine.nextId(),
           destinationResultLine.expectKnownSizeArrayAccess(),
           indexExprResultLine.expectIntAccess(),
           sourceExprResultLine))
 
     val oldValueAccess = RegisterAccessH(storeNode.registerId, sourceExprResultLine.expectedType)
 
-    (hamuts4, locals2, stackHeight2, nodesByLine3, oldValueAccess, destinationDeferreds ++ indexDeferreds)
+    (oldValueAccess, destinationDeferreds ++ indexDeferreds)
   }
 
   private def translateAddressibleMemberMutate(
       hinputs: Hinputs,
-      hamuts0: Hamuts,
-      locals1: Locals,
-      stackHeight0: StackHeight,
-      nodesByLine0: Vector[NodeH],
+      hamuts: HamutsBox,
+      locals: LocalsBox,
+      stackHeight: StackHeightBox,
+      nodesByLine: NodesBox,
       sourceExprResultLine: RegisterAccessH[ReferendH],
       structExpr2: ReferenceExpression2,
       memberName: String
-  ): (Hamuts, Locals, StackHeight, Vector[NodeH], RegisterAccessH[ReferendH], List[Expression2]) = {
-    val (hamuts1, locals2, stackHeight1, nodesByLine1, Some(destinationResultLine), destinationDeferreds) =
-      translate(hinputs, hamuts0, locals1, stackHeight0, nodesByLine0, structExpr2);
+  ): (RegisterAccessH[ReferendH], List[Expression2]) = {
+    val (Some(destinationResultLine), destinationDeferreds) =
+      translate(hinputs, hamuts, locals, stackHeight, nodesByLine, structExpr2);
 
     val structRef2 =
       structExpr2.resultRegister.reference.referend match {
@@ -140,11 +138,11 @@ object MutateHammer {
 
     val boxedType2 = member2.tyype.expectAddressMember().reference
 
-    val (hamuts2, boxedTypeH) =
-      TypeHammer.translateReference(hinputs, hamuts1, boxedType2);
+    val (boxedTypeH) =
+      TypeHammer.translateReference(hinputs, hamuts, boxedType2);
 
-    val (hamuts3, boxStructRefH) =
-      StructHammer.makeBox(hinputs, hamuts2, variability, boxedType2, boxedTypeH)
+    val (boxStructRefH) =
+      StructHammer.makeBox(hinputs, hamuts, variability, boxedType2, boxedTypeH)
 
     // Remember, structs can never own boxes, they only borrow them
     val expectedStructBoxMemberType = ReferenceH(m.Borrow, boxStructRefH)
@@ -152,11 +150,10 @@ object MutateHammer {
 
     // We're storing into a struct's member that is a box. The stack is also
     // pointing at this box. First, get the box, then mutate what's inside.
-    val (nodesByLine2, loadBoxNode) =
-    addNode(
-      nodesByLine1,
+    val loadBoxNode =
+    nodesByLine.addNode(
       MemberLoadH(
-        newId(nodesByLine1),
+        nodesByLine.nextId(),
         destinationResultLine.expectStructAccess(),
         memberIndex,
         m.Borrow,
@@ -165,31 +162,30 @@ object MutateHammer {
         memberName))
     val loadBoxAccess =
       RegisterAccessH(loadBoxNode.registerId, expectedBorrowBoxResultType)
-    val (nodesByLine3, storeNode) =
-      addNode(
-        nodesByLine2,
+    val storeNode =
+      nodesByLine.addNode(
         MemberStoreH(
-          newId(nodesByLine2),
+          nodesByLine.nextId(),
           loadBoxAccess,
           StructHammer.BOX_MEMBER_INDEX,
           sourceExprResultLine,
           StructHammer.BOX_MEMBER_NAME))
     val oldValueAccess = RegisterAccessH(storeNode.registerId, sourceExprResultLine.expectedType)
-    (hamuts3, locals2, stackHeight1, nodesByLine3, oldValueAccess, destinationDeferreds)
+    (oldValueAccess, destinationDeferreds)
   }
 
   private def translateMundaneMemberMutate(
       hinputs: Hinputs,
-      hamuts2: Hamuts,
-      locals1: Locals,
-      stackHeight0: StackHeight,
-      nodesByLine0: Vector[NodeH],
+      hamuts: HamutsBox,
+      locals: LocalsBox,
+      stackHeight: StackHeightBox,
+      nodesByLine: NodesBox,
       sourceExprResultLine: RegisterAccessH[ReferendH],
       structExpr2: ReferenceExpression2,
       memberName: String
-  ): (Hamuts, Locals, StackHeight, Vector[NodeH], RegisterAccessH[ReferendH], List[Expression2]) = {
-    val (hamuts3, locals2, stackHeight1, nodesByLine1, Some(destinationResultLine), destinationDeferreds) =
-      translate(hinputs, hamuts2, locals1, stackHeight0, nodesByLine0, structExpr2);
+  ): (RegisterAccessH[ReferendH], List[Expression2]) = {
+    val (Some(destinationResultLine), destinationDeferreds) =
+      translate(hinputs, hamuts, locals, stackHeight, nodesByLine, structExpr2);
 
     val structRef2 =
       structExpr2.resultRegister.reference.referend match {
@@ -200,44 +196,42 @@ object MutateHammer {
     vassert(memberIndex >= 0)
 
     // We're storing into a regular reference member of a struct.
-    val (nodesByLine2, storeNode) =
-      addNode(
-        nodesByLine1,
+    val storeNode =
+      nodesByLine.addNode(
         MemberStoreH(
-          newId(nodesByLine1),
+          nodesByLine.nextId(),
           destinationResultLine.expectStructAccess(),
           memberIndex,
           sourceExprResultLine,
           memberName))
     val oldValueAccess = RegisterAccessH(storeNode.registerId, sourceExprResultLine.expectedType)
-    (hamuts3, locals2, stackHeight1, nodesByLine2, oldValueAccess, destinationDeferreds)
+    (oldValueAccess, destinationDeferreds)
   }
 
   private def translateAddressibleLocalMutate(
       hinputs: Hinputs,
-      hamuts2: Hamuts,
-      locals1: Locals,
-      stackHeight0: StackHeight,
-      nodesByLine1: Vector[NodeH],
+      hamuts: HamutsBox,
+      locals: LocalsBox,
+      stackHeight: StackHeightBox,
+      nodesByLine: NodesBox,
       sourceExprResultLine: RegisterAccessH[ReferendH],
       sourceResultPointerTypeH: ReferenceH[ReferendH],
       varId: VariableId2,
       variability: Variability,
       reference: Coord
-  ): (Hamuts, Locals, StackHeight, Vector[NodeH], RegisterAccessH[ReferendH], List[Expression2]) = {
-    val local = locals1.get(varId).get
-    val (hamuts3, boxStructRefH) =
-      StructHammer.makeBox(hinputs, hamuts2, variability, reference, sourceResultPointerTypeH)
+  ): (RegisterAccessH[ReferendH], List[Expression2]) = {
+    val local = locals.get(varId).get
+    val (boxStructRefH) =
+      StructHammer.makeBox(hinputs, hamuts, variability, reference, sourceResultPointerTypeH)
     val expectedLocalBoxType = ReferenceH(m.Own, boxStructRefH)
     val expectedBorrowBoxResultType = ReferenceH(m.Borrow, boxStructRefH)
 
     // This means we're trying to mutate a local variable that holds a box.
     // We need to load the box, then mutate its contents.
-    val (nodesByLine2, loadBoxNode) =
-    addNode(
-      nodesByLine1,
+    val loadBoxNode =
+    nodesByLine.addNode(
       LocalLoadH(
-        newId(nodesByLine1),
+        nodesByLine.nextId(),
         local,
         m.Borrow,
         expectedLocalBoxType,
@@ -245,37 +239,35 @@ object MutateHammer {
         varId.variableName))
     val loadBoxAccess =
       RegisterAccessH(loadBoxNode.registerId, expectedBorrowBoxResultType)
-    val (nodesByLine3, storeNode) =
-      addNode(
-        nodesByLine2,
+    val storeNode =
+      nodesByLine.addNode(
         MemberStoreH(
-          newId(nodesByLine2),
+          nodesByLine.nextId(),
           loadBoxAccess,
           StructHammer.BOX_MEMBER_INDEX,
           sourceExprResultLine,
           StructHammer.BOX_MEMBER_NAME))
     val oldValueAccess = RegisterAccessH(storeNode.registerId, sourceExprResultLine.expectedType)
-    (hamuts3, locals1, stackHeight0, nodesByLine3, oldValueAccess, List())
+    (oldValueAccess, List())
   }
 
   private def translateMundaneLocalMutate(
-      hamuts2: Hamuts,
-      locals1: Locals,
-      stackHeight0: StackHeight,
-      nodesByLine1: Vector[NodeH],
+      hamuts: HamutsBox,
+      locals: LocalsBox,
+      stackHeight: StackHeightBox,
+      nodesByLine: NodesBox,
       sourceExprResultLine: RegisterAccessH[ReferendH],
       varId: VariableId2
-  ): (Hamuts, Locals, StackHeight, Vector[NodeH], RegisterAccessH[ReferendH], List[Expression2]) = {
-    val local = locals1.get(varId).get
-    val (nodesByLine2, newStoreNode) =
-      addNode(
-        nodesByLine1,
+  ): (RegisterAccessH[ReferendH], List[Expression2]) = {
+    val local = locals.get(varId).get
+    val newStoreNode =
+      nodesByLine.addNode(
         LocalStoreH(
-          newId(nodesByLine1),
+          nodesByLine.nextId(),
           local,
           sourceExprResultLine,
           varId.variableName))
     val oldValueAccess = RegisterAccessH(newStoreNode.registerId, sourceExprResultLine.expectedType)
-    (hamuts2, locals1, stackHeight0, nodesByLine2, oldValueAccess, List())
+    (oldValueAccess, List())
   }
 }

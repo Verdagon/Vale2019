@@ -624,6 +624,20 @@ case class VariableIdH(
   // Just for debugging purposes
   name: Option[String])
 
+case class StackHeightBox(var inner: StackHeight) {
+  def blockHeight: Int = inner.blockHeight
+  def blockStartLocalsHeight: Int = inner.blockStartLocalsHeight
+  def localsHeight: Int = inner.localsHeight
+  def snapshot = inner
+
+  def oneLocalHigher(): Unit = {
+    inner = inner.oneLocalHigher()
+  }
+  def oneBlockHigher(): Unit = {
+    inner = inner.oneBlockHigher()
+  }
+}
+
 case class StackHeight(
   blockHeight: Int, // How many blocks deep we are in the function. The first block is 0
   blockStartLocalsHeight: Int, // At the start of the block, how many locals are on the stack

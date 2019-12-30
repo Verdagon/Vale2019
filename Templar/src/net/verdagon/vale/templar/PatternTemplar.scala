@@ -80,10 +80,10 @@ object PatternTemplar {
     patterns1.zip(patternInputExprs2) match {
       case Nil => (Nil)
       case (pattern1, patternInputExpr2) :: _ => {
-        val (headLets) =
+        val headLets =
           PatternTemplar.innerNonCheckingTranslate(
             temputs, fate, pattern1, patternInputExpr2);
-        val (tailLets) =
+        val tailLets =
           nonCheckingTranslateList(
             temputs, fate, patterns1.tail, patternInputExprs2.tail)
         (headLets ++ tailLets)
@@ -197,13 +197,13 @@ object PatternTemplar {
             // Since we're receiving an owning reference, and we're *not* capturing
             // it in a variable, it will be destroyed and we will harvest its parts.
 
-            val (innerLets) =
+            val innerLets =
               nonCheckingTranslateStructInner(
                 temputs, fate, listOfMaybeDestructureMemberPatterns, expectedCoord, inputOrLookupExpr)
             (lets0 ++ innerLets)
           }
           case PackT2(_, _) => {
-            val (innerLets) =
+            val innerLets =
             nonCheckingTranslatePack(
               temputs, fate, listOfMaybeDestructureMemberPatterns, inputExpr)
             (lets0 ++ innerLets)
@@ -364,11 +364,11 @@ object PatternTemplar {
     // We don't pattern match against closure structs.
     val memberTypes = structDef2.members.map(_.tyype.expectReferenceMember().reference)
 
-    val (counter) = fate.nextVarCounter()
+    val counter = fate.nextVarCounter()
 
     structOwnership match {
       case Own => {
-        val (memberLocalVariables) =
+        val memberLocalVariables =
           memberTypes.zipWithIndex.map({
             case ((memberType, index)) => {
               val variableId = VariableId2(fate.function.lambdaNumber, "__pack_" + counter + "_member_" + index)
@@ -380,15 +380,15 @@ object PatternTemplar {
 
         val destructure = Destructure2(inputStructExpr, structRef2, memberLocalVariables)
 
-        val (lets) =
+        val lets =
           innerPatternMaybes.zip(memberLocalVariables).flatMap({
             case ((None, localVariable)) => {
-              val (unletExpr) =
+              val unletExpr =
                 ExpressionTemplar.unletLocal(fate, localVariable)
               List(DestructorTemplar.drop(fate, temputs, unletExpr))
             }
             case ((Some(innerPattern), localVariable)) => {
-              val (unletExpr) =
+              val unletExpr =
                 ExpressionTemplar.unletLocal(fate, localVariable)
               innerNonCheckingTranslate(temputs, fate, innerPattern, unletExpr)
             }
@@ -405,7 +405,7 @@ object PatternTemplar {
         val packLet = LetNormal2(packLocalVariable, inputStructExpr);
         fate.addVariable(packLocalVariable)
 
-        val (innerLets) =
+        val innerLets =
           innerPatternMaybes.zip(memberTypes).zipWithIndex
             .flatMap({
               case (((None, _), _)) => {
@@ -422,8 +422,8 @@ object PatternTemplar {
               }
             })
 
-        val (packUnlet) = ExpressionTemplar.unletLocal(fate, packLocalVariable)
-        val (dropExpr) =
+        val packUnlet = ExpressionTemplar.unletLocal(fate, packLocalVariable)
+        val dropExpr =
           DestructorTemplar.drop(fate, temputs, packUnlet)
 
         ((packLet :: innerLets) :+ dropExpr)

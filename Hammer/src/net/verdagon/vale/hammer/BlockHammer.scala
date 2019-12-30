@@ -8,37 +8,31 @@ import net.verdagon.vale.templar.types.Raw
 import net.verdagon.vale.{vassert, vfail}
 
 object BlockHammer {
-
-  def newId(nodesByLine: Vector[NodeH]) = Hammer.newId(nodesByLine)
-
-  def addLine(nodesByLine: Vector[NodeH], node: NodeH): (Vector[NodeH], NodeH) = {
-    (nodesByLine :+ node, node)
-  }
-
   def translateBlock(
     hinputs: Hinputs,
-    hamuts0: Hamuts,
-    locals0: Locals,
-    newStackHeight: StackHeight,
+    hamuts: HamutsBox,
+    initialLocals: Locals,
+    stackHeight: StackHeightBox,
     block2: Block2):
-  (Hamuts, Locals, BlockH, Option[RegisterAccessH[ReferendH]]) = {
+  (BlockH, Option[RegisterAccessH[ReferendH]]) = {
+    val locals = LocalsBox(initialLocals)
 
     // This means the caller didn't make us a new stack height.
-    vassert(newStackHeight.localsHeight == newStackHeight.blockStartLocalsHeight)
+    vassert(stackHeight.localsHeight == stackHeight.blockStartLocalsHeight)
 
-    val nodesByLine0 = Vector[NodeH]();
+    val nodesByLine = NodesBox(Vector[NodeH]());
 
-    val (hamuts6, locals1, stackHeight1, nodesByLine4, registerAccesses, deferreds) =
+    val (registerAccesses, deferreds) =
       ExpressionHammer.translateMaybeReturningExpressions(
-        hinputs, hamuts0, locals0, newStackHeight, nodesByLine0, block2.exprs);
+        hinputs, hamuts, locals, stackHeight, nodesByLine, block2.exprs);
 
     vassert(deferreds.isEmpty) // curious, do we have to do any here
 
-    val localIdsInThisBlock = locals1.locals.keys.toSet.diff(locals0.locals.keys.toSet)
-    vassert(stackHeight1.localsHeight - stackHeight1.blockStartLocalsHeight == localIdsInThisBlock.size)
-    val localsInThisBlock = localIdsInThisBlock.map(locals1.locals)
+    val localIdsInThisBlock = locals.locals.keys.toSet.diff(initialLocals.locals.keys.toSet)
+    vassert(stackHeight.localsHeight - stackHeight.blockStartLocalsHeight == localIdsInThisBlock.size)
+    val localsInThisBlock = localIdsInThisBlock.map(locals.locals)
     vassert(localsInThisBlock.map(_.height).size == localsInThisBlock.size)
-    val unstackifiedLocalIdsInThisBlock = locals1.unstackifiedVars.intersect(localIdsInThisBlock)
+    val unstackifiedLocalIdsInThisBlock = locals.unstackifiedVars.intersect(localIdsInThisBlock)
 
 //    if (localIdsInThisBlock != unstackifiedLocalIdsInThisBlock) {
 //      // This probably means that there was no UnletH or DestructureH for that variable.
@@ -46,8 +40,8 @@ object BlockHammer {
 //    }
 
     val resultType = registerAccesses.last.map(_.expectedType).getOrElse(ReferenceH(m.Raw, VoidH()))
-//    start here, we're returning locals0 and thats not optimal
+//    start here, we're returning locals and thats not optimal
     println("debt: put checking back in for unstackified things!")
-    (hamuts6, locals0, BlockH(nodesByLine4, resultType), registerAccesses.last)
+    (BlockH(nodesByLine.inner, resultType), registerAccesses.last)
   }
 }

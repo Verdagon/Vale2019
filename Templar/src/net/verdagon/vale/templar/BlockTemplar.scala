@@ -33,10 +33,10 @@ object BlockTemplar {
     val (undestructedExpressions, maybeResultLocalVariable) =
       resultifyExpressions(fate, unresultifiedUndestructedExpressions)
 
-    val (expressions) =
+    val expressions =
       unletUnmovedVariablesIntroducedSince(temputs, startingFate, fate, maybeResultLocalVariable, undestructedExpressions)
 
-    val (expressionsWithResult) =
+    val expressionsWithResult =
       maybeAddUnlet(fate, expressions, maybeResultLocalVariable)
 
     val block2 = Block2(expressionsWithResult)
@@ -56,7 +56,7 @@ object BlockTemplar {
     maybeVar match {
       case None => (exprs)
       case Some(resultLocalVariable) => {
-        val (getResultExpr) =
+        val getResultExpr =
           ExpressionTemplar.unletLocal(fate, resultLocalVariable)
         (exprs :+ getResultExpr)
       }
@@ -110,7 +110,7 @@ object BlockTemplar {
         if (lastExpr.resultRegister.referend == Void2()) {
           (undecayedExprs2, None)
         } else {
-          val (resultVarNum) = fate.nextVarCounter()
+          val resultVarNum = fate.nextVarCounter()
           val resultVarId = VariableId2(fate.function.lambdaNumber, "__blockresult_" + resultVarNum)
           val resultVariable = ReferenceLocalVariable2(resultVarId, Final, lastExpr.resultRegister.reference)
           val resultLet = LetNormal2(resultVariable, lastExpr)
@@ -133,13 +133,13 @@ object BlockTemplar {
           ExpressionTemplar.evaluateAndCoerceToReferenceExpression(
             temputs, fate, first1);
 
-        val (destructedFirstExpr2) =
+        val destructedFirstExpr2 =
           if (rest1.isEmpty) {
             // This is the last expression, which means it's getting returned,
             // so don't destruct it.
             (undestructedFirstExpr2) // Do nothing
           } else {
-            val (destructedFirstExpr2) =
+            val destructedFirstExpr2 =
               DestructorTemplar.drop(fate, temputs, undestructedFirstExpr2)
             (destructedFirstExpr2)
           }
@@ -160,10 +160,10 @@ object BlockTemplar {
     variables match {
       case Nil => (List())
       case head :: tail => {
-        val (unlet) = ExpressionTemplar.unletLocal(fate, head)
-        val (maybeHeadExpr2) =
+        val unlet = ExpressionTemplar.unletLocal(fate, head)
+        val maybeHeadExpr2 =
           DestructorTemplar.drop(fate, temputs, unlet)
-        val (tailExprs2) =
+        val tailExprs2 =
           unletAll(temputs, fate, tail)
         (maybeHeadExpr2 :: tailExprs2)
       }

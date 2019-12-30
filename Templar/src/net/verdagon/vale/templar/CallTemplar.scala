@@ -198,7 +198,7 @@ object CallTemplar {
       }
 
     // Whether we're given a borrow or an own, the call itself will be given a borrow.
-    val (givenCallableBorrowExpr2) =
+    val givenCallableBorrowExpr2 =
       givenCallableUnborrowedExpr2.resultRegister.reference match {
         case Coord(Borrow, _) => (givenCallableUnborrowedExpr2)
         case Coord(Share, _) => (givenCallableUnborrowedExpr2)
@@ -276,9 +276,9 @@ object CallTemplar {
       explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
       argsExpr2: Expression2):
   (FunctionCall2) = {
-    val (callableReferenceExpr2) =
+    val callableReferenceExpr2 =
       ExpressionTemplar.coerceToReferenceExpression(fate, callableExpr2)
-    val (argsRefExpr2) =
+    val argsRefExpr2 =
       ExpressionTemplar.coerceToReferenceExpression(fate, argsExpr2);
 //    val flattenedArgsExprs =
 //      PackTemplar.flatten(temputs, List(argsReferenceExprs2));
@@ -287,7 +287,7 @@ object CallTemplar {
         case PackE2(exprs, _, _) => exprs
         case other => List(other)
       }
-    val (callExpr) =
+    val callExpr =
       evaluateCall(temputs, fate, callableReferenceExpr2, explicitlySpecifiedTemplateArgTemplexesS, unpackedArgsExprs)
     (callExpr)
   }
@@ -299,7 +299,7 @@ object CallTemplar {
     explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
     argsExpr2: Expression2):
   (FunctionCall2) = {
-    val (argsRefExpr2) =
+    val argsRefExpr2 =
       ExpressionTemplar.coerceToReferenceExpression(fate, argsExpr2);
     val unpackedArgsExprs =
     argsRefExpr2 match {

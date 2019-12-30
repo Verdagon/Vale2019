@@ -10,6 +10,45 @@ case class FunctionRefH(prototype: PrototypeH) {
   def fullName = prototype.fullName
 }
 
+case class LocalsBox(var inner: Locals) {
+  def snapshot = inner
+
+  def templarLocals: Map[VariableId2, VariableIdH] = inner.templarLocals
+  def unstackifiedVars: Set[VariableIdH] = inner.unstackifiedVars
+  def locals: Map[VariableIdH, Local] = inner.locals
+
+  def get(id: VariableId2) = inner.get(id)
+  def get(id: VariableIdH) = inner.get(id)
+
+  def markUnstackified(varId2: VariableId2): Unit = {
+    inner = inner.markUnstackified(varId2)
+  }
+
+  def markUnstackified(varIdH: VariableIdH): Unit = {
+    inner = inner.markUnstackified(varIdH)
+  }
+
+  def addHammerLocal(
+    height: StackHeight,
+    tyype: ReferenceH[ReferendH]):
+  Local = {
+    val (newInner, local) = inner.addHammerLocal(height, tyype)
+    inner = newInner
+    local
+  }
+
+  def addTemplarLocal(
+    varId2: VariableId2,
+    height: StackHeight,
+    tyype: ReferenceH[ReferendH]):
+  Local = {
+    val (newInner, local) = inner.addTemplarLocal(varId2, height, tyype)
+    inner = newInner
+    local
+  }
+
+}
+
 // This represents the locals for the entire function.
 // Note, some locals will have the same index, that just means they're in
 // different blocks.
@@ -84,25 +123,31 @@ case class Locals(
 
 object Hammer {
   def translate(hinputs: Hinputs): ProgramH = {
-    val hamuts0 = Hamuts(Map(), Map(), List(), Map(), Map(), Map(), Map())
-    val (hamuts1, emptyPackStructRefH) =
-      StructHammer.translateStructRef(hinputs, hamuts0, hinputs.program2.emptyPackStructRef)
-    val hamuts2 = StructHammer.translateInterfaces(hinputs, hamuts1);
-    val hamuts3 = StructHammer.translateStructs(hinputs, hamuts2)
+    val hamuts = HamutsBox(Hamuts(Map(), Map(), List(), Map(), Map(), Map(), Map()))
+    val emptyPackStructRefH = StructHammer.translateStructRef(hinputs, hamuts, hinputs.program2.emptyPackStructRef)
+    StructHammer.translateInterfaces(hinputs, hamuts);
+    StructHammer.translateStructs(hinputs, hamuts)
     val userFunctions = hinputs.program2.functions.filter(_.header.isUserFunction).toList
     val nonUserFunctions = hinputs.program2.functions.filter(!_.header.isUserFunction).toList
-    val (hamuts4, _) = FunctionHammer.translateFunctions(hinputs, hamuts3, userFunctions)
-    val (hamuts5, _) = FunctionHammer.translateFunctions(hinputs, hamuts4, nonUserFunctions)
+    FunctionHammer.translateFunctions(hinputs, hamuts, userFunctions)
+    FunctionHammer.translateFunctions(hinputs, hamuts, nonUserFunctions)
 
     ProgramH(
-      hamuts5.interfaceDefs.values.toList,
-      hamuts5.structDefsByRef2.values.toList,
+      hamuts.interfaceDefs.values.toList,
+      hamuts.structDefsByRef2.values.toList,
       emptyPackStructRefH,
       List() /* externs */,
-      hamuts5.functionDefs.values.toList)
+      hamuts.functionDefs.values.toList)
+  }
+}
+
+case class NodesBox(var inner: Vector[NodeH]) {
+  def addNode(node: NodeH): NodeH = {
+    inner = inner :+ node
+    node
   }
 
-  def newId(nodesByLine: Vector[NodeH]) = {
-    "" + nodesByLine.size
+  def nextId(): String = {
+    "" + inner.size
   }
 }
