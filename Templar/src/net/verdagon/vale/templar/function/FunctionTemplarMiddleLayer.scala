@@ -21,23 +21,24 @@ object FunctionTemplarMiddleLayer {
   // - either no template args, or they were already added to the env.
   // - either no closured vars, or they were already added to the env.
   def predictOrdinaryFunctionBanner(
-    innerEnv: FunctionEnvironment,
+    runedEnv: FunctionEnvironment,
     temputs: TemputsBox,
     function1: FunctionA):
   (FunctionBanner2) = {
 
     // Check preconditions
     function1.typeByRune.keySet.foreach(templateParam => {
-      vassert(innerEnv.getNearestTemplataWithName(templateParam, Set(TemplataLookupContext, ExpressionLookupContext)).nonEmpty)
+      vassert(runedEnv.getNearestTemplataWithName(templateParam, Set(TemplataLookupContext, ExpressionLookupContext)).nonEmpty)
     })
     function1.body match {
       case CodeBodyA(body1) => vassert(body1.closuredNames.isEmpty)
       case _ =>
     }
 
-    val params2 = assembleFunctionParams(innerEnv, temputs, function1.params)
-    val banner = FunctionBanner2(Some(function1), innerEnv.fullName, params2)
-    (banner)
+    val params2 = assembleFunctionParams(runedEnv, temputs, function1.params)
+    val namedEnv = makeNamedEnv(runedEnv, params2.map(_.tyype))
+    val banner = FunctionBanner2(Some(function1), namedEnv.fullName, params2)
+    banner
   }
 
   private def evaluateMaybeVirtuality(
@@ -67,18 +68,20 @@ object FunctionTemplarMiddleLayer {
   // - either no template args, or they were already added to the env.
   // - either no closured vars, or they were already added to the env.
   def getOrEvaluateFunctionForBanner(
-    innerEnv: FunctionEnvironmentBox,
+    runedEnv: FunctionEnvironment,
     temputs: TemputsBox,
     function1: FunctionA):
   (FunctionBanner2) = {
 
     // Check preconditions
     function1.typeByRune.keySet.foreach(templateParam => {
-      vassert(innerEnv.getNearestTemplataWithName(templateParam, Set(TemplataLookupContext, ExpressionLookupContext)).nonEmpty);
+      vassert(runedEnv.getNearestTemplataWithName(templateParam, Set(TemplataLookupContext, ExpressionLookupContext)).nonEmpty);
     })
 
-    val params2 = assembleFunctionParams(innerEnv.snapshot, temputs, function1.params)
-    val banner = FunctionBanner2(Some(function1), innerEnv.fullName, params2)
+    val params2 = assembleFunctionParams(runedEnv, temputs, function1.params)
+
+    val namedEnv = makeNamedEnv(runedEnv, params2.map(_.tyype))
+    val banner = FunctionBanner2(Some(function1), namedEnv.fullName, params2)
 
     // Now we want to add its Function2 into the temputs.
     if (temputs.exactDeclaredSignatureExists(banner.toSignature)) {
@@ -87,16 +90,16 @@ object FunctionTemplarMiddleLayer {
       (banner)
     } else {
       val signature = banner.toSignature
-      temputs.declareFunctionSignature(signature, Some(innerEnv.snapshot))
-      val params2 = assembleFunctionParams(innerEnv.snapshot, temputs, function1.params)
+      temputs.declareFunctionSignature(signature, Some(namedEnv))
+      val params2 = assembleFunctionParams(namedEnv, temputs, function1.params)
       val header =
-        FunctionTemplarCore.evaluateFunctionForHeader(innerEnv, temputs, function1, params2)
+        FunctionTemplarCore.evaluateFunctionForHeader(namedEnv, temputs, function1, params2)
       if (header.toBanner != banner) {
         val bannerFromHeader = header.toBanner
         vfail("wut\n" + bannerFromHeader + "\n" + banner)
       }
 
-      VirtualTemplar.evaluateParent(innerEnv.snapshot, temputs, header)
+      VirtualTemplar.evaluateParent(namedEnv, temputs, header)
 
       (header.toBanner)
     }
@@ -107,28 +110,33 @@ object FunctionTemplarMiddleLayer {
   // - either no template args, or they were already added to the env.
   // - either no closured vars, or they were already added to the env.
   def getOrEvaluateFunctionForHeader(
-    innerEnv: FunctionEnvironmentBox,
+    runedEnv: FunctionEnvironment,
     temputs: TemputsBox,
     function1: FunctionA):
   (FunctionHeader2) = {
 
     // Check preconditions
     function1.typeByRune.keySet.foreach(templateParam => {
-      vassert(innerEnv.getNearestTemplataWithName(templateParam, Set(TemplataLookupContext, ExpressionLookupContext)).nonEmpty);
+      vassert(runedEnv.getNearestTemplataWithName(templateParam, Set(TemplataLookupContext, ExpressionLookupContext)).nonEmpty);
     })
 
-    val paramTypes2 = evaluateFunctionParamTypes(innerEnv, function1.params);
-    val needleSignature = Signature2(innerEnv.fullName, paramTypes2)
+    val paramTypes2 = evaluateFunctionParamTypes(runedEnv, function1.params);
+    val functionFullName = makeFunctionFullName(runedEnv.fullName, paramTypes2)
+    val needleSignature = Signature2(functionFullName, paramTypes2)
     temputs.lookupFunction(needleSignature) match {
       case Some(Function2(header, _, _)) => {
         (header)
       }
       case None => {
-        temputs.declareFunctionSignature(needleSignature, Some(innerEnv.snapshot))
-        val params2 = assembleFunctionParams(innerEnv.snapshot, temputs, function1.params)
+        val params2 = assembleFunctionParams(runedEnv, temputs, function1.params)
+
+        val namedEnv = makeNamedEnv(runedEnv, params2.map(_.tyype))
+
+        temputs.declareFunctionSignature(needleSignature, Some(namedEnv))
+
         val header =
           FunctionTemplarCore.evaluateFunctionForHeader(
-            innerEnv, temputs, function1, params2)
+            namedEnv, temputs, function1, params2)
         vassert(header.toSignature == needleSignature)
         (header)
       }
@@ -143,33 +151,34 @@ object FunctionTemplarMiddleLayer {
   // - either no template args, or they were already added to the env.
   // - either no closured vars, or they were already added to the env.
   def getOrEvaluateFunctionForPrototype(
-    innerEnv: FunctionEnvironmentBox,
+    runedEnv: FunctionEnvironment,
     temputs: TemputsBox,
     function1: FunctionA):
   (Prototype2) = {
 
     // Check preconditions
     function1.typeByRune.keySet.foreach(templateParam => {
-      vassert(innerEnv.getNearestTemplataWithName(templateParam, Set(TemplataLookupContext, ExpressionLookupContext)).nonEmpty);
+      vassert(runedEnv.getNearestTemplataWithName(templateParam, Set(TemplataLookupContext, ExpressionLookupContext)).nonEmpty);
     })
 
-    val paramTypes2 = evaluateFunctionParamTypes(innerEnv, function1.params)
-    val needleSignature = Signature2(innerEnv.fullName, paramTypes2)
+    val paramTypes2 = evaluateFunctionParamTypes(runedEnv, function1.params)
+    val namedEnv = makeNamedEnv(runedEnv, paramTypes2)
+    val needleSignature = Signature2(namedEnv.fullName, paramTypes2)
     temputs.returnTypesBySignature.get(needleSignature) match {
       case Some(returnType2) => {
-        (Prototype2(innerEnv.fullName, paramTypes2, returnType2))
+        (Prototype2(namedEnv.fullName, paramTypes2, returnType2))
       }
       case None => {
         if (temputs.exactDeclaredSignatureExists(needleSignature)) {
           vfail("Need return type for " + needleSignature + ", cycle found")
         }
-        temputs.declareFunctionSignature(needleSignature, Some(innerEnv.snapshot))
-        val params2 = assembleFunctionParams(innerEnv.snapshot, temputs, function1.params)
+        temputs.declareFunctionSignature(needleSignature, Some(namedEnv))
+        val params2 = assembleFunctionParams(namedEnv, temputs, function1.params)
         val header =
           FunctionTemplarCore.evaluateFunctionForHeader(
-            innerEnv, temputs, function1, params2)
+            namedEnv, temputs, function1, params2)
 
-        VirtualTemplar.evaluateParent(innerEnv.snapshot, temputs, header)
+        VirtualTemplar.evaluateParent(namedEnv, temputs, header)
 
         vassert(header.toSignature == needleSignature)
         (header.toPrototype)
@@ -180,7 +189,7 @@ object FunctionTemplarMiddleLayer {
 
 
   private def evaluateFunctionParamTypes(
-    env: IEnvironmentBox,
+    env: IEnvironment,
     params1: List[ParameterS]):
   List[Coord] = {
     params1.map(param1 => {
@@ -205,7 +214,7 @@ object FunctionTemplarMiddleLayer {
   }
 
 //  def makeImplDestructor(
-//    env: IEnvironmentBox,
+//    env: IEnvironment,
 //    temputs: TemputsBox,
 //    structDef2: StructDefinition2,
 //    interfaceRef2: InterfaceRef2):
@@ -233,4 +242,25 @@ object FunctionTemplarMiddleLayer {
 //
 //    temputs
 //  }
+
+  def makeNamedEnv(runedEnv: FunctionEnvironment, paramTypes: List[Coord]):
+  FunctionEnvironment = {
+    // The last step is the name, but it doesn't have the params filled out.
+    // (these asserts are just to make sure that's still the case)
+    vassert(runedEnv.fullName.steps.last.parameters.isEmpty)
+    // We fill out the params here to get the function's full name.
+    val functionFullName = makeFunctionFullName(runedEnv.fullName, paramTypes)
+    val namedEnv = runedEnv.copy(fullName = functionFullName)
+    namedEnv
+  }
+
+  def makeFunctionFullName(runedEnvFullName: FullName2, paramTypes: List[Coord]): FullName2 = {
+    vassert(runedEnvFullName.steps.last.parameters.isEmpty)
+    // We fill out the params here to get the function's full name.
+    val functionFullName =
+      FullName2(
+        runedEnvFullName.steps.init :+
+          runedEnvFullName.steps.last.copy(parameters = Some(paramTypes)))
+    functionFullName
+  }
 }

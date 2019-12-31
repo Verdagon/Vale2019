@@ -86,7 +86,7 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
 
   private[parser] def patternOwnership: Parser[OwnershipP] = {
     // See "Capturing Kinds and Ownerships" for why we don't capture a rune here.
-    (("^" ^^^ OwnP) | ("&" ^^^ BorrowP) | ("*" ^^^ ShareP) | ("~" ^^^ RawP))
+    (("^" ^^^ OwnP) | ("&" ^^^ BorrowP) | ("*" ^^^ ShareP))
   }
 
   // Add any new rules to the "Check no parser rules match empty" test!

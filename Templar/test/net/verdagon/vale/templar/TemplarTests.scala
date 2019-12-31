@@ -334,7 +334,7 @@ class TemplarTests extends FunSuite with Matchers {
     }
     val main = temputs.lookupFunction("main")
     main.header.returnType match {
-      case Coord(Raw,Void2()) =>
+      case Coord(Share, Void2()) =>
     }
   }
 

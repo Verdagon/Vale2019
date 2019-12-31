@@ -141,7 +141,6 @@ object VonHammer {
 
   def vonifyOwnership(ownership: m.Ownership): IVonData = {
     ownership match {
-      case m.Raw => VonObject("Raw", None, Vector())
       case m.Own => VonObject("Own", None, Vector())
       case m.Borrow => VonObject("Borrow", None, Vector())
       case m.Share => VonObject("Share", None, Vector())
@@ -444,7 +443,7 @@ object VonHammer {
           Some("parts"),
           VonArray(
             None,
-            name.parts.map({ case NamePartH(humanName, maybeTemplateArgs) =>
+            name.parts.map({ case NamePartH(humanName, maybeTemplateArgs, maybeParameters, maybeCodeLocation) =>
               VonObject(
                 "NamePart",
                 None,
@@ -461,6 +460,32 @@ object VonHammer {
                           None,
                           Vector(
                             VonMember(None, Some("value"), VonArray(None, templateArgs.map(vonifyTemplata).toVector))))
+                      }
+                    }),
+                  VonMember(
+                    None,
+                    Some("maybeParameters"),
+                    maybeParameters match {
+                      case None => VonObject("None", None, Vector())
+                      case Some(parameters) => {
+                        VonObject(
+                          "Some",
+                          None,
+                          Vector(
+                            VonMember(None, Some("value"), VonArray(None, parameters.map(vonifyCoord).toVector))))
+                      }
+                    }),
+                  VonMember(
+                    None,
+                    Some("maybeCodeLocation"),
+                    maybeCodeLocation match {
+                      case None => VonObject("None", None, Vector())
+                      case Some(codeLocation) => {
+                        VonObject(
+                          "Some",
+                          None,
+                          Vector(
+                            VonMember(None, Some("value"), vonifyCodeLocation(codeLocation))))
                       }
                     })))
             }).toVector))))
@@ -531,6 +556,17 @@ object VonHammer {
 
   def vonifyCodeLocation(codeLocation: m.CodeLocation): IVonData = {
     val m.CodeLocation(file, line, char) = codeLocation
+    VonObject(
+      "CodeLocation",
+      None,
+      Vector(
+        VonMember(None, Some("file"), VonStr(file)),
+        VonMember(None, Some("line"), VonInt(line)),
+        VonMember(None, Some("char"), VonInt(char))))
+  }
+
+  def vonifyCodeLocation(codeLocation: CodeLocationH): IVonData = {
+    val CodeLocationH(file, line, char) = codeLocation
     VonObject(
       "CodeLocation",
       None,

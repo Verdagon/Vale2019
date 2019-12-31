@@ -14,7 +14,6 @@ trait RuleTemplexParser extends RegexParsers with ParserUtils {
     "own" ^^^ OwnershipPRT(OwnP) |
     "borrow" ^^^ OwnershipPRT(BorrowP) |
     "share" ^^^ OwnershipPRT(ShareP) |
-    "raw" ^^^ OwnershipPRT(RawP) |
     "mut" ^^^ MutabilityPRT(MutableP) |
     "imm" ^^^ MutabilityPRT(ImmutableP) |
     "inl" ^^^ LocationPRT(InlineP) |

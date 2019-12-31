@@ -35,8 +35,8 @@ object BodyTemplar {
         val returns = returnsFromRets + body2.resultRegister.reference
 
         val returnsWithoutNever =
-          if (returns.size > 1 && returns.contains(Coord(Raw, Never2()))) {
-            returns - Coord(Raw, Never2())
+          if (returns.size > 1 && returns.contains(Coord(Share, Never2()))) {
+            returns - Coord(Share, Never2())
           } else {
             returns
           }
@@ -78,15 +78,15 @@ object BodyTemplar {
         val returns = returnsFromRets + convertedBody2.resultRegister.reference
 
         val returnsWithoutNever =
-          if (returns.size > 1 && returns.contains(Coord(Raw, Never2()))) {
-            returns - Coord(Raw, Never2())
+          if (returns.size > 1 && returns.contains(Coord(Share, Never2()))) {
+            returns - Coord(Share, Never2())
           } else {
             returns
           }
 
         if (returnsWithoutNever == Set(expectedRetCoord)) {
           // Let it through, it returns the expected type.
-        } else if (returnsWithoutNever == Set(Coord(Raw, Never2()))) {
+        } else if (returnsWithoutNever == Set(Coord(Share, Never2()))) {
           // Let it through, it returns a never but we expect something else, that's fine
         } else {
           vfail("In function " + header + ":\nExpected return type " + expectedRetCoord + " but was " + returnsWithoutNever)

@@ -63,7 +63,6 @@ sealed trait OwnershipP
 case object OwnP extends OwnershipP
 case object BorrowP extends OwnershipP
 case object ShareP extends OwnershipP
-case object RawP extends OwnershipP
 
 sealed trait PermissionP
 case object ReadonlyP extends PermissionP

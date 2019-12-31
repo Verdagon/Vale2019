@@ -49,13 +49,6 @@ case object Share extends Ownership {
     List(this).collect(func)
   }
 }
-case object Raw extends Ownership {
-  override def order: Int = 5;
-
-  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
-    List(this).collect(func)
-  }
-}
 
 sealed trait Mutability extends Queriable2 {
   def order: Int;
@@ -139,14 +132,8 @@ case object Yonder extends Location {
 
 case class Coord(ownership: Ownership, referend: Kind) extends Queriable2 {
   referend match {
-    case Int2() | Bool2() | Str2() | Float2() | Any2() => {
+    case Int2() | Bool2() | Str2() | Float2() | Void2() | Never2() => {
       vassert(ownership == Share)
-    }
-    case Void2() => {
-      vassert(ownership == Raw)
-    }
-    case Never2() => {
-      vassert(ownership == Raw)
     }
     case _ =>
   }
@@ -166,13 +153,6 @@ sealed trait Kind extends Queriable2 {
 // like Scala's Nothing. No instance of this can ever happen.
 case class Never2() extends Kind {
   override def order: Int = 6;
-
-  def all[T](func: PartialFunction[Queriable2, T]): List[T] = List(this).collect(func)
-}
-
-// like Scala's Any
-case class Any2() extends Kind {
-  override def order: Int = 7;
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = List(this).collect(func)
 }
@@ -432,8 +412,8 @@ case class InterfaceRef2(
 
 // This is what we use to search for overloads.
 case class ParamFilter(
-  tyype: Coord,
-  virtuality: Option[Virtuality2])
+    tyype: Coord,
+    virtuality: Option[Virtuality2])
 
 
 object ReferenceComparator extends Ordering[Coord] {

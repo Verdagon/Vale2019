@@ -10,7 +10,7 @@ import net.verdagon.vale._
 
 import scala.collection.immutable.List
 import net.verdagon.vale.astronomer._
-import net.verdagon.vale.parser.{BorrowP, OwnP, RawP, ShareP}
+import net.verdagon.vale.parser.{BorrowP, OwnP, ShareP}
 
 trait IInfererMatcherDelegate[Env, State] {
   def lookupMemberTypes(
@@ -284,15 +284,8 @@ class InfererMatcher[Env, State](
         if (actualOwnership == Conversions.evaluateOwnership(expectedOwnership)) {
           return (InferMatchSuccess(true))
         } else if (actualOwnership == Share) {
-          // Share is compatible with anything except raw
-          if (expectedOwnership != RawP) {
-            return (InferMatchSuccess(true))
-          }
-        } else if (actualOwnership == Raw) {
-          // Raw is compatible with anything except share
-          if (expectedOwnership != ShareP) {
-            return (InferMatchSuccess(true))
-          }
+          // Anything is compatible with share
+          return (InferMatchSuccess(true))
         }
         return (InferMatchConflict(inferences.inferences, s"Supplied ${actualOwnership} doesn't match expected ${expectedOwnership}", List()))
       }
@@ -540,22 +533,14 @@ class InfererMatcher[Env, State](
             case (Own, OwnP) => true
             case (Own, BorrowP) => false
             case (Own, ShareP) => false
-            case (Own, RawP) => false
 
             case (Borrow, OwnP) => false
             case (Borrow, BorrowP) => true
             case (Borrow, ShareP) => false
-            case (Borrow, RawP) => false
-
-            case (Raw, OwnP) => true
-            case (Raw, BorrowP) => true
-            case (Raw, ShareP) => false
-            case (Raw, RawP) => true
 
             case (Share, OwnP) => true
             case (Share, BorrowP) => true
             case (Share, ShareP) => true
-            case (Share, RawP) => false
           }
         if (compatible) {
           // The incoming thing is a borrow, and we expect a borrow, so send a regular own into the inner rule matcher.

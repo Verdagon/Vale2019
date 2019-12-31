@@ -798,7 +798,7 @@ object ExpressionTemplar {
       case Bool2() => Share
       case Float2() => Share
       case Str2() => Share
-      case Void2() => Raw
+      case Void2() => Share
 //      case FunctionT2(_, _) => Raw
       case PackT2(_, understruct2) => {
         val mutability = Templar.getMutability(temputs, understruct2)
@@ -855,7 +855,6 @@ object ExpressionTemplar {
           case Own => Borrow
           case Borrow => Borrow // it's fine if they accidentally borrow a borrow ref
           case Share => Share
-          case Raw => Raw
         }
       (SoftLoad2(a, targetOwnership))
     } else {
@@ -871,7 +870,7 @@ object ExpressionTemplar {
           fate.markVariableMoved(localVar.id)
           (Unlet2(localVar))
         }
-        case Borrow | Share | Raw => {
+        case Borrow | Share => {
           (SoftLoad2(a, a.resultRegister.reference.ownership))
         }
       }

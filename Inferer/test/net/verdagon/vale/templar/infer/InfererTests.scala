@@ -925,22 +925,18 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
     expectSuccess(run("Int", OwnP)) shouldEqual Coord(Share, Int2())
     expectSuccess(run("Int", BorrowP)) shouldEqual Coord(Share, Int2())
     expectSuccess(run("Int", ShareP)) shouldEqual Coord(Share, Int2())
-    vassert(expectFail(run("Int", RawP)).contains("Expected a raw, but was a share"))
 
-    vassert(expectFail(run("MutStruct", RawP)).contains("Expected a raw, but was an own"))
     vassert(expectFail(run("MutStruct", ShareP)).contains("Expected a share, but was an own"))
     expectSuccess(run("MutStruct", OwnP)) shouldEqual Coord(Own, StructRef2(FullName2(List(NamePart2("MutStruct", Some(List()), None, None)))))
     expectSuccess(run("MutStruct", BorrowP)) shouldEqual Coord(Borrow, StructRef2(FullName2(List(NamePart2("MutStruct", Some(List()), None, None)))))
 
-    vassert(expectFail(run("MutStructBorrow", RawP)).contains("Expected a raw, but was a borrow"))
     vassert(expectFail(run("MutStructBorrow", ShareP)).contains("Expected a share, but was a borrow"))
     expectSuccess(run("MutStructBorrow", OwnP)) shouldEqual Coord(Own, StructRef2(FullName2(List(NamePart2("MutStruct", Some(List()), None, None)))))
     expectSuccess(run("MutStructBorrow", BorrowP)) shouldEqual Coord(Borrow, StructRef2(FullName2(List(NamePart2("MutStruct", Some(List()), None, None)))))
 
-    vassert(expectFail(run("Void", ShareP)).contains("Expected a share, but was a raw"))
-    expectSuccess(run("Void", RawP)) shouldEqual Coord(Raw, Void2())
-    expectSuccess(run("Void", OwnP)) shouldEqual Coord(Raw, Void2())
-    expectSuccess(run("Void", BorrowP)) shouldEqual Coord(Raw, Void2())
+    expectSuccess(run("Void", ShareP)) shouldEqual Coord(Share, Void2())
+    expectSuccess(run("Void", OwnP)) shouldEqual Coord(Share, Void2())
+    expectSuccess(run("Void", BorrowP)) shouldEqual Coord(Share, Void2())
   }
 
   test("test matching ownershipped") {
@@ -975,14 +971,11 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
     expectSuccess(run("Int", OwnP)) shouldEqual Coord(Share, Int2())
     expectSuccess(run("Int", BorrowP)) shouldEqual Coord(Share, Int2())
     expectSuccess(run("Int", ShareP)) shouldEqual Coord(Share, Int2())
-    vassert(expectFail(run("Int", RawP)).contains("Couldn't match incoming Share against expected Raw"))
 
-    expectSuccess(run("Void", OwnP)) shouldEqual Coord(Raw, Void2())
-    expectSuccess(run("Void", BorrowP)) shouldEqual Coord(Raw, Void2())
+    expectSuccess(run("Void", OwnP)) shouldEqual Coord(Share, Void2())
+    expectSuccess(run("Void", BorrowP)) shouldEqual Coord(Share, Void2())
     vassert(expectFail(run("Void", ShareP)).contains("Couldn't match incoming Raw against expected Share"))
-    expectSuccess(run("Void", RawP)) shouldEqual Coord(Raw, Void2())
 
-    vassert(expectFail(run("MutStruct", RawP)).contains("Couldn't match incoming Own against expected Raw"))
     vassert(expectFail(run("MutStruct", ShareP)).contains("Couldn't match incoming Own against expected Share"))
     // Takes the own off the incoming own coord, ends up as another own.
     expectSuccess(run("MutStruct", OwnP)) shouldEqual Coord(Own, StructRef2(FullName2(List(NamePart2("MutStruct", Some(List()), None, None)))))
@@ -994,6 +987,5 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
     // Takes the borrow off the incoming borrow coord, succeeds and gives us an own.
     expectSuccess(run("MutStructBorrow", BorrowP)) shouldEqual Coord(Own, StructRef2(FullName2(List(NamePart2("MutStruct", Some(List()), None, None)))))
     vassert(expectFail(run("MutStructBorrow", ShareP)).contains("Couldn't match incoming Borrow against expected Share"))
-    vassert(expectFail(run("MutStructBorrow", RawP)).contains("Couldn't match incoming Borrow against expected Raw"))
   }
 }

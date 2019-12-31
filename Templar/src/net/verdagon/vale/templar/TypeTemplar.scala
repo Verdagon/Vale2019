@@ -77,7 +77,6 @@ object TypeTemplar {
           vfail("Supplied an owning but target wants to only borrow")
         }
         case (Borrow, Borrow) => sourceExpr
-        case (Raw, Raw) => sourceExpr
         case (Share, Share) => sourceExpr
         case (Own, Share) => {
           vfail(); // curious

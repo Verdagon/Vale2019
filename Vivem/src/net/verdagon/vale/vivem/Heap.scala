@@ -104,11 +104,10 @@ class AllocationMap(vivemDout: PrintStream) {
   }
 
   def checkForLeaks(): Unit = {
-    val nonRawObjectsById = objectsById.filter(_._2.reference.ownership != Raw)
-    if (nonRawObjectsById.nonEmpty) {
-      nonRawObjectsById.values.map(_.reference.allocId.num).toArray.sorted.foreach(objId => print("o" + objId + " "))
+    if (objectsById.nonEmpty) {
+      objectsById.values.map(_.reference.allocId.num).toArray.sorted.foreach(objId => print("o" + objId + " "))
       println()
-      nonRawObjectsById.values.toArray.sortWith(_.reference.allocId.num < _.reference.allocId.num).foreach(_.printRefs())
+      objectsById.values.toArray.sortWith(_.reference.allocId.num < _.reference.allocId.num).foreach(_.printRefs())
       vfail("Memory leaks! See above for ")
     }
   }

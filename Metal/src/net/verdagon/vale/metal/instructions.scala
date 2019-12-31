@@ -142,7 +142,7 @@ case class InterfaceToInterfaceUpcastH(
 }
 
 case class UnreachableH(registerId: String) extends NodeH {
-  def resultType = ReferenceH(Raw, NeverH())
+  def resultType = ReferenceH(Share, NeverH())
 }
 
 // Takes a reference from the given "source" register, and puts it into an *existing*

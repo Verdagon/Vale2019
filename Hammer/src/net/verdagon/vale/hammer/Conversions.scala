@@ -47,7 +47,6 @@ object Conversions {
       case t.Own => Own
       case t.Borrow => Borrow
       case t.Share => Share
-      case t.Raw => Raw
     }
   }
 
@@ -64,7 +63,6 @@ object Conversions {
       case Own => m.Own
       case Borrow => m.Borrow
       case Share => m.Share
-      case Raw => m.Raw
     }
   }
 

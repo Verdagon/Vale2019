@@ -1,4 +1,7 @@
-package net.verdagon.vale.templar;
+package net.verdagon.vale.templar
+
+import net.verdagon.vale.templar.templata._
+import net.verdagon.vale.templar.types._
 
 object NameTemplar {
   // Identifier names need to come from the Templar output because some things are erased
@@ -12,16 +15,26 @@ object NameTemplar {
         case Share => "*"
         case Borrow => "&"
         case Own => "^"
-        case Raw => "%"
       }
     ownershipString + getReferendIdentifierName(referend)
   }
 
   def getFullNameIdentifierName(fullName: FullName2): String = {
     fullName.steps.map({
-      case NamePart2(humanName, None) => humanName
-      case NamePart2(humanName, Some(templateArgs)) => {
-        humanName + "<" + templateArgs.map(getIdentifierName).mkString(", ") + ">"
+      case NamePart2(humanName, maybeTemplateArgs, maybeParameters, maybeCodeLocation) => {
+        humanName +
+          (maybeTemplateArgs match {
+            case None => ""
+            case Some(templateArgs) => "<" + templateArgs.map(templateArg => getIdentifierName(templateArg)).mkString(", ") + ">"
+          }) +
+          (maybeParameters match {
+            case None => ""
+            case Some(parameters) => "(" + parameters.map(parameter => getReferenceIdentifierName(parameter)).mkString(", ") + ")"
+          }) +
+          (maybeCodeLocation match {
+            case None => ""
+            case Some(CodeLocation2(file, line, char)) => "@" + file + ":" + line + ":" + char
+          })
       }
     }).mkString("::")
   }
@@ -35,9 +48,6 @@ object NameTemplar {
       case Void2() => "∅"
       case UnknownSizeArrayT2(array) => "𝔸" + getReferenceIdentifierName(array.memberType)
       case ArraySequenceT2(size, arrayT2) => "𝔸" + size + getReferenceIdentifierName(arrayT2.memberType)
-      case FunctionT2(paramTypes, returnType) => {
-        "𝔽(" + paramTypes.map(getReferenceIdentifierName).mkString(",") + "):" + getReferenceIdentifierName(returnType)
-      }
       case PackT2(innerTypes, underlyingStruct) => {
         getReferendIdentifierName(underlyingStruct)
       }
@@ -62,8 +72,19 @@ object NameTemplar {
   }
 
   def getIdentifierName(prototype: Prototype2): String = {
-    val Prototype2(fullName, FunctionT2(paramsTypes2, returnType2)) = prototype;
+    val Prototype2(fullName, paramsTypes2, returnType2) = prototype;
     "𝔽" + getFullNameIdentifierName(fullName) +
-        "(" + paramsTypes2.map(p => getReferenceIdentifierName(p)).mkString(",") + ")"
+        "(" + paramsTypes2.map(p => getReferenceIdentifierName(p)).mkString(",") + ")" +
+        getReferenceIdentifierName(returnType2)
+  }
+
+  def getIdentifierName(paramFilter: ParamFilter): String = {
+    val ParamFilter(tyype, virtuality) = paramFilter
+    getReferenceIdentifierName(tyype) +
+      (virtuality match {
+        case None => ""
+        case Some(Abstract2) => " abstract"
+        case Some(Override2(kind)) => " impl " + getReferendIdentifierName(kind)
+      })
   }
 }

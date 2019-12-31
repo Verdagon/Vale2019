@@ -18,14 +18,14 @@ object FunctionTemplarCore {
   // - either no template args, or they were already added to the env.
   // - either no closured vars, or they were already added to the env.
   def evaluateFunctionForHeader(
-      innerEnv: FunctionEnvironmentBox,
+    startingFullEnv: FunctionEnvironment,
       temputs: TemputsBox,
       function1: FunctionA,
       params2: List[Parameter2]):
   (FunctionHeader2) = {
-    val startingInnerEnv = innerEnv.snapshot
+    val fullEnv = FunctionEnvironmentBox(startingFullEnv)
 
-    println("Evaluating function " + innerEnv.fullName)
+    println("Evaluating function " + fullEnv.fullName)
 
     val isDestructor =
       function1.name == CallTemplar.DESTRUCTOR_NAME && params2.head.tyype.ownership == Own;
@@ -34,7 +34,7 @@ object FunctionTemplarCore {
       case CodeBodyA(body) => {
         val (header, body2) =
           BodyTemplar.declareAndEvaluateFunctionBody(
-            innerEnv, temputs, BFunctionA(function1, function1.name, body), params2, isDestructor)
+            fullEnv, temputs, BFunctionA(function1, function1.name, body), params2, isDestructor)
 
         // Funny story... let's say we're current instantiating a constructor,
         // for example MySome<T>().
@@ -49,10 +49,10 @@ object FunctionTemplarCore {
         // Remember, the near env contains closure variables, which we
         // don't care about here. So find the difference between the near
         // env and our latest env.
-        vassert(innerEnv.variables.startsWith(startingInnerEnv.variables))
+        vassert(fullEnv.variables.startsWith(startingFullEnv.variables))
         val introducedLocals =
-          innerEnv.variables
-            .drop(startingInnerEnv.variables.size)
+          fullEnv.variables
+            .drop(startingFullEnv.variables.size)
             .collect({
               case x @ ReferenceLocalVariable2(_, _, _) => x
               case x @ AddressibleLocalVariable2(_, _, _) => x
@@ -73,7 +73,7 @@ object FunctionTemplarCore {
         val maybeRetCoord =
           function1.maybeRetCoordRune match {
             case None => vfail("Need return type for abstract function!")
-            case Some(r) => innerEnv.getNearestTemplataWithName(r, Set(TemplataLookupContext))
+            case Some(r) => fullEnv.getNearestTemplataWithName(r, Set(TemplataLookupContext))
           }
         val retCoord =
           maybeRetCoord match {
@@ -81,12 +81,12 @@ object FunctionTemplarCore {
             case Some(CoordTemplata(r)) => r
           }
         val header =
-          makeInterfaceFunction(innerEnv, temputs, Some(function1), params2, retCoord)
+          makeInterfaceFunction(fullEnv.snapshot, temputs, Some(function1), params2, retCoord)
         (header)
       }
       case ExternBodyA => {
         val maybeRetCoord =
-          innerEnv.getNearestTemplataWithName(function1.maybeRetCoordRune.get, Set(TemplataLookupContext))
+          fullEnv.getNearestTemplataWithName(function1.maybeRetCoordRune.get, Set(TemplataLookupContext))
         val retCoord =
           maybeRetCoord match {
             case None => vfail("wat")
@@ -95,7 +95,7 @@ object FunctionTemplarCore {
         val header =
           makeExternFunction(
             temputs,
-            innerEnv.fullName,
+            fullEnv.fullName,
             function1.isUserFunction,
             params2,
             retCoord,
@@ -103,11 +103,11 @@ object FunctionTemplarCore {
         (header)
       }
       case GeneratedBodyA(generatorId) => {
-        val signature2 = Signature2(innerEnv.fullName, params2.map(_.tyype));
+        val signature2 = Signature2(fullEnv.fullName, params2.map(_.tyype));
         val maybeRetTemplata =
           function1.maybeRetCoordRune match {
             case None => (None)
-            case Some(retCoordRune) => innerEnv.getNearestTemplataWithName(retCoordRune, Set(TemplataLookupContext))
+            case Some(retCoordRune) => fullEnv.getNearestTemplataWithName(retCoordRune, Set(TemplataLookupContext))
           }
         val maybeRetCoord =
           maybeRetTemplata match {
@@ -137,7 +137,7 @@ object FunctionTemplarCore {
             val generator = temputs.functionGeneratorByName(generatorId)
             val header =
               generator.generate(
-                innerEnv, temputs, Some(function1), params2, maybeRetCoord)
+                fullEnv.snapshot, temputs, Some(function1), params2, maybeRetCoord)
             if (header.toSignature != signature2) {
               vfail("Generator made a function whose signature doesn't match the expected one!\n" +
               "Expected:  " + signature2 + "\n" +
@@ -171,7 +171,7 @@ object FunctionTemplarCore {
 
 
   def makeInterfaceFunction(
-    env: FunctionEnvironmentBox,
+    env: FunctionEnvironment,
     temputs: TemputsBox,
     origin: Option[FunctionA],
     params2: List[Parameter2],
@@ -295,12 +295,12 @@ object FunctionTemplarCore {
               NamePart2(
                 CallTemplar.INTERFACE_DESTRUCTOR_NAME,
                 Some(List(CoordTemplata(structType2), KindTemplata(interfaceRef2))),
-                None,
+                Some(List(structType2)),
                 None))),
           0,
           false, false,
           List(Parameter2("this", Some(Override2(interfaceRef2)), structType2)),
-          Coord(Raw, Void2()),
+          Coord(Share, Void2()),
           maybeOriginFunction1),
         List(),
         Block2(

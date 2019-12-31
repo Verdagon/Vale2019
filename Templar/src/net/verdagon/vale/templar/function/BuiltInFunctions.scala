@@ -71,7 +71,7 @@ object BuiltInFunctions {
         "concreteDestructorGenerator" ->
           new IFunctionGenerator {
             override def generate(
-              env: FunctionEnvironmentBox,
+              env: FunctionEnvironment,
               temputs: TemputsBox,
               maybeOriginFunction1: Option[FunctionA],
               paramCoords: List[Parameter2],
@@ -98,11 +98,11 @@ object BuiltInFunctions {
                 }
                 case List(r @ Coord(_, as @ ArraySequenceT2(_, _))) => {
                   DestructorTemplar.generateArraySequenceDestructor(
-                    env.snapshot, temputs, maybeOriginFunction1, r, as)
+                    env, temputs, maybeOriginFunction1, r, as)
                 }
                 case List(r @ Coord(_, ra @ UnknownSizeArrayT2(_))) => {
                   DestructorTemplar.generateUnknownSizeArrayDestructor(
-                    env.snapshot, temputs, maybeOriginFunction1, r, ra)
+                    env, temputs, maybeOriginFunction1, r, ra)
                 }
                 case _ => {
                   vfail("wot")
@@ -151,7 +151,7 @@ object BuiltInFunctions {
         ("interfaceDestructorGenerator" ->
         new IFunctionGenerator {
           override def generate(
-            innerEnv: FunctionEnvironmentBox,
+            namedEnv: FunctionEnvironment,
             temputs: TemputsBox,
             maybeOriginFunction1: Option[FunctionA],
             params: List[Parameter2],
@@ -163,7 +163,7 @@ object BuiltInFunctions {
             params.map(_.tyype) match {
               case List(Coord(_, InterfaceRef2(_))) => {
                 FunctionTemplarCore.makeInterfaceFunction(
-                  innerEnv,
+                  namedEnv,
                   temputs,
                   maybeOriginFunction1,
                   params,
@@ -216,7 +216,7 @@ object BuiltInFunctions {
         "implDestructorGenerator" ->
           new IFunctionGenerator {
             override def generate(
-              innerEnv: FunctionEnvironmentBox,
+              namedEnv: FunctionEnvironment,
               temputs: TemputsBox,
               maybeOriginFunction1: Option[FunctionA],
               params: List[Parameter2],
@@ -229,16 +229,16 @@ object BuiltInFunctions {
               // However, the template arguments are, and idestructor's template argument
               // is the interface we're overriding.
               val List(
-              CoordTemplata(Coord(_, overridingStructRef2FromTemplateArg @ StructRef2(_))),
-              KindTemplata(implementedInterfaceRef2 @ InterfaceRef2(_))) =
-              innerEnv.fullName.steps.last.templateArgs.get
+                CoordTemplata(Coord(_, overridingStructRef2FromTemplateArg @ StructRef2(_))),
+                KindTemplata(implementedInterfaceRef2 @ InterfaceRef2(_))) =
+                  namedEnv.fullName.steps.last.templateArgs.get
 
               params.map(_.tyype) match {
                 case List(Coord(_, structRef2 @ StructRef2(_))) => {
                   vassert(overridingStructRef2FromTemplateArg == structRef2)
                   val structDef2 = temputs.lookupStruct(structRef2)
                   FunctionTemplarCore.makeImplDestructor(
-                    innerEnv.globalEnv, temputs, maybeOriginFunction1, structDef2, implementedInterfaceRef2)
+                    namedEnv.globalEnv, temputs, maybeOriginFunction1, structDef2, implementedInterfaceRef2)
                 }
                 case _ => {
                   vfail("wot")
@@ -282,18 +282,18 @@ object BuiltInFunctions {
         "dropGenerator" ->
           new IFunctionGenerator {
             override def generate(
-              innerEnv: FunctionEnvironmentBox,
+              namedEnv: FunctionEnvironment,
               temputs: TemputsBox,
               maybeOriginFunction1: Option[FunctionA],
               params: List[Parameter2],
               maybeReturnType2: Option[Coord]):
             (FunctionHeader2) = {
-              vassert(maybeReturnType2 == Some(Coord(Raw, Void2())))
-              val List(CoordTemplata(ref2)) = innerEnv.fullName.steps.last.templateArgs.get
+              vassert(maybeReturnType2 == Some(Coord(Share, Void2())))
+              val List(CoordTemplata(ref2)) = namedEnv.fullName.steps.last.templateArgs.get
               val List(Parameter2("x", None, paramType2)) = params
               vassert(paramType2 == ref2)
               DestructorTemplar.generateDropFunction(
-                innerEnv, temputs, maybeOriginFunction1.get, ref2)
+                namedEnv, temputs, maybeOriginFunction1.get, ref2)
             }
           }))
   }

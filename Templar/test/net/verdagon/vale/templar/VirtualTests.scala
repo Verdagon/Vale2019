@@ -487,7 +487,7 @@ class VirtualTests extends FunSuite with Matchers {
 //          List(CoercedFinalTemplateArg2(ReferenceTemplata(Coord(Share, Int2())))),
 //          List(
 //            Parameter2("x", Some(Virtual2), Coord(Own, InterfaceRef2("MyInterface", List(CoercedFinalTemplateArg2(ReferenceTemplata(Coord(Share, Int2())))))))),
-//          Coord(Raw, Void2()),
+//          Coord(Share, Void2()),
 //          _),
 //        _,
 //        _) => {}

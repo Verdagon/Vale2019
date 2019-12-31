@@ -7,7 +7,7 @@ import net.verdagon.vale.scout.rules._
 import net.verdagon.vale.templar.infer._
 import net.verdagon.vale.templar.templata.{Conversions, ITemplata, _}
 import net.verdagon.vale.astronomer._
-import net.verdagon.vale.parser.{BorrowP, OwnP, RawP, ShareP}
+import net.verdagon.vale.parser.{BorrowP, OwnP, ShareP}
 import net.verdagon.vale.templar.types.{Kind, _}
 
 import scala.collection.immutable.List
@@ -585,21 +585,12 @@ class InfererEvaluator[Env, State](
                 case (Own, ShareP) => return (InferEvaluateConflict(inferences.inferences, "Expected a share, but was an own!", List()))
                 case (Own, OwnP) => Own // No change, allow it
                 case (Own, BorrowP) => Borrow // Can borrow an own, allow it
-                case (Own, RawP) => return (InferEvaluateConflict(inferences.inferences, "Expected a raw, but was an own!", List()))
                 case (Borrow, ShareP) => return (InferEvaluateConflict(inferences.inferences, "Expected a share, but was a borrow!", List()))
                 case (Borrow, OwnP) => Own
                 case (Borrow, BorrowP) => Borrow // No change, allow it
-                case (Borrow, RawP) => return (InferEvaluateConflict(inferences.inferences, "Expected a raw, but was a borrow!", List()))
                 case (Share, OwnP) => Share // Can own a share, just becomes another share.
                 case (Share, BorrowP) => Share // Can borrow a share, just becomes another share.
                 case (Share, ShareP) => Share // No change, allow it
-                case (Share, RawP) => return (InferEvaluateConflict(inferences.inferences, "Expected a raw, but was a share!", List()))
-                case (Raw, OwnP) => Raw // Can own a raw, just becomes another raw.
-                case (Raw, BorrowP) => Raw // Can borrow a raw, just becomes another raw.
-                case (Raw, ShareP) => {
-                  return (InferEvaluateConflict(inferences.inferences, "Expected a share, but was a raw!", List()))
-                }
-                case (Raw, RawP) => Raw // No change, allow it
               }
 
             // If we got here then the ownership and mutability were compatible.
@@ -979,8 +970,7 @@ class InfererEvaluator[Env, State](
         (maybeOwnership, maybeKind) match {
           case (Some(ownership), Some(kind)) => {
             val newOwnership =
-              if (kind == Void2()) Raw
-              else if (delegate.getMutability(state, kind) == Immutable) Share
+              if (delegate.getMutability(state, kind) == Immutable) Share
               else ownership
             (InferEvaluateSuccess(CoordTemplata(Coord(newOwnership, kind)), deeplySatisfied))
           }

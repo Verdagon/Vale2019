@@ -27,14 +27,9 @@ import net.verdagon.vale.vfail
 // thought of as dimensions of a coordinate.
 case class ReferenceH[+T <: ReferendH](ownership: Ownership, kind: T) {
   kind match {
-    case IntH() | BoolH() | StrH() | FloatH() => {
+    case IntH() | BoolH() | StrH() | FloatH() | VoidH() => {
       // Make sure that if we're pointing at a primitives, it's via a Share reference.
       if (ownership != Share) {
-        vfail("wot")
-      }
-    }
-    case VoidH() => {
-      if (ownership != Raw) {
         vfail("wot")
       }
     }
@@ -140,8 +135,6 @@ sealed trait Ownership
 case object Own extends Ownership
 case object Borrow extends Ownership
 case object Share extends Ownership
-// TODO: Remove raw.
-case object Raw extends Ownership
 
 // Permission says whether a reference can modify the referend it's pointing at.
 // See ReferenceH for explanation.

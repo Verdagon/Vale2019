@@ -39,7 +39,7 @@ object FunctionHammer {
         val stackHeight = StackHeightBox(StackHeight(0, 0, 0))
         val (bodyH, maybeResultAccess) =
           BlockHammer.translateBlock(hinputs, hamuts, locals.snapshot, stackHeight, body)
-        val resultCoord = maybeResultAccess.map(_.expectedType).getOrElse(ReferenceH(m.Raw, VoidH()))
+        val resultCoord = maybeResultAccess.map(_.expectedType).getOrElse(ReferenceH(m.Share, VoidH()))
         if (resultCoord != prototypeH.returnType) {
           vfail()
         }

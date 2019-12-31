@@ -202,7 +202,6 @@ object CallTemplar {
       givenCallableUnborrowedExpr2.resultRegister.reference match {
         case Coord(Borrow, _) => (givenCallableUnborrowedExpr2)
         case Coord(Share, _) => (givenCallableUnborrowedExpr2)
-        case Coord(Raw, _) => (givenCallableUnborrowedExpr2)
         case Coord(Own, _) => {
           ExpressionTemplar.makeTemporaryLocal(temputs, fate, givenCallableUnborrowedExpr2)
         }

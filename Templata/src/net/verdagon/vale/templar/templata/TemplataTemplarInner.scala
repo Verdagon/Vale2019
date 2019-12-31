@@ -248,7 +248,6 @@ class TemplataTemplarInner[Env, State](delegate: ITemplataTemplarInnerDelegate[E
         case (Borrow, Own) => return (None)
         case (Own, Borrow) => 1
         case (Borrow, Borrow) => 0
-        case (Raw, Raw) => 0
         case (Share, Share) => 0
       }
 
@@ -309,7 +308,6 @@ class TemplataTemplarInner[Env, State](delegate: ITemplataTemplarInnerDelegate[E
       case (Borrow, Own) => return (false)
       case (Own, Borrow) => return (false)
       case (Borrow, Borrow) =>
-      case (Raw, Raw) =>
       case (Share, Share) =>
     }
 
@@ -339,7 +337,7 @@ class TemplataTemplarInner[Env, State](delegate: ITemplataTemplarInnerDelegate[E
         Coord(ownership, i)
       }
       case Void2() => {
-        Coord(Raw, Void2())
+        Coord(Share, Void2())
       }
       case Int2() => {
         Coord(Share, Int2())
@@ -443,7 +441,6 @@ class TemplataTemplarInner[Env, State](delegate: ITemplataTemplarInnerDelegate[E
     templata: ITemplata,
     tyype: ITemplataType):
   (ITemplata) = {
-    println("clean up that raw/never thing!")
     // debt: find a way to simplify this function, seems simplifiable
     (templata, tyype) match {
       case (MutabilityTemplata(_), MutabilityTemplataType) => {
@@ -454,7 +451,7 @@ class TemplataTemplarInner[Env, State](delegate: ITemplataTemplarInnerDelegate[E
         val coerced =
           CoordTemplata(
             Coord(
-              if (kind == Void2() || kind == Never2()) Raw else if (mutability == Mutable) Own else Share,
+              if (mutability == Mutable) Own else Share,
               kind))
         (coerced)
       }

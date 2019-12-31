@@ -22,7 +22,7 @@ object FunctionTemplarClosureOrLightLayer {
   // This is for the early stages of Templar when it's scanning banners to put in
   // its env. We just want its banner, we don't want to evaluate it.
   def predictOrdinaryLightFunctionBanner(
-    outerEnv: FunctionEnvironmentBox,
+    outerEnv: FunctionEnvironment,
     temputs: TemputsBox,
     function1: FunctionA):
   (FunctionBanner2) = {
@@ -39,7 +39,7 @@ object FunctionTemplarClosureOrLightLayer {
 
 
   def evaluateOrdinaryLightFunctionFromNonCallForBanner(
-      outerEnv: FunctionEnvironmentBox,
+      outerEnv: FunctionEnvironment,
       temputs: TemputsBox,
       function1: FunctionA):
   (FunctionBanner2) = {
@@ -55,7 +55,7 @@ object FunctionTemplarClosureOrLightLayer {
   }
 
   def evaluateTemplatedClosureFunctionFromCallForBanner(
-      outerEnv: FunctionEnvironmentBox,
+      outerEnv: FunctionEnvironment,
       temputs: TemputsBox,
       closureStructRef: StructRef2,
       functionS: FunctionA,
@@ -94,7 +94,7 @@ object FunctionTemplarClosureOrLightLayer {
   }
 
   def evaluateTemplatedClosureFunctionFromCallForPrototype(
-    outerEnv: FunctionEnvironmentBox,
+    outerEnv: FunctionEnvironment,
     temputs: TemputsBox,
     closureStructRef: StructRef2,
     functionS: FunctionA,
@@ -133,7 +133,7 @@ object FunctionTemplarClosureOrLightLayer {
   }
 
   def evaluateTemplatedLightFunctionFromNonCallForHeader(
-      ourEnv: FunctionEnvironmentBox,
+      ourEnv: FunctionEnvironment,
       temputs: TemputsBox,
       functionS: FunctionA,
       explicitTemplateArgs: List[ITemplata]):
@@ -148,7 +148,7 @@ object FunctionTemplarClosureOrLightLayer {
   }
 
   def evaluateTemplatedLightFunctionFromCallForPrototype2(
-      ourEnv: FunctionEnvironmentBox,
+      ourEnv: FunctionEnvironment,
       temputs: TemputsBox,
       functionS: FunctionA,
       explicitTemplateArgs: List[ITemplata],
@@ -164,7 +164,7 @@ object FunctionTemplarClosureOrLightLayer {
   }
 
   def evaluateOrdinaryLightFunctionFromNonCallForHeader(
-      outerEnv: FunctionEnvironmentBox,
+      outerEnv: FunctionEnvironment,
       temputs: TemputsBox,
       function1: FunctionA):
   (FunctionHeader2) = {
@@ -179,7 +179,7 @@ object FunctionTemplarClosureOrLightLayer {
   // we were calling the function. This is necessary for a recursive function like
   // fn main():Int{main()}
   def evaluateOrdinaryLightFunctionFromNonCallForPrototype(
-    outerEnv: FunctionEnvironmentBox,
+    outerEnv: FunctionEnvironment,
     temputs: TemputsBox,
     function1: FunctionA):
   (Prototype2) = {
@@ -191,7 +191,7 @@ object FunctionTemplarClosureOrLightLayer {
   }
 
   def evaluateOrdinaryClosureFunctionFromNonCallForBanner(
-    outerEnv: FunctionEnvironmentBox,
+    outerEnv: FunctionEnvironment,
     temputs: TemputsBox,
     closureStructRef: StructRef2,
     function1: FunctionA):
@@ -225,7 +225,7 @@ object FunctionTemplarClosureOrLightLayer {
   }
 
   def evaluateOrdinaryClosureFunctionFromNonCallForHeader(
-      outerEnv: FunctionEnvironmentBox,
+      outerEnv: FunctionEnvironment,
       temputs: TemputsBox,
       closureStructRef: StructRef2,
       function1: FunctionA):
@@ -262,7 +262,7 @@ object FunctionTemplarClosureOrLightLayer {
   // are a lot of overloads available.
   // This assumes it met any type bound restrictions (or, will; not implemented yet)
   def evaluateTemplatedLightBannerFromCall(
-      functionOuterEnv: FunctionEnvironmentBox,
+      functionOuterEnv: FunctionEnvironment,
       temputs: TemputsBox,
       function: FunctionA,
       explicitTemplateArgs: List[ITemplata],
@@ -273,7 +273,7 @@ object FunctionTemplarClosureOrLightLayer {
   }
 
   def evaluateTemplatedFunctionFromCallForBanner(
-      outerEnv: FunctionEnvironmentBox,
+      outerEnv: FunctionEnvironment,
       temputs: TemputsBox,
       functionS: FunctionA,
       alreadySpecifiedTemplateArgs: List[ITemplata],
@@ -286,7 +286,7 @@ object FunctionTemplarClosureOrLightLayer {
   }
 
   def scanOrdinaryInterfaceMember(
-    env1: FunctionEnvironmentBox,
+    env1: FunctionEnvironment,
     temputs: TemputsBox,
     interfaceExplicitTemplateArgs: List[ITemplata],
     prototype1: FunctionA):

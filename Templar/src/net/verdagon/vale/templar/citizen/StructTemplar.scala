@@ -32,7 +32,7 @@ object StructTemplar {
       "structConstructorGenerator" ->
         new IFunctionGenerator {
           override def generate(
-            env: FunctionEnvironmentBox,
+            env: FunctionEnvironment,
             temputs: TemputsBox,
             originFunction: Option[FunctionA],
             paramCoords: List[Parameter2],
@@ -40,13 +40,13 @@ object StructTemplar {
           (FunctionHeader2) = {
             val Some(Coord(_, structRef2 @ StructRef2(_))) = maybeRetCoord
             val structDef2 = temputs.lookupStruct(structRef2)
-            StructTemplarCore.makeStructConstructor(temputs, originFunction, structDef2, structDef2.fullName)
+            StructTemplarCore.makeStructConstructor(temputs, originFunction, structDef2)
           }
         },
       "interfaceConstructorGenerator" ->
         new IFunctionGenerator {
           override def generate(
-            env: FunctionEnvironmentBox,
+            env: FunctionEnvironment,
             temputs: TemputsBox,
             originFunction: Option[FunctionA],
             paramCoords: List[Parameter2],
@@ -60,7 +60,7 @@ object StructTemplar {
               }
             val (_, _, constructor) =
               StructTemplar.makeAnonymousSubstruct(
-                env.functionEnvironment, temputs, originFunction, env.fullName, interfaceRef2, paramCoords.map(_.tyype))
+                env, temputs, originFunction, env.fullName, interfaceRef2, paramCoords.map(_.tyype))
             constructor
           }
         })

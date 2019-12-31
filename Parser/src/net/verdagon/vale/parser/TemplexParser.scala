@@ -25,7 +25,6 @@ trait TemplexParser extends RegexParsers with ParserUtils {
     "own" ^^^ OwnershipPT(OwnP) |
     "borrow" ^^^ OwnershipPT(BorrowP) |
     "share" ^^^ OwnershipPT(ShareP) |
-    "raw" ^^^ OwnershipPT(RawP) |
     "mut" ^^^ MutabilityPT(MutableP) |
     "imm" ^^^ MutabilityPT(ImmutableP) |
     "inl" ^^^ LocationPT(InlineP) |

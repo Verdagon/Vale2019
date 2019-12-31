@@ -61,16 +61,16 @@ object OverloadTemplar {
     rejectedReasonByFunction: Map[FunctionA, String]
   ) extends IScoutExpectedFunctionResult {
     override def toString = {
-      "Couldn't find a " + humanName + "(" + args.map(":" + _).mkString(", ") + ")\n" +
+      "Couldn't find a fn " + humanName + "(" + args.map(NameTemplar.getIdentifierName(_)).mkString(", ") + ")\n" +
         "Outscored:\n" + outscoredReasonByPotentialBanner.map({
-        case (potentialBanner, outscoredReason) => potentialBanner + ": " + outscoredReason
-      }).mkString("\n") + "\n" +
+          case (potentialBanner, outscoredReason) => NameTemplar.getFullNameIdentifierName(potentialBanner.banner.fullName) + ":\n  " + outscoredReason
+        }).mkString("\n") + "\n" +
         "Rejected:\n" + rejectedReasonByBanner.map({
-        case (banner, rejectedReason) => banner + ": " + rejectedReason
-      }).mkString("\n") + "\n" +
+          case (banner, rejectedReason) => NameTemplar.getFullNameIdentifierName(banner.fullName) + ":\n  " + rejectedReason
+        }).mkString("\n") + "\n" +
         "Rejected:\n" + rejectedReasonByFunction.map({
-        case (functionS, rejectedReason) => functionS + ": " + rejectedReason
-      }).mkString("\n") + "\n"
+          case (functionS, rejectedReason) => functionS + ":\n  " + rejectedReason
+        }).mkString("\n") + "\n"
     }
   }
 
@@ -108,7 +108,7 @@ object OverloadTemplar {
       if (source == destination) {
         (None)
       } else {
-        (Some(source + " is not " + destination))
+        (Some(NameTemplar.getReferenceIdentifierName(source) + " is not " + NameTemplar.getReferenceIdentifierName(destination)))
       }
     } else {
       TemplataTemplar.isTypeConvertible(temputs, source, destination) match {

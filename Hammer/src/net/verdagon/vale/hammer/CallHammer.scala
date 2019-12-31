@@ -2,7 +2,7 @@ package net.verdagon.vale.hammer
 
 import net.verdagon.vale.hinputs.Hinputs
 import net.verdagon.vale.{metal => m}
-import net.verdagon.vale.metal.{Raw => _, _}
+import net.verdagon.vale.metal.{Share => _, _}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.templata.{FunctionBanner2, FunctionHeader2, Prototype2}
 import net.verdagon.vale.templar.types._
@@ -43,7 +43,7 @@ object CallHammer {
         hinputs, hamuts, locals, stackHeight, nodesByLine, argsDeferreds)
 
     val access =
-      if (prototype2.returnType == Coord(Raw, Void2())) {
+      if (prototype2.returnType == Coord(Share, Void2())) {
         None
       } else {
         Some(RegisterAccessH(callResultNode.registerId, functionRefH.prototype.returnType))
@@ -90,7 +90,7 @@ object CallHammer {
         hinputs, hamuts, locals, stackHeight, nodesByLine, argsDeferreds)
 
     val access =
-      if (returnType2 == Coord(Raw, Void2())) {
+      if (returnType2 == Coord(Share, Void2())) {
         None
       } else {
         Some(RegisterAccessH(callResultNode.registerId, resultTypeH))
@@ -254,11 +254,11 @@ object CallHammer {
     val maybeResultCoord =
       (maybeThenResultCoord, maybeElseResultCoord) match {
         case (None, None) => None
-        case (Some(ReferenceH(m.Raw, NeverH())), Some(ReferenceH(m.Raw, NeverH()))) => Some(ReferenceH(m.Raw, NeverH()))
-        case (Some(ReferenceH(m.Raw, NeverH())), None) => None
-        case (Some(ReferenceH(m.Raw, NeverH())), Some(elseResultCoord)) => Some(elseResultCoord)
-        case (None, Some(ReferenceH(m.Raw, NeverH()))) => None
-        case (Some(thenResultCoord), Some(ReferenceH(m.Raw, NeverH()))) => Some(thenResultCoord)
+        case (Some(ReferenceH(m.Share, NeverH())), Some(ReferenceH(m.Share, NeverH()))) => Some(ReferenceH(m.Share, NeverH()))
+        case (Some(ReferenceH(m.Share, NeverH())), None) => None
+        case (Some(ReferenceH(m.Share, NeverH())), Some(elseResultCoord)) => Some(elseResultCoord)
+        case (None, Some(ReferenceH(m.Share, NeverH()))) => None
+        case (Some(thenResultCoord), Some(ReferenceH(m.Share, NeverH()))) => Some(thenResultCoord)
         case (Some(thenResultCoord), Some(elseResultCoord)) => {
           vassert(thenResultCoord == elseResultCoord, "what\n" + maybeThenResultCoord + "\n" + maybeElseResultCoord)
           // Arbitrarily choose the then
@@ -328,7 +328,7 @@ object CallHammer {
           indexInEdge,
           prototypeH));
     val access =
-      if (prototypeH.returnType == ReferenceH(m.Raw, VoidH())) {
+      if (prototypeH.returnType == ReferenceH(m.Share, VoidH())) {
         None
       } else {
         Some(RegisterAccessH(callNode.registerId, prototypeH.returnType))
@@ -376,7 +376,7 @@ object CallHammer {
 //
 //          val returnType2 = functionRegister.expectedType.expectFunctionReference().innerType.returnType
 //          val access =
-//            if (returnType2 == ReferenceH(m.Raw, VoidH())) {
+//            if (returnType2 == ReferenceH(m.Share, VoidH())) {
 //              None
 //            } else {
 //              Some(RegisterAccessH(callResultNode.registerId, returnType2))
@@ -444,7 +444,7 @@ object CallHammer {
 //          functionTypeH));
 //
 //    val access =
-//      if (functionTypeH.returnType == ReferenceH(m.Raw, VoidH())) {
+//      if (functionTypeH.returnType == ReferenceH(m.Share, VoidH())) {
 //        None
 //      } else {
 //        Some(RegisterAccessH(methodNode.registerId, functionTypeH.returnType))

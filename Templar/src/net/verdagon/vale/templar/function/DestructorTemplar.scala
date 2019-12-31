@@ -89,25 +89,26 @@ object DestructorTemplar {
   }
 
   def generateDropFunction(
-    innerEnv: FunctionEnvironmentBox,
+    initialBodyEnv: FunctionEnvironment,
     temputs: TemputsBox,
     originFunction1: FunctionA,
     type2: Coord):
   (FunctionHeader2) = {
-    val dropExpr2 = DestructorTemplar.drop(innerEnv, temputs, ArgLookup2(0, type2))
+    val bodyEnv = FunctionEnvironmentBox(initialBodyEnv)
+    val dropExpr2 = DestructorTemplar.drop(bodyEnv, temputs, ArgLookup2(0, type2))
     val header =
       FunctionHeader2(
-        innerEnv.fullName,
+        bodyEnv.fullName,
         0,
         isExtern = false,
         isUserFunction = false,
         List(Parameter2("x", None, type2)),
-        Coord(Raw, Void2()),
+        Coord(Share, Void2()),
         Some(originFunction1))
     val function2 = Function2(header, List(), Block2(List(dropExpr2)))
-    temputs.declareFunctionReturnType(header.toSignature, Coord(Raw, Void2()))
+    temputs.declareFunctionReturnType(header.toSignature, Coord(Share, Void2()))
     temputs.addFunction(function2)
-    vassert(temputs.exactDeclaredSignatureExists(innerEnv.fullName, header.paramTypes))
+    vassert(temputs.exactDeclaredSignatureExists(bodyEnv.fullName, header.paramTypes))
     header
   }
 
@@ -118,14 +119,6 @@ object DestructorTemplar {
   (ReferenceExpression2) = {
     val resultExpr2 =
       undestructedExpr2.resultRegister.reference match {
-        case Coord(Raw, _) => {
-          undestructedExpr2.resultRegister.reference.referend match {
-            case Void2() =>
-            case Never2() =>
-            case _ => vfail("wat")
-          }
-          undestructedExpr2
-        }
         case r @ Coord(Own, referend) => {
           val destructorPrototype =
             referend match {
@@ -165,7 +158,7 @@ object DestructorTemplar {
 
           val unshareExpr2 =
             undestructedExpr2.resultRegister.reference.referend match {
-              case Int2() | Str2() | Bool2() | Float2() => {
+              case Int2() | Str2() | Bool2() | Float2() | Void2() => {
                 Discard2(undestructedExpr2)
               }
               case as @ ArraySequenceT2(_, _) => {
@@ -192,19 +185,21 @@ object DestructorTemplar {
         }
       }
     vassert(
-      resultExpr2.resultRegister.reference == Coord(Raw, Void2()) ||
-      resultExpr2.resultRegister.reference == Coord(Raw, Never2()))
+      resultExpr2.resultRegister.reference == Coord(Share, Void2()) ||
+      resultExpr2.resultRegister.reference == Coord(Share, Never2()))
     resultExpr2
   }
 
   def generateStructDestructor(
-      innerEnv: FunctionEnvironmentBox,
+    namedEnv: FunctionEnvironment,
       temputs: TemputsBox,
       originFunction1: FunctionA,
       params2: List[Parameter2],
       structRef: StructRef2):
   (FunctionHeader2) = {
-    val destructorFullName = innerEnv.fullName
+    val destructorFullName = namedEnv.fullName
+
+    val bodyEnv = FunctionEnvironmentBox(namedEnv)
 
     val structDef = temputs.lookupStruct(structRef)
     val structOwnership = if (structDef.mutability == Mutable) Own else Share
@@ -217,7 +212,7 @@ object DestructorTemplar {
         0,
         false, false,
         params2,
-        Coord(Raw, Void2()),
+        Coord(Share, Void2()),
         Some(originFunction1));
 
       temputs
@@ -240,12 +235,10 @@ object DestructorTemplar {
     val destructMemberExprs =
       memberLocalVariables.map({
         case (variable) => {
-          val destructMemberExpr = drop(innerEnv, temputs, Unlet2(variable))
+          val destructMemberExpr = drop(bodyEnv, temputs, Unlet2(variable))
           destructMemberExpr
         }
       })
-
-    val _ = innerEnv
 
     val voidLiteral = VoidLiteral2()
 
@@ -294,7 +287,7 @@ object DestructorTemplar {
           0,
           false, false,
           List(Parameter2("this", None, arrayRefType)),
-          Coord(Raw, Void2()),
+          Coord(Share, Void2()),
           maybeOriginFunction1),
         List(),
         Block2(
@@ -342,7 +335,7 @@ object DestructorTemplar {
           0,
           false, false,
           List(Parameter2("this", None, arrayRefType2)),
-          Coord(Raw, Void2()),
+          Coord(Share, Void2()),
           maybeOriginFunction1),
         List(),
         Block2(

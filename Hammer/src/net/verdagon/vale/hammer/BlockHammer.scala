@@ -4,7 +4,6 @@ import net.verdagon.vale.hinputs.Hinputs
 import net.verdagon.vale.{metal => m}
 import net.verdagon.vale.metal._
 import net.verdagon.vale.templar.Block2
-import net.verdagon.vale.templar.types.Raw
 import net.verdagon.vale.{vassert, vfail}
 
 object BlockHammer {
@@ -39,7 +38,7 @@ object BlockHammer {
 //      vfail("Ununstackified local: " + (localIdsInThisBlock -- unstackifiedLocalIdsInThisBlock))
 //    }
 
-    val resultType = registerAccesses.last.map(_.expectedType).getOrElse(ReferenceH(m.Raw, VoidH()))
+    val resultType = registerAccesses.last.map(_.expectedType).getOrElse(ReferenceH(m.Share, VoidH()))
 //    start here, we're returning locals and thats not optimal
     println("debt: put checking back in for unstackified things!")
     (BlockH(nodesByLine.inner, resultType), registerAccesses.last)

@@ -3,7 +3,7 @@ package net.verdagon.vale.templar.templata
 
 import net.verdagon.vale.astronomer._
 import net.verdagon.vale.templar.types._
-import net.verdagon.vale.{vassert, vfail}
+import net.verdagon.vale.{vassert, vassertSome, vfail}
 
 case class CovariantFamily(
     root: Prototype2,
@@ -96,12 +96,17 @@ case class PotentialBannerFromExternFunction(
 case class Signature2(
     fullName: FullName2,
     paramTypes: List[Coord]) {
+  vassert(vassertSome(fullName.steps.last.parameters) == paramTypes)
 }
 
 case class FunctionBanner2(
     originFunction: Option[FunctionA],
     fullName: FullName2,
     params: List[Parameter2]) extends Queriable2  {
+
+  vassert(fullName.steps.last.parameters.nonEmpty)
+  fullName.steps.last.parameters.foreach(parameters => vassert(parameters == params.map(_.tyype)))
+
   def toSignature: Signature2 = Signature2(fullName, paramTypes)
   def paramTypes: List[Coord] = params.map(_.tyype)
 
@@ -160,6 +165,8 @@ case class FunctionHeader2(
 
   // Make sure there's no duplicate names
   vassert(params.map(_.name).toSet.size == params.size);
+  
+  vassert(vassertSome(fullName.steps.last.parameters) == paramTypes)
 
   def getAbstractInterface: Option[InterfaceRef2] = toBanner.getAbstractInterface
   def getOverride: Option[(StructRef2, InterfaceRef2)] = toBanner.getOverride
