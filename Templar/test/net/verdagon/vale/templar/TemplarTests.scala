@@ -12,7 +12,7 @@ import org.scalatest.{FunSuite, Matchers, _}
 class TemplarTests extends FunSuite with Matchers {
   // TODO: pull all of the templar specific stuff out, the unit test-y stuff
 
-  class Compilation(code: String, useCommonEnv: Boolean = true) {
+  class Compilation(code: String) {
     var parsedCache: Option[Program0] = None
     var scoutputCache: Option[ProgramS] = None
     var astroutsCache: Option[ProgramA] = None
@@ -34,12 +34,7 @@ class TemplarTests extends FunSuite with Matchers {
       scoutputCache match {
         case Some(scoutput) => scoutput
         case None => {
-          val scoutput =
-            if (useCommonEnv) {
-              Scout.runScout(getParsed())
-            } else {
-              Scout.scoutProgram(getParsed())
-            }
+          val scoutput = Scout.scoutProgram(getParsed())
           scoutputCache = Some(scoutput)
           scoutput
         }
@@ -50,12 +45,7 @@ class TemplarTests extends FunSuite with Matchers {
       astroutsCache match {
         case Some(astrouts) => astrouts
         case None => {
-          val astrouts =
-            if (useCommonEnv) {
-              Astronomer.runAstronomer(getScoutput())
-            } else {
-              Astronomer.runAstronomer(getScoutput())
-            }
+          val astrouts = Astronomer.runAstronomer(getScoutput())
           astroutsCache = Some(astrouts)
           astrouts
         }
@@ -67,12 +57,7 @@ class TemplarTests extends FunSuite with Matchers {
         case Some(temputs) => temputs
         case None => {
 
-          val temputs =
-            if (useCommonEnv) {
-              Templar.runTemplar(getAstrouts())
-            } else {
-              Templar.evaluate(getAstrouts())
-            }
+          val temputs = Templar.evaluate(getAstrouts())
           temputsCache = Some(temputs)
           temputs
         }

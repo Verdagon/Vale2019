@@ -365,7 +365,12 @@ object VonHammer {
         vimpl()
       }
       case InlineBlockH(registerId, block) => {
-        vimpl()
+        VonObject(
+          "InlineBlock",
+          None,
+          Vector(
+            VonMember(None, Some("registerId"), VonStr(registerId)),
+            VonMember(None, Some("block"), vonifyBlock(block))))
       }
     }
   }

@@ -203,21 +203,8 @@ object Scout {
     VParser.runParser(code) match {
       case None => None
       case Some(program0) => {
-        Some(runScout(program0))
+        Some(scoutProgram(program0))
       }
     }
   }
-
-  def runScout(program0: Program0): ProgramS = {
-    val ProgramS(originalStructs, originalInterfaces, originalImpls, originalImplementedFunctionsS) =
-      Scout.scoutProgram(program0)
-    val program1 =
-      ProgramS(
-        originalStructs,
-        originalInterfaces,
-        originalImpls,
-        originalImplementedFunctionsS)
-    program1
-  }
-
 }

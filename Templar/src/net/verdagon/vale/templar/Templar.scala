@@ -286,14 +286,10 @@ object Templar {
     }
   }
 
-  def runTemplar(programA: ProgramA): CompleteProgram2 = {
-    Templar.evaluate(programA)
-  }
-
   def runTemplar(code: String): Option[CompleteProgram2] = {
     Astronomer.runAstronomer(code) match {
       case None => None
-      case Some(program1) => Some(runTemplar(program1))
+      case Some(program1) => Some(evaluate(program1))
     }
   }
 }
