@@ -35,12 +35,7 @@ class Compilation(code: String, useCommonEnv: Boolean = true) {
     scoutputCache match {
       case Some(scoutput) => scoutput
       case None => {
-        val scoutput =
-          if (useCommonEnv) {
-            Scout.runScout(getParsed())
-          } else {
-            Scout.scoutProgram(getParsed())
-          }
+        val scoutput = Scout.scoutProgram(getParsed())
         scoutputCache = Some(scoutput)
         scoutput
       }
@@ -62,12 +57,7 @@ class Compilation(code: String, useCommonEnv: Boolean = true) {
     temputsCache match {
       case Some(temputs) => temputs
       case None => {
-        val temputs =
-          if (useCommonEnv) {
-            Templar.runTemplar(getAstrouts())
-          } else {
-            Templar.evaluate(getAstrouts())
-          }
+        val temputs = Templar.evaluate(getAstrouts())
         temputsCache = Some(temputs)
         temputs
       }

@@ -41,7 +41,10 @@ object FunctionHammer {
           BlockHammer.translateBlock(hinputs, hamuts, locals.snapshot, stackHeight, body)
         val resultCoord = maybeResultAccess.map(_.expectedType).getOrElse(ReferenceH(m.Share, VoidH()))
         if (resultCoord != prototypeH.returnType) {
-          vfail()
+          vfail(
+            "Result of body's instructions didnt match return type!\n" +
+            "Return type:   " + prototypeH.returnType + "\n" +
+            "Body's result: " + resultCoord)
         }
 
         val functionH = FunctionH(prototypeH, header.getAbstractInterface != None, isExtern, isUserFunction, bodyH);

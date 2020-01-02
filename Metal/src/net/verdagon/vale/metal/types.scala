@@ -70,6 +70,9 @@ case class FloatH() extends ReferendH
 // A primitive which can never be instantiated. If something returns this, it
 // means that it will never actually return. For example, the return type of
 // panic() is a NeverH.
+// TODO: This feels weird being a referend in metal. Figure out a way to not
+// have this? Perhaps replace all referends with Optional[Optional[ReferendH]],
+// where None is never, Some(None) is Void, and Some(Some(_)) is a normal thing.[
 case class NeverH() extends ReferendH
 
 case class InterfaceRefH(

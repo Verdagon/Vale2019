@@ -415,7 +415,7 @@ object StructTemplarCore {
       temputs.addFunction(forwarderFunction)
     })
 
-    val constructor = makeStructConstructor(temputs, maybeConstructorOriginFunctionA, structDef)
+    val constructor = makeStructConstructor(temputs, maybeConstructorOriginFunctionA, structDef, constructorFullName)
 
     (structRef, mutability, constructor)
   }
@@ -519,7 +519,8 @@ object StructTemplarCore {
   def makeStructConstructor(
     temputs: TemputsBox,
     maybeConstructorOriginFunctionA: Option[FunctionA],
-    structDef: StructDefinition2):
+    structDef: StructDefinition2,
+    constructorFullName: FullName2):
   FunctionHeader2 = {
     val constructorParams =
       structDef.members.map({
@@ -527,10 +528,6 @@ object StructTemplarCore {
           Parameter2(name, None, reference)
         }
       })
-    val constructorFullName =
-      FullName2(
-        structDef.fullName.steps.init :+
-        structDef.fullName.steps.last.copy(parameters = Some(constructorParams.map(_.tyype))))
     val constructorReturnOwnership = if (structDef.mutability == Mutable) Own else Share
     val constructorReturnType = Coord(constructorReturnOwnership, structDef.getRef)
     // not virtual because how could a constructor be virtual

@@ -60,7 +60,7 @@ object CallHammer {
       function: Prototype2,
       args: List[Expression2],
       resultType2: Coord):
-  (Option[RegisterAccessH[ReferendH]]) = {
+  RegisterAccessH[ReferendH] = {
     val Prototype2(_, paramTypes, returnType2) = function
     val (argLines, argsDeferreds) =
       ExpressionHammer.translateExpressions(
@@ -89,13 +89,7 @@ object CallHammer {
       ExpressionHammer.translateDeferreds(
         hinputs, hamuts, locals, stackHeight, nodesByLine, argsDeferreds)
 
-    val access =
-      if (returnType2 == Coord(Share, Void2())) {
-        None
-      } else {
-        Some(RegisterAccessH(callResultNode.registerId, resultTypeH))
-      }
-    (access)
+    RegisterAccessH(callResultNode.registerId, resultTypeH)
   }
 
   def translateConstructArray(
@@ -224,7 +218,7 @@ object CallHammer {
       stackHeight: StackHeightBox,
       nodesByLine: NodesBox,
       if2: If2):
-  (Option[RegisterAccessH[ReferendH]]) = {
+  Option[RegisterAccessH[ReferendH]] = {
 
     val If2(condition2, thenBlock2, elseBlock2) = if2
 
@@ -301,7 +295,7 @@ object CallHammer {
       superFunctionHeader: FunctionHeader2,
       resultType2: Coord,
       argsExprs2: List[Expression2]):
-  (Option[RegisterAccessH[ReferendH]]) = {
+  RegisterAccessH[ReferendH] = {
     val (argLines, argsDeferreds) =
       ExpressionHammer.translateExpressions(
         hinputs, hamuts, locals, stackHeight, nodesByLine, argsExprs2);
@@ -327,16 +321,10 @@ object CallHammer {
           interfaceRefH,
           indexInEdge,
           prototypeH));
-    val access =
-      if (prototypeH.returnType == ReferenceH(m.Share, VoidH())) {
-        None
-      } else {
-        Some(RegisterAccessH(callNode.registerId, prototypeH.returnType))
-      }
+    val access = RegisterAccessH(callNode.registerId, prototypeH.returnType)
 
-
-      ExpressionHammer.translateDeferreds(
-        hinputs, hamuts, locals, stackHeight, nodesByLine, argsDeferreds)
+    ExpressionHammer.translateDeferreds(
+      hinputs, hamuts, locals, stackHeight, nodesByLine, argsDeferreds)
 
     (access)
     //

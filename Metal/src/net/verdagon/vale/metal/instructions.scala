@@ -528,8 +528,6 @@ case class RegisterAccessH[+T <: ReferendH](
   registerId: String,
   expectedType: ReferenceH[T]) {
 
-  vassert(expectedType.kind != VoidH())
-
   def expectStructAccess(): RegisterAccessH[StructRefH] = {
     this match {
       case RegisterAccessH(registerId, ReferenceH(ownership, x @ StructRefH(_))) => {

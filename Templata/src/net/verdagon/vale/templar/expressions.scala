@@ -3,7 +3,7 @@ package net.verdagon.vale.templar
 import net.verdagon.vale.templar.env.{ILocalVariable2, ReferenceLocalVariable2, VariableId2}
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar.types._
-import net.verdagon.vale.{vassert, vfail}
+import net.verdagon.vale.{vassert, vfail, vwat}
 
 trait IRegister2 extends Queriable2 {
   def expectReference(): ReferenceRegister2 = {
@@ -105,8 +105,11 @@ case class Discard2(
 }
 
 case class Defer2(
-    innerExpr: ReferenceExpression2,
-    deferredExpr: ReferenceExpression2) extends ReferenceExpression2 {
+  innerExpr: ReferenceExpression2,
+  // Every deferred expression should discard its result, IOW, return Void.
+  deferredExpr: Discard2
+) extends ReferenceExpression2 {
+
   override def resultRegister = ReferenceRegister2(innerExpr.resultRegister.reference)
 
   vassert(deferredExpr.resultRegister.reference == Coord(Share, Void2()))
@@ -208,6 +211,10 @@ case class Block2(exprs: List[ReferenceExpression2]) extends ReferenceExpression
 }
 
 case class Consecutor2(exprs: List[ReferenceExpression2]) extends ReferenceExpression2 {
+  // Everything but the last should result in a Void.
+  // The last can be anything, even a Void or a Never.
+  exprs.init.foreach(expr => vassert(expr.referend == Void2()))
+
   def lastReferenceExpr = exprs.last
   override def resultRegister = lastReferenceExpr.resultRegister
 

@@ -752,8 +752,9 @@ object ExpressionTemplar {
     val unlet = ExpressionTemplar.unletLocal(fate, rlv)
     val destructExpr2 =
       DestructorTemplar.drop(fate, temputs, unlet)
+    vassert(destructExpr2.referend == Void2())
 
-    (Defer2(letExpr2, destructExpr2))
+    (Defer2(letExpr2, Discard2(destructExpr2)))
   }
 
   // Given a function1, this will give a closure (an OrdinaryClosure2 or a TemplatedClosure2)

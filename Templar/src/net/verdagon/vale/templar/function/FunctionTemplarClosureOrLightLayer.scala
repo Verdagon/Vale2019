@@ -66,28 +66,29 @@ object FunctionTemplarClosureOrLightLayer {
 
     val closureStructDef = temputs.lookupStruct(closureStructRef);
 
-    outerEnv.addVariables(
-      closureStructDef.members.map(member => {
-        member.tyype match {
-          case AddressMemberType2(reference) => {
-            AddressibleClosureVariable2(
-              VariableId2(containingFunctionLambdaNumber, member.name),
-              closureStructRef,
-              member.variability,
-              reference)
-          }
-          case ReferenceMemberType2(reference) => {
-            ReferenceClosureVariable2(
-              VariableId2(containingFunctionLambdaNumber, member.name),
-              closureStructRef,
-              member.variability,
-              reference)
-          }
-        }
-      }))
-    outerEnv.addEntry(closureStructRef.fullName.steps.last.humanName, TemplataEnvEntry(KindTemplata(closureStructRef)))
+    val nearEnv =
+      outerEnv
+        .addVariables(
+          closureStructDef.members.map(member => {
+            member.tyype match {
+              case AddressMemberType2(reference) => {
+                AddressibleClosureVariable2(
+                  VariableId2(containingFunctionLambdaNumber, member.name),
+                  closureStructRef,
+                  member.variability,
+                  reference)
+              }
+              case ReferenceMemberType2(reference) => {
+                ReferenceClosureVariable2(
+                  VariableId2(containingFunctionLambdaNumber, member.name),
+                  closureStructRef,
+                  member.variability,
+                  reference)
+              }
+            }
+          }))
+        .addEntry(closureStructRef.fullName.steps.last.humanName, TemplataEnvEntry(KindTemplata(closureStructRef)))
     // Now that the variables are added, we've modified the outerEnv to be the nearEnv.
-    val nearEnv = outerEnv
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateTemplatedFunctionFromCallForBanner(
       nearEnv, temputs, functionS, alreadySpecifiedTemplateArgs, argTypes2)
@@ -105,28 +106,29 @@ object FunctionTemplarClosureOrLightLayer {
 
     val closureStructDef = temputs.lookupStruct(closureStructRef);
 
-    outerEnv.addVariables(
-      closureStructDef.members.map(member => {
-        member.tyype match {
-          case AddressMemberType2(reference) => {
-            AddressibleClosureVariable2(
-              VariableId2(containingFunctionLambdaNumber, member.name),
-              closureStructRef,
-              member.variability,
-              reference)
-          }
-          case ReferenceMemberType2(reference) => {
-            ReferenceClosureVariable2(
-              VariableId2(containingFunctionLambdaNumber, member.name),
-              closureStructRef,
-              member.variability,
-              reference)
-          }
-        }
-      }))
-    outerEnv.addEntry(closureStructRef.fullName.steps.last.humanName, TemplataEnvEntry(KindTemplata(closureStructRef)))
+    val nearEnv =
+      outerEnv
+        .addVariables(
+          closureStructDef.members.map(member => {
+            member.tyype match {
+              case AddressMemberType2(reference) => {
+                AddressibleClosureVariable2(
+                  VariableId2(containingFunctionLambdaNumber, member.name),
+                  closureStructRef,
+                  member.variability,
+                  reference)
+              }
+              case ReferenceMemberType2(reference) => {
+                ReferenceClosureVariable2(
+                  VariableId2(containingFunctionLambdaNumber, member.name),
+                  closureStructRef,
+                  member.variability,
+                  reference)
+              }
+            }
+          }))
+        .addEntry(closureStructRef.fullName.steps.last.humanName, TemplataEnvEntry(KindTemplata(closureStructRef)))
     // Now that the variables are added, we've modified the outerEnv to be the nearEnv.
-    val nearEnv = outerEnv
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateTemplatedFunctionFromCallForPrototype(
       nearEnv, temputs, functionS, alreadySpecifiedTemplateArgs, argTypes2)
@@ -201,24 +203,25 @@ object FunctionTemplarClosureOrLightLayer {
 
     val closureStructDef = temputs.lookupStruct(closureStructRef);
 
-    outerEnv.addVariables(
-      closureStructDef.members.map(member => {
-        val containingFunctionLambdaNumber = outerEnv.function.lambdaNumber
-        val variableId = VariableId2(containingFunctionLambdaNumber, member.name)
-        member.tyype match {
-          case AddressMemberType2(reference) => {
-            AddressibleClosureVariable2(variableId, closureStructRef, member.variability, reference)
+    val nearEnv =
+      outerEnv
+        .addVariables(
+        closureStructDef.members.map(member => {
+          val containingFunctionLambdaNumber = outerEnv.function.lambdaNumber
+          val variableId = VariableId2(containingFunctionLambdaNumber, member.name)
+          member.tyype match {
+            case AddressMemberType2(reference) => {
+              AddressibleClosureVariable2(variableId, closureStructRef, member.variability, reference)
+            }
+            case ReferenceMemberType2(reference) => {
+              ReferenceClosureVariable2(variableId, closureStructRef, member.variability, reference)
+            }
           }
-          case ReferenceMemberType2(reference) => {
-            ReferenceClosureVariable2(variableId, closureStructRef, member.variability, reference)
-          }
-        }
-      }))
-    outerEnv.addEntry(
-      closureStructRef.fullName.steps.last.humanName,
-      TemplataEnvEntry(KindTemplata(closureStructRef)))
-    // Now that the variables are added, we've modified the outerEnv to be the nearEnv.
-    val nearEnv = outerEnv
+        }))
+      .addEntry(
+        closureStructRef.fullName.steps.last.humanName,
+        TemplataEnvEntry(KindTemplata(closureStructRef)))
+      // Now that the variables are added, we've modified the outerEnv to be the nearEnv.
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateOrdinaryFunctionFromNonCallForBanner(
       nearEnv, temputs, function1)
@@ -235,24 +238,25 @@ object FunctionTemplarClosureOrLightLayer {
 
     val closureStructDef = temputs.lookupStruct(closureStructRef);
 
-    outerEnv.addVariables(
-      closureStructDef.members.map(member => {
-        val containingFunctionLambdaNumber = outerEnv.function.lambdaNumber
-        val variableId = VariableId2(containingFunctionLambdaNumber, member.name)
-        member.tyype match {
-          case AddressMemberType2(reference) => {
-            AddressibleClosureVariable2(variableId, closureStructRef, member.variability, reference)
-          }
-          case ReferenceMemberType2(reference) => {
-            ReferenceClosureVariable2(variableId, closureStructRef, member.variability, reference)
-          }
-        }
-      }))
-    outerEnv.addEntry(
-      closureStructRef.fullName.steps.last.humanName,
-      TemplataEnvEntry(KindTemplata(closureStructRef)))
+    val nearEnv =
+      outerEnv
+        .addVariables(
+          closureStructDef.members.map(member => {
+            val containingFunctionLambdaNumber = outerEnv.function.lambdaNumber
+            val variableId = VariableId2(containingFunctionLambdaNumber, member.name)
+            member.tyype match {
+              case AddressMemberType2(reference) => {
+                AddressibleClosureVariable2(variableId, closureStructRef, member.variability, reference)
+              }
+              case ReferenceMemberType2(reference) => {
+                ReferenceClosureVariable2(variableId, closureStructRef, member.variability, reference)
+              }
+            }
+          }))
+        .addEntry(
+          closureStructRef.fullName.steps.last.humanName,
+          TemplataEnvEntry(KindTemplata(closureStructRef)))
     // Now that the variables are added, we've modified the outerEnv to be the nearEnv.
-    val nearEnv = outerEnv
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateOrdinaryFunctionFromNonCallForHeader(
       nearEnv, temputs, function1)

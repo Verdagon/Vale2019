@@ -534,7 +534,7 @@ class TemplarTests extends FunSuite with Matchers {
     val temputs = compile.getTemputs()
     val main = temputs.lookupFunction("main")
     val destructorCalls =
-      main.all({ case fpc @ FunctionCall2(Prototype2(FullName2(List(NamePart2("destructor",Some(List(CoordTemplata(Coord(Own,StructRef2(simpleName("Marine")))))), None, None))), _, _),_) => fpc })
+      main.all({ case fpc @ FunctionCall2(Prototype2(FullName2(List(NamePart2("destructor",Some(List(CoordTemplata(Coord(Own,StructRef2(simpleName("Marine")))))), _, None))), _, _),_) => fpc })
     destructorCalls.size shouldEqual 2
   }
 

@@ -158,6 +158,7 @@ object DestructorTemplar {
 
           val unshareExpr2 =
             undestructedExpr2.resultRegister.reference.referend match {
+              case Never2() => undestructedExpr2
               case Int2() | Str2() | Bool2() | Float2() | Void2() => {
                 Discard2(undestructedExpr2)
               }
@@ -252,16 +253,13 @@ object DestructorTemplar {
   }
 
   def generateArraySequenceDestructor(
-    env: IEnvironment,
+    env: FunctionEnvironment,
     temputs: TemputsBox,
     maybeOriginFunction1: Option[FunctionA],
     sequenceRefType2: Coord,
     sequence: ArraySequenceT2):
   (FunctionHeader2) = {
     vimpl("turn this into just a regular destructor template function? dont see why its special.")
-
-    val templatas = List(CoordTemplata(sequenceRefType2))
-    val destructorFullName = FullName2(List(NamePart2("destructor", Some(templatas), None, None)))
 
     val arrayOwnership = if (sequence.array.mutability == Mutable) Own else Share
     val arrayBorrowOwnership = if (sequence.array.mutability == Mutable) Borrow else Share
@@ -283,7 +281,7 @@ object DestructorTemplar {
     val function2 =
       Function2(
         FunctionHeader2(
-          destructorFullName,
+          env.fullName,
           0,
           false, false,
           List(Parameter2("this", None, arrayRefType)),
@@ -303,15 +301,12 @@ object DestructorTemplar {
   }
 
   def generateUnknownSizeArrayDestructor(
-      env: IEnvironment,
+      env: FunctionEnvironment,
       temputs: TemputsBox,
       maybeOriginFunction1: Option[FunctionA],
       arrayRefType2: Coord,
       array: UnknownSizeArrayT2):
   (FunctionHeader2) = {
-    val templatas = List(CoordTemplata(arrayRefType2))
-    val destructorFullName = FullName2(List(NamePart2("destructor", Some(templatas), None, None)))
-
     val arrayOwnership = if (array.array.mutability == Mutable) Own else Share
     val arrayBorrowOwnership = if (array.array.mutability == Mutable) Borrow else Share
 
@@ -331,7 +326,7 @@ object DestructorTemplar {
     val function2 =
       Function2(
         FunctionHeader2(
-          destructorFullName,
+          env.fullName,
           0,
           false, false,
           List(Parameter2("this", None, arrayRefType2)),

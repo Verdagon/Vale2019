@@ -40,7 +40,7 @@ object StructTemplar {
           (FunctionHeader2) = {
             val Some(Coord(_, structRef2 @ StructRef2(_))) = maybeRetCoord
             val structDef2 = temputs.lookupStruct(structRef2)
-            StructTemplarCore.makeStructConstructor(temputs, originFunction, structDef2)
+            StructTemplarCore.makeStructConstructor(temputs, originFunction, structDef2, env.fullName)
           }
         },
       "interfaceConstructorGenerator" ->
