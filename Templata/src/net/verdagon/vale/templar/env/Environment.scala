@@ -1,11 +1,11 @@
 package net.verdagon.vale.templar.env
 
 import net.verdagon.vale.astronomer.FunctionA
-import net.verdagon.vale.scout._
+import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar.types.{FullName2, NamePart2}
-import net.verdagon.vale.vfail
+import net.verdagon.vale.{vassert, vfail}
 
 import scala.collection.immutable.{List, Map}
 
@@ -39,6 +39,11 @@ case class NamespaceEnvironment(
   fullName: FullName2,
   entries: Map[String, List[IEnvEntry]]
 ) extends IEnvironment {
+  maybeParentEnv match {
+    case None =>
+    case Some(parentEnv) => vassert(fullName.steps.startsWith(parentEnv.fullName.steps))
+  }
+
   override def globalEnv: NamespaceEnvironment = {
     maybeParentEnv match {
       case None => this
@@ -69,8 +74,14 @@ case class NamespaceEnvironment(
   }
 
 
-  def addFunction(function: FunctionA): NamespaceEnvironment = {
-    addEntry(function.name, FunctionEnvEntry(function))
+  def addFunction(
+    parent: Option[IEnvEntry],
+    function: FunctionA
+  ): NamespaceEnvironment = {
+    NamespaceEnvironment(
+      maybeParentEnv,
+      fullName,
+      EnvironmentUtils.addFunction(entries, parent, function))
   }
 
   def addEntry(name: String, entry: IEnvEntry): NamespaceEnvironment = {
@@ -91,14 +102,14 @@ case class NamespaceEnvironment(
 object EnvironmentUtils {
   def entryToTemplata(env: IEnvironment, entry: IEnvEntry): ITemplata = {
     entry match {
-      case FunctionEnvEntry(function) => FunctionTemplata(env, function)
-      case StructEnvEntry(struct) => {
+      case FunctionEnvEntry(_, function) => FunctionTemplata(env, function)
+      case StructEnvEntry(_, struct) => {
         StructTemplata(NamespaceEnvironment(Some(env), env.fullName, Map()), struct)
       }
-      case InterfaceEnvEntry(interface) => {
+      case InterfaceEnvEntry(_, interface) => {
         InterfaceTemplata(NamespaceEnvironment(Some(env), env.fullName, Map()), interface)
       }
-      case ImplEnvEntry(impl) => ImplTemplata(env, impl)
+      case ImplEnvEntry(_, impl) => ImplTemplata(env, impl)
       case TemplataEnvEntry(templata) => templata
     }
   }
@@ -122,14 +133,21 @@ object EnvironmentUtils {
     addEntries(oldEntries, Map(name -> List(entry)))
   }
 
+  def addFunction(
+    oldEntries: Map[String, List[IEnvEntry]],
+    parent: Option[IEnvEntry],
+    functionA: FunctionA
+  ): Map[String, List[IEnvEntry]] = {
+    addEntry(oldEntries, functionA.name, FunctionEnvEntry(parent, functionA))
+  }
 
 
   def entryMatchesFilter(entry: IEnvEntry, contexts: Set[ILookupContext]): Boolean = {
     entry match {
-      case FunctionEnvEntry(_) => contexts.contains(ExpressionLookupContext)
-      case ImplEnvEntry(_) => contexts.contains(ExpressionLookupContext)
-      case StructEnvEntry(_) => contexts.contains(TemplataLookupContext)
-      case InterfaceEnvEntry(_) => contexts.contains(TemplataLookupContext)
+      case FunctionEnvEntry(_, _) => contexts.contains(ExpressionLookupContext)
+      case ImplEnvEntry(_, _) => contexts.contains(ExpressionLookupContext)
+      case StructEnvEntry(_, _) => contexts.contains(TemplataLookupContext)
+      case InterfaceEnvEntry(_, _) => contexts.contains(TemplataLookupContext)
       case TemplataEnvEntry(templata) => {
         templata match {
           case CoordTemplata(_) => contexts.contains(TemplataLookupContext)

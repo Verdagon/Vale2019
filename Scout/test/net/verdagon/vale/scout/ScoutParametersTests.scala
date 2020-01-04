@@ -21,16 +21,16 @@ class ScoutParametersTests extends FunSuite with Matchers {
     }
   }
 
-  test("Simple tame rule") {
-    val program1 = compile("""fn main(moo: #T) { }""")
+  test("Simple rune rule") {
+    val program1 = compile("""fn main<T>(moo T) { }""")
     val main = program1.lookupFunction("main")
     val expectedRulesS = List(TypedSR(Some("T"),CoordTypeSR))
     RuleSUtils.getDistinctOrderedRunesForRulexes(expectedRulesS) shouldEqual List("T")
     main.templateRules shouldEqual expectedRulesS
   }
 
-  test("Borrowed tame") {
-    val program1 = compile("""fn main(moo: &#T) { }""")
+  test("Borrowed rune") {
+    val program1 = compile("""fn main<T>(moo &T) { }""")
     val main = program1.lookupFunction("main")
     val List(param) = main.params
     param shouldEqual
@@ -60,7 +60,7 @@ class ScoutParametersTests extends FunSuite with Matchers {
   }
 
   test("Anonymous typed param") {
-    val program1 = compile("""fn main(:Int) { }""")
+    val program1 = compile("""fn main(_ Int) { }""")
     val main = program1.lookupFunction("main")
     val List(param) = main.params
     param shouldEqual
@@ -99,7 +99,7 @@ class ScoutParametersTests extends FunSuite with Matchers {
 
   test("Rune destructure") {
     // This is an ambiguous case but we decided it should destructure a struct or sequence, see CSTODTS in docs.
-    val program1 = compile("""fn main(moo: #T[a: Int]) { }""")
+    val program1 = compile("""fn main<T>(moo T(a Int)) { }""")
     val main = program1.lookupFunction("main")
 
     val aRune = Scout.unrunedParamRunePrefix + 0 + Scout.memberRuneSeparator + "0"
@@ -111,7 +111,7 @@ class ScoutParametersTests extends FunSuite with Matchers {
             Some(CaptureP("moo",FinalP)),
             None,
             "T",
-            Some(List(Some(AtomSP(Some(CaptureP("a",FinalP)),None,aRune,None))))))
+            Some(List(AtomSP(Some(CaptureP("a",FinalP)),None,aRune,None)))))
 
     val expectedRulesS =
       List(

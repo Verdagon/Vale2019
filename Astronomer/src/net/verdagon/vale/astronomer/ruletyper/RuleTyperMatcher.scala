@@ -1,6 +1,6 @@
 package net.verdagon.vale.astronomer.ruletyper
 
-import net.verdagon.vale.scout._
+import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
 import net.verdagon.vale.scout.patterns.{AbstractSP, AtomSP, OverrideSP}
 import net.verdagon.vale.scout.rules._
 import net.verdagon.vale._
@@ -39,18 +39,12 @@ class RuleTyperMatcher[Env, State](
     state: State,
     env: Env,
     conclusions: ConclusionsBox,
-    parts: List[Option[AtomSP]]):
+    parts: List[AtomSP]):
   (IRuleTyperMatchResult[Unit]) = {
-    parts.foreach({
-      case None => {
-        // The part is None; there's just an _ in this spot of the destructure.
-        // Nothing to do here.
-      }
-      case Some(part) => {
-        matchAgainstAtomSP(state, env, conclusions, part) match {
-          case (imc @ RuleTyperMatchConflict(_, _, _)) => return (imc)
-          case (RuleTyperMatchSuccess(())) =>
-        }
+    parts.foreach(part => {
+      matchAgainstAtomSP(state, env, conclusions, part) match {
+        case (imc @ RuleTyperMatchConflict(_, _, _)) => return (imc)
+        case (RuleTyperMatchSuccess(())) =>
       }
     })
     (RuleTyperMatchSuccess(()))

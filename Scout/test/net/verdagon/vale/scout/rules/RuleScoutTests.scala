@@ -1,7 +1,7 @@
 package net.verdagon.vale.scout.rules
 
 import net.verdagon.vale.parser._
-import net.verdagon.vale.scout._
+import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
 import net.verdagon.vale.vfail
 import org.scalatest.{FunSuite, Matchers}
 
@@ -36,17 +36,17 @@ class RuleScoutTests extends FunSuite with Matchers {
         TypedSR(Some("A"),CoordTypeSR))
     RuleSUtils.getDistinctOrderedRunesForRulexes(expectedRulesS) shouldEqual List("B", "A", "C")
     compile(
-      """fn main(a: #A)
+      """fn main<A>(a A)
         |rules(
-        |  #B: Ref = List<#A>,
-        |  #C: Ref = #B | #A | Int)
+        |  B Ref = List<A>,
+        |  C Ref = B | A | Int)
         |{ }
         |""".stripMargin) shouldEqual
       expectedRulesS
   }
 
   test("B") {
-    val rulesS = compile("fn main() rules(#B<Ref> = List<#A>, #C<Ref> = #B | #A | Int) {}")
+    val rulesS = compile("fn main() rules(B Ref = List<A>, A Ref, C Ref = B | A | Int) {}")
     RuleSUtils.getDistinctOrderedRunesForRulexes(rulesS) shouldEqual List("B", "A", "C")
   }
 }

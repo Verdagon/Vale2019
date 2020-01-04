@@ -4,7 +4,7 @@ import net.verdagon.vale.astronomer.{IRulexAR, ITemplataType}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.parser.CaptureP
-import net.verdagon.vale.scout._
+import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
 import net.verdagon.vale.scout.patterns.AtomSP
 import net.verdagon.vale.scout.rules.IRulexSR
 import net.verdagon.vale.templar.env._
@@ -333,7 +333,7 @@ object PatternTemplar {
   private def nonCheckingTranslatePack(
     temputs: TemputsBox,
     fate: FunctionEnvironmentBox,
-    innerPatternMaybes: List[Option[AtomSP]],
+    innerPatternMaybes: List[AtomSP],
     inputPackExpr: ReferenceExpression2):
   (List[ReferenceExpression2]) = {
     // we gotta:
@@ -355,7 +355,7 @@ object PatternTemplar {
   private def nonCheckingTranslateStructInner(
     temputs: TemputsBox,
     fate: FunctionEnvironmentBox,
-    innerPatternMaybes: List[Option[AtomSP]],
+    innerPatternMaybes: List[AtomSP],
     structType2: Coord,
     inputStructExpr: ReferenceExpression2):
   (List[ReferenceExpression2]) = {
@@ -382,12 +382,7 @@ object PatternTemplar {
 
         val lets =
           innerPatternMaybes.zip(memberLocalVariables).flatMap({
-            case ((None, localVariable)) => {
-              val unletExpr =
-                ExpressionTemplar.unletLocal(fate, localVariable)
-              List(DestructorTemplar.drop(fate, temputs, unletExpr))
-            }
-            case ((Some(innerPattern), localVariable)) => {
+            case ((innerPattern, localVariable)) => {
               val unletExpr =
                 ExpressionTemplar.unletLocal(fate, localVariable)
               innerNonCheckingTranslate(temputs, fate, innerPattern, unletExpr)
@@ -408,10 +403,7 @@ object PatternTemplar {
         val innerLets =
           innerPatternMaybes.zip(memberTypes).zipWithIndex
             .flatMap({
-              case (((None, _), _)) => {
-                List()
-              }
-              case (((Some(innerPattern), memberType), index)) => {
+              case (((innerPattern, memberType), index)) => {
                 val loadExpr =
                   SoftLoad2(
                     ReferenceMemberLookup2(

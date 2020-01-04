@@ -1,7 +1,7 @@
 package net.verdagon.vale.scout
 
 import net.verdagon.vale.parser._
-import net.verdagon.vale.scout._
+import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
 import net.verdagon.vale.scout.patterns.{AbstractSP, AtomSP}
 import net.verdagon.vale.scout.predictor.Conclusions
 import net.verdagon.vale.scout.rules.{EqualsSR, _}

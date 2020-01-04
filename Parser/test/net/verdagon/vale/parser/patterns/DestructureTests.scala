@@ -10,7 +10,7 @@ class DestructureTests extends FunSuite with Matchers {
   private def compile[T](parser: VParser.Parser[T], code: String): T = {
     VParser.parse(parser, code.toCharArray()) match {
       case VParser.NoSuccess(msg, input) => {
-        fail();
+        fail(msg);
       }
       case VParser.Success(expr, rest) => {
         if (!rest.atEnd) {
@@ -38,44 +38,68 @@ class DestructureTests extends FunSuite with Matchers {
   }
 
   test("Only empty destructure") {
-    compile("[]") shouldEqual
-        withDestructure()
+    compile("()") shouldEqual
+      withDestructure()
+  }
+  test("One element destructure") {
+    compile("(a)") shouldEqual
+      withDestructure(capture("a"))
+  }
+  test("One typed element destructure") {
+    compile("( _ A )") shouldEqual
+      withDestructure(withType(NameOrRunePPT("A")))
   }
   test("Only two-element destructure") {
-    compile("[a, b]") shouldEqual
+    compile("(a, b)") shouldEqual
         withDestructure(capture("a"), capture("b"))
   }
   test("Two-element destructure with ignore") {
-    compile("[_, b]") shouldEqual
+    compile("(_, b)") shouldEqual
         PatternPP(
           None,None,
-          Some(List(None, Some(capture("b")))),
+          Some(List(Patterns.ignore(), capture("b"))),
           None)
   }
   test("Capture with destructure") {
-    compile("a [a, b]") shouldEqual
-        PatternPP(
-          Some(CaptureP("a",FinalP)),
-          None,
-          Some(List(Some(capture("a")), Some(capture("b")))),
-          None)
+    compile("a (x, y)") shouldEqual
+      PatternPP(
+        Some(CaptureP("a",FinalP)),
+        None,
+        Some(List(capture("x"), capture("y"))),
+        None)
+  }
+  test("Type with destructure") {
+    compile("A(a, b)") shouldEqual
+      PatternPP(
+        None,
+        Some(NameOrRunePPT("A")),
+        Some(List(capture("a"), capture("b"))),
+        None)
+  }
+  test("Capture and type with destructure") {
+    compile("a A(x, y)") shouldEqual
+      PatternPP(
+        Some(CaptureP("a",FinalP)),
+        Some(NameOrRunePPT("A")),
+        Some(List(capture("x"), capture("y"))),
+        None)
   }
   test("Capture with types inside") {
-    compile("a [:Int, :Bool]") shouldEqual
+    compile("a (_ Int, _ Bool)") shouldEqual
         PatternPP(
           Some(CaptureP("a",FinalP)),
           None,
-          Some(List(Some(fromEnv("Int")), Some(fromEnv("Bool")))),
+          Some(List(fromEnv("Int"), fromEnv("Bool"))),
           None)
   }
   test("Destructure with type inside") {
-    compile("[a: Int, b: Bool]") shouldEqual
+    compile("(a Int, b Bool)") shouldEqual
         withDestructure(
-          capturedWithType("a", NamePPT("Int")),
-          capturedWithType("b", NamePPT("Bool")))
+          capturedWithType("a", NameOrRunePPT("Int")),
+          capturedWithType("b", NameOrRunePPT("Bool")))
   }
   test("Nested destructures A") {
-    compile("[a, [b, c]]") shouldEqual
+    compile("(a, (b, c))") shouldEqual
         withDestructure(
           capture("a"),
           withDestructure(
@@ -83,14 +107,14 @@ class DestructureTests extends FunSuite with Matchers {
             capture("c")))
   }
   test("Nested destructures B") {
-    compile("[[a], b]") shouldEqual
+    compile("((a), b)") shouldEqual
         withDestructure(
           withDestructure(
             capture("a")),
           capture("b"))
   }
   test("Nested destructures C") {
-    compile("[[[a]]]") shouldEqual
+    compile("(((a)))") shouldEqual
         withDestructure(
           withDestructure(
             withDestructure(

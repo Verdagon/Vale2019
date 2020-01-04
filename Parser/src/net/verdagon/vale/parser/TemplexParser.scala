@@ -10,7 +10,7 @@ trait TemplexParser extends RegexParsers with ParserUtils {
         ArraySequencePT(MutabilityPT(MutableP), numElements, elementType)
       }
     }) |
-    (("[:" ~> optWhite ~> unaryTemplex) ~ (optWhite ~> templex) ~ (optWhite ~> "*" ~> optWhite ~> templex <~ optWhite <~ "]") ^^ {
+    (("[<" ~> optWhite ~> unaryTemplex <~ optWhite <~ ">") ~ (optWhite ~> templex) ~ (optWhite ~> "*" ~> optWhite ~> templex <~ optWhite <~ "]") ^^ {
       case mutability ~ numElements ~ elementType => {
         ArraySequencePT(mutability, numElements, elementType)
       }
@@ -32,11 +32,11 @@ trait TemplexParser extends RegexParsers with ParserUtils {
     "xrw" ^^^ PermissionPT(ExclusiveReadwriteP) |
     "rw" ^^^ PermissionPT(ReadwriteP) |
     "ro" ^^^ PermissionPT(ReadonlyP) |
-    (typeIdentifier ^^ NamePT)
+    ("_" ^^^ AnonymousRunePT()) |
+    (typeIdentifier ^^ NameOrRunePT)
   }
 
   private[parser] def templex: Parser[ITemplexPT] = {
-    ("#" ~> optWhite ~> typeIdentifier ^^ RunePT) |
     ("?" ~> optWhite ~> templex ^^ NullablePT) |
     ("&" ~> optWhite ~> templex ^^ BorrowPT) |
     ("*" ~> optWhite ~> templex ^^ SharePT) |

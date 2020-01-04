@@ -1,7 +1,7 @@
 package net.verdagon.vale
 
 import net.verdagon.vale.parser.{FinalP, ImmutableP, MutableP, VaryingP}
-import net.verdagon.vale.scout._
+import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.env.{AddressibleLocalVariable2, ReferenceLocalVariable2, VariableId2}
 import net.verdagon.vale.templar.templata.{FunctionHeader2, Parameter2}
@@ -93,7 +93,7 @@ class ClosureTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |struct Marine {
-        |  hp: *Int;
+        |  hp *Int;
         |}
         |fn main() {
         |  m = Marine(9);

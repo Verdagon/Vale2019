@@ -34,11 +34,11 @@ class PackTests extends FunSuite with Matchers {
     temputs.only({ case PackE2(_, _, _) => })
   }
 
-  test("Extract pack") {
+  test("Extract seq") {
     val compile = new Compilation(
       """
         |fn main() {
-        |  [x, y, z] = (5, 6, 7);
+        |  (x, y, z) = [5, 6, 7];
         |  = x;
         |}
       """.stripMargin)
@@ -50,11 +50,11 @@ class PackTests extends FunSuite with Matchers {
     compile.evalForReferend(Vector()) shouldEqual VonInt(5)
   }
 
-  test("Nested packs") {
+  test("Nested seqs") {
     val compile = new Compilation(
       """
         |fn main() {
-        |  [x, [y, z]] = (5, (6, 7));
+        |  (x, (y, z)) = [5, [6, 7]];
         |  = x;
         |}
       """.stripMargin)

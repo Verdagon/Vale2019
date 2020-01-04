@@ -1,7 +1,7 @@
 package net.verdagon.vale.astronomer
 
 import net.verdagon.vale.astronomer.ruletyper.{RuleTyperSolveFailure, RuleTyperSolveSuccess}
-import net.verdagon.vale.scout._
+import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
 import net.verdagon.vale.vfail
 
 object ExpressionAstronomer {

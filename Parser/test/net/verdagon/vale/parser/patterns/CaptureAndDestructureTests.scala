@@ -39,31 +39,34 @@ class CaptureAndDestructureTests extends FunSuite with Matchers {
 
 
   test("Capture with destructure with type inside") {
-    compile("a [a :Int, b :Bool]") shouldEqual
+    compile("a (a Int, b Bool)") shouldEqual
         PatternPP(
           Some(CaptureP("a",FinalP)),
           None,
           Some(
             List(
-              Some(capturedWithType("a", NamePPT("Int"))),
-              Some(capturedWithType("b", NamePPT("Bool"))))),
+              capturedWithType("a", NameOrRunePPT("Int")),
+              capturedWithType("b", NameOrRunePPT("Bool")))),
           None)
   }
   test("capture with empty sequence type") {
-    compile("a: []") shouldEqual
+    compile("a []") shouldEqual
         capturedWithType("a", ManualSequencePPT(List()))
   }
+  test("empty destructure") {
+    compile(destructure,"()") shouldEqual List()
+  }
   test("capture with empty destructure") {
-    compile("a []") shouldEqual
+    compile("a ()") shouldEqual
         PatternPP(Some(CaptureP("a",FinalP)),None,Some(List()),None)
   }
   test("Destructure with nested atom") {
-    compile("a [ b : Int ]") shouldEqual
+    compile("a (b Int)") shouldEqual
         PatternPP(
           Some(CaptureP("a", FinalP)),
           None,
           Some(
-            List(Some(capturedWithType("b", NamePPT("Int"))))),
+            List(capturedWithType("b", NameOrRunePPT("Int")))),
           None)
   }
 }

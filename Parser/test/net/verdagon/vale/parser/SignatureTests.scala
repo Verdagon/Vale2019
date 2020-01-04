@@ -20,22 +20,22 @@ class SignatureTests extends FunSuite with Matchers with Collector {
   test("Impl function") {
     compile(
       VParser.topLevelFunction,
-      "fn maxHp(this: Marine for IUnit) { 5 }") shouldEqual
+      "fn maxHp(this Marine impl IUnit) { 5 }") shouldEqual
         FunctionP(
           Some("maxHp"),false,false,true,List(),List(),
           List(
             PatternPP(
               Some(CaptureP("this",FinalP)),
-              Some(NamePPT("Marine")),
+              Some(NameOrRunePPT("Marine")),
               None,
-              Some(OverrideP(NamePPT("IUnit"))))),
+              Some(OverrideP(NameOrRunePPT("IUnit"))))),
           None,
           Some(BlockPE(List(IntLiteralPE(5)))))
   }
 
   test("Param") {
-    val program = compile(VParser.program, "fn call(f: F){f()}")
-    program shouldHave PatternPP(Some(CaptureP("f",FinalP)),Some(NamePPT("F")),None,None)
+    val program = compile(VParser.program, "fn call(f F){f()}")
+    program shouldHave PatternPP(Some(CaptureP("f",FinalP)),Some(NameOrRunePPT("F")),None,None)
   }
 
   test("Templated function") {
@@ -46,10 +46,10 @@ class SignatureTests extends FunSuite with Matchers with Collector {
   test("Identifying runes") {
     compile(
       VParser.topLevelFunction,
-      "fn wrap<#F>(a: #A) { }") shouldEqual
+      "fn wrap<A, F>(a A) { }") shouldEqual
         FunctionP(
           Some("wrap"),false,false,true,
-          List("F"),
+          List("A", "F"),
           List(),
           List(Patterns.capturedWithTypeRune("a", "A")),
           None,

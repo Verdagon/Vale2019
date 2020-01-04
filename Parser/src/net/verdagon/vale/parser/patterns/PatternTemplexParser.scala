@@ -7,20 +7,8 @@ import scala.util.parsing.combinator.RegexParsers
 trait PatternTemplexParser extends RegexParsers with ParserUtils {
   // Add any new patterns to the "Check no parser patterns match empty" test!
 
-  private[parser] def namePatternTemplex: Parser[NamePPT] = {
-    typeIdentifier ^^ NamePPT
-  }
-
-  // Add any new patterns to the "Check no parser patterns match empty" test!
-
-  private[parser] def runePatternTemplex: Parser[RunePPT] = {
-    rune ^^ RunePPT
-  }
-
-  // Add any new patterns to the "Check no parser patterns match empty" test!
-
-  private[parser] def nameOrRunePatternTemplex: Parser[ITemplexPPT] = {
-    namePatternTemplex | runePatternTemplex
+  private[parser] def nameOrRunePatternTemplex: Parser[NameOrRunePPT] = {
+    typeIdentifier ^^ NameOrRunePPT
   }
 
   // Add any new patterns to the "Check no parser patterns match empty" test!
@@ -28,7 +16,6 @@ trait PatternTemplexParser extends RegexParsers with ParserUtils {
   private[parser] def patternTemplex: Parser[ITemplexPPT] = {
     ownershippedTemplex |
     callablePatternTemplex |
-    packPatternTemplex |
     manualSeqPatternTemplex |
     repeaterSeqPatternTemplex |
     ((nameOrRunePatternTemplex <~ optWhite <~ "<" <~ optWhite) ~ repsep(patternTemplex, optWhite ~> "," <~ optWhite) <~ optWhite <~ ">" ^^ {
@@ -65,7 +52,7 @@ trait PatternTemplexParser extends RegexParsers with ParserUtils {
     (("[" ~> optWhite ~> patternTemplex <~ optWhite <~ "*" <~ optWhite) ~ (patternTemplex <~ optWhite <~ "]") ^^ {
       case size ~ element => RepeaterSequencePPT(MutabilityPPT(MutableP), size, element)
     }) |
-    ((("[:" ~> patternTemplex) ~ (optWhite ~> patternTemplex) <~ optWhite <~ "*" <~ optWhite) ~ (patternTemplex <~ optWhite <~ "]") ^^ {
+    ((("[<" ~> optWhite ~> patternTemplex <~ optWhite <~ ">") ~ (optWhite ~> patternTemplex) <~ optWhite <~ "*" <~ optWhite) ~ (patternTemplex <~ optWhite <~ "]") ^^ {
       case mutability ~ size ~ element => RepeaterSequencePPT(mutability, size, element)
     })
   }
@@ -75,14 +62,6 @@ trait PatternTemplexParser extends RegexParsers with ParserUtils {
   private[parser] def callablePatternTemplex: Parser[ITemplexPPT] = {
     ("fn" ~> optWhite ~> opt(":" ~> optWhite ~> patternTemplex <~ optWhite)) ~ ("(" ~> optWhite ~> repsep(patternTemplex, optWhite ~ "," ~ optWhite) <~ optWhite <~ ")") ~ (optWhite ~> patternTemplex) ^^ {
       case mutability ~ params ~ ret => FunctionPPT(mutability, params, ret)
-    }
-  }
-
-  // Add any new patterns to the "Check no parser patterns match empty" test!
-
-  private[parser] def packPatternTemplex: Parser[ITemplexPPT] = {
-    ("(" ~> optWhite ~> repsep(patternTemplex, optWhite ~ "," ~ optWhite) <~ optWhite <~ ")") ^^ {
-      case members => PackPPT(members)
     }
   }
 

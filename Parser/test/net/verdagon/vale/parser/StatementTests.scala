@@ -20,7 +20,7 @@ class StatementTests extends FunSuite with Matchers {
   }
 
   test("8") {
-    compile("[x, y] = (4, 5);") shouldEqual
+    compile("(x, y) = [4, 5];") shouldEqual
         LetPE(
           List(),
           PatternPP(
@@ -28,10 +28,10 @@ class StatementTests extends FunSuite with Matchers {
             None,
             Some(
               List(
-                Some(PatternPP(Some(CaptureP("x",FinalP)),None,None,None)),
-                Some(PatternPP(Some(CaptureP("y",FinalP)),None,None,None)))),
+                PatternPP(Some(CaptureP("x",FinalP)),None,None,None),
+                PatternPP(Some(CaptureP("y",FinalP)),None,None,None))),
             None),
-          PackPE(List(IntLiteralPE(4), IntLiteralPE(5))))
+          SequencePE(List(IntLiteralPE(4), IntLiteralPE(5))))
   }
 
   test("9") {
@@ -46,6 +46,11 @@ class StatementTests extends FunSuite with Matchers {
   test("Test simple let") {
     compile("x = 3;") shouldEqual
       LetPE(List(),PatternPP(Some(CaptureP("x",FinalP)),None,None,None),IntLiteralPE(3))
+  }
+
+  test("Test varying let") {
+    compile("x! = 3;") shouldEqual
+      LetPE(List(),PatternPP(Some(CaptureP("x",VaryingP)),None,None,None),IntLiteralPE(3))
   }
 
   test("Test simple mut") {
@@ -75,28 +80,28 @@ class StatementTests extends FunSuite with Matchers {
   }
 
   test("Let with simple pattern") {
-    compile("a : Moo = m;") shouldEqual
+    compile("a Moo = m;") shouldEqual
         LetPE(
           List(),
-          PatternPP(Some(CaptureP("a",FinalP)),Some(NamePPT("Moo")),None,None),
+          PatternPP(Some(CaptureP("a",FinalP)),Some(NameOrRunePPT("Moo")),None,None),
           LookupPE("m", List()))
   }
 
   test("Let with simple pattern in seq") {
-    compile("[a : Moo] = m;") shouldEqual
+    compile("(a Moo) = m;") shouldEqual
         LetPE(
           List(),
           PatternPP(
             None,
             None,
-            Some(List(Some(PatternPP(Some(CaptureP("a",FinalP)),Some(NamePPT("Moo")),None,None)))),
+            Some(List(PatternPP(Some(CaptureP("a",FinalP)),Some(NameOrRunePPT("Moo")),None,None))),
             None),
           LookupPE("m", List()))
   }
 
   test("Let with destructuring pattern") {
-    compile(":Muta[] = m;") shouldEqual
-      LetPE(List(),PatternPP(None,Some(NamePPT("Muta")),Some(List()),None),LookupPE("m", List()))
+    compile("Muta() = m;") shouldEqual
+      LetPE(List(),PatternPP(None,Some(NameOrRunePPT("Muta")),Some(List()),None),LookupPE("m", List()))
   }
 
   test("Ret") {

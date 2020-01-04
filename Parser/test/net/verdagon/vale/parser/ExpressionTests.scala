@@ -114,9 +114,9 @@ class ExpressionTests extends FunSuite with Matchers {
 
   test("Template calling") {
     compile("MyNone<Int>()") shouldEqual
-      FunctionCallPE(LookupPE("MyNone", List(NamePT("Int"))),PackPE(List()), true)
+      FunctionCallPE(LookupPE("MyNone", List(NameOrRunePT("Int"))),PackPE(List()), true)
     compile("MySome<MyNone<Int>>()") shouldEqual
-      FunctionCallPE(LookupPE("MySome", List(CallPT(NamePT("MyNone"),List(NamePT("Int"))))),PackPE(List()), true)
+      FunctionCallPE(LookupPE("MySome", List(CallPT(NameOrRunePT("MyNone"),List(NameOrRunePT("Int"))))),PackPE(List()), true)
   }
 
   test(">=") {

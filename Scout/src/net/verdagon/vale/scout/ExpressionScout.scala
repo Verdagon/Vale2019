@@ -58,7 +58,7 @@ object ExpressionScout {
       case VoidPE() => (noDeclarations, NormalResult(VoidSE()), noVariableUses, noVariableUses)
       case lam @ LambdaPE(_) => {
         val (function1, childUses) =
-          FunctionScout.scoutLambda(tlfName, fate, Some(stackFrame), lam.function)
+          FunctionScout.scoutLambda(tlfName, fate, stackFrame, lam.function)
 
         // See maybify() for why we need this.
         val childMaybeUses = childUses.maybify()
@@ -104,7 +104,7 @@ object ExpressionScout {
           magickedName match {
             case "_" => {
               val magicParamIndex = fate.nextMagicParamNumber()
-              val paramIndex = stackFrame.numExplicitParams + magicParamIndex
+              val paramIndex = stackFrame.parentEnv.numExplicitParams + magicParamIndex
               val lookup = LocalLookupResult(Scout.unnamedParamNamePrefix + paramIndex)
               val declaration =
                 VariableDeclarations(Set(VariableDeclaration(lookup.name, FinalP)))
@@ -122,7 +122,7 @@ object ExpressionScout {
         (declarations, lookup, noVariableUses, noVariableUses)
       }
       case LookupPE(templateName, templateArgs) => {
-        (noDeclarations, NormalResult(TemplateSpecifiedLookupSE(templateName, templateArgs.map(TemplexScout.translateTemplex))), noVariableUses, noVariableUses)
+        (noDeclarations, NormalResult(TemplateSpecifiedLookupSE(templateName, templateArgs.map(TemplexScout.translateTemplex(Set(), _)))), noVariableUses, noVariableUses)
       }
       case FunctionCallPE(callablePE, argsPackPE, borrowCallable) => {
         if (borrowCallable != true) {
@@ -186,13 +186,14 @@ object ExpressionScout {
         val rulesS = RuleStateBox(RuleState(List()))
         val patternS =
           PatternScout.translatePattern(
+            stackFrame.parentEnv.allUserDeclaredRunes(),
             InitialRulesAndRunes(List(), templateRules, List(patternPE), None),
             fate,
             rulesS,
             patternPE,
             None,
             Some("__Let" + patternId + "_"))
-        rulesS.addRules(templateRules.map(RuleScout.translateRulex))
+        rulesS.addRules(templateRules.map(RuleScout.translateRulex(stackFrame.parentEnv.allUserDeclaredRunes(), _)))
 
         val allRunes = PredictorEvaluator.getAllRunes(List(), rulesS.rate.rulexesS, List(patternS), None)
 

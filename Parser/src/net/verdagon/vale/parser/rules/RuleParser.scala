@@ -16,10 +16,8 @@ trait RuleParser extends RegexParsers with ParserUtils {
   }
 
   private[parser] def typedPR: Parser[TypedPR] = {
-    (opt(underscoreOr(rune)) <~ optWhite <~ ":" <~ optWhite) ~ typePR ^^ {
-      case thing ~ tyype => {
-        TypedPR(thing.flatten, tyype)
-      }
+    (underscoreOr(typeIdentifier) ~ (white ~> typePR)) ^^ {
+      case maybeRune ~ tyype => TypedPR(maybeRune, tyype)
     }
   }
 
@@ -40,10 +38,14 @@ trait RuleParser extends RegexParsers with ParserUtils {
   }
 
   private[parser] def destructurePR: Parser[IRulexPR] = {
-    (typedPR <~ optWhite <~ "[" <~ optWhite) ~
-        repsep(rulePR, optWhite ~> "," <~ optWhite) <~ optWhite <~ "]" ^^ {
+    ((typePR <~ "(" <~ optWhite) ~
+      repsep(rulePR, optWhite ~> "," <~ optWhite) <~ optWhite <~ ")" ^^ {
+      case tyype ~ components => ComponentsPR(TypedPR(None, tyype), components)
+    }) |
+    ((typedPR <~ "(" <~ optWhite) ~
+      repsep(rulePR, optWhite ~> "," <~ optWhite) <~ optWhite <~ ")" ^^ {
       case container ~ components => ComponentsPR(container, components)
-    }
+    })
   }
 
   private[parser] def dotPR(innerRule: Parser[IRulexPR]): Parser[IRulexPR] = {
@@ -88,7 +90,7 @@ trait RuleParser extends RegexParsers with ParserUtils {
   // Add any new rules to the "Check no parser rules match empty" test!
 
   private[parser] def identifyingRunesPR: Parser[List[String]] = {
-    ("<" ~> optWhite ~> repsep(rune, optWhite ~> "," <~ optWhite) <~ optWhite <~ ">")
+    ("<" ~> optWhite ~> repsep(exprIdentifier, optWhite ~> "," <~ optWhite) <~ optWhite <~ ">")
   }
 
   // Add any new rules to the "Check no parser rules match empty" test!

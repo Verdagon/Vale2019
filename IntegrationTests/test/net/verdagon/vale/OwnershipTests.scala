@@ -1,7 +1,7 @@
 package net.verdagon.vale
 
 import net.verdagon.vale.parser.{CaptureP, FinalP, VaryingP}
-import net.verdagon.vale.scout._
+import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
 import net.verdagon.vale.scout.patterns.AtomSP
 import net.verdagon.vale.scout.rules.{CoordTypeSR, TypedSR}
 import net.verdagon.vale.templar._
@@ -38,9 +38,9 @@ class OwnershipTests extends FunSuite with Matchers {
       """
         |struct Muta { }
         |
-        |fn destructor(m: ^Muta) Void {
+        |fn destructor(m ^Muta) Void {
         |  println("Destroying!");
-        |  :Muta[] = m;
+        |  Muta[] = m;
         |}
         |
         |fn main() {
@@ -58,11 +58,11 @@ class OwnershipTests extends FunSuite with Matchers {
   test("Saves return value then destroys temporary") {
     val compile = new Compilation(
       """
-        |struct Muta { hp: *Int; }
+        |struct Muta { hp *Int; }
         |
-        |fn destructor(m: ^Muta) {
+        |fn destructor(m ^Muta) {
         |  println("Destroying!");
-        |  :Muta[hp] = m;
+        |  Muta[hp] = m;
         |}
         |
         |fn main() {
@@ -81,9 +81,9 @@ class OwnershipTests extends FunSuite with Matchers {
       """
         |struct Muta { }
         |
-        |fn destructor(m: ^Muta) {
+        |fn destructor(m ^Muta) {
         |  println("Destroying!");
-        |  :Muta[] = m;
+        |  Muta[] = m;
         |}
         |
         |fn main() {
@@ -104,12 +104,12 @@ class OwnershipTests extends FunSuite with Matchers {
       """
         |struct Muta { }
         |
-        |fn destructor(m: ^Muta) {
+        |fn destructor(m ^Muta) {
         |  println("Destroying!");
-        |  :Muta[] = m;
+        |  Muta[] = m;
         |}
         |
-        |fn moo(m: ^Muta) {
+        |fn moo(m ^Muta) {
         |}
         |
         |fn main() {
@@ -142,11 +142,11 @@ class OwnershipTests extends FunSuite with Matchers {
   test("Saves return value then destroys local var") {
     val compile = new Compilation(
       """
-        |struct Muta { hp: *Int; }
+        |struct Muta { hp *Int; }
         |
-        |fn destructor(m: ^Muta) {
+        |fn destructor(m ^Muta) {
         |  println("Destroying!");
-        |  :Muta[hp] = m;
+        |  Muta[hp] = m;
         |}
         |
         |fn main() {
@@ -166,10 +166,10 @@ class OwnershipTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |struct Wand {
-        |  charges: *Int;
+        |  charges *Int;
         |}
         |struct Wizard {
-        |  wand: ^Wand;
+        |  wand ^Wand;
         |}
         |fn main() {
         |  = Wizard(Wand(10)).wand.charges;
@@ -258,7 +258,7 @@ class OwnershipTests extends FunSuite with Matchers {
 //      """
 //        |struct MutaA { }
 //        |struct MutaB {
-//        |  a: &MutaA;
+//        |  a &MutaA;
 //        |}
 //        |fn main() {
 //        |  a = MutaA();

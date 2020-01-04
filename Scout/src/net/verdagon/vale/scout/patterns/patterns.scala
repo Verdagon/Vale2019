@@ -11,7 +11,7 @@ case class AtomSP(
   name: Option[CaptureP],
   virtuality: Option[VirtualitySP],
   coordRune: String,
-  destructure: Option[List[Option[AtomSP]]])
+  destructure: Option[List[AtomSP]])
 
 sealed trait VirtualitySP
 case object AbstractSP extends VirtualitySP
@@ -26,8 +26,7 @@ object PatternSUtils {
         case Some(OverrideSP(kindRune)) => List(kindRune)
       }
     val runesFromDestructures =
-      pattern.destructure.toList.flatten.flatten.flatMap(getDistinctOrderedRunesForPattern)
+      pattern.destructure.toList.flatten.flatMap(getDistinctOrderedRunesForPattern)
     (runesFromVirtuality ++ runesFromDestructures :+ pattern.coordRune).distinct
   }
-
 }

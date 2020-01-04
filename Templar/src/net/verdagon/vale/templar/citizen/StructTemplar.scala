@@ -4,7 +4,7 @@ import net.verdagon.vale.astronomer._
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.parser._
-import net.verdagon.vale.scout._
+import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
 import net.verdagon.vale.scout.patterns.{AtomSP, PatternSUtils}
 import net.verdagon.vale.scout.rules._
 import net.verdagon.vale.templar._
@@ -71,7 +71,7 @@ object StructTemplar {
     val params =
       struct1.members.zipWithIndex.map({
         case (member, index) => {
-          ParameterS(AtomSP(Some(CaptureP(member.name, FinalP)), None, Scout.memberRunePrefix + index, None))
+          ParameterS(AtomSP(Some(CaptureP(member.name, FinalP)), None, Scout.makeMemberRune(struct1.codeLocation, index), None))
         }
       })
     val retRune = "__RetRune"

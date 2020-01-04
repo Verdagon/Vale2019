@@ -4,7 +4,7 @@ import net.verdagon.vale.astronomer._
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.parser.{FinalP, ImmutableP, MutabilityP, MutableP}
-import net.verdagon.vale.scout._
+import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
 import net.verdagon.vale.templar.OverloadTemplar.{ScoutExpectedFunctionFailure, ScoutExpectedFunctionSuccess}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.env._
@@ -229,7 +229,7 @@ object StructTemplarCore {
         Some(env),
         fullName,
         Map(
-          CallTemplar.CALL_FUNCTION_NAME -> List(FunctionEnvEntry(functionS)),
+          CallTemplar.CALL_FUNCTION_NAME -> List(FunctionEnvEntry(None, functionS)),
           nearName -> List(TemplataEnvEntry(KindTemplata(structRef))),
           FunctionScout.CLOSURE_STRUCT_ENV_ENTRY_NAME -> List(TemplataEnvEntry(KindTemplata(structRef)))))
     // We return this from the function in case we want to eagerly compile it (which we do

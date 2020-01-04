@@ -2,7 +2,7 @@ package net.verdagon.vale.astronomer.builtins
 
 import net.verdagon.vale.astronomer._
 import net.verdagon.vale.parser.{CaptureP, FinalP}
-import net.verdagon.vale.scout._
+import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
 import net.verdagon.vale.scout.patterns.AtomSP
 
 object NotEquals {

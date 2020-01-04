@@ -1,7 +1,7 @@
 package net.verdagon.vale.templar.infer.inferer
 
 import net.verdagon.vale._
-import net.verdagon.vale.scout._
+import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
 import net.verdagon.vale.scout.patterns.{AbstractSP, AtomSP, OverrideSP}
 import net.verdagon.vale.scout.rules._
 import net.verdagon.vale.templar.infer._
@@ -230,8 +230,7 @@ class InfererEvaluator[Env, State](
               // debt: rename this patternDestructure to something. we need a term for an atom
               // that comes from a destructure.
               // debt: rename atom. probably just to pattern again?
-              case (((None, _), _)) => List()
-              case (((Some(patternDestructure), member), destructureIndex)) => {
+              case (((patternDestructure, member), destructureIndex)) => {
                 addParameterRules(state, inferences, patternDestructure, ParamFilter(member, None), paramLocation :+ destructureIndex) match {
                   case (iec @ InferEvaluateConflict(_, _, _)) => {
                     return (InferEvaluateConflict(inferences.inferences, "Failed to add parameter " + paramLocation.mkString("/"), List(iec)))

@@ -40,13 +40,13 @@ class PatternTests extends FunSuite with Matchers {
   test("Simple Int") {
     // Make sure every pattern on the way down to kind can match Int
     compile(typeIdentifier,"Int") shouldEqual "Int"
-    compile(kindPattern,"Int") shouldEqual NamePPT("Int")
-    compile(patternType,"Int") shouldEqual PatternTypePPI(None, None, Some(NamePPT("Int")))
-    compile(atomPattern,":Int") shouldEqual Patterns.fromEnv("Int")
+    compile(runeOrKindPattern,"Int") shouldEqual NameOrRunePPT("Int")
+    compile(patternType,"Int") shouldEqual PatternTypePPI(None, NameOrRunePPT("Int"))
+    compile(atomPattern,"_ Int") shouldEqual Patterns.fromEnv("Int")
   }
   test("Pattern Templexes") {
-    compile(patternType,"Int") shouldEqual PatternTypePPI(None, None, Some(NamePPT("Int")))
-    compile(patternType,"*Int") shouldEqual PatternTypePPI(Some(ShareP), None, Some(NamePPT("Int")))
+    compile(patternType,"Int") shouldEqual PatternTypePPI(None, NameOrRunePPT("Int"))
+    compile(patternType,"*Int") shouldEqual PatternTypePPI(Some(ShareP), NameOrRunePPT("Int"))
   }
   test("Name-only Capture") {
     compile(atomPattern,"a") shouldEqual
@@ -61,11 +61,11 @@ class PatternTests extends FunSuite with Matchers {
         List(capture("a"), capture("b"))
   }
   test("Simple pattern doesn't eat = after it") {
-    compile(atomPattern, "a : Int")
-    checkFail(atomPattern, "a : Int=")
-    checkFail(atomPattern, "a : Int =")
-    checkFail(atomPattern, "a : Int = m")
-    checkFail(atomPattern, "a : Int = m;")
+    compile(atomPattern, "a Int")
+    checkFail(atomPattern, "a Int=")
+    checkFail(atomPattern, "a Int =")
+    checkFail(atomPattern, "a Int = m")
+    checkFail(atomPattern, "a Int = m;")
   }
   test("Empty pattern") {
     compile("_") shouldEqual PatternPP(None,None,None,None)
@@ -74,40 +74,40 @@ class PatternTests extends FunSuite with Matchers {
 
 
   test("Capture with type with destructure") {
-    compile("a: Moo[a, b]") shouldEqual
+    compile("a Moo(a, b)") shouldEqual
         PatternPP(
           Some(CaptureP("a",FinalP)),
-          Some(NamePPT("Moo")),
-          Some(List(Some(capture("a")),Some(capture("b")))),
+          Some(NameOrRunePPT("Moo")),
+          Some(List(capture("a"),capture("b"))),
           None)
   }
 
 
   test("CSTODTS") {
     // This tests us handling an ambiguity properly, see CSTODTS in docs.
-    compile("moo: #T[a: Int]") shouldEqual
+    compile("moo T(a Int)") shouldEqual
         PatternPP(
           Some(CaptureP("moo",FinalP)),
-          Some(RunePPT("T")),
-          Some(List(Some(PatternPP(Some(CaptureP("a",FinalP)),Some(NamePPT("Int")),None,None)))),
+          Some(NameOrRunePPT("T")),
+          Some(List(PatternPP(Some(CaptureP("a",FinalP)),Some(NameOrRunePPT("Int")),None,None))),
           None)
   }
 
   test("Capture with destructure with type outside") {
-    compile("a: [Int, Bool][a, b]") shouldEqual
+    compile("a [Int, Bool](a, b)") shouldEqual
         PatternPP(
           Some(CaptureP("a",FinalP)),
           Some(
             ManualSequencePPT(
                   List(
-                    NamePPT("Int"),
-                    NamePPT("Bool")))),
-          Some(List(Some(capture("a")), Some(capture("b")))),
+                    NameOrRunePPT("Int"),
+                    NameOrRunePPT("Bool")))),
+          Some(List(capture("a"), capture("b"))),
           None)
   }
 
   test("Virtual function") {
-    compile(VParser.atomPattern, "this: virtual Car") shouldEqual
-      PatternPP(Some(CaptureP("this",FinalP)),Some(NamePPT("Car")),None,Some(AbstractP))
+    compile(VParser.atomPattern, "virtual this Car") shouldEqual
+      PatternPP(Some(CaptureP("this",FinalP)),Some(NameOrRunePPT("Car")),None,Some(AbstractP))
   }
 }

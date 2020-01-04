@@ -1,7 +1,5 @@
 package net.verdagon.vale
 
-import net.verdagon.vale.templar.CommonEnv
-
 object SculptorTests {
 //  private def check[T](testNumber: Int, code: String, expected: T) {
 //    CommonEnv.runSculptor(code) match {

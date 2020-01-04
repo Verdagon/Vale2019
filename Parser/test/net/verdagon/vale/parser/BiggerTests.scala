@@ -71,13 +71,27 @@ class BiggerTests extends FunSuite with Matchers with Collector {
 
   test("Simple function") {
     compile(VParser.topLevelFunction, "fn sum(){3}") shouldEqual
-        FunctionP(Some("sum"),false,false,true,List(),List(), List(),None,Some(BlockPE(List(IntLiteralPE(3)))))
+      FunctionP(Some("sum"),false,false,true,List(),List(), List(),None,Some(BlockPE(List(IntLiteralPE(3)))))
   }
+
+//  test("Simple function with typed identifying rune") {
+//    val func = compile(VParser.topLevelFunction, "fn sum<A>(a A){a}")
+//    func.templateRules shouldEqual
+//  }
 
   test("Function call") {
     val program = compile(VParser.program, "fn main(){call(sum)}")
     program shouldHave FunctionCallPE(LookupPE("call", List()),PackPE(List(LookupPE("sum", List()))),true)
   }
+
+  test("Mutating as statement") {
+    val program = compile(VParser.topLevelFunction, "fn main() { mut x = 6; }")
+    program.body.get.elements.head shouldEqual MutatePE(LookupPE("x",List()),IntLiteralPE(6))
+  }
+
+
+
+
 
   test("Test templated lambda param") {
     val program = compile(VParser.program, "fn main(){(a){ a + a}(3)}")
@@ -87,8 +101,8 @@ class BiggerTests extends FunSuite with Matchers with Collector {
   }
 
   test("Simple struct") {
-    compile(VParser.struct, "struct Moo { x: &Int; }") shouldEqual
-        StructP("Moo",MutableP,None,List(),List(StructMemberP("x",FinalP,BorrowPT(NamePT("Int")))))
+    compile(VParser.struct, "struct Moo { x &Int; }") shouldEqual
+        StructP("Moo",MutableP,None,List(),List(StructMemberP("x",FinalP,BorrowPT(NameOrRunePT("Int")))))
   }
 
   test("Test block's trailing void presence") {
@@ -149,8 +163,8 @@ class BiggerTests extends FunSuite with Matchers with Collector {
       """.stripMargin) shouldEqual
       ImplP(
         List(),
-        CallPPT(NamePPT("SomeStruct"),List(NamePPT("T"))),
-        CallPPT(NamePPT("MyInterface"),List(NamePPT("T"))))
+        CallPPT(NameOrRunePPT("SomeStruct"),List(NameOrRunePPT("T"))),
+        CallPPT(NameOrRunePPT("MyInterface"),List(NameOrRunePPT("T"))))
   }
 
   test("Impling a template call") {
@@ -161,8 +175,8 @@ class BiggerTests extends FunSuite with Matchers with Collector {
         |""".stripMargin) shouldEqual
       ImplP(
         List(),
-        NamePPT("MyIntIdentity"),
-        CallPPT(NamePPT("IFunction1"),List(MutabilityPPT(MutableP), NamePPT("Int"), NamePPT("Int"))))
+        NameOrRunePPT("MyIntIdentity"),
+        CallPPT(NameOrRunePPT("IFunction1"),List(MutabilityPPT(MutableP), NameOrRunePPT("Int"), NameOrRunePPT("Int"))))
   }
 
 
@@ -170,27 +184,27 @@ class BiggerTests extends FunSuite with Matchers with Collector {
     compile(
       VParser.topLevelFunction,
       """
-        |fn doCivicDance(this: virtual Car) Int;
+        |fn doCivicDance(virtual this Car) Int;
       """.stripMargin) shouldEqual
       FunctionP(
         Some("doCivicDance"),false,false,true,List(),List(),
-        List(PatternPP(Some(CaptureP("this",FinalP)),Some(NamePPT("Car")),None,Some(AbstractP))),
-        Some(NamePPT("Int")),None)
+        List(PatternPP(Some(CaptureP("this",FinalP)),Some(NameOrRunePPT("Car")),None,Some(AbstractP))),
+        Some(NameOrRunePPT("Int")),None)
   }
 
 
   test("17") {
     compile(
       VParser.structMember,
-      "a: *ListNode<T>;") shouldEqual
-      StructMemberP("a",FinalP,SharePT(CallPT(NamePT("ListNode"),List(NamePT("T")))))
+      "a *ListNode<T>;") shouldEqual
+      StructMemberP("a",FinalP,SharePT(CallPT(NameOrRunePT("ListNode"),List(NameOrRunePT("T")))))
   }
 
   test("18") {
     compile(
       VParser.structMember,
-      "a: Array<imm, #T>;") shouldEqual
-      StructMemberP("a",FinalP,CallPT(NamePT("Array"),List(MutabilityPT(ImmutableP), RunePT("T"))))
+      "a Array<imm, T>;") shouldEqual
+      StructMemberP("a",FinalP,CallPT(NameOrRunePT("Array"),List(MutabilityPT(ImmutableP), NameOrRunePT("T"))))
   }
 
   test("19") {

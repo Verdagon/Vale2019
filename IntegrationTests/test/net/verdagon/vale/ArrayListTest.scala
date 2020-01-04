@@ -9,11 +9,11 @@ class ArrayListTest extends FunSuite with Matchers {
   test("Simple ArrayList, no optionals") {
     val compile = new Compilation(
       """
-        |struct List<#E> rules(#E: Ref) {
-        |  array: Array<mut, #E>;
+        |struct List<E> rules(E Ref) {
+        |  array Array<mut, E>;
         |}
-        |fn len<#E>(list: &List<#E>) { len(list.array) }
-        |fn add<#E>(list: &List<#E>, newElement: #E) {
+        |fn len<E>(list &List<E>) { len(list.array) }
+        |fn add<E>(list &List<E>, newElement E) {
         |  newArray =
         |      Array<mut, E>(len(list) + 1, (index){
         |        = if (index == len(list)) {
@@ -25,8 +25,8 @@ class ArrayListTest extends FunSuite with Matchers {
         |      });
         |  mut list.array = newArray;
         |}
-        |// todo: make that return a &#E
-        |fn get<#E>(list: &List<#E>, index: Int) #E {
+        |// todo: make that return a &E
+        |fn get<E>(list &List<E>, index Int) E {
         |  a = list.array;
         |  = a.(index);
         |}
@@ -61,7 +61,7 @@ class ArrayListTest extends FunSuite with Matchers {
         |          Array<mut, Opt<Int>>(
         |              0,
         |              (index){
-        |                result: Opt<Int> = Some(index);
+        |                result Opt<Int> = Some(index);
         |                = result;
         |              }),
         |          0);
@@ -135,7 +135,7 @@ class ArrayListTest extends FunSuite with Matchers {
       Opt.code +
       OptingArrayList.code +
         """
-          |struct Marine { hp: Int; }
+          |struct Marine { hp Int; }
           |
           |fn main() {
           |  l =
@@ -143,7 +143,7 @@ class ArrayListTest extends FunSuite with Matchers {
           |          Array<mut, Opt<Marine>>(
           |              0,
           |              (index){
-          |                result: Opt<Marine> = Some(Marine(index));
+          |                result Opt<Marine> = Some(Marine(index));
           |                = result;
           |              }),
           |          0);
@@ -160,7 +160,7 @@ class ArrayListTest extends FunSuite with Matchers {
   test("Mutate mutable from in lambda") {
     val compile = new Compilation(
         """
-          |struct Marine { hp: Int; }
+          |struct Marine { hp Int; }
           |
           |fn main() {
           |  m = Marine(6);
@@ -184,10 +184,10 @@ class ArrayListTest extends FunSuite with Matchers {
     val compile = new Compilation(
       Opt.code +
       """
-        |struct Marine { hp: Int; }
+        |struct Marine { hp Int; }
         |
         |fn main() {
-        |  m: Opt<Marine> = Some(Marine(6));
+        |  m Opt<Marine> = Some(Marine(6));
         |  lam = {
         |    m2 = (mut m = None<Marine>())^.get();
         |    = m2.hp;

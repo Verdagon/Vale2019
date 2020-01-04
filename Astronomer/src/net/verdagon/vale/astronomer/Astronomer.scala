@@ -4,7 +4,7 @@ import net.verdagon.vale.astronomer.builtins._
 import net.verdagon.vale.astronomer.externs.Externs
 import net.verdagon.vale.astronomer.ruletyper.{IRuleTyperEvaluatorDelegate, RuleTyperEvaluator, RuleTyperSolveFailure, RuleTyperSolveSuccess}
 import net.verdagon.vale.parser.{ImmutableP, MutabilityP, MutableP}
-import net.verdagon.vale.scout._
+import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
 import net.verdagon.vale.scout.patterns.AtomSP
 import net.verdagon.vale.scout.rules._
 import net.verdagon.vale.{vassert, vfail, vimpl}
@@ -303,7 +303,8 @@ object Astronomer {
   def translateProgram(
       programS: ProgramS,
       primitives: Map[String, ITypeSR],
-      suppliedFunctions: List[FunctionA]):
+      suppliedFunctions: List[FunctionA],
+      suppliedInterfaces: List[InterfaceA]):
   ProgramA = {
     val ProgramS(structsS, interfacesS, implsS, functionsS) = programS
 
@@ -321,7 +322,7 @@ object Astronomer {
 
     val _ = astrouts
 
-    ProgramA(structsA, interfacesA, implsA, functionsA ++ suppliedFunctions)
+    ProgramA(structsA, suppliedInterfaces ++ interfacesA, implsA, suppliedFunctions ++ functionsA)
   }
 
 
@@ -351,8 +352,9 @@ object Astronomer {
 
   def runAstronomer(programS: ProgramS): ProgramA = {
     val suppliedFunctions = stlFunctions ++ wrapperFunctions ++ Forwarders.forwarders ++ Externs.externs
+    val suppliedInterfaces = List(IFunction1.interface)
     val ProgramA(originalStructs, originalInterfaces, originalImpls, originalImplementedFunctionsS) =
-      Astronomer.translateProgram(programS, primitives, suppliedFunctions)
+      Astronomer.translateProgram(programS, primitives, suppliedFunctions, suppliedInterfaces)
     val programA =
       ProgramA(
         originalStructs,

@@ -3,7 +3,7 @@ package net.verdagon.vale.templar.infer
 import net.verdagon.vale.astronomer._
 import net.verdagon.vale.astronomer.ruletyper.IRuleTyperEvaluatorDelegate
 import net.verdagon.vale.parser._
-import net.verdagon.vale.scout._
+import net.verdagon.vale.scout.{IEnvironment => _, _}
 import net.verdagon.vale.{scout => s}
 import net.verdagon.vale.scout.patterns.{AbstractSP, AtomSP}
 import net.verdagon.vale.templar.env._
@@ -117,12 +117,12 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
   def makeCannedEnvironment(): SimpleEnvironment = {
     SimpleEnvironment(
       Map(
-        "ImmInterface" -> InterfaceEnvEntry(InterfaceA(s.CodeLocationS("ImmInterface.vale", 0, 0), List(), "ImmInterface", ImmutableP, Some(ImmutableP), KindTemplataType, List(), Map(), List(), List())),
+        "ImmInterface" -> InterfaceEnvEntry(None, InterfaceA(s.CodeLocationS("ImmInterface.vale", 0, 0), List(), "ImmInterface", ImmutableP, Some(ImmutableP), KindTemplataType, List(), Map(), List(), List())),
         "Array" -> TemplataEnvEntry(ArrayTemplateTemplata()),
-        "MutTStruct" -> StructEnvEntry(StructA(s.CodeLocationS("MutTStruct.vale", 0, 0), List(), "MutTStruct", MutableP, Some(MutableP), TemplateTemplataType(List(CoordTemplataType), KindTemplataType), List("T"), Map("T" -> CoordTemplataType), List(), List())),
-        "MutTInterface" -> InterfaceEnvEntry(InterfaceA(s.CodeLocationS("MutTInterface.vale", 0, 0), List(), "MutTInterface", MutableP, Some(MutableP), TemplateTemplataType(List(CoordTemplataType), KindTemplataType), List("T"), Map("T" -> CoordTemplataType), List(), List())),
-        "MutStruct" -> StructEnvEntry(StructA(s.CodeLocationS("MutStruct.vale", 0, 0), List(), "MutStruct", MutableP, Some(MutableP), KindTemplataType, List(), Map(), List(), List())),
-        "MutInterface" -> InterfaceEnvEntry(InterfaceA(s.CodeLocationS("MutInterface.vale", 0, 0), List(), "MutInterface", MutableP, Some(MutableP), KindTemplataType, List(), Map(), List(), List())),
+        "MutTStruct" -> StructEnvEntry(None, StructA(s.CodeLocationS("MutTStruct.vale", 0, 0), List(), "MutTStruct", MutableP, Some(MutableP), TemplateTemplataType(List(CoordTemplataType), KindTemplataType), List("T"), Map("T" -> CoordTemplataType), List(), List())),
+        "MutTInterface" -> InterfaceEnvEntry(None, InterfaceA(s.CodeLocationS("MutTInterface.vale", 0, 0), List(), "MutTInterface", MutableP, Some(MutableP), TemplateTemplataType(List(CoordTemplataType), KindTemplataType), List("T"), Map("T" -> CoordTemplataType), List(), List())),
+        "MutStruct" -> StructEnvEntry(None, StructA(s.CodeLocationS("MutStruct.vale", 0, 0), List(), "MutStruct", MutableP, Some(MutableP), KindTemplataType, List(), Map(), List(), List())),
+        "MutInterface" -> InterfaceEnvEntry(None, InterfaceA(s.CodeLocationS("MutInterface.vale", 0, 0), List(), "MutInterface", MutableP, Some(MutableP), KindTemplataType, List(), Map(), List(), List())),
         "MutStructBorrow" -> TemplataEnvEntry(CoordTemplata(Coord(Borrow, StructRef2(FullName2(List(NamePart2("MutStruct", Some(List()), None, None))))))),
         "MutArraySequenceOf4Int" -> TemplataEnvEntry(KindTemplata(ArraySequenceT2(4, RawArrayT2(Coord(Share, Int2()), Mutable)))),
         "Void" -> TemplataEnvEntry(KindTemplata(Void2())),
@@ -712,8 +712,8 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
             None,"__Let0_",
             Some(
               List(
-                Some(AtomSP(Some(CaptureP("x",FinalP)),None,"__Let0__Mem_0",None)),
-                Some(AtomSP(Some(CaptureP("y",FinalP)),None,"__Let0__Mem_1",None)))))),
+                AtomSP(Some(CaptureP("x",FinalP)),None,"__Let0__Mem_0",None),
+                AtomSP(Some(CaptureP("y",FinalP)),None,"__Let0__Mem_1",None))))),
         Some(List(ParamFilter(Coord(Share,PackT2(List(Coord(Share,Int2()), Coord(Share,Int2())),StructRef2(FullName2(List(NamePart2("__Pack",Some(List(CoordTemplata(Coord(Share,Int2())), CoordTemplata(Coord(Share,Int2())))), None, None)))))),None))),
         true)
     inferencesD.templatasByRune("__Let0_") shouldEqual
@@ -974,7 +974,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
 
     expectSuccess(run("Void", OwnP)) shouldEqual Coord(Share, Void2())
     expectSuccess(run("Void", BorrowP)) shouldEqual Coord(Share, Void2())
-    vassert(expectFail(run("Void", ShareP)).contains("Couldn't match incoming Raw against expected Share"))
+    expectSuccess(run("Void", ShareP)) shouldEqual Coord(Share, Void2())
 
     vassert(expectFail(run("MutStruct", ShareP)).contains("Couldn't match incoming Own against expected Share"))
     // Takes the own off the incoming own coord, ends up as another own.

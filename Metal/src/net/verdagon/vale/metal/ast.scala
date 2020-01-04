@@ -7,6 +7,8 @@ import scala.collection.immutable.ListMap
 case class ProgramH(
   interfaces: List[InterfaceDefinitionH],
   structs: List[StructDefinitionH],
+  // TODO: Get rid of this; since there's no IDs anymore we can have a stable
+  // hardcoded FullNameH("__Pack", Some(List()), None, None).
   emptyPackStructRef: StructRefH,
   externs: List[PrototypeH],
   functions: List[FunctionH]) {
@@ -69,6 +71,7 @@ case class StructMemberH(
 case class InterfaceDefinitionH(
   fullName: FullNameH,
   mutability: Mutability,
+  // TODO: Change this to edges, since interfaces impl other interfaces.
   superInterfaces: List[InterfaceRefH],
   prototypes: List[PrototypeH]) {
   def getRef = InterfaceRefH(fullName)
@@ -83,8 +86,11 @@ case class EdgeH(
 
 case class FunctionH(
   prototype: PrototypeH,
+  // TODO: Get rid of this, since it's only for testing. Perhaps use an external set?
   isAbstract: Boolean,
+  // TODO: Get rid of this, since it's only for testing. Perhaps use an external set?
   isExtern: Boolean,
+  // TODO: Get rid of this, since it's only for testing. Perhaps use an external set?
   isUserFunction: Boolean,
   block: BlockH) {
   def fullName = prototype.fullName
@@ -92,13 +98,14 @@ case class FunctionH(
 
 case class PrototypeH(
   fullName: FullNameH,
+  // TODO: Perhaps get rid of this, since we can get it from the full name.
   params: List[ReferenceH[ReferendH]],
   returnType: ReferenceH[ReferendH]
 )
 
 case class NamePartH(
   humanName: String,
-  maybeTemplateArgs: Option[List[ITemplataH]],
+  templateArgs: Option[List[ITemplataH]],
   parameters: Option[List[ReferenceH[ReferendH]]],
   codeLocation: Option[CodeLocationH])
 case class FullNameH(parts: List[NamePartH])

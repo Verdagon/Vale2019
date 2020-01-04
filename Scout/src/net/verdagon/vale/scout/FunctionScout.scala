@@ -105,7 +105,7 @@ object FunctionScout {
         (paramIndexBox: IntBox, anonymousRuneIndex0: Int, templex: ITemplexPPT) => {
           templex match {
             case AnonymousRunePPT() => {
-              val newTemplex = RunePPT(Scout.unrunedParamRunePrefix + paramIndexBox.num + "_" + anonymousRuneIndex0)
+              val newTemplex = NameOrRunePPT(Scout.unrunedParamRunePrefix + paramIndexBox.num + "_" + anonymousRuneIndex0)
               paramIndexBox.num = paramIndexBox.num + 1
               newTemplex
             }
@@ -115,9 +115,7 @@ object FunctionScout {
     filledTemplex
   }
 
-  def scoutTopLevelFunction(
-      functionP: FunctionP):
-  FunctionS = {
+  def scoutTopLevelFunction(rootEnv: Environment, functionP: FunctionP): FunctionS = {
     val FunctionP(
       Some(name),
       isExtern,
@@ -128,8 +126,15 @@ object FunctionScout {
       unfilledParamsP,
       maybeRetPPT,
       maybeBody0
-    ) = functionP;
-    val codeLocation = CodeLocationS("userInput.vale", functionP.pos.line, functionP.pos.column)
+    ) = functionP
+    val codeLocation = CodeLocationS(rootEnv.file, functionP.pos.line, functionP.pos.column)
+
+    val userDeclaredRunes =
+      userSpecifiedIdentifyingRunes ++
+      // Patterns can't define runes
+      // unfilledParamsP.flatMap(PatternPUtils.getOrderedIdentifyingRunesFromPattern) ++
+      RulePUtils.getOrderedRuneDeclarationsFromRulexesWithDuplicates(templateRulesP)
+    val functionEnv = FunctionEnvironment(rootEnv, userDeclaredRunes.toSet, unfilledParamsP.size)
 
     val filledParamsP = fillParams(unfilledParamsP)
 
@@ -142,10 +147,11 @@ object FunctionScout {
         filledParamsP,
         maybeRetPPT)
 
-    val rate = RuleStateBox(RuleState(RuleScout.translateRulexes(templateRulesP)))
+    val rate = RuleStateBox(RuleState(RuleScout.translateRulexes(functionEnv.allUserDeclaredRunes(), templateRulesP)))
 
     val explicitParamsPatterns1 =
       PatternScout.scoutPatterns(
+        userDeclaredRunes.toSet,
         initialRulesAndRunes,
         fate,
         rate,
@@ -156,12 +162,14 @@ object FunctionScout {
 
     val identifyingRunes =
       (
-        userSpecifiedIdentifyingRunes ++
-        filledParamsP.flatMap(PatternPUtils.getOrderedIdentifyingRunesFromPattern)
+        userSpecifiedIdentifyingRunes //++
+        // Patterns can't define runes
+        // filledParamsP.flatMap(PatternPUtils.getOrderedIdentifyingRunesFromPattern)
       ).distinct
 
     val maybeRetCoordRune =
       PatternScout.translateMaybeTypeIntoMaybeRune(
+        userDeclaredRunes.toSet,
         initialRulesAndRunes,
         rate,
         maybeRetPPT,
@@ -175,7 +183,7 @@ object FunctionScout {
         .map(explicitParam1 => VariableDeclarations(PatternScout.getParameterCaptures(explicitParam1.pattern)))
         .foldLeft(noDeclarations)(_ ++ _)
 
-    val myStackFrame = StackFrame(None, filledParamsP.size, captureDeclarations)
+    val myStackFrame = StackFrame(functionEnv, None, captureDeclarations)
     val body1 =
       if (isAbstract) {
         AbstractBody1
@@ -232,11 +240,11 @@ object FunctionScout {
   def scoutLambda(
       tlfName: String,
       fate: ScoutFateBox,
-      parentStackFrame: Option[StackFrame],
+      parentStackFrame: StackFrame,
       lambdaFunction0: FunctionP):
   (FunctionS, VariableUses) = {
     val FunctionP(_, false, false, isUserFunction, userSpecifiedIdentifyingRunes, List(), unfilledParamsP, maybeRetPT, Some(body0)) = lambdaFunction0;
-    val codeLocation = CodeLocationS("userInput.vale", lambdaFunction0.pos.line, lambdaFunction0.pos.column)
+    val codeLocation = CodeLocationS(parentStackFrame.parentEnv.file, lambdaFunction0.pos.line, lambdaFunction0.pos.column)
 
     val filledParamsP = fillParams(unfilledParamsP)
 
@@ -253,6 +261,7 @@ object FunctionScout {
 
     val explicitParamPatterns1 =
       PatternScout.scoutPatterns(
+        parentStackFrame.parentEnv.allUserDeclaredRunes(),
         initialRulesAndRunes,
         lambdaFate,
         rate,
@@ -272,7 +281,7 @@ object FunctionScout {
 
     // Don't add the closure to the environment, we don't want the user to be able
     // to access it.
-    val myStackFrame = StackFrame(parentStackFrame, explicitParams1.size, paramDeclarations)
+    val myStackFrame = StackFrame(parentStackFrame.parentEnv, Some(parentStackFrame), paramDeclarations)
 
     val (body1, variableUses) =
       scoutBody(
@@ -293,12 +302,13 @@ object FunctionScout {
     // We're basically trying to add `__closure: &__Closure<main>:lam1`
     val closureParamAtomSP =
       PatternScout.translatePattern(
+        myStackFrame.parentEnv.allUserDeclaredRunes(),
         initialRulesAndRunes,
         lambdaFate,
         rate,
         PatternPP(
           Some(CaptureP("__closure", FinalP)),
-          Some(OwnershippedPPT(BorrowP, NamePPT(closureStructName))),
+          Some(OwnershippedPPT(BorrowP, NameOrRunePPT(closureStructName))),
           None,
           None),
         Some("__closure"),
@@ -312,6 +322,7 @@ object FunctionScout {
             val paramIndex = explicitParams1.size + magicParamIndex
             val paramS =
               PatternScout.translatePattern(
+                myStackFrame.parentEnv.allUserDeclaredRunes(),
                 initialRulesAndRunes,
                 lambdaFate,
                 rate,
@@ -325,7 +336,8 @@ object FunctionScout {
     val identifyingRunes =
       (
         userSpecifiedIdentifyingRunes ++
-        filledParamsP.flatMap(PatternPUtils.getOrderedIdentifyingRunesFromPattern) ++
+        // Patterns can't define runes
+        // filledParamsP.flatMap(PatternPUtils.getOrderedIdentifyingRunesFromPattern) ++
         // Magic params always go on the end
         magicParams.map(_.pattern.coordRune)
       ).distinct
@@ -334,6 +346,7 @@ object FunctionScout {
 
     val maybeRetCoordRune =
       PatternScout.translateMaybeTypeIntoMaybeRune(
+        parentStackFrame.parentEnv.allUserDeclaredRunes(),
         initialRulesAndRunes,
         rate,
         maybeRetPT,
@@ -439,7 +452,7 @@ object FunctionScout {
     (BodySE(closuredNames, block1WithParamLocals), allUses)
   }
 
-  def scoutInterfaceMember(functionP: FunctionP): FunctionS = {
+  def scoutInterfaceMember(interfaceEnv: Environment, functionP: FunctionP): FunctionS = {
     val FunctionP(
       maybeName,
       false,
@@ -463,14 +476,16 @@ object FunctionScout {
 
     val identifyingRunes =
       (
-        userSpecifiedIdentifyingRunes ++
-        filledParamsP.flatMap(PatternPUtils.getOrderedIdentifyingRunesFromPattern)
+        userSpecifiedIdentifyingRunes// ++
+        // Patterns can't define runes
+        // filledParamsP.flatMap(PatternPUtils.getOrderedIdentifyingRunesFromPattern)
       ).distinct
 
     val fate = ScoutFateBox(ScoutFate(0, 0, 0, 0, 0))
     val rate = RuleStateBox(RuleState(List()))
     val patternsS =
       PatternScout.scoutPatterns(
+        interfaceEnv.allUserDeclaredRunes(),
         initialRulesAndRunes,
         fate,
         rate,
@@ -485,6 +500,7 @@ object FunctionScout {
 
     val maybeReturnRune =
       PatternScout.translateMaybeTypeIntoMaybeRune(
+        interfaceEnv.allUserDeclaredRunes(),
         initialRulesAndRunes,
         rate,
         maybeReturnType,

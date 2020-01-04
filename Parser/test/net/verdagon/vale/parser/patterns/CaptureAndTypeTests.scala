@@ -37,18 +37,22 @@ class CaptureAndTypeTests extends FunSuite with Matchers {
     }
   }
 
+  test("No capture, with type") {
+    compile("_ Int") shouldEqual
+      PatternPP(None, Some(NameOrRunePPT("Int")), None, None)
+  }
   test("Capture with type") {
-    compile("a : Int") shouldEqual
-        capturedWithType("a", NamePPT("Int"))
+    compile("a Int") shouldEqual
+        capturedWithType("a", NameOrRunePPT("Int"))
   }
   test("Simple capture with tame") {
-    compile("a : #T") shouldEqual capturedWithTypeRune("a","T")
+    compile("a T") shouldEqual capturedWithTypeRune("a","T")
   }
   test("Capture with borrow tame") {
-    compile("arr: &#R") shouldEqual
+    compile("arr &R") shouldEqual
         PatternPP(
           Some(CaptureP("arr",FinalP)),
-          Some(OwnershippedPPT(BorrowP, RunePPT("R"))),
+          Some(OwnershippedPPT(BorrowP, NameOrRunePPT("R"))),
           None,
           None)
   }

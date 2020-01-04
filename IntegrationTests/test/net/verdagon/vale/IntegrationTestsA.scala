@@ -19,7 +19,7 @@ class IntegrationTestsA extends FunSuite with Matchers {
   }
 
   test("Taking an argument and returning it") {
-    val compile = new Compilation("fn main(a: Int){a}")
+    val compile = new Compilation("fn main(a Int){a}")
     compile.evalForReferend(Vector(IntV(5))) shouldEqual VonInt(5)
   }
 
@@ -56,15 +56,15 @@ class IntegrationTestsA extends FunSuite with Matchers {
 
   // Test that the lambda's arg is the right type, and the name is right
   test("Lambda with a type specified param") {
-    val compile = new Compilation("fn main(){(a: Int){ +(a,a)}(3)}");
+    val compile = new Compilation("fn main(){(a Int){ +(a,a)}(3)}");
     compile.evalForReferend(Vector()) shouldEqual VonInt(6)
   }
 
   test("Test overloads") {
     val compile = new Compilation(
       """
-        |fn ~(a: Int, b: Int){+(a, b)}
-        |fn ~(a: Str, b: Str){+(a, b)}
+        |fn ~(a Int, b Int){+(a, b)}
+        |fn ~(a Str, b Str){+(a, b)}
         |fn main(){3 ~ 3}
       """.stripMargin)
     compile.evalForReferend(Vector()) shouldEqual VonInt(6)
@@ -78,7 +78,7 @@ class IntegrationTestsA extends FunSuite with Matchers {
   test("Test templates") {
     val compile = new Compilation(
       """
-        |fn ~<#T>(a: #T, b: #T) #T { a }
+        |fn ~<T>(a T, b T) T { a }
         |fn main(){true ~ false; 2 ~ 2; = 3 ~ 3;}
       """.stripMargin)
     compile.evalForReferend(Vector()) shouldEqual VonInt(3)
@@ -106,14 +106,14 @@ class IntegrationTestsA extends FunSuite with Matchers {
   test("Stamps an interface template via a function parameter") {
     val compile = new Compilation(
       """
-        |interface MyInterface<#T> rules(#T: Ref) { }
-        |fn doAThing<#T>(i: MyInterface<#T>) { }
+        |interface MyInterface<T> rules(T Ref) { }
+        |fn doAThing<T>(i MyInterface<T>) { }
         |
-        |struct SomeStruct<#T> rules(#T: Ref) { }
-        |fn doAThing<#T>(s: SomeStruct<#T>) { }
-        |impl SomeStruct<#T> for MyInterface<#T>;
+        |struct SomeStruct<T> rules(T Ref) { }
+        |fn doAThing<T>(s SomeStruct<T>) { }
+        |impl SomeStruct<T> for MyInterface<T>;
         |
-        |fn main(a: SomeStruct<Int>) {
+        |fn main(a SomeStruct<Int>) {
         |  doAThing<Int>(a);
         |}
       """.stripMargin)
@@ -129,7 +129,7 @@ class IntegrationTestsA extends FunSuite with Matchers {
   test("Reads a struct member") {
     val compile = new Compilation(
       """
-        |struct MyStruct { a: *Int; }
+        |struct MyStruct { a *Int; }
         |fn main() { ms = MyStruct(7); = ms.a; }
       """.stripMargin)
     compile.evalForReferend(Vector()) shouldEqual VonInt(7)
@@ -138,7 +138,7 @@ class IntegrationTestsA extends FunSuite with Matchers {
   test("Tests single expression and single statement functions' returns") {
     val compile = new Compilation(
       """
-        |struct MyThing { value: *Int; }
+        |struct MyThing { value *Int; }
         |fn moo() { MyThing(4) }
         |fn main() { moo(); }
       """.stripMargin)
@@ -148,7 +148,7 @@ class IntegrationTestsA extends FunSuite with Matchers {
   test("Tests calling a templated struct's constructor") {
     val compile = new Compilation(
       """
-        |struct MySome<#T> rules(#T: Ref) { value: #T; }
+        |struct MySome<T> rules(T Ref) { value T; }
         |fn main() {
         |  MySome<*Int>(4).value
         |}
@@ -160,10 +160,10 @@ class IntegrationTestsA extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |interface MyInterface { }
-        |struct MyStruct { value: *Int; }
+        |struct MyStruct { value *Int; }
         |impl MyStruct for MyInterface;
         |fn main() {
-        |  x: MyInterface = MyStruct(9);
+        |  x MyInterface = MyStruct(9);
         |}
       """.stripMargin)
     compile.run(Vector())
@@ -178,17 +178,17 @@ class IntegrationTestsA extends FunSuite with Matchers {
     // Tests putting MyOption<Int> as the type of x.
     val compile = new Compilation(
       """
-        |interface MyOption<#T> rules(#T: Ref) { }
+        |interface MyOption<T> rules(T Ref) { }
         |
-        |struct MySome<#T> rules(#T: Ref) {}
-        |impl MySome<#T> for MyOption<#T>;
+        |struct MySome<T> rules(T Ref) {}
+        |impl MySome<T> for MyOption<T>;
         |
-        |fn doSomething(opt: MyOption<*Int>) *Int {
+        |fn doSomething(opt MyOption<*Int>) *Int {
         |  = 9;
         |}
         |
         |fn main() Int {
-        |	x: MyOption<*Int> = MySome<*Int>();
+        |	x MyOption<*Int> = MySome<*Int>();
         |	= doSomething(x);
         |}
       """.stripMargin)
@@ -208,12 +208,12 @@ class IntegrationTestsA extends FunSuite with Matchers {
   test("Tests calling an abstract function") {
     val compile = new Compilation(
       """
-        |interface MyInterface<#T> rules(#T: Ref) { }
-        |abstract fn doThing<#T>(x: virtual MyInterface<#T>) *Int;
+        |interface MyInterface<T> rules(T Ref) { }
+        |abstract fn doThing<T>(x virtual MyInterface<T>) *Int;
         |
-        |struct MyStruct<#T> rules(#T: Ref) { }
-        |impl MyStruct<#T> for MyInterface<#T>;
-        |fn doThing(x: MyStruct<#T> for MyInterface<#T>) *Int {4}
+        |struct MyStruct<T> rules(T Ref) { }
+        |impl MyStruct<T> for MyInterface<T>;
+        |fn doThing(x MyStruct<T> for MyInterface<T>) *Int {4}
         |
         |fn main() {
         |  x = MyStruct<*Int>();
@@ -244,16 +244,16 @@ class IntegrationTestsA extends FunSuite with Matchers {
   test("Stamp multiple ancestors") {
     val compile = new Compilation(
       """
-        |interface I<#T> imm rules(#T: Ref) { }
+        |interface I<T> imm rules(T Ref) { }
         |
-        |interface J<#T> imm rules(#T: Ref) { }
-        |impl J<#T> for I<#T>;
+        |interface J<T> imm rules(T Ref) { }
+        |impl J<T> for I<T>;
         |
-        |interface K<#T> imm rules(#T: Ref) { }
-        |impl K<#T> for J<#T>;
+        |interface K<T> imm rules(T Ref) { }
+        |impl K<T> for J<T>;
         |
-        |struct L<#T> imm rules(#T: Ref) { }
-        |impl L<#T> for K<#T>;
+        |struct L<T> imm rules(T Ref) { }
+        |impl L<T> for K<T>;
         |
         |fn main() {
         |  x = L<*Int>();
@@ -267,7 +267,7 @@ class IntegrationTestsA extends FunSuite with Matchers {
   test("Tests recursion") {
     val compile = new Compilation(
       """
-        |fn factorial(x: Int) Int {
+        |fn factorial(x Int) Int {
         |  = if (x == 0) {
         |      1
         |    } else {
@@ -286,7 +286,7 @@ class IntegrationTestsA extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |struct Moo imm {
-        |  x: Float;
+        |  x Float;
         |}
         |fn main() {
         |  7
@@ -298,22 +298,22 @@ class IntegrationTestsA extends FunSuite with Matchers {
   test("getOr function") {
     val compile = new Compilation(
       """
-        |interface Opt<#T> rules(#T: Ref) { }
-        |struct Some<#T> rules(#T: Ref) { value: #T; }
-        |impl Some<#T> for Opt<#T>;
-        |struct None<#T> rules(#T: Ref) { }
-        |impl None<#T> for Opt<#T>;
+        |interface Opt<T> rules(T Ref) { }
+        |struct Some<T> rules(T Ref) { value T; }
+        |impl Some<T> for Opt<T>;
+        |struct None<T> rules(T Ref) { }
+        |impl None<T> for Opt<T>;
         |
-        |abstract fn getOr<#T>(opt: virtual &Opt<*#T>, default: *#T) *#T;
-        |fn getOr<#T>(opt: &None<*#T> for Opt<*#T>, default: *#T) *#T {
+        |abstract fn getOr<T>(opt virtual &Opt<*T>, default *T) *T;
+        |fn getOr<T>(opt &None<*T> for Opt<*T>, default *T) *T {
         |  default
         |}
-        |fn getOr<#T>(opt: &Some<*#T> for Opt<*#T>, default: *#T) *#T {
+        |fn getOr<T>(opt &Some<*T> for Opt<*T>, default *T) *T {
         |  opt.value
         |}
         |
         |fn main() {
-        |  a: Opt<Int> = Some(9);
+        |  a Opt<Int> = Some(9);
         |  = a.getOr<Int>(12);
         |}
         |""".stripMargin)
@@ -325,7 +325,7 @@ class IntegrationTestsA extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |interface Opt { }
-        |struct Some { value: Int; }
+        |struct Some { value Int; }
         |impl Some for Opt;
         |
         |fn doIt() Opt {
@@ -351,7 +351,7 @@ class IntegrationTestsA extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |interface Opt { }
-        |struct Some { value: Int; }
+        |struct Some { value Int; }
         |impl Some for Opt;
         |
         |fn doIt() Opt {
@@ -376,36 +376,35 @@ class IntegrationTestsA extends FunSuite with Matchers {
   test("Map function") {
     val compile = new Compilation(
       """
-        |interface Opt<#T> rules(#T: Ref) { }
-        |struct Some<#T> rules(#T: Ref) { value: #T; }
-        |impl Some<#T> for Opt<#T>;
-        |struct None<#T> rules(#T: Ref) { }
-        |impl None<#T> for Opt<#T>;
+        |interface Opt<T> rules(T Ref) { }
+        |struct Some<T> rules(T Ref) { value T; }
+        |impl Some<T> for Opt<T>;
+        |struct None<T> rules(T Ref) { }
+        |impl None<T> for Opt<T>;
         |
-        |abstract fn getOr<#T>(opt: virtual &Opt<#T>, default: #T) #T;
-        |fn getOr<#T>(opt: &None<#T> for Opt<#T>, default: #T) #T {
+        |abstract fn getOr<T>(opt virtual &Opt<T>, default T) T;
+        |fn getOr<T>(opt &None<T> for Opt<T>, default T) T {
         |  default
         |}
-        |fn getOr<#T>(opt: &Some<#T> for Opt<#T>, default: #T) #T {
+        |fn getOr<T>(opt &Some<T> for Opt<T>, default T) T {
         |  opt.value
         |}
         |
-        |abstract fn map<#T, #R>(opt: virtual &Opt<#T>, func: &IFunction1<mut, #T, #R>) Opt<#R>;
-        |fn map<#T, #R>(opt: &None<#T> for Opt<#T>, func: &IFunction1<mut, #T, #R>) Opt<#R> {
+        |fn map<T, R>(opt &None<T> for Opt<T>, func &IFunction1<mut, T, R>) Opt<R> {
         |  None<R>()
         |}
-        |fn map<#T, #R>(opt: &Some<#T> for Opt<#T>, func: &IFunction1<mut, #T, #R>) Opt<#R> {
+        |fn map<T, R>(opt &Some<T> for Opt<T>, func &IFunction1<mut, T, R>) OptR> {
         |  Some<R>(func(opt.value))
         |}
         |
         |struct MyEquals9Functor { }
         |impl MyEquals9Functor for IFunction1<mut, Int, Bool>;
-        |fn __call(this: &MyEquals9Functor for IFunction1<mut, Int, Bool>, i: Int) Bool { i == 9 }
+        |fn __call(this &MyEquals9Functor for IFunction1<mut, Int, Bool>, i Int) Bool { i == 9 }
         |
         |fn main() {
-        |  a: Opt<Int> = Some(9);
+        |  a Opt<Int> = Some(9);
         |  f = MyEquals9Functor();
-        |  b: Opt<Bool> = a.map<Int, Bool>(&f);
+        |  b Opt<Bool> = a.map<Int, Bool>(&f);
         |  = b.getOr<Bool>(false);
         |}
         |""".stripMargin)

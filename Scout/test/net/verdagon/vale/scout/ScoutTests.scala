@@ -32,10 +32,10 @@ class ScoutTests extends FunSuite with Matchers {
   }
 
   test("Struct") {
-    val program1 = compile("struct Moo { x: Int; }")
+    val program1 = compile("struct Moo { x Int; }")
     val imoo = program1.lookupStruct("Moo")
 
-    imoo.rules shouldEqual List(EqualsSR(TypedSR(Some("Mem_0"),CoordTypeSR),TemplexSR(NameST("Int"))))
+    imoo.rules shouldEqual List(EqualsSR(TypedSR(Some("userInput.vale:1:1_Mem_0"),CoordTypeSR),TemplexSR(RuneST("Int"))))
     imoo.members shouldEqual List(StructMemberS("x",FinalP,"Mem_0"))
   }
 
@@ -49,7 +49,7 @@ class ScoutTests extends FunSuite with Matchers {
   }
 
   test("Interface") {
-    val program1 = compile("interface IMoo { fn blork(a: Bool)Void; }")
+    val program1 = compile("interface IMoo { fn blork(a Bool)Void; }")
     val imoo = program1.lookupInterface("IMoo")
 
     imoo.rules shouldEqual List()

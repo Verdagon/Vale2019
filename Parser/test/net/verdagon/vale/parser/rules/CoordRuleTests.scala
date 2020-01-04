@@ -36,22 +36,22 @@ class CoordRuleTests extends FunSuite with Matchers {
   }
 
   test("Empty Coord rule") {
-    compile(rulePR, ":Ref") shouldEqual TypedPR(None,CoordTypePR)
+    compile(rulePR, "_ Ref") shouldEqual TypedPR(None,CoordTypePR)
   }
 
   test("Coord with rune") {
-    compile(rulePR, "#T: Ref") shouldEqual TypedPR(Some("T"),CoordTypePR)
+    compile(rulePR, "T Ref") shouldEqual TypedPR(Some("T"),CoordTypePR)
   }
 
   test("Coord with destructure only") {
-    compile(rulePR, ":Ref[_, _]") shouldEqual
+    compile(rulePR, "Ref(_, _)") shouldEqual
         ComponentsPR(TypedPR(None,CoordTypePR),List(TemplexPR(AnonymousRunePRT()), TemplexPR(AnonymousRunePRT())))
   }
 
   test("Coord with rune and destructure") {
-    compile(rulePR, "#T: Ref[_, _]") shouldEqual
+    compile(rulePR, "T Ref(_, _)") shouldEqual
         ComponentsPR(TypedPR(Some("T"),CoordTypePR),List(TemplexPR(AnonymousRunePRT()), TemplexPR(AnonymousRunePRT())))
-    compile(rulePR, "#T: Ref[own, _]") shouldEqual
+    compile(rulePR, "T Ref(own, _)") shouldEqual
         ComponentsPR(
           TypedPR(Some("T"),CoordTypePR),
           List(TemplexPR(OwnershipPRT(OwnP)), TemplexPR(AnonymousRunePRT())))
@@ -67,22 +67,22 @@ class CoordRuleTests extends FunSuite with Matchers {
     //   rules(
     //     Ref#T[_, _, Ref[_, _, Int]]:Ref[_, _, Void]))
     //   (a: #T)
-    compile(rulePR, "Int") shouldEqual TemplexPR(NamePRT("Int"))
+    compile(rulePR, "Int") shouldEqual TemplexPR(NameOrRunePRT("Int"))
 //        CoordPR(None,None,None,None,None,Some(List(NameTemplexPR("Int"))))
 
   }
 
   test("Coord with Int in kind rule") {
-    compile(rulePR, "#T: Ref[_, Int]") shouldEqual
+    compile(rulePR, "T Ref(_, Int)") shouldEqual
         ComponentsPR(
           TypedPR(Some("T"),CoordTypePR),
-          List(TemplexPR(AnonymousRunePRT()), TemplexPR(NamePRT("Int"))))
+          List(TemplexPR(AnonymousRunePRT()), TemplexPR(NameOrRunePRT("Int"))))
 //      runedTCoordWithEnvKind("T", "Int")
 
   }
 
   test("Coord with specific Kind rule") {
-    compile(rulePR, "#T: Ref[_, :Kind[mut]]") shouldEqual
+    compile(rulePR, "T Ref(_, Kind(mut))") shouldEqual
         ComponentsPR(
           TypedPR(Some("T"),CoordTypePR),
           List(
@@ -92,33 +92,33 @@ class CoordRuleTests extends FunSuite with Matchers {
   }
 
   test("Coord with value") {
-    compile(rulePR, "#T: Ref = Int") shouldEqual
+    compile(rulePR, "T Ref = Int") shouldEqual
         EqualsPR(
           TypedPR(Some("T"),CoordTypePR),
-          TemplexPR(NamePRT("Int")))
+          TemplexPR(NameOrRunePRT("Int")))
   }
 
   test("Coord with destructure and value") {
-    compile(rulePR, "#T: Ref[_, _] = Int") shouldEqual
+    compile(rulePR, "T Ref(_, _) = Int") shouldEqual
         EqualsPR(
           ComponentsPR(TypedPR(Some("T"),CoordTypePR),List(TemplexPR(AnonymousRunePRT()), TemplexPR(AnonymousRunePRT()))),
-          TemplexPR(NamePRT("Int")))
+          TemplexPR(NameOrRunePRT("Int")))
 //        runedTCoordWithValue("T", NameTemplexPR("Int"))
   }
 
   test("Coord with sequence in value spot") {
-    compile(rulePR, "#T: Ref = [Int, Bool]") shouldEqual
+    compile(rulePR, "T Ref = [Int, Bool]") shouldEqual
         EqualsPR(
           TypedPR(Some("T"),CoordTypePR),
           TemplexPR(
             ManualSequencePRT(
-              List(NamePRT("Int"), NamePRT("Bool")))))
+              List(NameOrRunePRT("Int"), NameOrRunePRT("Bool")))))
   }
 
   test("Braces without Ref is sequence") {
     compile(rulePR, "[Int, Bool]") shouldEqual
         TemplexPR(
           ManualSequencePRT(
-            List(NamePRT("Int"), NamePRT("Bool"))))
+            List(NameOrRunePRT("Int"), NameOrRunePRT("Bool"))))
   }
 }

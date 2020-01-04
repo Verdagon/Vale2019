@@ -1,6 +1,7 @@
 package net.verdagon.vale.parser.patterns
 
-import net.verdagon.vale.parser._
+import net.verdagon.vale.parser.{ITemplexPPT, _}
+import net.verdagon.vale.vfail
 
 import scala.util.parsing.combinator.RegexParsers
 
@@ -8,7 +9,6 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
 
   // Things needed from other parsers
   private[parser] def exprIdentifier: Parser[String]
-  private[parser] def rune: Parser[String]
 
 
   // Add any new rules to the "Check no parser rules match empty" test!
@@ -16,30 +16,67 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
   // Remember, for pattern parsers, something *must* be present, don't match empty.
   // And it relies on that fact for the subpatterns too.
   private[parser] def atomPattern: Parser[PatternPP] = {
-    // This handles when there's a "virtual" in the mix. There can't be a destructure, and there must be a type.
-    ((underscoreOr(patternCapture) <~ optWhite <~ ":" <~ optWhite <~ "virtual" <~ optWhite) ~ patternTemplex ^^ {
-      case maybeCapture ~ templex => {
-        PatternPP(maybeCapture, Some(templex), None, Some(AbstractP))
+
+    opt("virtual" ~> white) ~
+    (
+      // The order here matters, we don't want the "a" rule to match "a A(_, _)" just because one starts with the other.
+
+      // First, the ones with destructuring:
+        // Yes capture, yes type, yes destructure:
+        underscoreOr(patternCapture) ~ (white ~> patternTemplex) ~ destructure ^^ { case capture ~ tyype ~ destructure => (capture, Some(tyype), Some(destructure)) } |
+        // Yes capture, no type, yes destructure:
+        underscoreOr(patternCapture) ~ (white ~> destructure) ^^ { case capture ~ destructure => (capture, None, Some(destructure)) } |
+        // No capture, yes type, yes destructure:
+        patternTemplex ~ destructure ^^ { case tyype ~ destructure => (None, Some(tyype), Some(destructure)) } |
+        // No capture, no type, yes destructure:
+        destructure ^^ { case destructure => (None, None, Some(destructure)) } |
+      // Now, the ones with types:
+        // No capture, yes type, no destructure: impossible.
+        // Yes capture, yes type, no destructure:
+        underscoreOr(patternCapture) ~ (white ~> patternTemplex) ^^ { case capture ~ tyype => (capture, Some(tyype), None) } |
+      // Now, a simple capture:
+        // Yes capture, no type, no destructure:
+        underscoreOr(patternCapture) ^^ { case capture => (capture, None, None) }
+    ) ~
+    opt(white ~> "impl" ~> white ~> patternTemplex) ^^ {
+      case maybeVirtual ~ maybeCaptureAndMaybeTypeAndMaybeDestructure ~ maybeInterface => {
+        val (maybeCapture, maybeType, maybeDestructure) = maybeCaptureAndMaybeTypeAndMaybeDestructure
+        val maybeVirtuality =
+          (maybeVirtual, maybeInterface) match {
+            case (None, None) => None
+            case (Some(_), None) => Some(AbstractP)
+            case (None, Some(interface)) => Some(OverrideP(interface))
+            case (Some(_), Some(_)) => vfail()
+          }
+        PatternPP(maybeCapture, maybeType, maybeDestructure, maybeVirtuality)
       }
-    }) |
-    // Handles when there's a "for" in there somewhere. If there's a "for" then there must be a type.
-    (opt(underscoreOr(patternCapture) <~ optWhite) ~ (":" ~> optWhite ~> patternTemplex) ~ opt(optWhite ~> destructure) ~ (optWhite ~> "for" ~> optWhite ~> patternTemplex) ^^ {
-      case maybeCapture ~ patternTemplex ~ maybeDestructure ~ overrride => {
-        PatternPP(maybeCapture.flatten, Some(patternTemplex), maybeDestructure, Some(OverrideP(overrride)))
-      }
-    }) |
-    // Handles when there's no override or virtual, but there is a type in there.
-    ((opt(underscoreOr(patternCapture)) <~ optWhite) ~ (":" ~> optWhite ~> patternTemplex) ~ opt(optWhite ~> destructure) ^^ {
-      case maybeCapture ~ patternTemplex ~ maybeDestructure => {
-        PatternPP(maybeCapture.flatten, Some(patternTemplex), maybeDestructure, None)
-      }
-    }) |
-    // Handles when there's no override or virtual or type, but there is a capture or a destructure.
-    (atLeastOneOfWW(underscoreOr(patternCapture), destructure) ^^ {
-      case maybeCapture ~ maybeDestructure => {
-        PatternPP(maybeCapture.flatten, None, maybeDestructure, None)
-      }
-    })
+    }
+
+//
+//    // This handles when there's a "virtual" in the mix. There can't be a destructure, and there must be a type.
+//    ((underscoreOr(patternCapture) <~ optWhite <~ ":" <~ optWhite <~ "virtual" <~ optWhite) ~ patternTemplex ^^ {
+//      case maybeCapture ~ templex => {
+//        PatternPP(maybeCapture, Some(templex), None, Some(AbstractP))
+//      }
+//    }) |
+//    // Handles when there's a "impl" in there somewhere. If there's a "impl" then there must be a type.
+//    (underscoreOr(patternCapture) ~ (white ~> patternTemplex) ~ opt(destructure) ~ (optWhite ~> "impl" ~> optWhite ~> patternTemplex) ^^ {
+//      case maybeCapture ~ patternTemplex ~ maybeDestructure ~ overrride => {
+//        PatternPP(maybeCapture, Some(patternTemplex), maybeDestructure, Some(OverrideP(overrride)))
+//      }
+//    }) |
+//    // Handles when there's no override or virtual, but there is a type in there.
+//    ((opt(underscoreOr(patternCapture)) <~ optWhite) ~ (":" ~> optWhite ~> patternTemplex) ~ opt(optWhite ~> destructure) ^^ {
+//      case maybeCapture ~ patternTemplex ~ maybeDestructure => {
+//        PatternPP(maybeCapture.flatten, Some(patternTemplex), maybeDestructure, None)
+//      }
+//    }) |
+//    // Handles when there's no override or virtual or type, but there is a capture or a destructure.
+//    (atLeastOneOfWW(underscoreOr(patternCapture), destructure) ^^ {
+//      case maybeCapture ~ maybeDestructure => {
+//        PatternPP(maybeCapture.flatten, None, maybeDestructure, None)
+//      }
+//    })
   }
 
   // Add any new rules to the "Check no parser rules match empty" test!
@@ -47,7 +84,7 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
   // Remember, for pattern parsers, something *must* be present, don't match empty.
   // Luckily, for this rule, we always have the expr identifier.
   private[parser] def patternCapture: Parser[CaptureP] = {
-    exprIdentifier ~ opt(optWhite ~> "!") ^^ {
+    exprIdentifier ~ opt("!") ^^ {
       case name ~ maybeMutable => CaptureP(name, if (maybeMutable.nonEmpty) VaryingP else FinalP)
     }
   }
@@ -55,31 +92,19 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
   // Add any new rules to the "Check no parser rules match empty" test!
 
   // Remember, for pattern parsers, something *must* be present, don't match empty.
-  case class PatternTypePPI(ownership: Option[OwnershipP], rune: Option[String], kind: Option[ITemplexPPT])
+  case class PatternTypePPI(ownership: Option[OwnershipP], runeOrKind: ITemplexPPT)
   private[parser] def patternType: Parser[PatternTypePPI] = {
     opt(patternOwnership <~ optWhite) ~ runeOrKindPattern ^^ {
       case maybeOwnershipP ~ maybeRuneOrKind => {
-        maybeRuneOrKind match {
-          case RuneRuneOrKindPPI(rune) => PatternTypePPI(maybeOwnershipP, Some(rune), None)
-          case KindRuneOrKindPPI(kind) => PatternTypePPI(maybeOwnershipP, None, Some(kind))
-        }
+        PatternTypePPI(maybeOwnershipP, maybeRuneOrKind)
       }
     }
   }
 
   // Add any new rules to the "Check no parser rules match empty" test!
 
-  private[parser] def destructure: Parser[List[Option[PatternPP]]] = {
-    "[" ~> optWhite ~> repsep(underscoreOr(atomPattern), optWhite ~> "," <~ optWhite) <~ optWhite <~ "]"
-  }
-
-  sealed trait IRuneOrKindPPI
-  case class RuneRuneOrKindPPI(rune: String) extends IRuneOrKindPPI
-  case class KindRuneOrKindPPI(kind: ITemplexPPT) extends IRuneOrKindPPI
-
-  private[parser] def runeOrKindPattern: Parser[IRuneOrKindPPI] = {
-    (rune ^^ RuneRuneOrKindPPI) |
-    (kindPattern ^^ KindRuneOrKindPPI)
+  private[parser] def destructure: Parser[List[PatternPP]] = {
+    "(" ~> optWhite ~> repsep(atomPattern, optWhite ~> "," <~ optWhite) <~ optWhite <~ ")"
   }
 
   // Add any new rules to the "Check no parser rules match empty" test!
@@ -91,7 +116,7 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
 
   // Add any new rules to the "Check no parser rules match empty" test!
 
-  private[parser] def kindPattern: Parser[ITemplexPPT] = {
+  private[parser] def runeOrKindPattern: Parser[ITemplexPPT] = {
     patternTemplex
 //    callableKindPattern |
 //        repeaterSequenceKindPattern |

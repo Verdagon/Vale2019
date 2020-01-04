@@ -31,10 +31,6 @@ trait ParserUtils extends RegexParsers {
     ("_" ^^^ { val x: Option[T] = None; x } | parser ^^ (a => Some(a)))
   }
 
-  private[parser] def rune: Parser[String] = {
-    "#" ~> optWhite ~> typeIdentifier
-  }
-
   private[parser] def int: Parser[Int] = {
     raw"^-?\d+".r ^^ {
       case thingStr => thingStr.toInt
@@ -83,11 +79,23 @@ trait ParserUtils extends RegexParsers {
     }
   }
 
-  private[parser] def atLeastOneOf[A, B, C, D](
+  private[parser] def atLeastOneOf[A, B](
       parserA: Parser[A],
-      parserB: Parser[B],
-      parserC: Parser[C],
-      parserD: Parser[D]
+      parserB: Parser[B]
+  ): Parser[(Option[A] ~ Option[B])] = {
+    (parserA ~ opt(parserB) ^^ { case (a ~ maybeB) =>
+      val maybeA: Option[A] = Some(a)
+      new ~(maybeA, maybeB)
+    }) |
+      // With B definitely present
+      (parserB ^^ { case b => (new ~(None, Some(b))) })
+  }
+
+  private[parser] def atLeastOneOf[A, B, C, D](
+    parserA: Parser[A],
+    parserB: Parser[B],
+    parserC: Parser[C],
+    parserD: Parser[D]
   ): Parser[(Option[A] ~ Option[B] ~ Option[C] ~ Option[D])] = {
     atLeastOneOfWW(atLeastOneOfWW(parserA, parserB, parserC), parserD) ^^ {
       case (None ~ c) => (new ~(new ~(new ~(None, None), None), c))

@@ -2,7 +2,7 @@ package net.verdagon.vale.templar.templata
 
 import net.verdagon.vale.astronomer._
 import net.verdagon.vale.parser.ShareP
-import net.verdagon.vale.scout._
+import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.{vassert, vfail, vimpl}
 

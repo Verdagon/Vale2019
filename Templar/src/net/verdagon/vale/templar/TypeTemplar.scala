@@ -9,7 +9,7 @@ import net.verdagon.vale.templar.types._
 
 import scala.collection.immutable.List
 //import net.verdagon.vale.carpenter.CovarianceCarpenter
-import net.verdagon.vale.scout._
+import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
 
 object TypeTemplar {
 

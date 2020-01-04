@@ -38,45 +38,44 @@ class TypeTests extends FunSuite with Matchers {
   }
 
   test("Ignoring name") {
-    compile(": Int") shouldEqual fromEnv("Int")
-    compile("_ : Int") shouldEqual fromEnv("Int")
+    compile("_ Int") shouldEqual fromEnv("Int")
   }
   test("Callable type") {
-    compile(":fn(#T)Void") shouldEqual
+    compile("_ fn(T)Void") shouldEqual
         withType(
           FunctionPPT(
             None,
-            List(RunePPT("T")),
-            NamePPT("Void")))
+            List(NameOrRunePPT("T")),
+            NameOrRunePPT("Void")))
   }
   test("15a") {
-    compile(":[3 * MutableStruct]") shouldEqual
+    compile("_ [3 * MutableStruct]") shouldEqual
         withType(
           RepeaterSequencePPT(
               MutabilityPPT(MutableP),
               IntPPT(3),
-              NamePPT("MutableStruct")))
+              NameOrRunePPT("MutableStruct")))
   }
 
   test("15b") {
-    compile(":[:imm 3 * MutableStruct]") shouldEqual
+    compile("_ [<imm> 3 * MutableStruct]") shouldEqual
       withType(
         RepeaterSequencePPT(
           MutabilityPPT(ImmutableP),
           IntPPT(3),
-          NamePPT("MutableStruct")))
+          NameOrRunePPT("MutableStruct")))
   }
 
   test("Sequence type") {
-    compile(":[Int, Bool]") shouldEqual
+    compile("_ [Int, Bool]") shouldEqual
         withType(
           ManualSequencePPT(
             List(
-              NamePPT("Int"),
-              NamePPT("Bool"))))
+              NameOrRunePPT("Int"),
+              NameOrRunePPT("Bool"))))
   }
   test("15") {
-    compile(":&[3 * MutableStruct]") shouldEqual
+    compile("_ &[3 * MutableStruct]") shouldEqual
       PatternPP(
         None,
         Some(
@@ -85,22 +84,22 @@ class TypeTests extends FunSuite with Matchers {
             RepeaterSequencePPT(
               MutabilityPPT(MutableP),
               IntPPT(3),
-              NamePPT("MutableStruct")))),
+              NameOrRunePPT("MutableStruct")))),
         None,
         None)
   }
   test("15z") {
-    compile(": MyOption<MyList<Int>>") shouldEqual
+    compile("_ MyOption<MyList<Int>>") shouldEqual
       PatternPP(
         None,
         Some(
           CallPPT(
-            NamePPT("MyOption"),
+            NameOrRunePPT("MyOption"),
             List(
               CallPPT(
-                NamePPT("MyList"),
+                NameOrRunePPT("MyList"),
                 List(
-                  NamePPT("Int")))))),
+                  NameOrRunePPT("Int")))))),
         None,
         None)
   }

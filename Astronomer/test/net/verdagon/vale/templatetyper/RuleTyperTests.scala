@@ -3,7 +3,7 @@ package net.verdagon.vale.templatetyper
 import net.verdagon.vale.astronomer._
 import net.verdagon.vale.astronomer.ruletyper.{IRuleTyperEvaluatorDelegate, RuleTyperEvaluator, RuleTyperSolveFailure, RuleTyperSolveSuccess}
 import net.verdagon.vale.parser._
-import net.verdagon.vale.scout._
+import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
 import net.verdagon.vale.scout.patterns.{AbstractSP, AtomSP}
 import net.verdagon.vale.scout.rules.{EqualsSR, _}
 import net.verdagon.vale.{vassert, vassertSome, vfail, vimpl}
@@ -388,8 +388,8 @@ class RuleTyperTests extends FunSuite with Matchers {
             None,"__Let0_",
             Some(
               List(
-                Some(AtomSP(Some(CaptureP("x",FinalP)),None,"__Let0__Mem_0",None)),
-                Some(AtomSP(Some(CaptureP("y",FinalP)),None,"__Let0__Mem_1",None)))))),
+                AtomSP(Some(CaptureP("x",FinalP)),None,"__Let0__Mem_0",None),
+                AtomSP(Some(CaptureP("y",FinalP)),None,"__Let0__Mem_1",None))))),
         Some(Set("__Let0__Mem_0", "__Let0__Mem_1", "__Let0_")))
     conclusions.typeByRune("__Let0_") shouldEqual CoordTemplataType
     conclusions.typeByRune("__Let0__Mem_0") shouldEqual CoordTemplataType

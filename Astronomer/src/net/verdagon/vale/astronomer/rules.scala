@@ -141,6 +141,11 @@ case class NameAT(
   resultType: ITemplataType
 ) extends ITemplexA
 
+// We have both NameAT and RuneAT even though theyre syntactically identical
+// because in the template engine, when we try to match an incoming type
+// against a NameAT/RuneAT, we do different things. For NameAT, we take the thing
+// from the environment and make sure it matches. For RuneAT, we might put
+// something into the environment.
 case class RuneAT(
   rune: String,
   resultType: ITemplataType

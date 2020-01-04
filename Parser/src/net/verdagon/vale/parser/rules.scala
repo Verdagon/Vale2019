@@ -42,8 +42,8 @@ case class LocationPRT(location: LocationP) extends ITemplexPRT
 case class OwnershipPRT(ownership: OwnershipP) extends ITemplexPRT
 case class VariabilityPRT(variability: VariabilityP) extends ITemplexPRT
 case class BoolPRT(value: Boolean) extends ITemplexPRT
-case class NamePRT(name: String) extends ITemplexPRT
-case class RunePRT(rune: String) extends ITemplexPRT
+case class NameOrRunePRT(name: String) extends ITemplexPRT
+case class TypedRunePRT(rune: String, tyype: ITypePR) extends ITemplexPRT
 case class AnonymousRunePRT() extends ITemplexPRT
 case class BorrowPRT(inner: ITemplexPRT) extends ITemplexPRT
 case class SharePRT(inner: ITemplexPRT) extends ITemplexPRT
@@ -76,32 +76,32 @@ case class ManualSequencePRT(
 
 object RulePUtils {
 
-  def getOrderedRunesFromRulexesWithDuplicates(rulexes: List[IRulexPR]):
+  def getOrderedRuneDeclarationsFromRulexesWithDuplicates(rulexes: List[IRulexPR]):
   List[String] = {
     rulexes.foldLeft(List[String]())({
-      case (previous, current) => previous ++ getOrderedRunesFromRulexWithDuplicates(current)
+      case (previous, current) => previous ++ getOrderedRuneDeclarationsFromRulexWithDuplicates(current)
     })
   }
 
-  def getOrderedRunesFromRulexWithDuplicates(rulex: IRulexPR): List[String] = {
+  def getOrderedRuneDeclarationsFromRulexWithDuplicates(rulex: IRulexPR): List[String] = {
     rulex match {
-      case EqualsPR(left, right) => getOrderedRunesFromRulexWithDuplicates(left) ++ getOrderedRunesFromRulexWithDuplicates(right)
-      case OrPR(possibilities) => getOrderedRunesFromRulexesWithDuplicates(possibilities)
-      case DotPR(container, memberName) => getOrderedRunesFromRulexWithDuplicates(container)
-      case ComponentsPR(container, components) => getOrderedRunesFromRulexesWithDuplicates(container :: components)
-      case TypedPR(maybeRune, tyype: ITypePR) => maybeRune.toList
-      case TemplexPR(templex) => getOrderedRunesFromTemplexWithDuplicates(templex)
-      case CallPR(name, args) => getOrderedRunesFromRulexesWithDuplicates(args)
+      case EqualsPR(left, right) => getOrderedRuneDeclarationsFromRulexWithDuplicates(left) ++ getOrderedRuneDeclarationsFromRulexWithDuplicates(right)
+      case OrPR(possibilities) => getOrderedRuneDeclarationsFromRulexesWithDuplicates(possibilities)
+      case DotPR(container, memberName) => getOrderedRuneDeclarationsFromRulexWithDuplicates(container)
+      case ComponentsPR(container, components) => getOrderedRuneDeclarationsFromRulexesWithDuplicates(container :: components)
+      case TypedPR(maybeRune, tyype) => maybeRune.toList
+      case TemplexPR(templex) => getOrderedRuneDeclarationsFromTemplexWithDuplicates(templex)
+      case CallPR(name, args) => getOrderedRuneDeclarationsFromRulexesWithDuplicates(args)
     }
   }
 
-  def getOrderedRunesFromTemplexesWithDuplicates(templexes: List[ITemplexPRT]): List[String] = {
+  def getOrderedRuneDeclarationsFromTemplexesWithDuplicates(templexes: List[ITemplexPRT]): List[String] = {
     templexes.foldLeft(List[String]())({
-      case (previous, current) => previous ++ getOrderedRunesFromTemplexWithDuplicates(current)
+      case (previous, current) => previous ++ getOrderedRuneDeclarationsFromTemplexWithDuplicates(current)
     })
   }
 
-  def getOrderedRunesFromTemplexWithDuplicates(templex: ITemplexPRT): List[String] = {
+  def getOrderedRuneDeclarationsFromTemplexWithDuplicates(templex: ITemplexPRT): List[String] = {
     templex match {
       case IntPRT(value) => List()
       case MutabilityPRT(mutability) => List()
@@ -109,15 +109,19 @@ object RulePUtils {
       case LocationPRT(location) => List()
       case OwnershipPRT(ownership) => List()
       case BoolPRT(value) => List()
-      case NamePRT(name) => List()
-      case RunePRT(rune) => List(rune)
+      case NameOrRunePRT(name) => List()
+      case TypedRunePRT(name, tyype) => List(name)
       case AnonymousRunePRT() => List()
-      case CallPRT(template, args) => getOrderedRunesFromTemplexesWithDuplicates((template :: args))
-      case FunctionPRT(mutability, parameters, returnType) => getOrderedRunesFromTemplexesWithDuplicates(mutability.toList) ++ getOrderedRunesFromTemplexWithDuplicates(parameters) ++ getOrderedRunesFromTemplexWithDuplicates(returnType)
-      case PrototypePRT(name, parameters, returnType) => getOrderedRunesFromTemplexesWithDuplicates((parameters :+ returnType))
-      case PackPRT(members) => getOrderedRunesFromTemplexesWithDuplicates(members)
-      case RepeaterSequencePRT(mutability, size, element) => getOrderedRunesFromTemplexesWithDuplicates(List(mutability, size, element))
-      case ManualSequencePRT(elements) => getOrderedRunesFromTemplexesWithDuplicates(elements)
+      case CallPRT(template, args) => getOrderedRuneDeclarationsFromTemplexesWithDuplicates((template :: args))
+      case FunctionPRT(mutability, parameters, returnType) => {
+        getOrderedRuneDeclarationsFromTemplexesWithDuplicates(mutability.toList) ++
+          getOrderedRuneDeclarationsFromTemplexWithDuplicates(parameters) ++
+          getOrderedRuneDeclarationsFromTemplexWithDuplicates(returnType)
+      }
+      case PrototypePRT(name, parameters, returnType) => getOrderedRuneDeclarationsFromTemplexesWithDuplicates((parameters :+ returnType))
+      case PackPRT(members) => getOrderedRuneDeclarationsFromTemplexesWithDuplicates(members)
+      case RepeaterSequencePRT(mutability, size, element) => getOrderedRuneDeclarationsFromTemplexesWithDuplicates(List(mutability, size, element))
+      case ManualSequencePRT(elements) => getOrderedRuneDeclarationsFromTemplexesWithDuplicates(elements)
     }
   }
 }

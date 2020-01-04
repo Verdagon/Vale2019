@@ -7,7 +7,7 @@ import net.verdagon.vale.hinputs.Hinputs
 import net.verdagon.vale.metal.ProgramH
 import net.verdagon.vale.parser.{Program0, VParser}
 import net.verdagon.vale.scout.{ProgramS, Scout}
-import net.verdagon.vale.templar.{CommonEnv, CompleteProgram2, Program2, Templar}
+import net.verdagon.vale.templar.{CompleteProgram2, Program2, Templar}
 import net.verdagon.vale.vivem.{Heap, PrimitiveReferendV, ReferenceV, Vivem}
 import net.verdagon.von.IVonData
 

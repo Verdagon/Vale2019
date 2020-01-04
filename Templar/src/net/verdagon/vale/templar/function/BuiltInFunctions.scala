@@ -5,7 +5,7 @@ import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.parser._
 import net.verdagon.vale.{scout => s}
-import net.verdagon.vale.scout._
+import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
 import net.verdagon.vale.scout.patterns.{AbstractSP, AtomSP, OverrideSP}
 import net.verdagon.vale.scout.rules._
 import net.verdagon.vale.templar._
@@ -39,6 +39,7 @@ object BuiltInFunctions {
       .addEntry(
         CallTemplar.DESTRUCTOR_NAME,
         FunctionEnvEntry(
+          None,
           FunctionA(
             s.CodeLocationS(CallTemplar.DESTRUCTOR_NAME + ".builtin.vale", 0, 0),
             CallTemplar.DESTRUCTOR_NAME,
@@ -120,6 +121,7 @@ object BuiltInFunctions {
     (
     currentlyConstructingEnv
       .addFunction(
+        None,
         FunctionA(
           s.CodeLocationS(CallTemplar.INTERFACE_DESTRUCTOR_NAME + ".builtin.vale", 0, 0),
           CallTemplar.INTERFACE_DESTRUCTOR_NAME,
@@ -184,6 +186,7 @@ object BuiltInFunctions {
     (
     currentlyConstructingEnv
       .addFunction(
+        None,
         FunctionA(
           s.CodeLocationS(CallTemplar.INTERFACE_DESTRUCTOR_NAME + ".builtin.vale", 0, 1),
           CallTemplar.INTERFACE_DESTRUCTOR_NAME,
@@ -260,6 +263,7 @@ object BuiltInFunctions {
     (
       currentlyConstructingEnv
         .addFunction(
+          None,
           FunctionA(
             s.CodeLocationS(CallTemplar.DROP_FUNCTION_NAME + ".builtin.vale", 0, 0),
             CallTemplar.DROP_FUNCTION_NAME,
@@ -301,6 +305,7 @@ object BuiltInFunctions {
   private def addArrayLen(currentlyConstructingEnv: NamespaceEnvironment): NamespaceEnvironment = {
     currentlyConstructingEnv
       .addFunction(
+        None,
         FunctionA(
           s.CodeLocationS("len.builtin.vale", 0, 0),
           "len",
@@ -339,6 +344,7 @@ object BuiltInFunctions {
                   ArrayLengthAE(
                     LocalLoadAE("arr", false))))))))
       .addFunction(
+        None,
         FunctionA(
           s.CodeLocationS("len.builtin.vale", 0, 1),
           "len",
@@ -383,6 +389,7 @@ object BuiltInFunctions {
   private def addPanic(currentlyConstructingEnv: NamespaceEnvironment): NamespaceEnvironment = {
     currentlyConstructingEnv
       .addFunction(
+        None,
         FunctionA(
           s.CodeLocationS("panic.builtin.vale", 0, 0),
           "panic",

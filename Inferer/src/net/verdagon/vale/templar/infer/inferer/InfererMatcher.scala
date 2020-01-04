@@ -1,6 +1,6 @@
 package net.verdagon.vale.templar.infer.inferer
 
-import net.verdagon.vale.scout._
+import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
 import net.verdagon.vale.scout.patterns.{AbstractSP, AtomSP, OverrideSP}
 import net.verdagon.vale.scout.rules._
 import net.verdagon.vale.templar.infer._
@@ -121,7 +121,7 @@ class InfererMatcher[Env, State](
     state: State,
     inferences: InferencesBox,
     instance: Coord,
-    parts: List[Option[AtomSP]]):
+    parts: List[AtomSP]):
   (IInferMatchResult) = {
 
     val structMemberTypes =
@@ -132,12 +132,7 @@ class InfererMatcher[Env, State](
 
     val destructuresDeeplySatisfied =
       structMemberTypes.zip(parts).foldLeft((true))({
-        case ((deeplySatisfiedSoFar), (_, None)) => {
-          // The part is None; there's just an _ in this spot of the destructure.
-          // Nothing to do here.
-          (deeplySatisfiedSoFar)
-        }
-        case ((deeplySatisfiedSoFar), (structMemberType, Some(part))) => {
+        case ((deeplySatisfiedSoFar), (structMemberType, part)) => {
           val paramFilter = ParamFilter(structMemberType, None)
           matchParamFilterAgainstAtomSP(env, state, inferences, paramFilter, part) match {
             case (imc @ InferMatchConflict(_, _, _)) => return (imc)

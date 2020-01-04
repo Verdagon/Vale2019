@@ -27,12 +27,12 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
   }
 
   private[parser] def let: Parser[LetPE] = {
-    (opt(templateRulesPR) <~ optWhite) ~
+//    (opt(templateRulesPR) <~ optWhite) ~
         (atomPattern <~ white <~ "=" <~ white) ~
         (expression <~ optWhite <~ ";") ^^ {
-      case maybeTemplateRules ~ pattern ~ expr => {
+      case /*maybeTemplateRules ~*/ pattern ~ expr => {
         // We just threw away the topLevelRunes because let statements cant have them.
-        LetPE(maybeTemplateRules.getOrElse(List()), pattern, expr)
+        LetPE(/*maybeTemplateRules.getOrElse(List())*/List(), pattern, expr)
       }
     }
   }
@@ -106,7 +106,7 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
     // debt: "block" is here temporarily because we get ambiguities in this case:
     //   fn main() { {_ + _}(4 + 5) }
     // because it mistakenly successfully parses {_ + _} then dies on the next part.
-    swap | let | whiile | ifLadder | (expression <~ ";") | ("block" ~> optWhite ~> bracedBlock)
+    (mutate <~ ";") | swap | let | whiile | ifLadder | (expression <~ ";") | ("block" ~> optWhite ~> bracedBlock)
   }
 
   private[parser] def expressionElementLevel1: Parser[IExpressionPE] = {

@@ -17,11 +17,11 @@ case class ImplP(
   interface: ITemplexPPT) extends Positional
 
 case class StructP(
-    name: String,
-    mutability: MutabilityP,
-    identifyingRunes: Option[List[String]],
-    templateRules: List[IRulexPR],
-    members: List[StructMemberP]) extends Positional
+  name: String,
+  mutability: MutabilityP,
+  identifyingRunes: Option[List[String]],
+  templateRules: List[IRulexPR],
+  members: List[StructMemberP]) extends Positional
 
 case class StructMemberP(
   name: String,

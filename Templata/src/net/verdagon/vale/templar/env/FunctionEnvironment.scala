@@ -31,6 +31,8 @@ case class FunctionEnvironment(
   // See AENS for some more thoughts on environment vs state.
 
 ) extends IEnvironment {
+  vassert(fullName.steps.startsWith(parentEnv.fullName.steps))
+
   override def globalEnv: NamespaceEnvironment = parentEnv.globalEnv
 
   def addScoutedLocals(newScoutedLocals: Set[LocalVariable1]): FunctionEnvironment = {

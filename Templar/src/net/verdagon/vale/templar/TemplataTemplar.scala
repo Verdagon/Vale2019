@@ -1,7 +1,7 @@
 package net.verdagon.vale.templar.templata
 
 import net.verdagon.vale.astronomer.{ITemplataType, ITemplexA, TemplateTemplataType}
-import net.verdagon.vale.scout._
+import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.citizen.{ImplTemplar, StructTemplar}
 import net.verdagon.vale.templar.env.{IEnvironment, IEnvironmentBox, TemplataLookupContext}

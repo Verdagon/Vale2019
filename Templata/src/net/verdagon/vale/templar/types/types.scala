@@ -1,6 +1,6 @@
 package net.verdagon.vale.templar.types
 
-import net.verdagon.vale.scout._
+import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
 import net.verdagon.vale.templar.env.IEnvironment
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar.types._

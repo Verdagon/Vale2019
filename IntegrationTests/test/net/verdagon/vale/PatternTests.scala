@@ -17,21 +17,21 @@ class PatternTests extends FunSuite with Matchers {
   //  compile.evalForReferend(Vector()) shouldEqual VonInt(4)
   //}
 
-  test("Test matching a multiple-member pack of immutables") {
+  test("Test matching a multiple-member seq of immutables") {
     // Checks that the 5 made it into y, and it was an int
-    val compile = new Compilation("fn main() { [x, y] = (4, 5); = y; }")
+    val compile = new Compilation("fn main() { (x, y) = [4, 5]; = y; }")
     val temputs = compile.getTemputs()
     val main = temputs.lookupFunction("main")
     main.header.returnType shouldEqual Coord(Share, Int2())
     compile.evalForReferend(Vector()) shouldEqual VonInt(5)
   }
 
-  test("Test matching a multiple-member pack of mutables") {
+  test("Test matching a multiple-member seq of mutables") {
     // Checks that the 5 made it into y, and it was an int
     val compile = new Compilation(
       """
-        |struct Marine { hp: *Int; }
-        |fn main() { [x, y] = (Marine(6), Marine(8)); = y.hp; }
+        |struct Marine { hp *Int; }
+        |fn main() { (x, y) = [Marine(6), Marine(8)]; = y.hp; }
       """.stripMargin)
     val temputs = compile.getTemputs()
     val main = temputs.lookupFunction("main");
@@ -43,8 +43,8 @@ class PatternTests extends FunSuite with Matchers {
     // Checks that the 5 made it into y, and it was an int
     val compile = new Compilation(
       """
-        |struct Marine { hp: *Int; }
-        |fn main() { [x, y] = (7, Marine(8)); = y.hp; }
+        |struct Marine { hp *Int; }
+        |fn main() { (x, y) = [7, Marine(8)]; = y.hp; }
       """.stripMargin)
     val temputs = compile.getTemputs()
     temputs.functions.head.header.returnType == Coord(Share, Int2())
@@ -55,10 +55,10 @@ class PatternTests extends FunSuite with Matchers {
     // Checks that the 5 made it into y, and it was an int
     val compile = new Compilation(
       """
-        |struct Marine { hp: *Int; }
+        |struct Marine { hp *Int; }
         |fn main() {
         |  m = Marine(8);
-        |  [x, y] = (7, &m);
+        |  (x, y) = [7, &m];
         |  = y.hp;
         |}
       """.stripMargin)

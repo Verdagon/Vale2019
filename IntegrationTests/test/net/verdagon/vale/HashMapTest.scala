@@ -56,12 +56,12 @@ class HashMapTest extends FunSuite with Matchers {
       Assert.code +
       """
         |struct IntHasher { }
-        |fn __call(this: &IntHasher, x: Int) { x }
+        |fn __call(this &IntHasher, x Int) { x }
         |
         |struct IntEquator { }
-        |fn __call(this: &IntEquator, a: Int, b: Int) { a == b }
+        |fn __call(this &IntEquator, a Int, b Int) { a == b }
         |
-        |fn add42(map: &HashMap<Int, Int, IntHasher, IntEquator>) {
+        |fn add42(map &HashMap<Int, Int, IntHasher, IntEquator>) {
         |  map.add(42, 100);
         |}
         |
@@ -83,13 +83,13 @@ class HashMapTest extends FunSuite with Matchers {
         Assert.code +
         """
           |struct Location imm {
-          |  groupX: Int;
-          |  groupY: Int;
-          |  indexInGroup: Int;
+          |  groupX Int;
+          |  groupY Int;
+          |  indexInGroup Int;
           |}
           |
           |struct LocationHasher { }
-          |fn __call(this: &LocationHasher, loc: Location) {
+          |fn __call(this &LocationHasher, loc Location) {
           |  hash = 0;
           |  mut hash = 41 * hash + loc.groupX;
           |  mut hash = 41 * hash + loc.groupY;
@@ -98,7 +98,7 @@ class HashMapTest extends FunSuite with Matchers {
           |}
           |
           |struct LocationEquator { }
-          |fn __call(this: &LocationEquator, a: Location, b: Location) {
+          |fn __call(this &LocationEquator, a Location, b Location) {
           |  (a.groupX == b.groupX) and (a.groupY == b.groupY) and (a.indexInGroup == b.indexInGroup)
           |}
           |

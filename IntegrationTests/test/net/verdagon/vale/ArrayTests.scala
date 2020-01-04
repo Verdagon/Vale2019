@@ -67,7 +67,7 @@ class ArrayTests extends FunSuite with Matchers {
   test("Take arraysequence as a parameter") {
     val compile = new Compilation(
       """
-        |fn doThings(arr: [5 * *Int]) {
+        |fn doThings(arr [5 * *Int]) {
         |  arr.3
         |}
         |fn main() {
@@ -83,10 +83,10 @@ class ArrayTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |struct MutableStruct {
-        |  x: *Int;
+        |  x *Int;
         |}
         |
-        |fn doThings(arr: &[3 * ^MutableStruct]) {
+        |fn doThings(arr &[3 * ^MutableStruct]) {
         |  arr.2.x
         |}
         |fn main() {
@@ -238,7 +238,7 @@ class ArrayTests extends FunSuite with Matchers {
       """
         |struct MyIntIdentity {}
         |impl MyIntIdentity for IFunction1<mut, Int, Int>;
-        |fn __call(this: &MyIntIdentity for IFunction1<mut, Int, Int>, i: Int) Int { i }
+        |fn __call(this &MyIntIdentity for IFunction1<mut, Int, Int>, i Int) Int { i }
         |fn main() {
         |  m = MyIntIdentity();
         |  arr = Array<mut, Int>(10, &m);
@@ -305,7 +305,7 @@ class ArrayTests extends FunSuite with Matchers {
 
   test("Map from hardcoded values") {
     val compile = new Compilation(
-      """fn toArray<#M>(seq: &[:_ #N * #E]) rules(#M: Mutability) {
+      """fn toArray<M>(seq &[<_> N * E]) rules(M Mutability) {
         |  Array<M, E>(N, (i){ seq.(i)})
         |}
         |fn main() {

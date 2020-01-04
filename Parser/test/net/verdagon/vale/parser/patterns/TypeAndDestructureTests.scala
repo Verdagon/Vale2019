@@ -41,78 +41,78 @@ class TypeAndDestructureTests extends FunSuite with Matchers {
 
 
   test("Empty destructure") {
-    compile(":Muta[]") shouldEqual
+    compile("_ Muta()") shouldEqual
         PatternPP(
           None,
-          Some(NamePPT("Muta")),
+          Some(NameOrRunePPT("Muta")),
           Some(List()),
           None)
   }
 
   test("Templated destructure") {
-    compile(":Muta<Int>[]") shouldEqual
+    compile("_ Muta<Int>()") shouldEqual
         PatternPP(
           None,
           Some(
             CallPPT(
-              NamePPT("Muta"),
-              List(NamePPT("Int")))),
+              NameOrRunePPT("Muta"),
+              List(NameOrRunePPT("Int")))),
           Some(List()),
           None)
-    compile(":Muta<#R>[]") shouldEqual
+    compile("_ Muta<R>()") shouldEqual
         PatternPP(
           None,
           Some(
             CallPPT(
-              NamePPT("Muta"),
-              List(RunePPT("R")))),
+              NameOrRunePPT("Muta"),
+              List(NameOrRunePPT("R")))),
           Some(List()),
           None)
   }
 
 
   test("Destructure with type outside") {
-    compile(":[Int, Bool][a, b]") shouldEqual
+    compile("_ [Int, Bool](a, b)") shouldEqual
         PatternPP(
           None,
           Some(
             ManualSequencePPT(
                 List(
-                  NamePPT("Int"),
-                  NamePPT("Bool")))),
-          Some(List(Some(capture("a")), Some(capture("b")))),
+                  NameOrRunePPT("Int"),
+                  NameOrRunePPT("Bool")))),
+          Some(List(capture("a"), capture("b"))),
           None)
   }
   test("Destructure with typeless capture") {
-    compile(":Muta[b]") shouldEqual
+    compile("_ Muta(b)") shouldEqual
         PatternPP(
           None,
-          Some(NamePPT("Muta")),
-          Some(List(Some(PatternPP(Some(CaptureP("b",FinalP)),None,None,None)))),
+          Some(NameOrRunePPT("Muta")),
+          Some(List(PatternPP(Some(CaptureP("b",FinalP)),None,None,None))),
           None)
   }
   test("Destructure with typed capture") {
-    compile(":Muta[b: Marine]") shouldEqual
+    compile("_ Muta(b Marine)") shouldEqual
         PatternPP(
           None,
-          Some(NamePPT("Muta")),
-          Some(List(Some(PatternPP(Some(CaptureP("b",FinalP)),Some(NamePPT("Marine")),None,None)))),
+          Some(NameOrRunePPT("Muta")),
+          Some(List(PatternPP(Some(CaptureP("b",FinalP)),Some(NameOrRunePPT("Marine")),None,None))),
           None)
   }
   test("Destructure with unnamed capture") {
-    compile(":Muta[:Marine]") shouldEqual
+    compile("_ Muta(_ Marine)") shouldEqual
         PatternPP(
           None,
-          Some(NamePPT("Muta")),
-          Some(List(Some(PatternPP(None,Some(NamePPT("Marine")),None,None)))),
+          Some(NameOrRunePPT("Muta")),
+          Some(List(PatternPP(None,Some(NameOrRunePPT("Marine")),None,None))),
           None)
   }
   test("Destructure with runed capture") {
-    compile(":Muta[:#R]") shouldEqual
+    compile("_ Muta(_ R)") shouldEqual
         PatternPP(
           None,
-          Some(NamePPT("Muta")),
-          Some(List(Some(PatternPP(None,Some(RunePPT("R")),None,None)))),
+          Some(NameOrRunePPT("Muta")),
+          Some(List(PatternPP(None,Some(NameOrRunePPT("R")),None,None))),
           None)
   }
 }

@@ -183,8 +183,8 @@ object FunctionTemplarClosureOrLightLayer {
   def evaluateOrdinaryLightFunctionFromNonCallForPrototype(
     outerEnv: FunctionEnvironment,
     temputs: TemputsBox,
-    function1: FunctionA):
-  (Prototype2) = {
+    function1: FunctionA
+  ): Prototype2 = {
     // This should only be called with a non-templated function
     vassert(!function1.isTemplate)
 

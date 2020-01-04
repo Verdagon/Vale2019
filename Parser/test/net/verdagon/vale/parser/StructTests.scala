@@ -19,9 +19,9 @@ class StructTests extends FunSuite with Matchers with Collector {
   test("Struct with rune") {
     compile(VParser.topLevelThing,
       """
-        |struct ListNode<#E> {
-        |  value: E;
-        |  next: ListNode<E>;
+        |struct ListNode<E> {
+        |  value E;
+        |  next ListNode<E>;
         |}
       """.stripMargin) shouldEqual
           TopLevelStruct(
@@ -31,17 +31,17 @@ class StructTests extends FunSuite with Matchers with Collector {
               Some(List("E")),
               List(),
               List(
-                StructMemberP("value",FinalP,NamePT("E")),
-                StructMemberP("next",FinalP,CallPT(NamePT("ListNode"),List(NamePT("E")))))))
+                StructMemberP("value",FinalP,NameOrRunePT("E")),
+                StructMemberP("next",FinalP,CallPT(NameOrRunePT("ListNode"),List(NameOrRunePT("E")))))))
   }
 
   test("Struct with int rune") {
     compile(VParser.topLevelThing,
       """
-        |struct Vecf<#N>
-        |rules(#N: Int)
+        |struct Vecf<N>
+        |rules(N Int)
         |{
-        |  values: [N * Float];
+        |  values [N * Float];
         |}
         |
       """.stripMargin) shouldEqual
@@ -51,16 +51,16 @@ class StructTests extends FunSuite with Matchers with Collector {
             MutableP,
             Some(List("N")),
             List(TypedPR(Some("N"),IntTypePR)),
-            List(StructMemberP("values",FinalP,ArraySequencePT(MutabilityPT(MutableP), NamePT("N"), NamePT("Float"))))))
+            List(StructMemberP("values",FinalP,ArraySequencePT(MutabilityPT(MutableP), NameOrRunePT("N"), NameOrRunePT("Float"))))))
   }
 
   test("Struct with int rune, array sequence specifies mutability") {
     compile(VParser.topLevelThing,
       """
-        |struct Vecf<#N>
-        |rules(#N: Int)
+        |struct Vecf<N>
+        |rules(N Int)
         |{
-        |  values: [:imm N * Float];
+        |  values [<imm> N * Float];
         |}
         |
       """.stripMargin) shouldEqual
@@ -70,6 +70,6 @@ class StructTests extends FunSuite with Matchers with Collector {
           MutableP,
           Some(List("N")),
           List(TypedPR(Some("N"),IntTypePR)),
-          List(StructMemberP("values",FinalP,ArraySequencePT(MutabilityPT(ImmutableP), NamePT("N"), NamePT("Float"))))))
+          List(StructMemberP("values",FinalP,ArraySequencePT(MutabilityPT(ImmutableP), NameOrRunePT("N"), NameOrRunePT("Float"))))))
   }
 }

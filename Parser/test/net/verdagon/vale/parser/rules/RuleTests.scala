@@ -41,7 +41,6 @@ class RuleTests extends FunSuite with Matchers {
     checkFail(existsPR, "")
     checkFail(implementsPR, "")
     checkFail(keywordOrIdentifierOrRuneRuleTemplexPR, "")
-    checkFail(keywordOrIdentifierRuleTemplexPR, "")
     checkFail(level0PR, "")
     checkFail(level1PR, "")
     checkFail(level2PR, "")
@@ -55,22 +54,21 @@ class RuleTests extends FunSuite with Matchers {
     checkFail(ruleTemplexPR, "")
     checkFail(ruleTemplexPR, "")
     checkFail(ruleTemplexSetPR, "")
-    checkFail(runeRuleTemplexPR, "")
     checkFail(templateRulesPR, "")
   }
 
   test("Relations") {
     compile(rulePR, "implements(MyObject, IObject)") shouldEqual
-        CallPR("implements",List(TemplexPR(NamePRT("MyObject")), TemplexPR(NamePRT("IObject"))))
-    compile(rulePR, "implements(#R, IObject)") shouldEqual
-        CallPR("implements",List(TemplexPR(RunePRT("R")), TemplexPR(NamePRT("IObject"))))
-    compile(rulePR, "implements(MyObject, #T)") shouldEqual
-        CallPR("implements",List(TemplexPR(NamePRT("MyObject")), TemplexPR(RunePRT("T"))))
-    compile(rulePR, "exists(fn +(#T)Int)") shouldEqual
-        CallPR("exists", List(TemplexPR(PrototypePRT("+", List(RunePRT("T")), NamePRT("Int")))))
+        CallPR("implements",List(TemplexPR(NameOrRunePRT("MyObject")), TemplexPR(NameOrRunePRT("IObject"))))
+    compile(rulePR, "implements(R, IObject)") shouldEqual
+        CallPR("implements",List(TemplexPR(NameOrRunePRT("R")), TemplexPR(NameOrRunePRT("IObject"))))
+    compile(rulePR, "implements(MyObject, T)") shouldEqual
+        CallPR("implements",List(TemplexPR(NameOrRunePRT("MyObject")), TemplexPR(NameOrRunePRT("T"))))
+    compile(rulePR, "exists(fn +(T)Int)") shouldEqual
+        CallPR("exists", List(TemplexPR(PrototypePRT("+", List(NameOrRunePRT("T")), NameOrRunePRT("Int")))))
   }
 
   test("Super complicated") {
-    compile(rulePR, "#C = [#I * #X] | [#N * #T]") // succeeds
+    compile(rulePR, "C = [I * X] | [N * T]") // succeeds
   }
 }

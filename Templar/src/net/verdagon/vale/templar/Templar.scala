@@ -2,11 +2,6 @@ package net.verdagon.vale.templar;
 
 import net.verdagon.vale._
 import net.verdagon.vale.astronomer._
-import net.verdagon.vale.parser._
-import net.verdagon.vale.scout._
-import net.verdagon.vale.{scout => s}
-import net.verdagon.vale.scout.patterns.{AbstractSP, AtomSP}
-import net.verdagon.vale.scout.rules._
 import net.verdagon.vale.templar.OverloadTemplar.{ScoutExpectedFunctionFailure, ScoutExpectedFunctionSuccess}
 import net.verdagon.vale.templar.citizen.StructTemplar
 import net.verdagon.vale.templar.env._
@@ -21,6 +16,7 @@ object Templar {
 
   def evaluate(program: ProgramA):
   CompleteProgram2 = {
+
     val ProgramA(structsA, interfacesA, impls1, functions1) = program;
 
     val env0 =
@@ -39,103 +35,29 @@ object Templar {
     val (env1, functionGeneratorByName1) = BuiltInFunctions.addBuiltInFunctions(env0, functionGeneratorByName0)
     val functionGeneratorByName2 = functionGeneratorByName1 ++ StructTemplar.getFunctionGenerators()
 
-    val ifunction1InterfaceA =
-      InterfaceA(
-        s.CodeLocationS("IFunction1.builtin.vale", 0, 0),
-        List(),
-        "IFunction1",
-        MutableP,
-        Some(MutableP),
-        TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType, CoordTemplataType), KindTemplataType),
-        List("IFunctionM", "IFunctionP1", "IFunctionR"),
-        Map(
-          "IFunctionM" -> MutabilityTemplataType,
-          "IFunctionP1" -> CoordTemplataType,
-          "IFunctionR" -> CoordTemplataType),
-        List(
-          TemplexAR(RuneAT("IFunctionM", MutabilityTemplataType)),
-          TemplexAR(RuneAT("IFunctionP1", CoordTemplataType)),
-          TemplexAR(RuneAT("IFunctionR", CoordTemplataType))),
-        List(
-          FunctionA(
-            s.CodeLocationS("IFunction1.builtin.vale", 0, 1),
-            "__call", List(), 0, true,
-            FunctionTemplataType,
-            List(),
-            Map(
-              "CallM" -> MutabilityTemplataType,
-              "CallP1" -> CoordTemplataType,
-              "CallR" -> CoordTemplataType,
-              "CallThisK" -> CoordTemplataType),
-            List(
-              ParameterS(AtomSP(Some(CaptureP("this", FinalP)), Some(AbstractSP), "CallBorrowThis", None)),
-              ParameterS(AtomSP(Some(CaptureP("p1", FinalP)), None, "CallP1", None))),
-            Some("CallR"),
-            List(
-              EqualsAR(TemplexAR(RuneAT("CallM", MutabilityTemplataType)), TemplexAR(NameAT("IFunctionM", MutabilityTemplataType))),
-              EqualsAR(TemplexAR(RuneAT("CallP1", CoordTemplataType)), TemplexAR(NameAT("IFunctionP1", CoordTemplataType))),
-              EqualsAR(TemplexAR(RuneAT("CallR", CoordTemplataType)), TemplexAR(NameAT("IFunctionR", CoordTemplataType))),
-              EqualsAR(
-                TemplexAR(RuneAT("CallThisK", CoordTemplataType)),
-                TemplexAR(
-                  CallAT(
-                    NameAT("IFunction1", TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType, CoordTemplataType), KindTemplataType)),
-                    List(
-                      NameAT("IFunctionM", MutabilityTemplataType),
-                      NameAT("IFunctionP1", CoordTemplataType),
-                      NameAT("IFunctionR", CoordTemplataType)),
-                    CoordTemplataType))),
-              EqualsAR(
-                TemplexAR(RuneAT("CallBorrowThis", CoordTemplataType)),
-                TemplexAR(OwnershippedAT(BorrowP, RuneAT("CallThisK", CoordTemplataType))))),
-            AbstractBodyA)))
-    val env2 =
-      env1
-        .addEntry("IFunction1", InterfaceEnvEntry(ifunction1InterfaceA))
-        .addFunction(StructTemplar.getInterfaceConstructor(ifunction1InterfaceA))
+    val env3 = env1
 
     // This has to come before the structs and interfaces because part of evaluating a
     // struct or interface is figuring out what it extends.
-    val env4 =
-      impls1.foldLeft(env2)({
-        case (envH, impl1) => envH.addEntry(IMPL_NAME, ImplEnvEntry(impl1))
-      })
     val env5 =
-      structsA.foldLeft(env4)({
-        case (env4a, s) => {
-          env4a
-            .addEntry(s.name, StructEnvEntry(s))
-            .addFunction(StructTemplar.getConstructor(s))
-        }
+      impls1.foldLeft(env3)({
+        case (env4, impl1) => env4.addEntry(IMPL_NAME, ImplEnvEntry(None, impl1))
+      })
+    val env7 =
+      structsA.foldLeft(env5)({
+        case (env6, s) => env6.addEntries(makeStructEnvironmentEntries(None, s))
       })
     val env9 =
-      interfacesA.foldLeft(env5)({
-        case (env6, interfaceA) => {
-          val env7 =
-            env6
-              .addEntry(interfaceA.name, InterfaceEnvEntry(interfaceA))
-              .addFunction(StructTemplar.getInterfaceConstructor(interfaceA))
-          interfaceA.internalMethods.foldLeft(env7)({
-            case (env8, internalMethodA) => env8.addFunction(internalMethodA)
-          })
-        }
+      interfacesA.foldLeft(env7)({
+        case (env8, interfaceA) => env8.addEntries(makeInterfaceEnvironmentEntries(None, interfaceA))
       })
-
-//    val env9 =
-//      envExternFunctionMembers.foldLeft(env6)({
-//        case (env8, (name, headers)) => {
-//          env8.addEntries(
-//            Map((name -> headers.map(header => TemplataEnvEntry(ExternFunctionTemplata(header))))))
-//        }
-//      })
 
     val env11 =
       functions1.foldLeft(env9)({
         case (env10, functionS) => {
-          env10.addFunction(functionS)
+          env10.addFunction(None, functionS)
         }
       })
-
 
     val temputs =
       TemputsBox(
@@ -180,30 +102,6 @@ object Templar {
         }
       })
 
-//
-//      envExternFunctionMembers.values.foldLeft(temputs)({
-//        case (headers) => {
-//          headers.foldLeft(temputs)({
-//            case (header) => {
-//              temputs.declareFunctionSignature(header.toSignature, None)
-//              val _ =
-//                FunctionTemplarCore.makeExternFunction(
-//                  temputs,
-//                  header.toBanner.humanName,
-//                  header.isUserFunction,
-//                  header.templateArgs,
-//                  header.params,
-//                  header.returnType,
-//                  None)
-//
-//              vassert(temputs.exactDeclaredSignatureExists(header.toBanner.humanName, header.toBanner.templateArgs, header.toBanner.paramTypes))
-//
-//              temputs
-//            }
-//          })
-//        }
-//      })
-
       functions1.foreach({
         case (functionS) => {
           if (functionS.isTemplate) {
@@ -227,6 +125,51 @@ object Templar {
         temputs.getAllFunctions())
 
     result
+  }
+
+  // (Once we add namespaces, this will probably change)
+  def makeInterfaceEnvironmentEntries(
+    parent: Option[IEnvEntry],
+    interfaceA: InterfaceA
+  ): Map[String, List[IEnvEntry]] = {
+    val interfaceEnvEntry = InterfaceEnvEntry(parent, interfaceA)
+
+    val env0 = Map[String, List[IEnvEntry]]()
+    val env1 = EnvironmentUtils.addEntry(env0, interfaceA.name, interfaceEnvEntry)
+    val env2 = EnvironmentUtils.addFunction(env1, parent, StructTemplar.getInterfaceConstructor(interfaceA))
+
+    val env4 =
+      interfaceA.internalMethods.foldLeft(env2)({
+        case (env3, internalMethodA) => EnvironmentUtils.addFunction(env3, Some(interfaceEnvEntry), internalMethodA)
+      })
+
+    // Once we have sub-interfaces and sub-structs, we could recursively call this function.
+    // We'll put our interfaceA onto the top of the list of every entry from the sub-struct/sub-interface.
+
+    env4
+  }
+
+  // (Once we add namespaces, this will probably change)
+  def makeStructEnvironmentEntries(
+    parent: Option[IEnvEntry],
+    structA: StructA
+  ): Map[String, List[IEnvEntry]] = {
+    val interfaceEnvEntry = StructEnvEntry(parent, structA)
+
+    val env0 = Map[String, List[IEnvEntry]]()
+    val env1 = EnvironmentUtils.addEntry(env0, structA.name, interfaceEnvEntry)
+    val env2 = EnvironmentUtils.addFunction(env1, parent, StructTemplar.getConstructor(structA))
+
+    // To add once we have methods inside structs:
+//    val env4 =
+//      structA.internalMethods.foldLeft(env2)({
+//        case (env3, internalMethodA) => EnvironmentUtils.addFunction(env3, Some(interfaceEnvEntry), internalMethodA)
+//      })
+
+    // Once we have sub-interfaces and sub-structs, we could recursively call this function.
+    // We'll put our structA onto the top of the list of every entry from the sub-struct/sub-interface.
+
+    env2
   }
 
   def stampNeededOverridesUntilSettled(env: NamespaceEnvironment, temputs: TemputsBox): Unit = {

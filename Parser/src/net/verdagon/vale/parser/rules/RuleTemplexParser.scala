@@ -8,7 +8,7 @@ import scala.util.parsing.combinator.RegexParsers
 trait RuleTemplexParser extends RegexParsers with ParserUtils {
   // Add any new rules to the "Check no parser rules match empty" test!
 
-  private[parser] def keywordOrIdentifierRuleTemplexPR: Parser[ITemplexPRT] = {
+  private[parser] def keywordOrIdentifierOrRuneRuleTemplexPR: Parser[ITemplexPRT] = {
     "true" ^^^ BoolPRT(true) |
     "false" ^^^ BoolPRT(false) |
     "own" ^^^ OwnershipPRT(OwnP) |
@@ -21,19 +21,7 @@ trait RuleTemplexParser extends RegexParsers with ParserUtils {
     "xrw" ^^^ PermissionPRT(ExclusiveReadwriteP) |
     "rw" ^^^ PermissionPRT(ReadwriteP) |
     "ro" ^^^ PermissionPRT(ReadonlyP) |
-    typeIdentifier ^^ NamePRT
-  }
-
-  // Add any new rules to the "Check no parser rules match empty" test!
-
-  private[parser] def runeRuleTemplexPR: Parser[RunePRT] = {
-    rune ^^ RunePRT
-  }
-
-  // Add any new rules to the "Check no parser rules match empty" test!
-
-  private[parser] def keywordOrIdentifierOrRuneRuleTemplexPR: Parser[ITemplexPRT] = {
-    keywordOrIdentifierRuleTemplexPR | runeRuleTemplexPR
+    typeIdentifier ^^ NameOrRunePRT
   }
 
   // Add any new rules to the "Check no parser rules match empty" test!
@@ -74,7 +62,7 @@ trait RuleTemplexParser extends RegexParsers with ParserUtils {
     (("[" ~> optWhite ~> ruleTemplexPR <~ optWhite <~ "*" <~ optWhite) ~ (ruleTemplexPR <~ optWhite <~ "]") ^^ {
       case size ~ element => RepeaterSequencePRT(MutabilityPRT(MutableP), size, element)
     }) |
-    ((("[:" ~> ruleTemplexPR) ~ (optWhite ~> ruleTemplexPR) <~ optWhite <~ "*" <~ optWhite) ~ (ruleTemplexPR <~ optWhite <~ "]") ^^ {
+    ((("[<" ~> optWhite ~> ruleTemplexPR <~ optWhite <~ ">") ~ (optWhite ~> ruleTemplexPR) <~ optWhite <~ "*" <~ optWhite) ~ (ruleTemplexPR <~ optWhite <~ "]") ^^ {
       case mutability ~ size ~ element => RepeaterSequencePRT(mutability, size, element)
     })
   }

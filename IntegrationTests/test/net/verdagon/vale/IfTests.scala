@@ -1,6 +1,6 @@
 package net.verdagon.vale
 
-import net.verdagon.vale.scout._
+import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.types._
 import net.verdagon.von.{VonInt, VonStr}
@@ -61,7 +61,7 @@ class IfTests extends FunSuite with Matchers {
   test("Moving from inside if") {
     val compile = new Compilation(
       """
-        |struct Marine { x: *Int; }
+        |struct Marine { x *Int; }
         |fn main() {
         |  m = Marine(5);
         |  = if (false) {
@@ -91,7 +91,7 @@ class IfTests extends FunSuite with Matchers {
   test("If with complex condition") {
     val compile = new Compilation(
       """
-        |struct Marine { x: *Int; }
+        |struct Marine { x *Int; }
         |fn main() {
         |  m = Marine(5);
         |  = if (m.x == 5) { "#" }
@@ -109,10 +109,10 @@ class IfTests extends FunSuite with Matchers {
 
   test("Ret from inside if will destroy locals") {
     val compile = new Compilation(
-      """struct Marine { hp: Int; }
-        |fn destructor(marine: Marine) Void {
+      """struct Marine { hp Int; }
+        |fn destructor(marine Marine) Void {
         |  println("Destroying marine!");
-        |  :Marine[weapon] = marine;
+        |  Marine(weapon) = marine;
         |}
         |fn main() {
         |  m = Marine(5);
@@ -137,7 +137,7 @@ class IfTests extends FunSuite with Matchers {
       """struct Marine { hp: Int; }
         |fn destructor(marine: Marine) Void {
         |  println("Destroying marine!");
-        |  :Marine[weapon] = marine;
+        |  Marine(weapon) = marine;
         |}
         |fn main() {
         |  m = Marine(5);
