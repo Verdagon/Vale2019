@@ -13,41 +13,39 @@ case class ProgramA(
     interfaces: List[InterfaceA],
     impls: List[ImplA],
     functions: List[FunctionA]) {
-  def lookupFunction(name: String) = {
+  def lookupFunction(name: AbsoluteNameA[INameA]) = {
     val matches = functions.filter(_.name == name)
     vassert(matches.size == 1)
     matches.head
   }
-  def lookupInterface(name: String) = {
+  def lookupInterface(name: AbsoluteNameA[INameA]) = {
     val matches = interfaces.find(_.name == name)
     vassert(matches.size == 1)
     matches.head match {
-      case i @ InterfaceA(_, _, _, _, _, _, _, _, _, _) => i
+      case i @ InterfaceA(_, _, _, _, _, _, _, _) => i
     }
   }
-  def lookupStruct(name: String) = {
+  def lookupStruct(name: AbsoluteNameA[INameA]) = {
     val matches = structs.find(_.name == name)
     vassert(matches.size == 1)
     matches.head match {
-      case i @ StructA(_, _, _, _, _, _, _, _, _, _) => i
+      case i @ StructA(_, _, _, _, _, _, _, _) => i
     }
   }
 }
 
 
 trait TypeDefinitionA {
-  def name: String;
+  def name: AbsoluteNameA[INameA];
 }
 
 case class StructA(
-    codeLocation: CodeLocationS,
-    namespace: List[String],
-    name: String,
+    name: AbsoluteNameA[INameA],
     mutability: MutabilityP,
     maybePredictedMutability: Option[MutabilityP],
     tyype: ITemplataType,
-    identifyingRunes: List[String],
-    typeByRune: Map[String, ITemplataType],
+    identifyingRunes: List[AbsoluteNameA[IRuneA]],
+    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
     rules: List[IRulexAR],
     members: List[StructMemberA]
 ) extends TypeDefinitionA {
@@ -61,14 +59,14 @@ case class StructA(
 case class StructMemberA(
     name: String,
     variability: VariabilityP,
-    typeRune: String)
+    typeRune: AbsoluteNameA[IRuneA])
 
 case class ImplA(
-    codeLocation: CodeLocationS,
+    name: AbsoluteNameA[INameA],
     rules: List[IRulexAR],
-    typeByRune: Map[String, ITemplataType],
-    structKindRune: String,
-    interfaceKindRune: String)
+    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
+    structKindRune: AbsoluteNameA[IRuneA],
+    interfaceKindRune: AbsoluteNameA[IRuneA])
 
 //case class AliasA(
 //  codeLocation: CodeLocation,
@@ -78,14 +76,12 @@ case class ImplA(
 //  aliaseeRune: String)
 
 case class InterfaceA(
-    codeLocation: CodeLocationS,
-    namespace: List[String],
-    name: String,
+    name: AbsoluteNameA[INameA],
     mutability: MutabilityP,
     maybePredictedMutability: Option[MutabilityP],
     tyype: ITemplataType,
-    identifyingRunes: List[String],
-    typeByRune: Map[String, ITemplataType],
+    identifyingRunes: List[AbsoluteNameA[IRuneA]],
+    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
     rules: List[IRulexAR],
     // See IMRFDI
     internalMethods: List[FunctionA]) {
@@ -98,14 +94,14 @@ case class InterfaceA(
 
 object interfaceName {
   // The extraction method (mandatory)
-  def unapply(interfaceA: InterfaceA): Option[String] = {
+  def unapply(interfaceA: InterfaceA): Option[AbsoluteNameA[INameA]] = {
     Some(interfaceA.name)
   }
 }
 
 object structName {
   // The extraction method (mandatory)
-  def unapply(structA: StructA): Option[String] = {
+  def unapply(structA: StructA): Option[AbsoluteNameA[INameA]] = {
     Some(structA.name)
   }
 }
@@ -127,34 +123,28 @@ object structName {
 
 // Underlying class for all XYZFunctionS types
 case class FunctionA(
-    codeLocation: CodeLocationS,
-    name: String,
-    namespace: List[String],
-    lambdaNumber: Int, // 0 if at top level
+    name: AbsoluteNameA[INameA],
     isUserFunction: Boolean,
 
     tyype: ITemplataType,
     // This is not necessarily only what the user specified, the compiler can add
     // things to the end here, see CCAUIR.
-    identifyingRunes: List[String],
-    typeByRune: Map[String, ITemplataType],
+    identifyingRunes: List[AbsoluteNameA[IRuneA]],
+    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
 
-    params: List[ParameterS],
+    params: List[ParameterA],
 
     // We need to leave it an option to signal that the compiler can infer the return type.
-    maybeRetCoordRune: Option[String],
+    maybeRetCoordRune: Option[AbsoluteNameA[IRuneA]],
 
     templateRules: List[IRulexAR],
     body: IBodyA
 ) {
   def isLight(): Boolean = {
-    lambdaNumber == 0 ||
-      (body match {
-        case ExternBodyA => true
-        case AbstractBodyA => true
-        case GeneratedBodyA(_) => true
-        case CodeBodyA(body1) => body1.closuredNames.isEmpty
-      })
+    body match {
+      case ExternBodyA | AbstractBodyA | GeneratedBodyA(_) => false
+      case CodeBodyA(bodyA) => bodyA.closuredNames.nonEmpty
+    }
   }
 
   def isTemplate: Boolean = tyype match {
@@ -163,6 +153,20 @@ case class FunctionA(
     case _ => vwat()
   }
 }
+
+
+case class ParameterA(
+  // Note the lack of a VariabilityP here. The only way to get a variability is with a Capture.
+  pattern: AtomAP) {
+
+  // The name they supplied, or a generated one. This is actually not used at all by the templar,
+  // it's probably only used by IDEs. The templar gets arguments by index.
+  def name = pattern.name
+}
+
+case class CaptureA(
+  name: AbsoluteNameA[INameA],
+  variability: VariabilityP)
 
 sealed trait IBodyA
 case object ExternBodyA extends IBodyA

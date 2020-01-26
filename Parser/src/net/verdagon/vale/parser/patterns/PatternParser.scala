@@ -15,7 +15,7 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
 
   // Remember, for pattern parsers, something *must* be present, don't match empty.
   // And it relies on that fact for the subpatterns too.
-  private[parser] def atomPattern: Parser[PatternPP] = {
+  private[parser] def atomPattern: Parser[PatternPP] = positioned {
 
     opt("virtual" ~> white) ~
     (

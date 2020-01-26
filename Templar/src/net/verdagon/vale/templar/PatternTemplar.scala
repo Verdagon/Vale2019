@@ -1,11 +1,10 @@
 package net.verdagon.vale.templar;
 
-import net.verdagon.vale.astronomer.{IRulexAR, ITemplataType}
+import net.verdagon.vale.astronomer._
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.parser.CaptureP
-import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
-import net.verdagon.vale.scout.patterns.AtomSP
+import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
 import net.verdagon.vale.scout.rules.IRulexSR
 import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.function.DestructorTemplar
@@ -39,10 +38,10 @@ object PatternTemplar {
     temputs: TemputsBox,
     fate: FunctionEnvironmentBox,
     rules: List[IRulexAR],
-    typeByRune: Map[String, ITemplataType],
-    patterns1: List[AtomSP],
+    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
+    patterns1: List[AtomAP],
     patternInputExprs2: List[ReferenceExpression2]):
-  (List[ReferenceExpression2]) = {
+  List[ReferenceExpression2] = {
 
     val patternInputCoords = patternInputExprs2.map(_.resultRegister.reference)
 
@@ -52,7 +51,7 @@ object PatternTemplar {
         case (InferSolveSuccess(tbr)) => (tbr.templatasByRune.mapValues(v => List(TemplataEnvEntry(v))))
       }
 
-    fate.addEntries(templatasByRune)
+    fate.addEntries(templatasByRune.map({ case (key, value) => (RuneSymbol(key), value) }))
 
     nonCheckingTranslateList(temputs, fate, patterns1, patternInputExprs2)
   }
@@ -73,7 +72,7 @@ object PatternTemplar {
   def nonCheckingTranslateList(
     temputs: TemputsBox,
     fate: FunctionEnvironmentBox,
-      patterns1: List[AtomSP],
+      patterns1: List[AtomAP],
       patternInputExprs2: List[ReferenceExpression2]):
   (List[ReferenceExpression2]) = {
 
@@ -97,8 +96,8 @@ object PatternTemplar {
       temputs: TemputsBox,
       fate: FunctionEnvironmentBox,
       rules: List[IRulexAR],
-      typeByRune: Map[String, ITemplataType],
-      pattern: AtomSP,
+      typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
+      pattern: AtomAP,
       inputExpr: ReferenceExpression2):
   (List[ReferenceExpression2]) = {
 
@@ -108,7 +107,7 @@ object PatternTemplar {
         case (InferSolveSuccess(tbr)) => (tbr.templatasByRune.mapValues(v => List(TemplataEnvEntry(v))))
       }
 
-    fate.addEntries(templatasByRune)
+    fate.addEntries(templatasByRune.map({ case (key, value) => (RuneSymbol(key), value) }))
 
     innerNonCheckingTranslate(
       temputs, fate, pattern, inputExpr)
@@ -118,7 +117,7 @@ object PatternTemplar {
   def nonCheckingTranslate(
       temputs: TemputsBox,
       fate: FunctionEnvironmentBox,
-      pattern: AtomSP,
+      pattern: AtomAP,
       inputExpr: ReferenceExpression2):
   (List[ReferenceExpression2]) = {
     innerNonCheckingTranslate(
@@ -135,19 +134,18 @@ object PatternTemplar {
   private def innerNonCheckingTranslate(
       temputs: TemputsBox,
       fate: FunctionEnvironmentBox,
-      pattern: AtomSP,
+      pattern: AtomAP,
       unconvertedInputExpr: ReferenceExpression2):
   (List[ReferenceExpression2]) = {
 
-
-    val AtomSP(maybeCapture, maybeVirtuality, coordRune, maybeDestructure) = pattern
+    val AtomAP(maybeCapture, maybeVirtuality, coordRuneA, maybeDestructure) = pattern
 
     if (maybeVirtuality.nonEmpty) {
       // This is actually to be expected for when we translate the patterns from the
       // function's parameters. Ignore them.
     }
 
-    val expectedTemplata = fate.getNearestTemplataWithName(coordRune, Set(TemplataLookupContext))
+    val expectedTemplata = fate.getNearestTemplataWithName(RuneSymbol(coordRuneA), Set(TemplataLookupContext))
     val expectedCoord =
       expectedTemplata match {
         case Some(CoordTemplata(coord)) => coord
@@ -333,7 +331,7 @@ object PatternTemplar {
   private def nonCheckingTranslatePack(
     temputs: TemputsBox,
     fate: FunctionEnvironmentBox,
-    innerPatternMaybes: List[AtomSP],
+    innerPatternMaybes: List[AtomAP],
     inputPackExpr: ReferenceExpression2):
   (List[ReferenceExpression2]) = {
     // we gotta:
@@ -355,7 +353,7 @@ object PatternTemplar {
   private def nonCheckingTranslateStructInner(
     temputs: TemputsBox,
     fate: FunctionEnvironmentBox,
-    innerPatternMaybes: List[AtomSP],
+    innerPatternMaybes: List[AtomAP],
     structType2: Coord,
     inputStructExpr: ReferenceExpression2):
   (List[ReferenceExpression2]) = {
@@ -429,7 +427,7 @@ object PatternTemplar {
   }
 //
 //  // Assumes the templated stuff has already been put into this environment
-//  def getParameterType2(env: IEnvironmentBox, temputs: TemputsBox, param1: AtomSP):
+//  def getParameterType2(env: IEnvironmentBox, temputs: TemputsBox, param1: AtomAP):
 //  (Temputs, Coord) = {
 //    val type1 = getPatternType1(param1)
 //    val type2 = TypeTemplar.evaluateType(env, temputs, type1)
@@ -437,7 +435,7 @@ object PatternTemplar {
 //  }
 //
 //  // Assumes the templated stuff has already been put into this environment
-//  def getPatternType2(env: IEnvironmentBox, temputs: TemputsBox, pattern1: AtomSP):
+//  def getPatternType2(env: IEnvironmentBox, temputs: TemputsBox, pattern1: AtomAP):
 //  (Temputs, Coord) = {
 //    val type1 = getPatternType1(pattern1)
 //    val type2 =
@@ -445,22 +443,22 @@ object PatternTemplar {
 //    (temputs, TemplataTemplar.coerceTemplataToReference(temputs, type2, Own))
 //  }
 //
-//  def getParameterType1(param1: AtomSP): ITemplexS = {
+//  def getParameterType1(param1: AtomAP): ITemplexS = {
 //    getPatternType1(param1)
 //  }
 //
-//  def getParameterType1s(params1: List[AtomSP]): List[ITemplexS] = {
+//  def getParameterType1s(params1: List[AtomAP]): List[ITemplexS] = {
 //    getPatternType1s(params1)
 //  }
 //
-//  def getPatternType1s(patterns1: List[AtomSP]):
+//  def getPatternType1s(patterns1: List[AtomAP]):
 //  List[ITemplexS] = {
 //    patterns1.map(pattern1 => getPatternType1(pattern1))
 //  }
 
   // Once we know that a function isnt templated, we use this to figure out
-  // the types of its AtomSP
-//  def getPatternType1(pattern: AtomSP):
+  // the types of its AtomAP
+//  def getPatternType1(pattern: AtomAP):
 //      ITemplexS = {
 //    pattern.coordPattern.get.iname match {
 //      case TemplexSP(name) =>
@@ -479,7 +477,7 @@ object PatternTemplar {
 //    }
 //  }
 
-//  private def getPatternsCaptureDeclarations(patterns: List[AtomSP]):
+//  private def getPatternsCaptureDeclarations(patterns: List[AtomAP]):
 //      VariableDeclarations = {
 //    patterns.foldLeft(VariableDeclarations(Set()))({ case (previousDeclarations, pattern) =>
 //      previousDeclarations ++ getPatternCaptureDeclarations(pattern)

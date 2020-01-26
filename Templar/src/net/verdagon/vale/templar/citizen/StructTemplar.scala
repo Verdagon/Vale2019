@@ -71,10 +71,9 @@ object StructTemplar {
     val params =
       struct1.members.zipWithIndex.map({
         case (member, index) => {
-          ParameterS(AtomSP(Some(CaptureP(member.name, FinalP)), None, Scout.makeMemberRune(struct1.codeLocation, index), None))
+          ParameterS(AtomSP(Some(CaptureP(member.name, FinalP)), None, MemberRune(struct1.codeLocation, index), None))
         }
       })
-    val retRune = "__RetRune"
     val rules =
       struct1.rules :+
       EqualsAR(
@@ -169,34 +168,18 @@ object StructTemplar {
     uncoercedTemplateArgs: List[ITemplata]):
   (StructRef2) = {
     StructTemplarTemplateArgsLayer.getStructRef(
-      structTemplata.env, temputs, structTemplata.originStruct, uncoercedTemplateArgs)
-  }
-
-  def getStructRef(
-    env: NamespaceEnvironment,
-    temputs: TemputsBox,
-    struct1: StructA,
-    uncoercedTemplateArgs: List[ITemplata]):
-  (StructRef2) = {
-    StructTemplarTemplateArgsLayer.getStructRef(env, temputs, struct1, uncoercedTemplateArgs)
+      temputs, structTemplata, uncoercedTemplateArgs)
   }
 
   def getInterfaceRef(
     temputs: TemputsBox,
+    // We take the entire templata (which includes environment and parents) so we can incorporate
+    // their rules as needed
     interfaceTemplata: InterfaceTemplata,
     uncoercedTemplateArgs: List[ITemplata]):
   (InterfaceRef2) = {
     StructTemplarTemplateArgsLayer.getInterfaceRef(
-      interfaceTemplata.env, temputs, interfaceTemplata.originInterface, uncoercedTemplateArgs)
-  }
-
-  def getInterfaceRef(
-    env: NamespaceEnvironment,
-    temputs: TemputsBox,
-    interface1: InterfaceA,
-    uncoercedTemplateArgs: List[ITemplata]):
-  (InterfaceRef2) = {
-    StructTemplarTemplateArgsLayer.getInterfaceRef(env, temputs, interface1, uncoercedTemplateArgs)
+      temputs, interfaceTemplata, uncoercedTemplateArgs)
   }
 
   def convert(

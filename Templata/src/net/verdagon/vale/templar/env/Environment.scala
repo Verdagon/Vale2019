@@ -1,11 +1,11 @@
 package net.verdagon.vale.templar.env
 
-import net.verdagon.vale.astronomer.FunctionA
-import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
+import net.verdagon.vale.astronomer._
+import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar.types.{FullName2, NamePart2}
-import net.verdagon.vale.{vassert, vfail}
+import net.verdagon.vale.{vassert, vfail, vimpl, vwat}
 
 import scala.collection.immutable.{List, Map}
 
@@ -14,8 +14,10 @@ trait IEnvironment {
     "#Environment"
   }
   def globalEnv: NamespaceEnvironment
-  def getAllTemplatasWithName(name: String, lookupFilter: Set[ILookupContext]): List[ITemplata]
-  def getNearestTemplataWithName(name: String, lookupFilter: Set[ILookupContext]): Option[ITemplata]
+  def getAllTemplatasWithAbsoluteName(name: AbsoluteNameA[INameA], lookupFilter: Set[ILookupContext]): List[ITemplata]
+  def getNearestTemplataWithAbsoluteName(name: AbsoluteNameA[INameA], lookupFilter: Set[ILookupContext]): Option[ITemplata]
+  def getAllTemplatasWithName(name: ImpreciseNameA[IImpreciseNameStepA], lookupFilter: Set[ILookupContext]): List[ITemplata]
+  def getNearestTemplataWithName(name: ImpreciseNameA[IImpreciseNameStepA], lookupFilter: Set[ILookupContext]): Option[ITemplata]
   def fullName: FullName2
 }
 
@@ -25,8 +27,8 @@ trait IEnvironmentBox {
     "#Environment"
   }
   def globalEnv: NamespaceEnvironment
-  def getAllTemplatasWithName(name: String, lookupFilter: Set[ILookupContext]): List[ITemplata]
-  def getNearestTemplataWithName(name: String, lookupFilter: Set[ILookupContext]): Option[ITemplata]
+  def getAllTemplatasWithAbsoluteName(name: AbsoluteNameA[INameA], lookupFilter: Set[ILookupContext]): List[ITemplata]
+  def getNearestTemplataWithAbsoluteName(name: AbsoluteNameA[INameA], lookupFilter: Set[ILookupContext]): Option[ITemplata]
   def fullName: FullName2
 }
 
@@ -37,7 +39,7 @@ case object ExpressionLookupContext extends ILookupContext
 case class NamespaceEnvironment(
   maybeParentEnv: Option[IEnvironment],
   fullName: FullName2,
-  entries: Map[String, List[IEnvEntry]]
+  entries: Map[AbsoluteNameA[INameA], List[IEnvEntry]]
 ) extends IEnvironment {
   maybeParentEnv match {
     case None =>
@@ -51,14 +53,14 @@ case class NamespaceEnvironment(
     }
   }
 
-  override def getAllTemplatasWithName(name: String, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
+  override def getAllTemplatasWithAbsoluteName(name: AbsoluteNameA[INameA], lookupFilter: Set[ILookupContext]): List[ITemplata] = {
     entries.getOrElse(name, List())
       .filter(EnvironmentUtils.entryMatchesFilter(_, lookupFilter))
       .map(EnvironmentUtils.entryToTemplata(this, _))++
-      maybeParentEnv.toList.flatMap(_.getAllTemplatasWithName(name, lookupFilter))
+      maybeParentEnv.toList.flatMap(_.getAllTemplatasWithAbsoluteName(name, lookupFilter))
   }
 
-  override def getNearestTemplataWithName(name: String, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
+  override def getNearestTemplataWithAbsoluteName(name: AbsoluteNameA[INameA], lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
     entries
       .get(name).toList.flatten
       .filter(EnvironmentUtils.entryMatchesFilter(_, lookupFilter)) match {
@@ -66,32 +68,36 @@ case class NamespaceEnvironment(
       case List() => {
         maybeParentEnv match {
           case None => None
-          case Some(parentEnv) => parentEnv.getNearestTemplataWithName(name, lookupFilter)
+          case Some(parentEnv) => parentEnv.getNearestTemplataWithAbsoluteName(name, lookupFilter)
         }
       }
       case multiple => vfail("Too many things named " + name + ":\n" + multiple.mkString("\n"));
     }
   }
 
+  override def getAllTemplatasWithName(name: ImpreciseNameA[IImpreciseNameStepA], lookupFilter: Set[ILookupContext]): List[ITemplata] = {
+    vimpl()
+  }
 
-  def addFunction(
-    parent: Option[IEnvEntry],
-    function: FunctionA
-  ): NamespaceEnvironment = {
+  override def getNearestTemplataWithName(name: ImpreciseNameA[IImpreciseNameStepA], lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
+    vimpl()
+  }
+
+  def addFunction(function: FunctionA): NamespaceEnvironment = {
     NamespaceEnvironment(
       maybeParentEnv,
       fullName,
-      EnvironmentUtils.addFunction(entries, parent, function))
+      EnvironmentUtils.addFunction(entries, function))
   }
 
-  def addEntry(name: String, entry: IEnvEntry): NamespaceEnvironment = {
+  def addEntry(name: AbsoluteNameA[INameA], entry: IEnvEntry): NamespaceEnvironment = {
     NamespaceEnvironment(
       maybeParentEnv,
       fullName,
       EnvironmentUtils.addEntry(entries, name, entry))
   }
 
-  def addEntries(newEntries: Map[String, List[IEnvEntry]]): NamespaceEnvironment = {
+  def addEntries(newEntries: Map[AbsoluteNameA[INameA], List[IEnvEntry]]): NamespaceEnvironment = {
     NamespaceEnvironment(
       maybeParentEnv,
       fullName,
@@ -102,22 +108,25 @@ case class NamespaceEnvironment(
 object EnvironmentUtils {
   def entryToTemplata(env: IEnvironment, entry: IEnvEntry): ITemplata = {
     entry match {
-      case FunctionEnvEntry(_, function) => FunctionTemplata(env, function)
-      case StructEnvEntry(_, struct) => {
+      case FunctionEnvEntry(func) => {
+        println("Fill in the containers!")
+        FunctionTemplata(env, List(), func)
+      }
+      case StructEnvEntry(struct) => {
         StructTemplata(NamespaceEnvironment(Some(env), env.fullName, Map()), struct)
       }
-      case InterfaceEnvEntry(_, interface) => {
+      case InterfaceEnvEntry(interface) => {
         InterfaceTemplata(NamespaceEnvironment(Some(env), env.fullName, Map()), interface)
       }
-      case ImplEnvEntry(_, impl) => ImplTemplata(env, impl)
+      case ImplEnvEntry(impl) => ImplTemplata(env, impl)
       case TemplataEnvEntry(templata) => templata
     }
   }
 
   def addEntries(
-      oldEntries: Map[String, List[IEnvEntry]],
-      newEntries: Map[String, List[IEnvEntry]]):
-  Map[String, List[IEnvEntry]] = {
+      oldEntries: Map[AbsoluteNameA[INameA], List[IEnvEntry]],
+      newEntries: Map[AbsoluteNameA[INameA], List[IEnvEntry]]):
+  Map[AbsoluteNameA[INameA], List[IEnvEntry]] = {
     oldEntries ++
       newEntries ++
       oldEntries.keySet.intersect(newEntries.keySet)
@@ -126,28 +135,27 @@ object EnvironmentUtils {
   }
 
   def addEntry(
-      oldEntries: Map[String, List[IEnvEntry]],
-      name: String,
+      oldEntries: Map[AbsoluteNameA[INameA], List[IEnvEntry]],
+      name: AbsoluteNameA[INameA],
       entry: IEnvEntry):
-  Map[String, List[IEnvEntry]] = {
+  Map[AbsoluteNameA[INameA], List[IEnvEntry]] = {
     addEntries(oldEntries, Map(name -> List(entry)))
   }
 
   def addFunction(
-    oldEntries: Map[String, List[IEnvEntry]],
-    parent: Option[IEnvEntry],
+    oldEntries: Map[AbsoluteNameA[INameA], List[IEnvEntry]],
     functionA: FunctionA
-  ): Map[String, List[IEnvEntry]] = {
-    addEntry(oldEntries, functionA.name, FunctionEnvEntry(parent, functionA))
+  ): Map[AbsoluteNameA[INameA], List[IEnvEntry]] = {
+    addEntry(oldEntries, functionA.name, FunctionEnvEntry(functionA))
   }
 
 
   def entryMatchesFilter(entry: IEnvEntry, contexts: Set[ILookupContext]): Boolean = {
     entry match {
-      case FunctionEnvEntry(_, _) => contexts.contains(ExpressionLookupContext)
-      case ImplEnvEntry(_, _) => contexts.contains(ExpressionLookupContext)
-      case StructEnvEntry(_, _) => contexts.contains(TemplataLookupContext)
-      case InterfaceEnvEntry(_, _) => contexts.contains(TemplataLookupContext)
+      case FunctionEnvEntry(_) => contexts.contains(ExpressionLookupContext)
+      case ImplEnvEntry(_) => contexts.contains(ExpressionLookupContext)
+      case StructEnvEntry(_) => contexts.contains(TemplataLookupContext)
+      case InterfaceEnvEntry(_) => contexts.contains(TemplataLookupContext)
       case TemplataEnvEntry(templata) => {
         templata match {
           case CoordTemplata(_) => contexts.contains(TemplataLookupContext)
@@ -156,7 +164,7 @@ object EnvironmentUtils {
           case InterfaceTemplata(_, _) => contexts.contains(TemplataLookupContext)
           case ArrayTemplateTemplata() => contexts.contains(TemplataLookupContext)
           case BooleanTemplata(_) => true
-          case FunctionTemplata(_, _) => contexts.contains(ExpressionLookupContext)
+          case FunctionTemplata(_, _, _) => contexts.contains(ExpressionLookupContext)
           case ImplTemplata(_, _) => contexts.contains(ExpressionLookupContext)
           case IntegerTemplata(_) => true
           case LocationTemplata(_) => contexts.contains(TemplataLookupContext)
@@ -169,5 +177,33 @@ object EnvironmentUtils {
         }
       }
     }
+  }
+
+  // See NTKPRR
+  def assembleRulesFromFunctionAndContainers(containers: List[IContainer], function: FunctionA):
+  (List[IRulexAR], Map[AbsoluteNameA[IRuneA], ITemplataType]) = {
+    val (containersRules, containersTypeByRune) =
+      containers
+        .map({
+          case ContainerInterface(interface) => (interface.rules, interface.typeByRune)
+          case ContainerStruct(struct) => (struct.rules, struct.typeByRune)
+          case ContainerFunction(function) => (function.templateRules, function.typeByRune)
+          case ContainerImpl(impl) => vimpl()
+        })
+        .unzip
+    val rules = containersRules.foldLeft(List[IRulexAR]())(_ ++ _)
+    val typeByRune = containersTypeByRune.foldLeft(Map[AbsoluteNameA[IRuneA], ITemplataType]())(_ ++ _)
+    (rules ++ function.templateRules, typeByRune ++ function.typeByRune)
+  }
+
+  // See OFCBT.
+  def functionIsTemplateInContext(unevaluatedContainers: List[IContainer], function: FunctionA): Boolean = {
+    function.isTemplate &&
+    unevaluatedContainers.forall({
+      case ContainerInterface(interface) => interface.isTemplate
+      case ContainerStruct(struct) => struct.isTemplate
+      case ContainerFunction(function) => function.isTemplate
+      case ContainerImpl(impl) => vimpl()
+    })
   }
 }

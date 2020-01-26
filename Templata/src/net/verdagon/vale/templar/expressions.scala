@@ -1,5 +1,6 @@
 package net.verdagon.vale.templar
 
+import net.verdagon.vale.astronomer.{AbsoluteNameA, IVarNameA}
 import net.verdagon.vale.templar.env.{ILocalVariable2, ReferenceLocalVariable2, VariableId2}
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar.types._
@@ -390,7 +391,7 @@ case class ReferenceMemberLookup2(
 }
 case class AddressMemberLookup2(
     structExpr: ReferenceExpression2,
-    memberName: String,
+    memberName: AbsoluteNameA[IVarNameA],
     varId: VariableId2,
     resultType2: Coord) extends AddressExpression2 {
   override def resultRegister = AddressRegister2(resultType2)

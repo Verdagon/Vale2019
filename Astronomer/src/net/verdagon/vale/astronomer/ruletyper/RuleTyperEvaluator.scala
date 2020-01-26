@@ -1,18 +1,17 @@
 package net.verdagon.vale.astronomer.ruletyper
 
-import net.verdagon.vale.astronomer.ITemplataType
-import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
+import net.verdagon.vale.astronomer.{INameA, ITemplataType, _}
+import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
 import net.verdagon.vale.scout.patterns.AtomSP
 import net.verdagon.vale.scout.rules._
 import net.verdagon.vale.vfail
-import net.verdagon.vale.astronomer._
 
 import scala.collection.immutable.List
 
 trait IRuleTyperEvaluatorDelegate[Env, State] {
-  def lookupType(state: State, env: Env, name: String): (ITemplataType)
+  def lookupType(state: State, env: Env, name: ImpreciseNameS[CodeTypeNameS]): ITemplataType
+  def lookupType(state: State, env: Env, name: AbsoluteNameS[INameS]): ITemplataType
 }
-
 
 // Given enough user specified template params and param inputs, we should be able to
 // infer everything.
@@ -27,7 +26,7 @@ class RuleTyperEvaluator[Env, State](
     env: Env,
     rules: List[IRulexSR],
     paramAtoms: List[AtomSP],
-    maybeNeededRunes: Option[Set[String]]
+    maybeNeededRunes: Option[Set[AbsoluteNameA[IRuneA]]]
   ): (Conclusions, IRuleTyperSolveResult[List[IRulexAR]]) = {
     // First, we feed into the system the things the user already specified.
 
@@ -239,8 +238,8 @@ class RuleTyperEvaluator[Env, State](
       case LocationST(value) => (RuleTyperEvaluateSuccess(LocationAT(value)))
       case OwnershipST(value) => (RuleTyperEvaluateSuccess(OwnershipAT(value)))
       case VariabilityST(value) => (RuleTyperEvaluateSuccess(VariabilityAT(value)))
-      case NameST(name) => {
-        delegate.lookupType(state, env, name) match {
+      case NameST(nameS) => {
+        delegate.lookupType(state, env, nameS) match {
           case (KindTemplataType) => {
             // The thing identified by `name` is a kind, but we don't know whether we're trying to access it
             // as a kind, or trying to access it like a coord.
@@ -249,14 +248,15 @@ class RuleTyperEvaluator[Env, State](
             (RuleTyperEvaluateUnknown())
           }
           case (otherType) => {
-            (RuleTyperEvaluateSuccess(NameAT(name, otherType)))
+            val nameA = Astronomer.translateImpreciseName(nameS)
+            (RuleTyperEvaluateSuccess(NameAT(nameA, otherType)))
           }
         }
       }
-      case AnonymousRuneST() => (RuleTyperEvaluateUnknown())
-      case RuneST(rune) => {
-        conclusions.typeByRune.get(rune) match {
-          case Some(tyype) => (RuleTyperEvaluateSuccess(RuneAT(rune, tyype)))
+      case RuneST(runeS) => {
+        val runeA = Astronomer.translateRuneAbsoluteName(runeS)
+        conclusions.typeByRune.get(runeA) match {
+          case Some(tyype) => (RuleTyperEvaluateSuccess(RuneAT(runeA, tyype)))
           case None => (RuleTyperEvaluateUnknown())
         }
       }
@@ -399,7 +399,8 @@ class RuleTyperEvaluator[Env, State](
     conclusions: ConclusionsBox,
     rule: TypedSR,
   ): (IRuleTyperEvaluateResult[TemplexAR]) = {
-    val TypedSR(maybeRune, typeSR) = rule
+    val TypedSR(runeS, typeSR) = rule
+    val runeA = Astronomer.translateRuneAbsoluteName(runeS)
 
     val templataType =
       typeSR match {
@@ -408,16 +409,11 @@ class RuleTyperEvaluator[Env, State](
         case MutabilityTypeSR => MutabilityTemplataType
       }
 
-    maybeRune match {
+    conclusions.typeByRune.get(runeA) match {
       case None =>
-      case Some(rune) => {
-        conclusions.typeByRune.get(rune) match {
-          case None =>
-          case Some(typeFromConclusions) => {
-            if (typeFromConclusions != templataType) {
-              return (RuleTyperEvaluateConflict(conclusions.conclusions, "Typed rule failed: expected rune " + rune + " to be " + templataType + " but previously concluded " + typeFromConclusions, None))
-            }
-          }
+      case Some(typeFromConclusions) => {
+        if (typeFromConclusions != templataType) {
+          return (RuleTyperEvaluateConflict(conclusions.conclusions, "Typed rule failed: expected rune " + runeA + " to be " + templataType + " but previously concluded " + typeFromConclusions, None))
         }
       }
     }
@@ -687,7 +683,11 @@ class RuleTyperEvaluator[Env, State](
     new RuleTyperMatcher[Env, State](
       evaluateTemplex,
       new RuleTyperMatcherDelegate[Env, State] {
-        override def lookupType(state: State, env: Env, name: String): (ITemplataType) = {
+        override def lookupType(state: State, env: Env, name: ImpreciseNameS[CodeTypeNameS]): ITemplataType = {
+          delegate.lookupType(state, env, name)
+        }
+
+        override def lookupType(state: State, env: Env, name: AbsoluteNameS[INameS]): ITemplataType = {
           delegate.lookupType(state, env, name)
         }
       })

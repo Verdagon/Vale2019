@@ -41,21 +41,21 @@ object Templar {
     // struct or interface is figuring out what it extends.
     val env5 =
       impls1.foldLeft(env3)({
-        case (env4, impl1) => env4.addEntry(IMPL_NAME, ImplEnvEntry(None, impl1))
+        case (env4, impl1) => env4.addEntry(IMPL_NAME, ImplEnvEntry(impl1))
       })
     val env7 =
       structsA.foldLeft(env5)({
-        case (env6, s) => env6.addEntries(makeStructEnvironmentEntries(None, s))
+        case (env6, s) => env6.addEntries(makeStructEnvironmentEntries(s))
       })
     val env9 =
       interfacesA.foldLeft(env7)({
-        case (env8, interfaceA) => env8.addEntries(makeInterfaceEnvironmentEntries(None, interfaceA))
+        case (env8, interfaceA) => env8.addEntries(makeInterfaceEnvironmentEntries(interfaceA))
       })
 
     val env11 =
       functions1.foldLeft(env9)({
         case (env10, functionS) => {
-          env10.addFunction(None, functionS)
+          env10.addFunction(functionS)
         }
       })
 
@@ -85,9 +85,9 @@ object Templar {
         case (structS @ StructA(_, _, _, _, _, _, _, _, _, _)) => {
           if (structS.isTemplate) {
             // Do nothing, it's a template
-
           } else {
-            val _ = StructTemplar.getStructRef(env11, temputs, structS, List())
+            val structTemplata = StructTemplata(env11, structS)
+            val _ = StructTemplar.getStructRef(temputs, structTemplata, List())
           }
         }
       })
@@ -97,7 +97,9 @@ object Templar {
           if (interfaceS.isTemplate) {
             // Do nothing, it's a template
           } else {
-            val _ = StructTemplar.getInterfaceRef(env11, temputs, interfaceS, List())
+            val _ =
+              StructTemplar.getInterfaceRef(
+                temputs, InterfaceTemplata(env11, interfaceS), List())
           }
         }
       })
@@ -107,9 +109,10 @@ object Templar {
           if (functionS.isTemplate) {
             // Do nothing, it's a template
           } else {
+            println("fill in these containers!")
             val _ =
               FunctionTemplar.evaluateOrdinaryFunctionFromNonCallForPrototype(
-                temputs, FunctionTemplata(env11, functionS))
+                temputs, FunctionTemplata(env11, List(), functionS))
           }
         }
       })
@@ -129,18 +132,17 @@ object Templar {
 
   // (Once we add namespaces, this will probably change)
   def makeInterfaceEnvironmentEntries(
-    parent: Option[IEnvEntry],
     interfaceA: InterfaceA
   ): Map[String, List[IEnvEntry]] = {
-    val interfaceEnvEntry = InterfaceEnvEntry(parent, interfaceA)
+    val interfaceEnvEntry = InterfaceEnvEntry(interfaceA)
 
     val env0 = Map[String, List[IEnvEntry]]()
     val env1 = EnvironmentUtils.addEntry(env0, interfaceA.name, interfaceEnvEntry)
-    val env2 = EnvironmentUtils.addFunction(env1, parent, StructTemplar.getInterfaceConstructor(interfaceA))
+    val env2 = EnvironmentUtils.addFunction(env1, StructTemplar.getInterfaceConstructor(interfaceA))
 
     val env4 =
       interfaceA.internalMethods.foldLeft(env2)({
-        case (env3, internalMethodA) => EnvironmentUtils.addFunction(env3, Some(interfaceEnvEntry), internalMethodA)
+        case (env3, internalMethodA) => EnvironmentUtils.addFunction(env3, internalMethodA)
       })
 
     // Once we have sub-interfaces and sub-structs, we could recursively call this function.
@@ -151,14 +153,13 @@ object Templar {
 
   // (Once we add namespaces, this will probably change)
   def makeStructEnvironmentEntries(
-    parent: Option[IEnvEntry],
     structA: StructA
   ): Map[String, List[IEnvEntry]] = {
-    val interfaceEnvEntry = StructEnvEntry(parent, structA)
+    val interfaceEnvEntry = StructEnvEntry(structA)
 
     val env0 = Map[String, List[IEnvEntry]]()
     val env1 = EnvironmentUtils.addEntry(env0, structA.name, interfaceEnvEntry)
-    val env2 = EnvironmentUtils.addFunction(env1, parent, StructTemplar.getConstructor(structA))
+    val env2 = EnvironmentUtils.addFunction(env1, StructTemplar.getConstructor(structA))
 
     // To add once we have methods inside structs:
 //    val env4 =

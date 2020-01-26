@@ -110,10 +110,13 @@ object VParser
   }
 
   private[parser] def impl: Parser[ImplP] = positioned {
-     ("impl" ~> optWhite ~>
-      opt(templateRulesPR) <~ optWhite) ~ (patternTemplex <~ optWhite <~ "for" <~ optWhite) ~ (patternTemplex <~ optWhite <~ ";") ^^ {
-      case maybeTemplateRules ~ structType ~ interfaceType => {
-        ImplP(maybeTemplateRules.getOrElse(List()), structType, interfaceType)
+    ("impl" ~> optWhite ~>
+      opt(identifyingRunesPR <~ optWhite) ~
+      opt(templateRulesPR) <~ optWhite) ~
+      (patternTemplex <~ optWhite <~ "for" <~ optWhite) ~
+      (patternTemplex <~ optWhite <~ ";") ^^ {
+      case maybeIdentifyingRunes ~ maybeTemplateRules ~ structType ~ interfaceType => {
+        ImplP(maybeIdentifyingRunes.getOrElse(List()), maybeTemplateRules.getOrElse(List()), structType, interfaceType)
       }
     }
   }
@@ -140,10 +143,6 @@ object VParser
       }
     }
   }
-
-  def emptyParamlessLambda(userDefined: Boolean) =
-    LambdaPE(FunctionP(None,false,false,userDefined,List(),List(), List(),None,Some(BlockPE(List(VoidPE())))))
-
 
   def runParser(codeWithComments: String): Option[Program0] = {
     val regex = "//[^\\r\\n]*".r

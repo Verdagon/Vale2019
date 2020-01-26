@@ -112,7 +112,7 @@ sealed trait ITemplataH
 case class CoordTemplataH(reference: ReferenceH[ReferendH]) extends ITemplataH
 case class KindTemplataH(referend: ReferendH) extends ITemplataH
 case class ArrayTemplateTemplataH() extends ITemplataH
-case class FunctionTemplataH(envName: FullNameH, humanName: String, location: CodeLocation) extends ITemplataH
+case class FunctionTemplataH(envName: FullNameH, unevaluatedContainers: List[IContainerH], humanName: String, location: CodeLocation) extends ITemplataH
 case class StructTemplataH(envName: FullNameH, humanName: String, location: CodeLocation) extends ITemplataH
 case class InterfaceTemplataH(envName: FullNameH, humanName: String, location: CodeLocation) extends ITemplataH
 case class ImplTemplataH(envName: FullNameH, location: CodeLocation) extends ITemplataH
@@ -124,6 +124,7 @@ case class PermissionTemplataH(mutability: Permission) extends ITemplataH
 case class LocationTemplataH(mutability: Location) extends ITemplataH
 case class BooleanTemplataH(value: Boolean) extends ITemplataH
 case class IntegerTemplataH(value: Integer) extends ITemplataH
+case class IContainerH(humanName: String, location: CodeLocation)
 
 // Place in the original source code that something came from. Useful for uniquely
 // identifying templates.

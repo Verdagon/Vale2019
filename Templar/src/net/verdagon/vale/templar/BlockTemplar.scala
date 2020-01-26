@@ -24,8 +24,7 @@ object BlockTemplar {
           parentFate.snapshot, parentFate.fullName, parentFate.function, Map(), parentFate.maybeReturnType, Set(), newCounter, List(), Set()))
     val startingFate = fate.snapshot
 
-
-      fate.addScoutedLocals(block1.locals)
+    fate.addScoutedLocals(block1.locals)
 
     val (unresultifiedUndestructedExpressions, returnsFromExprs) =
       evaluateBlockStatements(temputs, fate, block1.exprs);

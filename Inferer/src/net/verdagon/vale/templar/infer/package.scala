@@ -18,8 +18,8 @@ package object infer {
 
   sealed trait IInferSolveResult
   case class InferSolveFailure(
-    typeByRune: Map[String, ITemplataType],
-    directInputs: Map[String, ITemplata],
+    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
+    directInputs: Map[AbsoluteNameA[IRuneA], ITemplata],
     maybeParamInputs: Option[List[ParamFilter]],
     inferences: Inferences,
     message: String,

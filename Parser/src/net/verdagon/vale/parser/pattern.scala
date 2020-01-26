@@ -3,12 +3,11 @@ package net.verdagon.vale.parser
 import net.verdagon.vale.vassert
 
 import scala.collection.immutable.List
+import scala.util.parsing.input.Positional
 
 sealed trait IVirtualityP
 case object AbstractP extends IVirtualityP
 case class OverrideP(tyype: ITemplexPPT) extends IVirtualityP
-
-case class IntBox(var num: Int)
 
 case class PatternPP(
     capture: Option[CaptureP],
@@ -29,7 +28,7 @@ case class PatternPP(
     // to account for nested parens, like struct Fn:((#Params...), (#Rets...))
 
     destructure: Option[List[PatternPP]],
-    virtuality: Option[IVirtualityP])
+    virtuality: Option[IVirtualityP]) extends Positional
 
 case class CaptureP(
     name: String,
@@ -127,62 +126,46 @@ object PatternPUtils {
 //    }
 //  }
 
-  def traverseTemplex[Env, State](
-    env: Env,
-    state: State,
+  def traverseTemplex(
     templex: ITemplexPPT,
-    handler: (Env, State, ITemplexPPT) => (ITemplexPPT)):
+    handler: ITemplexPPT => ITemplexPPT):
   (ITemplexPPT) = {
     templex match {
-      case AnonymousRunePPT() => handler(env, state, templex)
-      case IntPPT(value) => handler(env, state, templex)
-      case BoolPPT(value) => handler(env, state, templex)
-//      case RunePPT(rune) => handler(env, state, templex)
-      case NameOrRunePPT(name) => handler(env, state, templex)
-      case MutabilityPPT(mutability) => handler(env, state, templex)
+      case AnonymousRunePPT() => handler(templex)
+      case IntPPT(value) => handler(templex)
+      case BoolPPT(value) => handler(templex)
+//      case RunePPT(rune) => handler(templex)
+      case NameOrRunePPT(name) => handler(templex)
+      case MutabilityPPT(mutability) => handler(templex)
       case OwnershippedPPT(borrow, innerA) => {
-        val innerB = traverseTemplex(env, state, innerA, handler)
+        val innerB = traverseTemplex(innerA, handler)
         val newTemplex = OwnershippedPPT(borrow, innerB)
-        handler(env, state, newTemplex)
+        handler(newTemplex)
       }
       case CallPPT(templateA, argsA) => {
-        val templateB = traverseTemplex(env, state, templateA, handler)
-        val argsB = traverseTemplexes(env, state, argsA, handler)
+        val templateB = traverseTemplex(templateA, handler)
+        val argsB = argsA.map(traverseTemplex(_, handler))
         val newTemplex = CallPPT(templateB, argsB)
-        handler(env, state, newTemplex)
+        handler(newTemplex)
       }
       case RepeaterSequencePPT(mutabilityA, sizeA, elementA) => {
-        val mutabilityB = traverseTemplex(env, state, mutabilityA, handler)
-        val sizeB = traverseTemplex(env, state, sizeA, handler)
-        val elementB = traverseTemplex(env, state, elementA, handler)
+        val mutabilityB = traverseTemplex(mutabilityA, handler)
+        val sizeB = traverseTemplex(sizeA, handler)
+        val elementB = traverseTemplex(elementA, handler)
         val newTemplex = RepeaterSequencePPT(mutabilityB, sizeB, elementB)
-        handler(env, state, newTemplex)
+        handler(newTemplex)
       }
       case ManualSequencePPT(membersA) => {
-        val membersB = traverseTemplexes(env, state, membersA, handler)
+        val membersB = membersA.map(traverseTemplex(_, handler))
         val newTemplex = ManualSequencePPT(membersB)
-        handler(env, state, newTemplex)
+        handler(newTemplex)
       }
       case FunctionPPT(mutable, paramsA, retA) => {
-        val paramsB = traverseTemplexes(env, state, paramsA, handler)
-        val retB = traverseTemplex(env, state, retA, handler)
+        val paramsB = paramsA.map(traverseTemplex(_, handler))
+        val retB = traverseTemplex(retA, handler)
         val newTemplex = FunctionPPT(mutable, paramsB, retB)
-        handler(env, state, newTemplex)
+        handler(newTemplex)
       }
     }
-  }
-
-  def traverseTemplexes[Env, State](
-    env: Env,
-    state: State,
-    templexes: List[ITemplexPPT],
-    handler: (Env, State, ITemplexPPT) => (ITemplexPPT)):
-  (List[ITemplexPPT]) = {
-    templexes.foldLeft((List[ITemplexPPT]()))({
-      case ((previousNewTemplexes), templex) => {
-        val newTemplex = traverseTemplex[Env, State](env, state, templex, handler)
-        (previousNewTemplexes :+ newTemplex)
-      }
-    })
   }
 }

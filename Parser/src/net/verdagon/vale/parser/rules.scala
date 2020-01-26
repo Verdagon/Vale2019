@@ -78,9 +78,7 @@ object RulePUtils {
 
   def getOrderedRuneDeclarationsFromRulexesWithDuplicates(rulexes: List[IRulexPR]):
   List[String] = {
-    rulexes.foldLeft(List[String]())({
-      case (previous, current) => previous ++ getOrderedRuneDeclarationsFromRulexWithDuplicates(current)
-    })
+    rulexes.flatMap(getOrderedRuneDeclarationsFromRulexWithDuplicates)
   }
 
   def getOrderedRuneDeclarationsFromRulexWithDuplicates(rulex: IRulexPR): List[String] = {
@@ -96,9 +94,7 @@ object RulePUtils {
   }
 
   def getOrderedRuneDeclarationsFromTemplexesWithDuplicates(templexes: List[ITemplexPRT]): List[String] = {
-    templexes.foldLeft(List[String]())({
-      case (previous, current) => previous ++ getOrderedRuneDeclarationsFromTemplexWithDuplicates(current)
-    })
+    templexes.flatMap(getOrderedRuneDeclarationsFromTemplexWithDuplicates)
   }
 
   def getOrderedRuneDeclarationsFromTemplexWithDuplicates(templex: ITemplexPRT): List[String] = {

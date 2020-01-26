@@ -1,9 +1,9 @@
 package net.verdagon.vale.scout
 
 import net.verdagon.vale.parser._
-import net.verdagon.vale.scout.patterns.AtomSP
+import net.verdagon.vale.scout.patterns.{AtomSP, CaptureS}
 import net.verdagon.vale.scout.rules._
-import net.verdagon.vale.vfail
+import net.verdagon.vale.{vassert, vfail}
 import org.scalatest.{FunSuite, Matchers}
 
 class ScoutTests extends FunSuite with Matchers {
@@ -21,13 +21,19 @@ class ScoutTests extends FunSuite with Matchers {
     }
   }
 
+  val mainName =
+    AbsoluteNameS(
+      "in.vale",
+      List(),
+      FunctionNameS("main", CodeLocationS(0, 0)))
+
   test("Lookup +") {
     val program1 = compile("fn main() { +(3, 4) }")
     val main = program1.lookupFunction("main")
     
     val CodeBody1(BodySE(_, block)) = main.body
     block match {
-      case BlockSE(_, List(FunctionCallSE(GlobalLoadSE("+"), _))) =>
+      case BlockSE(_, List(FunctionCallSE(FunctionLoadSE(ImpreciseNameS(_, GlobalFunctionFamilyNameS("+"))), _))) =>
     }
   }
 
@@ -35,17 +41,32 @@ class ScoutTests extends FunSuite with Matchers {
     val program1 = compile("struct Moo { x Int; }")
     val imoo = program1.lookupStruct("Moo")
 
-    imoo.rules shouldEqual List(EqualsSR(TypedSR(Some("userInput.vale:1:1_Mem_0"),CoordTypeSR),TemplexSR(RuneST("Int"))))
-    imoo.members shouldEqual List(StructMemberS("x",FinalP,"Mem_0"))
+    val mooName =
+      AbsoluteNameS(
+        "in.vale",
+        List(),
+        TopLevelCitizenDeclarationNameS("Moo",CodeLocationS(1,1)))
+
+    val memberRune = mooName.addStep(MemberRuneS(0))
+    imoo.rules shouldEqual
+      List(EqualsSR(TypedSR(memberRune,CoordTypeSR),TemplexSR(NameST(ImpreciseNameS(List(), CodeTypeNameS("Int"))))))
+    imoo.members shouldEqual List(StructMemberS("x",FinalP,memberRune))
   }
 
   test("Lambda") {
     val program1 = compile("fn main() { {_ + _}(4, 6) }")
 
     val CodeBody1(BodySE(_, BlockSE(_, List(expr)))) = program1.lookupFunction("main").body
-    val FunctionCallSE(FunctionSE(lambda @ FunctionS(_, _, _, _, _, _, _, _,_, _, _, _, _)), _) = expr
-    lambda.identifyingRunes shouldEqual
-      List(Scout.unrunedParamRunePrefix + "0", Scout.unrunedParamRunePrefix + "1")
+    val FunctionCallSE(FunctionSE(lambda @ FunctionS(_, _, _, _, _, _,_, _, _, _)), _) = expr
+    lambda.identifyingRunes match {
+      case List(
+        AbsoluteNameS(_, List(FunctionNameS("main",mainLoc1), LambdaNameS(lamLoc1)),MagicParamRuneS(0)),
+        AbsoluteNameS(_, List(FunctionNameS("main",mainLoc2), LambdaNameS(lamLoc2)),MagicParamRuneS(1))) => {
+        vassert(mainLoc1 == mainLoc2)
+        vassert(lamLoc1 == lamLoc2)
+        vassert(mainLoc1 != lamLoc1)
+      }
+    }
   }
 
   test("Interface") {
@@ -54,34 +75,64 @@ class ScoutTests extends FunSuite with Matchers {
 
     imoo.rules shouldEqual List()
 
-    val expectedRulesS =
-      List(
-        TypedSR(Some("__Par0"),CoordTypeSR),
-        EqualsSR(TemplexSR(RuneST("__Par0")),TemplexSR(NameST("Bool"))),
-        TypedSR(Some("__Ret"),CoordTypeSR),
-        EqualsSR(TemplexSR(RuneST("__Ret")),TemplexSR(NameST("Void"))))
+    val blork = imoo.internalMethods.head
+    blork.name.last match { case FunctionNameS("blork", _) => }
 
-    RuleSUtils.getDistinctOrderedRunesForRulexes(expectedRulesS) shouldEqual List("__Par0", "__Ret")
-    program1.lookupFunction("blork").templateRules shouldEqual expectedRulesS
+    val (paramRune, retRune) =
+      blork.templateRules match {
+        case List(
+          EqualsSR(
+            TypedSR(actualParamRune, CoordTypeSR),
+            TemplexSR(NameST(ImpreciseNameS(List(), CodeTypeNameS("Bool"))))),
+          EqualsSR(
+            TypedSR(actualRetRune, CoordTypeSR),
+            TemplexSR(NameST(ImpreciseNameS(List(), CodeTypeNameS("Void")))))) => {
+          actualParamRune match {
+            case AbsoluteNameS(_, List(TopLevelCitizenDeclarationNameS("IMoo",CodeLocationS(1,1)), FunctionNameS("blork",_)),ImplicitRuneS(0)) =>
+          }
+          actualRetRune match {
+            case AbsoluteNameS(_, List(TopLevelCitizenDeclarationNameS("IMoo",CodeLocationS(1,1)), FunctionNameS("blork",_)),ImplicitRuneS(1)) =>
+          }
+          (actualParamRune, actualRetRune)
+        }
+      }
 
-    program1.lookupFunction("blork").params shouldEqual
-      List(ParameterS(AtomSP(Some(CaptureP("a",FinalP)),None,"__Par0",None)))
+    RuleSUtils.getDistinctOrderedRunesForRulexes(mainName, blork.templateRules) shouldEqual
+      List(paramRune, retRune)
+
+    blork.params match {
+      case List(
+        ParameterS(
+          AtomSP(
+            CaptureS(AbsoluteNameS(_, List(TopLevelCitizenDeclarationNameS("IMoo",CodeLocationS(1,1)), FunctionNameS("blork",_)), CodeVarNameS("a")),FinalP),
+            None,
+            AbsoluteNameS(_, List(TopLevelCitizenDeclarationNameS("IMoo",CodeLocationS(1,1)), FunctionNameS("blork",_)),ImplicitRuneS(0)),
+            None))) =>
+    }
 
     // Yes, even though the user didnt specify any. See CCAUIR.
-    program1.lookupFunction("blork").identifyingRunes shouldEqual List()
+    blork.identifyingRunes shouldEqual List()
   }
 
   test("Impl") {
     val program1 = compile("impl Moo for IMoo;")
     val impl = program1.impls.head
-    impl.structKindRune shouldEqual "__0"
-    impl.interfaceKindRune shouldEqual "__1"
-    impl.rules shouldEqual
-      List(
-        TypedSR(Some("__0"),KindTypeSR),
-        EqualsSR(TemplexSR(RuneST("__0")), TemplexSR(NameST("Moo"))),
-        TypedSR(Some("__1"),KindTypeSR),
-        EqualsSR(TemplexSR(RuneST("__1")), TemplexSR(NameST("IMoo"))))
+    val structRune =
+      impl.structKindRune match {
+        case ir0 @ AbsoluteNameS(_, List(ImplNameS(_)),ImplicitRuneS(0)) => ir0
+      }
+    val interfaceRune =
+      impl.interfaceKindRune match {
+        case ir0 @ AbsoluteNameS(_, List(ImplNameS(_)),ImplicitRuneS(1)) => ir0
+      }
+    impl.rules match {
+      case List(
+          EqualsSR(TypedSR(a,KindTypeSR), TemplexSR(NameST(ImpreciseNameS(_, CodeTypeNameS("Moo"))))),
+          EqualsSR(TypedSR(b,KindTypeSR), TemplexSR(NameST(ImpreciseNameS(_, CodeTypeNameS("IMoo")))))) => {
+        vassert(a == structRune)
+        vassert(b == interfaceRune)
+      }
+    }
   }
 
   test("Method call") {
@@ -90,7 +141,11 @@ class ScoutTests extends FunSuite with Matchers {
 
     val CodeBody1(BodySE(_, block)) = main.body
     block match {
-      case BlockSE(_, List(_, FunctionCallSE(GlobalLoadSE("shout"), PackSE(List(ExpressionLendSE(LocalLoadSE("x", true))))))) =>
+      case BlockSE(_, List(_, FunctionCallSE(FunctionLoadSE(ImpreciseNameS(_, GlobalFunctionFamilyNameS("shout"))), PackSE(List(ExpressionLendSE(LocalLoadSE(name, true))))))) => {
+        name match {
+          case AbsoluteNameS(_, List(FunctionNameS("main",_)), CodeVarNameS("x")) =>
+        }
+      }
     }
   }
 
@@ -100,7 +155,7 @@ class ScoutTests extends FunSuite with Matchers {
 
     val CodeBody1(BodySE(_, block)) = main.body
     block match {
-      case BlockSE(_, List(_, FunctionCallSE(GlobalLoadSE("shout"), PackSE(List(LocalLoadSE("x", false)))))) =>
+      case BlockSE(_, List(_, FunctionCallSE(FunctionLoadSE(ImpreciseNameS(List(), GlobalFunctionFamilyNameS("shout"))), PackSE(List(LocalLoadSE(_, false)))))) =>
     }
   }
 
@@ -118,8 +173,12 @@ class ScoutTests extends FunSuite with Matchers {
 
     val CodeBody1(BodySE(_, block)) = main.body
     val BlockSE(_, FunctionSE(lambda1) :: FunctionSE(lambda2) :: _) = block
-    val List(_, ParameterS(AtomSP(Some(CaptureP("__param_0",FinalP)),None,_,None))) = lambda1.params
-    val List(_, ParameterS(AtomSP(Some(CaptureP("a",FinalP)),None,_,None))) = lambda2.params
+    lambda1.params match {
+      case List(_, ParameterS(AtomSP(CaptureS(AbsoluteNameS(_, List(FunctionNameS("main",_), LambdaNameS(_)), MagicParamNameS(0)),FinalP),None,AbsoluteNameS(_, List(FunctionNameS("main",_), LambdaNameS(_)),MagicParamRuneS(0)),None))) =>
+    }
+    lambda2.params match {
+      case List(_, ParameterS(AtomSP(CaptureS(AbsoluteNameS(_, List(FunctionNameS("main",_), LambdaNameS(_)), CodeVarNameS("a")),FinalP),None,AbsoluteNameS(_, List(FunctionNameS("main",_), LambdaNameS(_)),ImplicitRuneS(0)),None))) =>
+    }
   }
 
 

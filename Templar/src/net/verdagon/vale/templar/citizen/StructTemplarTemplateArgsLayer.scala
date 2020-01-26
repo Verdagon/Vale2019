@@ -1,11 +1,11 @@
 package net.verdagon.vale.templar.citizen
 
-import net.verdagon.vale.astronomer.{FunctionA, InterfaceA, StructA}
+import net.verdagon.vale.astronomer._
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
-import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
+import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
 import net.verdagon.vale.templar._
-import net.verdagon.vale.templar.env.{IEnvironment, NamespaceEnvironment}
+import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.function.FunctionTemplar
 import net.verdagon.vale.templar.infer.{InferSolveFailure, InferSolveSuccess}
 import net.verdagon.vale.vfail
@@ -15,12 +15,14 @@ import scala.collection.immutable.List
 object StructTemplarTemplateArgsLayer {
 
   def getStructRef(
-    env: NamespaceEnvironment,
     temputs: TemputsBox,
-    structS: StructA,
+    structTemplata: StructTemplata,
     templateArgs: List[ITemplata]):
   (StructRef2) = {
-    val fullName = FullName2(env.fullName.steps :+ NamePart2(structS.name, Some(templateArgs), None, None))
+    val StructTemplata(env, structAndParents) = structTemplata
+    val struct = structTemplata.originStruct
+
+    val fullName = FullName2(env.fullName.steps :+ NamePart2(struct.name, Some(templateArgs), None, None))
 
     temputs.structDeclared(fullName) match {
       case Some(structRef2) => {
@@ -28,25 +30,26 @@ object StructTemplarTemplateArgsLayer {
       }
       case None => {
         // not sure if this is okay or not, do we allow this?
-        if (templateArgs.size != structS.identifyingRunes.size) {
+        if (templateArgs.size != struct.identifyingRunes.size) {
           vfail("wat?")
         }
         val temporaryStructRef = StructRef2(fullName)
         temputs.declareStruct(temporaryStructRef)
 
-
-          structS.maybePredictedMutability match {
-            case None => temputs
-            case Some(predictedMutability) => temputs.declareStructMutability(temporaryStructRef, Conversions.evaluateMutability(predictedMutability))
-          }
-
+        struct.maybePredictedMutability match {
+          case None => temputs
+          case Some(predictedMutability) => temputs.declareStructMutability(temporaryStructRef, Conversions.evaluateMutability(predictedMutability))
+        }
+        val (rulesForStructAndParents, typeByRuneForStructAndParents) =
+//          EnvironmentUtils.assembleRulesFromEnvEntryAndParents(structAndParents)
+          (struct.rules, struct.typeByRune)
         val result =
           InferTemplar.inferFromExplicitTemplateArgs(
             env,
             temputs,
-            structS.identifyingRunes,
-            structS.rules,
-            structS.typeByRune,
+            struct.identifyingRunes,
+            rulesForStructAndParents,
+            typeByRuneForStructAndParents,
             List(),
             None,
             templateArgs)
@@ -59,23 +62,22 @@ object StructTemplarTemplateArgsLayer {
             case InferSolveSuccess(i) => i
           }
 
+        struct.maybePredictedMutability match {
+          case None => temputs.declareStructMutability(temporaryStructRef, Conversions.evaluateMutability(struct.mutability))
+          case Some(_) => temputs
+        }
 
-          structS.maybePredictedMutability match {
-            case None => temputs.declareStructMutability(temporaryStructRef, Conversions.evaluateMutability(structS.mutability))
-            case Some(_) => temputs
-          }
-
-        StructTemplarMiddle.getStructRef(env, temputs, structS, inferences.templatasByRune)
+        StructTemplarMiddle.getStructRef(env, temputs, struct, inferences.templatasByRune)
       }
     }
   }
 
   def getInterfaceRef(
-    env: NamespaceEnvironment,
     temputs: TemputsBox,
-    interfaceS: InterfaceA,
+    interfaceTemplata: InterfaceTemplata,
     templateArgs: List[ITemplata]):
   (InterfaceRef2) = {
+    val InterfaceTemplata(env, interfaceS) = interfaceTemplata
     val fullName = FullName2(env.fullName.steps :+ NamePart2(interfaceS.name, Some(templateArgs), None, None))
 
     temputs.interfaceDeclared(fullName) match {
@@ -91,18 +93,21 @@ object StructTemplarTemplateArgsLayer {
         temputs.declareInterface(temporaryInterfaceRef)
 
 
-          interfaceS.maybePredictedMutability match {
-            case None => temputs
-            case Some(predictedMutability) => temputs.declareInterfaceMutability(temporaryInterfaceRef, Conversions.evaluateMutability(predictedMutability))
-          }
+        interfaceS.maybePredictedMutability match {
+          case None =>
+          case Some(predictedMutability) => temputs.declareInterfaceMutability(temporaryInterfaceRef, Conversions.evaluateMutability(predictedMutability))
+        }
 
+        val (rulesForInterfaceAndParents, typeByRuneForInterfaceAndParents) =
+//          EnvironmentUtils.assembleRulesFromEnvEntryAndParents(interfaceAndParents)
+          (interfaceS.rules, interfaceS.typeByRune)
         val result =
           InferTemplar.inferFromExplicitTemplateArgs(
             env,
             temputs,
             interfaceS.identifyingRunes,
-            interfaceS.rules,
-            interfaceS.typeByRune,
+            rulesForInterfaceAndParents,
+            typeByRuneForInterfaceAndParents,
             List(),
             None,
             templateArgs)
@@ -115,10 +120,10 @@ object StructTemplarTemplateArgsLayer {
           }
 
 
-          interfaceS.maybePredictedMutability match {
-            case None => temputs.declareInterfaceMutability(temporaryInterfaceRef, Conversions.evaluateMutability(interfaceS.mutability))
-            case Some(_) => temputs
-          }
+        interfaceS.maybePredictedMutability match {
+          case None => temputs.declareInterfaceMutability(temporaryInterfaceRef, Conversions.evaluateMutability(interfaceS.mutability))
+          case Some(_) =>
+        }
 
         StructTemplarMiddle.getInterfaceRef(env, temputs, interfaceS, inferences.templatasByRune)
       }

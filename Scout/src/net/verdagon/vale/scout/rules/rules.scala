@@ -1,6 +1,6 @@
 package net.verdagon.vale.scout.rules
 
-import net.verdagon.vale.scout.{AnonymousRuneST, ITemplexS, TemplexSUtils}
+import net.verdagon.vale.scout._
 
 import scala.collection.immutable.List
 
@@ -14,7 +14,7 @@ case class ComponentsSR(
   container: TypedSR,
   components: List[IRulexSR]
 ) extends IRulexSR
-case class TypedSR(rune: Option[String], tyype: ITypeSR) extends IRulexSR
+case class TypedSR(rune: AbsoluteNameS[IRuneS], tyype: ITypeSR) extends IRulexSR
 case class TemplexSR(templex: ITemplexS) extends IRulexSR
 // This is for built-in parser functions, such as exists() or isBaseOf() etc.
 case class CallSR(name: String, args: List[IRulexSR]) extends IRulexSR {
@@ -43,31 +43,26 @@ case object VariabilityTypeSR extends ITypeSR
 
 object RuleSUtils {
 
-  def getDistinctOrderedRunesForRulex(rulex: IRulexSR): List[String] = {
+  def getDistinctOrderedRunesForRulex(envFullName: AbsoluteNameS[INameS], rulex: IRulexSR): List[AbsoluteNameS[IRuneS]] = {
     rulex match {
-      case EqualsSR(left, right) => (getDistinctOrderedRunesForRulex(left) ++ getDistinctOrderedRunesForRulex(right)).distinct
-      case IsaSR(left, right) => (getDistinctOrderedRunesForRulex(left) ++ getDistinctOrderedRunesForRulex(right)).distinct
-      case OrSR(possibilities) => possibilities.flatMap(getDistinctOrderedRunesForRulex).distinct
+      case EqualsSR(left, right) => (getDistinctOrderedRunesForRulex(envFullName, left) ++ getDistinctOrderedRunesForRulex(envFullName, right)).distinct
+      case IsaSR(left, right) => (getDistinctOrderedRunesForRulex(envFullName, left) ++ getDistinctOrderedRunesForRulex(envFullName, right)).distinct
+      case OrSR(possibilities) => possibilities.flatMap(getDistinctOrderedRunesForRulex(envFullName, _)).distinct
       case ComponentsSR(container, components) => {
-        getDistinctOrderedRunesForRulex(container) ++
-          components.flatMap(getDistinctOrderedRunesForRulex).toSet
+        getDistinctOrderedRunesForRulex(envFullName, container) ++
+          components.flatMap(getDistinctOrderedRunesForRulex(envFullName, _)).toSet
       }
-      case TypedSR(maybeRune, tyype) => maybeRune.toList
+      case TypedSR(rune, tyype) => List(rune)
       case TemplexSR(templex) => TemplexSUtils.getDistinctOrderedRunesForTemplex(templex)
-      case CallSR(name, args) => args.flatMap(getDistinctOrderedRunesForRulex).distinct
+      case CallSR(name, args) => args.flatMap(getDistinctOrderedRunesForRulex(envFullName, _)).distinct
     }
   }
 
-  def getDistinctOrderedRunesForRulexes(rulexes: List[IRulexSR]): List[String] = {
-    rulexes.flatMap(getDistinctOrderedRunesForRulex).distinct
+  def getDistinctOrderedRunesForRulexes(envFullName: AbsoluteNameS[INameS], rulexes: List[IRulexSR]):
+  List[AbsoluteNameS[IRuneS]] = {
+    rulexes.flatMap(getDistinctOrderedRunesForRulex(envFullName, _)).distinct
   }
 
-  // This doesn't have the snazzy ability to choose the appropriate ownership that
-  // knownCoordRule has... but it does work in inferring.
-  // If these are a problem, make toRef able to do inferring.
-  def unknownCoordRule(kindRulexSR: IRulexSR): IRulexSR = {
-    ComponentsSR(TypedSR(None, CoordTypeSR), List(TemplexSR(AnonymousRuneST()), kindRulexSR))
-  }
   // This can make a ref for the given kind, choosing the appropriate ownership.
   // However, it can't figure out an unknown kind given a coord, so it's not that
   // useful in inferring.

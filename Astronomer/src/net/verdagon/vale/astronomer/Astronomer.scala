@@ -2,61 +2,145 @@ package net.verdagon.vale.astronomer
 
 import net.verdagon.vale.astronomer.builtins._
 import net.verdagon.vale.astronomer.externs.Externs
-import net.verdagon.vale.astronomer.ruletyper.{IRuleTyperEvaluatorDelegate, RuleTyperEvaluator, RuleTyperSolveFailure, RuleTyperSolveSuccess}
-import net.verdagon.vale.parser.{ImmutableP, MutabilityP, MutableP}
-import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
-import net.verdagon.vale.scout.patterns.AtomSP
+import net.verdagon.vale.astronomer.ruletyper._
+import net.verdagon.vale.parser.{CaptureP, ImmutableP, MutabilityP, MutableP}
+import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
+import net.verdagon.vale.scout.patterns.{AbstractSP, AtomSP, CaptureS, OverrideSP}
 import net.verdagon.vale.scout.rules._
-import net.verdagon.vale.{vassert, vfail, vimpl}
+import net.verdagon.vale.{vassert, vfail, vimpl, vwat}
 
 import scala.collection.immutable.List
 
+// Environments dont have an AbsoluteName, because an environment can span multiple
+// files.
 case class Environment(
+    maybeName: Option[AbsoluteNameS[INameS]],
     maybeParentEnv: Option[Environment],
     primitives: Map[String, ITypeSR],
     structs: List[StructS],
     interfaces: List[InterfaceS],
     impls: List[ImplS],
     functions: List[FunctionS],
-    typeByRune: Map[String, ITemplataType]) {
-  def addRunes(newTypeByRune: Map[String, ITemplataType]): Environment = {
-    Environment(maybeParentEnv, primitives, structs, interfaces, impls, functions, typeByRune ++ newTypeByRune)
+    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType]) {
+  def addRunes(newTypeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType]): Environment = {
+    Environment(maybeName, maybeParentEnv, primitives, structs, interfaces, impls, functions, typeByRune ++ newTypeByRune)
   }
 
-  def lookup(name: String):
-  (Option[ITypeSR], List[StructS], List[InterfaceS], Option[ITemplataType]) = {
-    val nearPrimitives = primitives.get(name)
-    val nearStructs = structs.filter(_.name == name)
-    val nearInterfaces = interfaces.filter(_.name == name)
-    val nearRuneType = typeByRune.get(name)
+  // If the absolute name ends with the imprecise name, returns the start of
+  // the absolute name. Otherwise returns None.
+  // See MINAAN for what we're doing here.
+  def absoluteNameEndsWithImpreciseName(
+    absoluteName: AbsoluteNameS[INameS],
+    impreciseName: ImpreciseNameS[IImpreciseNameStepS]):
+  Option[AbsoluteNameS[INameS]] = {
+    impreciseName.steps.last match {
+      case CodeTypeNameS(impreciseNameStr) => {
+        absoluteName.steps.last match {
+          case TopLevelCitizenDeclarationNameS(citizenNameStr, _) => {
+            if (impreciseNameStr == citizenNameStr) Some(absoluteName.init) else None
+          }
+          case _ => vimpl()
+        }
+      }
+      case _ => vimpl()
+    }
+  }
 
-    if (nearPrimitives.nonEmpty || nearStructs.nonEmpty || nearInterfaces.nonEmpty || nearRuneType.nonEmpty) {
-      return (nearPrimitives, nearStructs, nearInterfaces, nearRuneType)
+  // Returns whether the imprecise name could be referring to the absolute name.
+  // See MINAAN for what we're doing here.
+  def impreciseNameMatchesAbsoluteName(
+    absoluteName: AbsoluteNameS[INameS],
+    needleImpreciseNameS: ImpreciseNameS[IImpreciseNameStepS]):
+  Boolean = {
+    val envNameSteps = maybeName.map(_.steps).getOrElse(List())
+
+    // See MINAAN for what we're doing here.
+    absoluteNameEndsWithImpreciseName(absoluteName, needleImpreciseNameS) match {
+      case None => false
+      case Some(absoluteNameFirstHalf) => {
+        if (absoluteNameFirstHalf.steps.size > envNameSteps.size) {
+          false
+        } else {
+          (absoluteNameFirstHalf.steps.map(Some(_)) ++ envNameSteps.map(_ => None))
+            .zip(envNameSteps)
+            .forall({
+              case (None, _) => true
+              case (Some(firstHalfNameStep), envNameStep) => firstHalfNameStep == envNameStep
+            })
+        }
+      }
+    }
+  }
+
+  def lookupType(needleImpreciseNameS: ImpreciseNameS[IImpreciseNameStepS]):
+  (Option[ITypeSR], List[StructS], List[InterfaceS]) = {
+    // See MINAAN for what we're doing here.
+
+    val nearStructs = structs.filter(struct => {
+      impreciseNameMatchesAbsoluteName(struct.name, needleImpreciseNameS)
+    })
+    val nearInterfaces = interfaces.filter(interface => {
+      impreciseNameMatchesAbsoluteName(interface.name, needleImpreciseNameS)
+    })
+    val nearPrimitives =
+      needleImpreciseNameS match {
+        case ImpreciseNameS(List(), CodeTypeNameS(nameStr)) => primitives.get(nameStr)
+        case _ => None
+      }
+
+    if (nearPrimitives.nonEmpty || nearStructs.nonEmpty || nearInterfaces.nonEmpty) {
+      return (nearPrimitives, nearStructs, nearInterfaces)
     }
     maybeParentEnv match {
-      case None => (None, List(), List(), None)
-      case Some(parentEnv) => parentEnv.lookup(name)
+      case None => (None, List(), List())
+      case Some(parentEnv) => parentEnv.lookupType(needleImpreciseNameS)
+    }
+  }
+
+  def lookupType(name: AbsoluteNameS[INameS]):
+  (List[StructS], List[InterfaceS]) = {
+    val nearStructs = structs.filter(_.name == name)
+    val nearInterfaces = interfaces.filter(_.name == name)
+
+    if (nearStructs.nonEmpty || nearInterfaces.nonEmpty) {
+      return (nearStructs, nearInterfaces)
+    }
+    maybeParentEnv match {
+      case None => (List(), List())
+      case Some(parentEnv) => parentEnv.lookupType(name)
+    }
+  }
+
+  def lookupRune(name: AbsoluteNameA[IRuneA]): ITemplataType = {
+    typeByRune.get(name) match {
+      case Some(tyype) => tyype
+      case None => {
+        maybeParentEnv match {
+          case None => vfail()
+          case Some(parentEnv) => parentEnv.lookupRune(name)
+        }
+      }
     }
   }
 }
 
 case class AstroutsBox(var astrouts: Astrouts) {
-  def getImpl(codeLocation: CodeLocationS) = {
-    astrouts.impls.get(codeLocation)
+  def getImpl(name: AbsoluteNameA[INameA]) = {
+    astrouts.impls.get(name)
   }
-  def getStruct(codeLocation: CodeLocationS) = {
-    astrouts.structs.get(codeLocation)
+  def getStruct(name: AbsoluteNameA[INameA]) = {
+    astrouts.structs.get(name)
   }
-  def getInterface(codeLocation: CodeLocationS) = {
-    astrouts.interfaces.get(codeLocation)
+  def getInterface(name: AbsoluteNameA[INameA]) = {
+    astrouts.interfaces.get(name)
   }
 }
 
 case class Astrouts(
-  structs: Map[CodeLocationS, StructA],
-  interfaces: Map[CodeLocationS, InterfaceA],
-  impls: Map[CodeLocationS, ImplA],
-  functions: Map[CodeLocationS, FunctionA])
+  structs: Map[AbsoluteNameA[INameA], StructA],
+  interfaces: Map[AbsoluteNameA[INameA], InterfaceA],
+  impls: Map[AbsoluteNameA[INameA], ImplA],
+  functions: Map[AbsoluteNameA[INameA], FunctionA])
 
 object Astronomer {
   val primitives =
@@ -68,13 +152,6 @@ object Astronomer {
       "Void" -> KindTypeSR,
       "IFunction1" -> TemplateTypeSR(List(MutabilityTypeSR, CoordTypeSR, CoordTypeSR), KindTypeSR),
       "Array" -> TemplateTypeSR(List(MutabilityTypeSR, CoordTypeSR), KindTypeSR))
-
-  def translateStructs(astrouts: AstroutsBox, env: Environment, structsS: List[StructS]): List[StructA] = {
-    structsS match {
-      case Nil => Nil
-      case headS :: tailS => translateStruct(astrouts, env, headS) :: translateStructs(astrouts, env, tailS)
-    }
-  }
 
   def translateRuneType(tyype: ITypeSR): ITemplataType = {
     tyype match {
@@ -117,20 +194,60 @@ object Astronomer {
     }
   }
 
-  def lookupType(astrouts: AstroutsBox, env: Environment, name: String): ITemplataType = {
+  def lookupType(astrouts: AstroutsBox, env: Environment, name: AbsoluteNameS[INameS]): ITemplataType = {
+    // When the scout comes across a lambda, it doesn't put the e.g. main:lam1:__Closure struct into
+    // the environment or anything, it lets templar to do that (because templar knows the actual types).
+    // However, this means that when the lambda function gets to the astronomer, the astronomer doesn't
+    // know what to do with it.
+
+    name.last match {
+      case LambdaNameS(_) =>
+      case FunctionNameS(_, _) =>
+      case TopLevelCitizenDeclarationNameS(_, _) =>
+      case LambdaStructNameS(_) => return KindTemplataType
+      case ImplNameS(_) => vwat()
+      case LetNameS(_) => vwat()
+      case UnnamedLocalNameS(_) => vwat()
+      case ClosureParamNameS() => vwat()
+      case MagicParamNameS(_) => vwat()
+      case CodeVarNameS(_) => vwat()
+    }
+
+    val (structsS, interfacesS) = env.lookupType(name)
+
+    if (structsS.isEmpty && interfacesS.isEmpty) {
+      vfail("Nothing found with name " + name)
+    }
+    if (structsS.size.signum + interfacesS.size.signum > 1) {
+      vfail("Name doesn't correspond to only one of primitive or struct or interface: " + name)
+    }
+
+    if (structsS.nonEmpty) {
+      val types = structsS.map(lookupStructType(astrouts, env, _))
+      if (types.toSet.size > 1) {
+        vfail("'" + name + "' has multiple types: " + types.toSet)
+      }
+      val tyype = types.head
+      tyype
+    } else if (interfacesS.nonEmpty) {
+      val types = interfacesS.map(lookupInterfaceType(astrouts, env, _))
+      if (types.toSet.size > 1) {
+        vfail("'" + name + "' has multiple types: " + types.toSet)
+      }
+      val tyype = types.head
+      tyype
+    } else vfail()
+  }
+
+  def lookupType(astrouts: AstroutsBox, env: Environment, name: ImpreciseNameS[CodeTypeNameS]): ITemplataType = {
     // When the scout comes across a lambda, it doesn't put the e.g. __Closure<main>:lam1 struct into
     // the environment or anything, it lets templar to do that (because templar knows the actual types).
     // However, this means that when the lambda function gets to the astronomer, the astronomer doesn't
     // know what to do with it.
-    // TODO: Make it so names aren't strings, but instead sealed traits and case classes.
-    // Or, figure out something else to avoid this oddity here.
-    if (name.startsWith(FunctionScout.CLOSURE_STRUCT_NAME)) {
-      return KindTemplataType
-    }
 
-    val (primitivesS, structsS, interfacesS, maybeRuneTypeS) = env.lookup(name)
+    val (primitivesS, structsS, interfacesS) = env.lookupType(name)
 
-    if (primitivesS.isEmpty && structsS.isEmpty && interfacesS.isEmpty && maybeRuneTypeS.isEmpty) {
+    if (primitivesS.isEmpty && structsS.isEmpty && interfacesS.isEmpty) {
       vfail("Nothing found with name " + name)
     }
     if (primitivesS.size.signum + structsS.size.signum + interfacesS.size.signum > 1) {
@@ -140,8 +257,6 @@ object Astronomer {
     if (primitivesS.nonEmpty) {
       vassert(primitivesS.size == 1)
       translateRuneType(primitivesS.get)
-    } else if (maybeRuneTypeS.nonEmpty) {
-      maybeRuneTypeS.get
     } else if (structsS.nonEmpty) {
       val types = structsS.map(lookupStructType(astrouts, env, _))
       if (types.toSet.size > 1) {
@@ -162,67 +277,84 @@ object Astronomer {
   def makeRuleTyper(): RuleTyperEvaluator[Environment, AstroutsBox] = {
     new RuleTyperEvaluator[Environment, AstroutsBox](
       new IRuleTyperEvaluatorDelegate[Environment, AstroutsBox] {
-        override def lookupType(state: AstroutsBox, env: Environment, name: String): (ITemplataType) = {
-          val tyype = Astronomer.lookupType(state, env, name)
-          (tyype)
+        override def lookupType(state: AstroutsBox, env: Environment, name: ImpreciseNameS[CodeTypeNameS]): (ITemplataType) = {
+          Astronomer.lookupType(state, env, name)
+        }
+
+        override def lookupType(state: AstroutsBox, env: Environment, name: AbsoluteNameS[INameS]): ITemplataType = {
+          Astronomer.lookupType(state, env, name)
         }
       })
   }
 
   def translateStruct(astrouts: AstroutsBox, env: Environment, structS: StructS): StructA = {
-    val StructS(struct1Id, namespace, name, mutability, maybePredictedMutability, identifyingRunes, allRunes, predictedTypeByRune, isTemplate, rules, members) = structS
+    val StructS(nameS, mutability, maybePredictedMutability, identifyingRunesS, allRunesS, predictedTypeByRune, isTemplate, rules, members) = structS
+    val nameA = Astronomer.translateAbsoluteName(nameS)
+    val allRunesA = allRunesS.map(Astronomer.translateRuneAbsoluteName)
+    val identifyingRunesA = identifyingRunesS.map(Astronomer.translateRuneAbsoluteName)
 
     // predictedTypeByRune is used by the rule typer delegate to short-circuit infinite recursion
     // in types like List, see RTMHTPS.
     val _ = predictedTypeByRune
 
-    astrouts.getStruct(struct1Id) match {
+    astrouts.getStruct(nameA) match {
       case Some(existingStructA) => return existingStructA
       case _ =>
     }
 
     val (conclusions, rulesA) =
-      makeRuleTyper().solve(astrouts, env, rules, List(), Some(allRunes)) match {
+      makeRuleTyper().solve(astrouts, env, rules, List(), Some(allRunesA)) match {
         case (_, rtsf @ RuleTyperSolveFailure(_, _, _)) => vfail(rtsf.toString)
         case (c, RuleTyperSolveSuccess(r)) => (c, r)
       }
 
     val tyype =
       if (isTemplate) {
-        TemplateTemplataType(identifyingRunes.map(conclusions.typeByRune), KindTemplataType)
+        TemplateTemplataType(identifyingRunesA.map(conclusions.typeByRune), KindTemplataType)
       } else {
         KindTemplataType
       }
 
     val membersA =
       members.map({
-        case StructMemberS(name, variablility, typeRune) => StructMemberA(name, variablility, typeRune)
+        case StructMemberS(name, variablility, typeRune) => StructMemberA(name, variablility, translateRuneAbsoluteName(typeRune))
       })
 
-    StructA(struct1Id, namespace, name, mutability, maybePredictedMutability, tyype, identifyingRunes, conclusions.typeByRune, rulesA, membersA)
+    StructA(
+      nameA,
+      mutability,
+      maybePredictedMutability,
+      tyype,
+      identifyingRunesA,
+      conclusions.typeByRune,
+      rulesA,
+      membersA)
   }
 
   def translateInterface(astrouts: AstroutsBox, env: Environment, interfaceS: InterfaceS): InterfaceA = {
-    val InterfaceS(interface1Id, namespace, name, mutability, maybePredictedMutability, identifyingRunes, allRunes, predictedTypeByRune, isTemplate, rules, internalMethodsS) = interfaceS
+    val InterfaceS(nameS, mutability, maybePredictedMutability, identifyingRunesS, allRunesS, predictedTypeByRune, isTemplate, rules, internalMethodsS) = interfaceS
+    val allRunesA = allRunesS.map(Astronomer.translateRuneAbsoluteName)
+    val identifyingRunesA = identifyingRunesS.map(Astronomer.translateRuneAbsoluteName)
+    val nameA = translateAbsoluteName(nameS)
 
     // predictedTypeByRune is used by the rule typer delegate to short-circuit infinite recursion
     // in types like List, see RTMHTPS.
     val _ = predictedTypeByRune
 
-    astrouts.getInterface(interface1Id) match {
+    astrouts.getInterface(nameA) match {
       case Some(existingInterfaceA) => return existingInterfaceA
       case _ =>
     }
 
     val (conclusions, rulesA) =
-      makeRuleTyper().solve(astrouts, env, rules, List(), Some(allRunes)) match {
+      makeRuleTyper().solve(astrouts, env, rules, List(), Some(allRunesA)) match {
         case (_, rtsf @ RuleTyperSolveFailure(_, _, _)) => vfail(rtsf.toString)
         case (c, RuleTyperSolveSuccess(r)) => (c, r)
       }
 
     val tyype =
       if (isTemplate) {
-        TemplateTemplataType(identifyingRunes.map(conclusions.typeByRune), KindTemplataType)
+        TemplateTemplataType(identifyingRunesA.map(conclusions.typeByRune), KindTemplataType)
       } else {
         KindTemplataType
       }
@@ -231,13 +363,11 @@ object Astronomer {
 
     val interfaceA =
       InterfaceA(
-        interface1Id,
-        namespace,
-        name,
+        nameA,
         mutability,
         maybePredictedMutability,
         tyype,
-        identifyingRunes,
+        identifyingRunesA,
         conclusions.typeByRune,
         rulesA,
         internalMethodsA)
@@ -245,34 +375,68 @@ object Astronomer {
   }
 
   def translateImpl(astrouts: AstroutsBox, env: Environment, implS: ImplS): ImplA = {
-    val ImplS(codeLocation, rules, allRunes, isTemplate, structKindRune, interfaceKindRune) = implS
+    val ImplS(nameS, rules, allRunesS, isTemplate, structKindRuneS, interfaceKindRuneS) = implS
+    val nameA = translateAbsoluteName(nameS)
+    val allRunesA = allRunesS.map(Astronomer.translateRuneAbsoluteName)
 
-    astrouts.getImpl(codeLocation) match {
+    astrouts.getImpl(nameA) match {
       case Some(existingImplA) => return existingImplA
       case _ =>
     }
 
     val (conclusions, rulesA) =
-      makeRuleTyper().solve(astrouts, env, rules, List(), Some(allRunes)) match {
+      makeRuleTyper().solve(astrouts, env, rules, List(), Some(allRunesA)) match {
         case (_, rtsf @ RuleTyperSolveFailure(_, _, _)) => vfail(rtsf.toString)
         case (c, RuleTyperSolveSuccess(r)) => (c, r)
       }
 
-    ImplA(codeLocation, rulesA, conclusions.typeByRune, structKindRune, interfaceKindRune)
+    ImplA(
+      nameA,
+      rulesA,
+      conclusions.typeByRune,
+      translateRuneAbsoluteName(structKindRuneS),
+      translateRuneAbsoluteName(interfaceKindRuneS))
+  }
+
+  def translateParameter(paramS: ParameterS): ParameterA = {
+    val ParameterS(atomS) = paramS
+    ParameterA(translateAtom(atomS))
+  }
+
+  def translateAtom(atomS: AtomSP): AtomAP = {
+    val AtomSP(CaptureS(nameS, variability), virtualityS, coordRuneS, destructureS) = atomS
+    val nameA = translateAbsoluteName(nameS)
+
+    val virtualityA =
+      virtualityS.map({
+        case AbstractSP => AbstractAP
+        case OverrideSP(kindRune) => OverrideAP(translateRuneAbsoluteName(kindRune))
+      })
+
+    val coordRuneA = translateRuneAbsoluteName(coordRuneS)
+
+    val destructureA = destructureS.map(_.map(translateAtom))
+
+    AtomAP(CaptureA(nameA, variability), virtualityA, coordRuneA, destructureA)
   }
 
   def translateFunction(astrouts: AstroutsBox, env: Environment, functionS: FunctionS): FunctionA = {
-    val FunctionS(codeLocation, name, namespace, lambdaNumber, isUserFunction, identifyingRunes, allRunes, maybePredictedType, paramsS, maybeRetCoordRune, isTemplate, templateRules, bodyS) = functionS
+    val FunctionS(nameS, isUserFunction, identifyingRunesS, allRunesS, maybePredictedType, paramsS, maybeRetCoordRune, isTemplate, templateRules, bodyS) = functionS
+    val nameA = translateAbsoluteName(nameS)
+    val allRunesA = allRunesS.map(Astronomer.translateRuneAbsoluteName)
+    val identifyingRunesA = identifyingRunesS.map(Astronomer.translateRuneAbsoluteName)
+
+    val paramsA = paramsS.map(translateParameter)
 
     val (conclusions, rulesA) =
-      makeRuleTyper().solve(astrouts, env, templateRules, List(), Some(allRunes)) match {
+      makeRuleTyper().solve(astrouts, env, templateRules, List(), Some(allRunesA)) match {
         case (_, rtsf @ RuleTyperSolveFailure(_, _, _)) => vfail(rtsf.toString)
         case (c, RuleTyperSolveSuccess(r)) => (c, r)
       }
 
     val tyype =
       if (isTemplate) {
-        TemplateTemplataType(identifyingRunes.map(conclusions.typeByRune), FunctionTemplataType)
+        TemplateTemplataType(identifyingRunesA.map(conclusions.typeByRune), FunctionTemplataType)
       } else {
         FunctionTemplataType
       }
@@ -282,10 +446,15 @@ object Astronomer {
     val bodyA = translateBody(astrouts, innerEnv, bodyS)
 
     FunctionA(
-      codeLocation,
-      name, namespace, lambdaNumber, isUserFunction,
+      nameA,
+      isUserFunction,
       tyype,
-      identifyingRunes, conclusions.typeByRune, paramsS, maybeRetCoordRune, rulesA, bodyA)
+      identifyingRunesA,
+      conclusions.typeByRune,
+      paramsA,
+      maybeRetCoordRune.map(translateRuneAbsoluteName),
+      rulesA,
+      bodyA)
   }
 
   def translateBody(astrouts: AstroutsBox, env: Environment, body: IBody1): IBodyA = {
@@ -293,10 +462,109 @@ object Astronomer {
       case ExternBody1 => ExternBodyA
       case AbstractBody1 => AbstractBodyA
       case GeneratedBody1(generatorId) => GeneratedBodyA(generatorId)
-      case CodeBody1(BodySE(closuredNames, blockS)) => {
+      case CodeBody1(BodySE(closuredNamesS, blockS)) => {
         val blockA = ExpressionAstronomer.translateBlock(env, astrouts, blockS)
-        CodeBodyA(BodyAE(closuredNames, blockA))
+        CodeBodyA(BodyAE(closuredNamesS.map(translateAbsoluteName), blockA))
       }
+    }
+  }
+
+  def translateImpreciseTypeName(fullNameS: ImpreciseNameS[CodeTypeNameS]): ImpreciseNameA[CodeTypeNameA] = {
+    val ImpreciseNameS(initS, lastS) = fullNameS
+    ImpreciseNameA(initS.map(translateImpreciseNameStep), translateCodeTypeName(lastS))
+  }
+
+  def translateImpreciseName(fullNameS: ImpreciseNameS[IImpreciseNameStepS]): ImpreciseNameA[IImpreciseNameStepA] = {
+    val ImpreciseNameS(initS, lastS) = fullNameS
+    ImpreciseNameA(initS.map(translateImpreciseNameStep), translateImpreciseNameStep(lastS))
+  }
+
+  def translateCodeTypeName(codeTypeNameS: CodeTypeNameS): CodeTypeNameA = {
+    val CodeTypeNameS(name) = codeTypeNameS
+    CodeTypeNameA(name)
+  }
+
+  def translateImpreciseNameStep(impreciseNameStepS: IImpreciseNameStepS): IImpreciseNameStepA = {
+    impreciseNameStepS match {
+      case ctn @ CodeTypeNameS(_) => translateCodeTypeName(ctn)
+      case GlobalFunctionFamilyNameS(name) => GlobalFunctionFamilyNameA(name)
+      case icvn @ ImpreciseCodeVarNameS(_) => translateImpreciseCodeVarNameStep(icvn)
+    }
+  }
+
+  def translateImpreciseCodeVarNameStep(impreciseNameStepS: ImpreciseCodeVarNameS): ImpreciseCodeVarNameA = {
+    var ImpreciseCodeVarNameS(name) = impreciseNameStepS
+    ImpreciseCodeVarNameA(name)
+  }
+
+  def translateRuneAbsoluteName(absoluteNameS: AbsoluteNameS[IRuneS]): AbsoluteNameA[IRuneA] = {
+    val AbsoluteNameS(file, initS, lastS) = absoluteNameS
+    AbsoluteNameA(file, initS.map(translateNameStep), translateRune(lastS))
+  }
+
+  def translateVarAbsoluteName(absoluteNameS: AbsoluteNameS[IVarNameS]): AbsoluteNameA[IVarNameA] = {
+    val AbsoluteNameS(file, initS, lastS) = absoluteNameS
+    AbsoluteNameA(file, initS.map(translateNameStep), translateVarNameStep(lastS))
+  }
+
+  def translateVarImpreciseName(absoluteNameS: ImpreciseNameS[ImpreciseCodeVarNameS]):
+  ImpreciseNameA[ImpreciseCodeVarNameA] = {
+    val ImpreciseNameS(initS, lastS) = absoluteNameS
+    ImpreciseNameA(initS.map(translateImpreciseNameStep), translateImpreciseCodeVarNameStep(lastS))
+  }
+
+  def translateFunctionFamilyName(name: ImpreciseNameS[GlobalFunctionFamilyNameS]):
+  ImpreciseNameA[GlobalFunctionFamilyNameA] = {
+    val ImpreciseNameS(init, last) = name
+    ImpreciseNameA(init.map(translateImpreciseNameStep), translateGlobalFunctionFamilyName(last))
+  }
+
+  def translateGlobalFunctionFamilyName(s: GlobalFunctionFamilyNameS): GlobalFunctionFamilyNameA = {
+    val GlobalFunctionFamilyNameS(name) = s
+    GlobalFunctionFamilyNameA(name)
+  }
+
+  def translateAbsoluteName(absoluteNameS: AbsoluteNameS[INameS]): AbsoluteNameA[INameA] = {
+    val AbsoluteNameS(file, initS, lastS) = absoluteNameS
+    AbsoluteNameA(file, initS.map(translateNameStep), translateNameStep(lastS))
+  }
+
+  def translateNameStep(name: INameS): INameA = {
+    name match {
+      case LambdaNameS(codeLocation) => LambdaNameA(codeLocation)
+      case FunctionNameS(name, codeLocation) => FunctionNameA(name, codeLocation)
+      case TopLevelCitizenDeclarationNameS(name, codeLocation) => TopLevelCitizenDeclarationNameA(name, codeLocation)
+      case LambdaStructNameS(codeLocation) => LambdaStructNameA(codeLocation)
+      case ImplNameS(codeLocation) => ImplNameA(codeLocation)
+      case LetNameS(codeLocation) => LetNameA(codeLocation)
+      case UnnamedLocalNameS(codeLocation) => UnnamedLocalNameA(codeLocation)
+      case ClosureParamNameS() => ClosureParamNameA()
+      case MagicParamNameS(magicParamNumber) => MagicParamNameA(magicParamNumber)
+      case CodeVarNameS(name) => CodeVarNameA(name)
+      case CodeRuneS(name) => CodeRuneA(name)
+      case ImplicitRuneS(name) => ImplicitRuneA(name)
+      case MagicParamRuneS(magicParamIndex) => MagicImplicitRuneA(magicParamIndex)
+      case MemberRuneS(memberIndex) => MemberRuneA(memberIndex)
+      case ReturnRuneS() => ReturnRuneA()
+    }
+  }
+
+  def translateVarNameStep(name: IVarNameS): IVarNameA = {
+    name match {
+      case UnnamedLocalNameS(codeLocation) => UnnamedLocalNameA(codeLocation)
+      case ClosureParamNameS() => ClosureParamNameA()
+      case MagicParamNameS(magicParamNumber) => MagicParamNameA(magicParamNumber)
+      case CodeVarNameS(name) => CodeVarNameA(name)
+    }
+  }
+
+  def translateRune(rune: IRuneS): IRuneA = {
+    rune match {
+      case CodeRuneS(name) => CodeRuneA(name)
+      case ImplicitRuneS(name) => ImplicitRuneA(name)
+      case MagicParamRuneS(magicParamIndex) => MagicImplicitRuneA(magicParamIndex)
+      case MemberRuneS(memberIndex) => MemberRuneA(memberIndex)
+      case ReturnRuneS() => ReturnRuneA()
     }
   }
 
@@ -310,7 +578,8 @@ object Astronomer {
 
     val astrouts = AstroutsBox(Astrouts(Map(), Map(), Map(), Map()))
 
-    val env = Environment(None, primitives, structsS, interfacesS, implsS, functionsS, Map())
+
+    val env = Environment(None, None, primitives, structsS, interfacesS, implsS, functionsS, Map())
 
     val structsA = structsS.map(translateStruct(astrouts, env, _))
 

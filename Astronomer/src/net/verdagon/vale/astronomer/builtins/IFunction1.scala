@@ -8,55 +8,48 @@ import net.verdagon.vale.scout.patterns.{AbstractSP, AtomSP}
 import scala.collection.immutable.{List, Map}
 
 object IFunction1 {
+  val ifunction1Name = AbsoluteNameA("IFunction1.stl.vale", List(), FunctionNameA("IFunction1", CodeLocationS(0, 0)))
+  val callName = ifunction1Name.addStep(FunctionNameA("__call", CodeLocationS(1, 0)))
   val interface =
     InterfaceA(
-      CodeLocationS("IFunction1.builtin.vale", 0, 0),
-      List(),
-      "IFunction1",
+      ifunction1Name,
       MutableP,
       Some(MutableP),
       TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType, CoordTemplataType), KindTemplataType),
-      List("IFunctionM", "IFunctionP1", "IFunctionR"),
+      List(ifunction1Name.addStep(CodeRuneA("M")), ifunction1Name.addStep(CodeRuneA("P1")), ifunction1Name.addStep(CodeRuneA("R"))),
       Map(
-        "IFunctionM" -> MutabilityTemplataType,
-        "IFunctionP1" -> CoordTemplataType,
-        "IFunctionR" -> CoordTemplataType),
+        ifunction1Name.addStep(CodeRuneA("M")) -> MutabilityTemplataType,
+        ifunction1Name.addStep(CodeRuneA("P1")) -> CoordTemplataType,
+        ifunction1Name.addStep(CodeRuneA("R")) -> CoordTemplataType),
       List(
-        TemplexAR(RuneAT("IFunctionM", MutabilityTemplataType)),
-        TemplexAR(RuneAT("IFunctionP1", CoordTemplataType)),
-        TemplexAR(RuneAT("IFunctionR", CoordTemplataType))),
+        TemplexAR(RuneAT(ifunction1Name.addStep(CodeRuneA("M")), MutabilityTemplataType)),
+        TemplexAR(RuneAT(ifunction1Name.addStep(CodeRuneA("P1")), CoordTemplataType)),
+        TemplexAR(RuneAT(ifunction1Name.addStep(CodeRuneA("R")), CoordTemplataType))),
       List(
         FunctionA(
-          CodeLocationS("IFunction1.builtin.vale", 0, 1),
-          "__call", List(), 0, true,
+          callName,
+          true,
           FunctionTemplataType,
           List(),
-          Map(
-            "CallM" -> MutabilityTemplataType,
-            "CallP1" -> CoordTemplataType,
-            "CallR" -> CoordTemplataType,
-            "CallThisK" -> CoordTemplataType),
+          Map(callName.addStep(CodeRuneA("ThisK")) -> CoordTemplataType),
           List(
-            ParameterS(AtomSP(Some(CaptureP("this", FinalP)), Some(AbstractSP), "CallBorrowThis", None)),
-            ParameterS(AtomSP(Some(CaptureP("p1", FinalP)), None, "CallP1", None))),
-          Some("CallR"),
+            ParameterA(AtomAP(CaptureA(callName.addStep(CodeVarNameA("this")), FinalP), Some(AbstractAP), callName.addStep(CodeRuneA("BorrowThis")), None)),
+            ParameterA(AtomAP(CaptureA(callName.addStep(CodeVarNameA("p1")), FinalP), None, ifunction1Name.addStep(CodeRuneA("P1")), None))),
+          Some(ifunction1Name.addStep(CodeRuneA("R"))),
           List(
-            EqualsAR(TemplexAR(RuneAT("CallM", MutabilityTemplataType)), TemplexAR(NameAT("IFunctionM", MutabilityTemplataType))),
-            EqualsAR(TemplexAR(RuneAT("CallP1", CoordTemplataType)), TemplexAR(NameAT("IFunctionP1", CoordTemplataType))),
-            EqualsAR(TemplexAR(RuneAT("CallR", CoordTemplataType)), TemplexAR(NameAT("IFunctionR", CoordTemplataType))),
             EqualsAR(
-              TemplexAR(RuneAT("CallThisK", CoordTemplataType)),
+              TemplexAR(RuneAT(callName.addStep(CodeRuneA("ThisK")), CoordTemplataType)),
               TemplexAR(
                 CallAT(
-                  NameAT("IFunction1", TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType, CoordTemplataType), KindTemplataType)),
+                  NameAT(ImpreciseNameA(List(), CodeTypeNameA("IFunction1")), TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType, CoordTemplataType), KindTemplataType)),
                   List(
-                    NameAT("IFunctionM", MutabilityTemplataType),
-                    NameAT("IFunctionP1", CoordTemplataType),
-                    NameAT("IFunctionR", CoordTemplataType)),
+                    RuneAT(ifunction1Name.addStep(CodeRuneA("M")), MutabilityTemplataType),
+                    RuneAT(ifunction1Name.addStep(CodeRuneA("P1")), CoordTemplataType),
+                    RuneAT(ifunction1Name.addStep(CodeRuneA("R")), CoordTemplataType)),
                   CoordTemplataType))),
             EqualsAR(
-              TemplexAR(RuneAT("CallBorrowThis", CoordTemplataType)),
-              TemplexAR(OwnershippedAT(BorrowP, RuneAT("CallThisK", CoordTemplataType))))),
+              TemplexAR(RuneAT(callName.addStep(CodeRuneA("BorrowThis")), CoordTemplataType)),
+              TemplexAR(OwnershippedAT(BorrowP, RuneAT(callName.addStep(CodeRuneA("ThisK")), CoordTemplataType))))),
           AbstractBodyA)))
 
 }

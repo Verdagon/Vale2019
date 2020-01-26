@@ -1,9 +1,9 @@
 package net.verdagon.vale.scout
 
 import net.verdagon.vale.parser._
-import net.verdagon.vale.scout.patterns.AtomSP
+import net.verdagon.vale.scout.patterns.{AtomSP, CaptureS}
 import net.verdagon.vale.scout.rules._
-import net.verdagon.vale.vfail
+import net.verdagon.vale.{vassert, vfail}
 import org.scalatest.{FunSuite, Matchers}
 
 class ScoutParametersTests extends FunSuite with Matchers {
@@ -21,80 +21,114 @@ class ScoutParametersTests extends FunSuite with Matchers {
     }
   }
 
+  val mainName =
+    AbsoluteNameS(
+      "in.vale",
+      List(),
+      FunctionNameS("main", CodeLocationS(0, 0)))
+
   test("Simple rune rule") {
     val program1 = compile("""fn main<T>(moo T) { }""")
     val main = program1.lookupFunction("main")
-    val expectedRulesS = List(TypedSR(Some("T"),CoordTypeSR))
-    RuleSUtils.getDistinctOrderedRunesForRulexes(expectedRulesS) shouldEqual List("T")
-    main.templateRules shouldEqual expectedRulesS
+
+    val runeInRules =
+      main.templateRules match {
+        case List(TypedSR(rune @ AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeRuneS("T")),CoordTypeSR)) => rune
+      }
+    RuleSUtils.getDistinctOrderedRunesForRulexes(mainName, main.templateRules) match {
+      case List(runeFromFunc) => vassert(runeInRules == runeFromFunc)
+    }
   }
 
   test("Borrowed rune") {
     val program1 = compile("""fn main<T>(moo &T) { }""")
     val main = program1.lookupFunction("main")
     val List(param) = main.params
-    param shouldEqual
-        ParameterS(AtomSP(Some(CaptureP("moo",FinalP)),None,"__ParamRune_0",None))
 
-    val expectedRulesS =
-      List(
-        TypedSR(Some("T"),CoordTypeSR),
-        TypedSR(Some("__ParamRune_0K"),KindTypeSR),
+    val tCoordRune =
+      param match {
+        case ParameterS(
+          AtomSP(
+            CaptureS(AbsoluteNameS(_, _, CodeVarNameS("moo")),FinalP),
+            None,
+            tcr @ AbsoluteNameS(_, _, ImplicitRuneS(1)),
+            None)) => tcr
+      }
+
+    main.templateRules match {
+      case List(
+        TypedSR(AbsoluteNameS(_,_,ImplicitRuneS(0)),KindTypeSR),
+        TypedSR(AbsoluteNameS(_,_,CodeRuneS("T")),CoordTypeSR),
+        TypedSR(AbsoluteNameS(_,_,ImplicitRuneS(1)),CoordTypeSR),
         ComponentsSR(
-          TypedSR(Some("T"),CoordTypeSR),
+          TypedSR(AbsoluteNameS(_,_,CodeRuneS("T")),CoordTypeSR),
           List(
             TemplexSR(OwnershipST(OwnP)),
-            TemplexSR(RuneST("__ParamRune_0K")))),
-        TypedSR(
-          Some("__ParamRune_0"),CoordTypeSR),
+            TemplexSR(RuneST(AbsoluteNameS(_,_,ImplicitRuneS(0)))))),
         ComponentsSR(
-          TypedSR(Some("__ParamRune_0"),CoordTypeSR),
+          TypedSR(AbsoluteNameS(_,_,ImplicitRuneS(1)),CoordTypeSR),
           List(
             TemplexSR(OwnershipST(BorrowP)),
-            TemplexSR(RuneST("__ParamRune_0K")))))
+            TemplexSR(RuneST(AbsoluteNameS(_,_,ImplicitRuneS(0))))))) =>
+    }
 
-    RuleSUtils.getDistinctOrderedRunesForRulexes(expectedRulesS) shouldEqual
-      List("T", "__ParamRune_0K", "__ParamRune_0")
-
-    main.templateRules shouldEqual expectedRulesS
+    RuleSUtils.getDistinctOrderedRunesForRulexes(mainName, main.templateRules) match {
+      case List(
+        AbsoluteNameS(_,_,ImplicitRuneS(0)),
+          AbsoluteNameS(_,_,CodeRuneS("T")),
+          AbsoluteNameS(_,_,ImplicitRuneS(1))) =>
+    }
   }
 
   test("Anonymous typed param") {
     val program1 = compile("""fn main(_ Int) { }""")
     val main = program1.lookupFunction("main")
     val List(param) = main.params
-    param shouldEqual
-        ParameterS(AtomSP(Some(CaptureP("__param_0",FinalP)),None,"__ParamRune_0",None))
+    val paramRune =
+      param match {
+        case ParameterS(
+          AtomSP(
+            CaptureS(AbsoluteNameS(_, List(FunctionNameS("main",_)), UnnamedLocalNameS(_)),FinalP),
+            None,
+            pr @ AbsoluteNameS(_, List(FunctionNameS("main",_)),ImplicitRuneS(0)),
+            None)) => pr
+      }
 
-    val expectedRulesS =
-      List(
-        TypedSR(Some("__ParamRune_0"),CoordTypeSR),
+    main.templateRules match {
+      case List(
         EqualsSR(
-          TemplexSR(RuneST("__ParamRune_0")),
-          TemplexSR(NameST("Int"))))
+          TypedSR(pr,CoordTypeSR),
+          TemplexSR(NameST(ImpreciseNameS(List(), CodeTypeNameS("Int")))))) => {
+        vassert(pr == paramRune)
+      }
+    }
 
-    RuleSUtils.getDistinctOrderedRunesForRulexes(expectedRulesS) shouldEqual
-      List("__ParamRune_0")
-
-    main.templateRules shouldEqual expectedRulesS
+    RuleSUtils.getDistinctOrderedRunesForRulexes(mainName, main.templateRules) shouldEqual
+      List(paramRune)
   }
 
   test("Anonymous untyped param") {
     val program1 = compile("""fn main(_) { }""")
     val main = program1.lookupFunction("main")
     val List(param) = main.params
-    param shouldEqual
-        ParameterS(AtomSP(Some(CaptureP("__param_0",FinalP)),None,"__ParamRune_0_0",None))
+    val paramRune =
+      param match {
+        case ParameterS(
+         AtomSP(
+          CaptureS(AbsoluteNameS(_, List(FunctionNameS("main",_)), UnnamedLocalNameS(_)),FinalP),
+          None,
+          pr @ AbsoluteNameS(_, List(FunctionNameS("main",_)),ImplicitRuneS(0)),
+          None)) => pr
+      }
 
-    val expectedRulesS =
-      List(TypedSR(Some("__ParamRune_0_0"),CoordTypeSR))
+    main.templateRules match {
+      case List(TypedSR(pr,CoordTypeSR)) => {
+        vassert(pr == paramRune)
+      }
+    }
 
-    RuleSUtils.getDistinctOrderedRunesForRulexes(expectedRulesS) shouldEqual
-      List("__ParamRune_0_0")
-
-    main.templateRules shouldEqual expectedRulesS
-
-    main.identifyingRunes shouldEqual List("__ParamRune_0_0")
+    RuleSUtils.getDistinctOrderedRunesForRulexes(mainName, main.templateRules) shouldEqual
+      List(paramRune)
   }
 
   test("Rune destructure") {
@@ -102,29 +136,39 @@ class ScoutParametersTests extends FunSuite with Matchers {
     val program1 = compile("""fn main<T>(moo T(a Int)) { }""")
     val main = program1.lookupFunction("main")
 
-    val aRune = Scout.unrunedParamRunePrefix + 0 + Scout.memberRuneSeparator + "0"
-
     val List(param) = main.params
-    param shouldEqual
-        ParameterS(
-          AtomSP(
-            Some(CaptureP("moo",FinalP)),
-            None,
-            "T",
-            Some(List(AtomSP(Some(CaptureP("a",FinalP)),None,aRune,None)))))
 
-    val expectedRulesS =
-      List(
-        TypedSR(Some("T"),CoordTypeSR),
-        TypedSR(Some(aRune),CoordTypeSR),
-        EqualsSR(TemplexSR(RuneST(aRune)),TemplexSR(NameST("Int"))))
+    val (aRune, tRune) =
+      param match {
+        case ParameterS(
+            AtomSP(
+              CaptureS(AbsoluteNameS(_, List(FunctionNameS("main",_)), CodeVarNameS("moo")),FinalP),
+              None,
+              tr @ AbsoluteNameS(_, List(FunctionNameS("main",_)), CodeRuneS("T")),
+              Some(
+                List(
+                  AtomSP(
+                    CaptureS(AbsoluteNameS(_, List(FunctionNameS("main",_)), CodeVarNameS("a")),FinalP),
+                    None,
+                    ar @ AbsoluteNameS(_, List(FunctionNameS("main",_)), ImplicitRuneS(0)),
+                    None))))) => (ar, tr)
+      }
 
-    RuleSUtils.getDistinctOrderedRunesForRulexes(expectedRulesS) shouldEqual
-      List("T", aRune)
+    main.templateRules match {
+      case List(
+        TypedSR(tr,CoordTypeSR),
+        EqualsSR(
+          TypedSR(ar,CoordTypeSR),
+          TemplexSR(NameST(ImpreciseNameS(List(), CodeTypeNameS("Int")))))) => {
+        vassert(tr == tRune)
+        vassert(ar == aRune)
+      }
+    }
 
-    main.templateRules shouldEqual expectedRulesS
+    RuleSUtils.getDistinctOrderedRunesForRulexes(mainName, main.templateRules) shouldEqual
+      List(tRune, aRune)
 
-    // Yes, even though the user didnt specify any. See CCAUIR.
-    main.identifyingRunes shouldEqual List("T")
+    // See CCAUIR.
+    main.identifyingRunes shouldEqual List(tRune)
   }
 }

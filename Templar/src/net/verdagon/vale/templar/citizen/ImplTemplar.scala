@@ -13,20 +13,23 @@ import scala.collection.immutable.List
 object ImplTemplar {
 
   private def getMaybeImplementedInterface(
-    env: IEnvironment,
     temputs: TemputsBox,
     childCitizenRef: CitizenRef2,
-    impl1: ImplA):
+    implTemplata: ImplTemplata):
   (Option[InterfaceRef2]) = {
-    val ImplA(codeLocation, rules, typeByRune, structKindRune, interfaceKindRune) = impl1
+    val ImplTemplata(env, impl) = implTemplata
+    val ImplA(codeLocation, rules, _, structKindRune, interfaceKindRune) = impl
 
+    val (rulesForImplAndParents, typeByRuneForImplAndParents) =
+//      EnvironmentUtils.assembleRulesFromContainers(implAndParents)
+      (impl.rules, impl.typeByRune)
     val result =
       InferTemplar.inferFromExplicitTemplateArgs(
         env,
         temputs,
         List(structKindRune),
-        rules,
-        typeByRune,
+        rulesForImplAndParents,
+        typeByRuneForImplAndParents,
         List(),
         None,
         List(KindTemplata(childCitizenRef)))
@@ -62,7 +65,7 @@ object ImplTemplar {
       }
     citizenEnv.getAllTemplatasWithName(Templar.IMPL_NAME, Set(TemplataLookupContext, ExpressionLookupContext))
       .flatMap({
-        case ImplTemplata(implEnv, impl) => getMaybeImplementedInterface(implEnv, temputs, childCitizenRef, impl).toList
+        case it @ ImplTemplata(_, _) => getMaybeImplementedInterface(temputs, childCitizenRef, it).toList
         case ExternImplTemplata(structRef, interfaceRef) => if (structRef == childCitizenRef) List(interfaceRef) else List()
         case other => vwat(other.toString)
       })

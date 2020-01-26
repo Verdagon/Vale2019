@@ -1,18 +1,19 @@
 package net.verdagon.vale.astronomer
 
+import net.verdagon.vale.scout.IRuneS
 import net.verdagon.vale.vassert
 
 package object ruletyper {
   case class ConclusionsBox(var conclusions: Conclusions) {
     def typeByRune = conclusions.typeByRune
-    def addConclusion(rune: String, tyype: ITemplataType): Unit = {
+    def addConclusion(rune: AbsoluteNameA[IRuneA], tyype: ITemplataType): Unit = {
       conclusions = conclusions.addConclusion(rune, tyype)
     }
   }
 
   case class Conclusions(
-      typeByRune: Map[String, ITemplataType]) {
-    def addConclusion(rune: String, tyype: ITemplataType): Conclusions = {
+      typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType]) {
+    def addConclusion(rune: AbsoluteNameA[IRuneA], tyype: ITemplataType): Conclusions = {
       vassert(!typeByRune.contains(rune))
       Conclusions(typeByRune + (rune -> tyype))
     }

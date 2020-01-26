@@ -1,8 +1,8 @@
 package net.verdagon.vale.templar.infer.inferer
 
 import net.verdagon.vale._
-import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
-import net.verdagon.vale.scout.patterns.{AbstractSP, AtomSP, OverrideSP}
+import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
+import net.verdagon.vale.scout.patterns.{AtomSP, OverrideSP}
 import net.verdagon.vale.scout.rules._
 import net.verdagon.vale.templar.infer._
 import net.verdagon.vale.templar.templata.{Conversions, ITemplata, _}
@@ -11,6 +11,8 @@ import net.verdagon.vale.parser.{BorrowP, OwnP, ShareP}
 import net.verdagon.vale.templar.types.{Kind, _}
 
 import scala.collection.immutable.List
+
+case class SolverKindRuneA(ints: List[Int]) extends IRuneA
 
 private[infer] trait IInfererEvaluatorDelegate[Env, State] {
   def lookupMemberTypes(
@@ -51,9 +53,9 @@ class InfererEvaluator[Env, State](
     env: Env,
     state: State,
     initialRules: List[IRulexAR],
-    typeByRune: Map[String, ITemplataType],
-    directInputs: Map[String, ITemplata],
-    paramAtoms: List[AtomSP],
+    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
+    directInputs: Map[AbsoluteNameA[IRuneA], ITemplata],
+    paramAtoms: List[AtomAP],
     maybeParamInputs: Option[List[ParamFilter]],
     checkAllRunesPresent: Boolean
   ): (IInferSolveResult) = {
@@ -148,23 +150,24 @@ class InfererEvaluator[Env, State](
   private def addParameterRules(
       state: State,
       inferences: InferencesBox,
-      paramAtom: AtomSP,
+      paramAtom: AtomAP,
       paramFilterInstance: ParamFilter,
       paramLocation: List[Int]):
   // TODO: Don't use IInferEvaluateResult for this, because it has a deeplySatisfied member
   // which is n/a for this kind of thing.
   (IInferEvaluateResult[List[IRulexAR]]) = {
-    val AtomSP(_, patternVirtuality, patternCoordRune, maybePatternDestructure) = paramAtom
+    val AtomAP(_, patternVirtuality, patternCoordRuneA, maybePatternDestructure) = paramAtom
+
     val rulesFromType =
       paramFilterInstance.tyype.referend match {
         case c: CitizenRef2 => {
           val ancestorInterfaces = delegate.getAncestorInterfaces(state, c)
           val selfAndAncestors = List(c) ++ ancestorInterfaces
-          val kindRune = "__SolverKind_" + paramLocation.mkString("_")
+          val kindRune = patternCoordRuneA.addStep(SolverKindRuneA(paramLocation))
           inferences.addPossibilities(kindRune, selfAndAncestors.map(KindTemplata))
           val rule =
             EqualsAR(
-              TemplexAR(RuneAT(patternCoordRune, CoordTemplataType)),
+              TemplexAR(RuneAT(patternCoordRuneA, CoordTemplataType)),
               ComponentsAR(
                 CoordTemplataType,
                 List(
@@ -173,21 +176,21 @@ class InfererEvaluator[Env, State](
           List(rule)
         }
         case _ => {
-          inferences.templatasByRune.get(patternCoordRune) match {
+          inferences.templatasByRune.get(patternCoordRuneA) match {
             case Some(existingOne) if existingOne != CoordTemplata(paramFilterInstance.tyype) => {
               return (InferEvaluateConflict(inferences.inferences, "Incoming argument type doesnt match already known rune " + paramAtom.coordRune + " value. Had value " + existingOne + " but incoming arg was " + paramFilterInstance.tyype, Nil))
             }
             case _ =>
           }
-          inferences.addConclusion(patternCoordRune, CoordTemplata(paramFilterInstance.tyype))
+          inferences.addConclusion(patternCoordRuneA, CoordTemplata(paramFilterInstance.tyype))
           List()
         }
       }
     val rulesFromVirtuality =
       (paramFilterInstance.virtuality, patternVirtuality) match {
         case (None, _) => List()
-        case (Some(Abstract2), Some(AbstractSP)) => List()
-        case (Some(Override2(superInterface)), Some(OverrideSP(superInterfaceRune))) => {
+        case (Some(Abstract2), Some(AbstractAP)) => List()
+        case (Some(Override2(superInterface)), Some(OverrideAP(superInterfaceRune))) => {
           // We might already have this superInterface figured out.
           inferences.templatasByRune.get(superInterfaceRune) match {
             case None => {
@@ -249,7 +252,7 @@ class InfererEvaluator[Env, State](
     env: Env,
     state: State,
     rules: List[IRulexAR],
-    typeByRune: Map[String, ITemplataType],
+    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
     inferences: InferencesBox
   ): (IInferEvaluateResult[Unit]) = {
     val initialInferences = inferences.inferences
@@ -544,12 +547,6 @@ class InfererEvaluator[Env, State](
         val templata =
           templataTemplar.lookupTemplata(env, state, name, expectedType)
         (InferEvaluateSuccess(templata, true))
-      }
-      case AnonymousRuneAT(_) => {
-        // See ARCDS for why anonymous runes are considered deeply satisfied.
-        val deeplySatisfied = true
-
-        (InferEvaluateUnknown(deeplySatisfied))
       }
       case RuneAT(rune, expectedType) => {
         inferences.templatasByRune.get(rune) match {

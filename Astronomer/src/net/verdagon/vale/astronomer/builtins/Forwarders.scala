@@ -3,7 +3,7 @@ package net.verdagon.vale.astronomer.builtins
 import net.verdagon.vale.astronomer._
 import net.verdagon.vale.astronomer.externs.Externs.makeExtern
 import net.verdagon.vale.parser.FinalP
-import net.verdagon.vale.scout.{LocalVariable1, NotUsed, Used}
+import net.verdagon.vale.scout.{CodeLocationS, LocalVariable1, NotUsed, Used}
 
 import scala.collection.immutable.List
 
@@ -39,7 +39,8 @@ object Forwarders {
       makeForwarder("<=", List(("left", "Int"), ("right", "Int")), "Bool", "__lessThanOrEqInt"),
       makeForwarder(">=", List(("left", "Int"), ("right", "Int")), "Bool", "__greaterThanOrEqInt"))
 
-  def makeForwarder(name: String, params: List[(String, String)], ret: String, callee: String): FunctionA = {
+  def makeForwarder(functionName: String, params: List[(String, String)], ret: String, callee: String): FunctionA = {
+    val name = AbsoluteNameA(functionName + ".builtin.vale", List(), FunctionNameA(functionName, CodeLocationS(0, 0)))
     makeSimpleFunction(
       name,
       params,
@@ -48,13 +49,13 @@ object Forwarders {
         BodyAE(
           Set(),
           BlockAE(
-            params.map(_._1).toSet.map(param => {
-              LocalVariable1(param, FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)
-            }),
+            params.map(_._1).map(param => {
+              LocalVariableA(name.addStep(CodeVarNameA(param)), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)
+            }).toSet,
             List(
               FunctionCallAE(
-                GlobalLoadAE(callee),
+                FunctionLoadAE(ImpreciseNameA(List(), GlobalFunctionFamilyNameA(callee))),
                 PackAE(
-                    params.map(param => LocalLoadAE(param._1, false)))))))))
+                    params.map(param => LocalLoadAE(name.addStep(CodeVarNameA(param._1)), false)))))))))
   }
 }

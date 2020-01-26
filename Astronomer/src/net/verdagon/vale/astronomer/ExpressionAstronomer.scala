@@ -8,20 +8,33 @@ object ExpressionAstronomer {
   def translateBlock(env: Environment, astrouts: AstroutsBox, blockS: BlockSE): BlockAE = {
     val BlockSE(locals, exprsS) = blockS
     val exprsA = exprsS.map(translateExpression(env, astrouts, _))
-    BlockAE(locals, exprsA)
+    BlockAE(locals.map(translateLocalVariable), exprsA)
+  }
+
+  def translateLocalVariable(varS: LocalVariable1): LocalVariableA = {
+    val LocalVariable1(varNameS, variability, selfBorrowed, selfMoved, selfMutated, childBorrowed, childMoved, childMutated) = varS
+    val varNameA = Astronomer.translateAbsoluteName(varNameS)
+    LocalVariableA(varNameA, variability, selfBorrowed, selfMoved, selfMutated, childBorrowed, childMoved, childMutated)
   }
 
   def translateExpression(env: Environment, astrouts: AstroutsBox, iexprS: IExpressionSE): IExpressionAE = {
     iexprS match {
-      case LetSE(patternId, rules, allRunes, pattern, expr) => {
+      case LetSE(rules, allRunesS, patternS, expr) => {
+        val allRunesA = allRunesS.map(Astronomer.translateRuneAbsoluteName)
         val (conclusions, rulesA) =
-          Astronomer.makeRuleTyper().solve(astrouts, env, rules, List(pattern), Some(allRunes)) match {
+          Astronomer.makeRuleTyper().solve(astrouts, env, rules, List(patternS), Some(allRunesA)) match {
             case (_, rtsf @ RuleTyperSolveFailure(_, _, _)) => vfail(rtsf.toString)
             case (c, RuleTyperSolveSuccess(r)) => (c, r)
           }
         val exprA = translateExpression(env, astrouts, expr)
 
-        LetAE(patternId, rulesA, conclusions.typeByRune, pattern, exprA)
+        val patternA = Astronomer.translateAtom(patternS)
+
+        LetAE(
+          rulesA,
+          conclusions.typeByRune,
+          patternA,
+          exprA)
       }
       case IfSE(conditionS, thenBodyS, elseBodyS) => {
         val conditionA = translateBlock(env, astrouts, conditionS)
@@ -41,11 +54,11 @@ object ExpressionAstronomer {
       }
       case GlobalMutateSE(name, exprS) => {
         val exprA = translateExpression(env, astrouts, exprS)
-        GlobalMutateAE(name, exprA)
+        GlobalMutateAE(Astronomer.translateImpreciseName(name), exprA)
       }
       case LocalMutateSE(nameS, exprS) => {
         val exprA = translateExpression(env, astrouts, exprS)
-        LocalMutateAE(nameS, exprA)
+        LocalMutateAE(Astronomer.translateVarAbsoluteName(nameS), exprA)
       }
       case ExpressionLendSE(innerExprS) => {
         val innerExprA = translateExpression(env, astrouts, innerExprS)
@@ -110,8 +123,12 @@ object ExpressionAstronomer {
         // We don't translate the templexes, we can't until we know what the template expects.
         TemplateSpecifiedLookupAE(name, templateArgsS)
       }
-      case LocalLoadSE(name, borrow) => LocalLoadAE(name, borrow)
-      case GlobalLoadSE(name) => GlobalLoadAE(name)
+      case LocalLoadSE(name, borrow) => {
+        LocalLoadAE(Astronomer.translateVarAbsoluteName(name), borrow)
+      }
+      case FunctionLoadSE(name) => {
+        FunctionLoadAE(Astronomer.translateFunctionFamilyName(name))
+      }
       case UnletSE(name) => UnletAE(name)
     }
   }

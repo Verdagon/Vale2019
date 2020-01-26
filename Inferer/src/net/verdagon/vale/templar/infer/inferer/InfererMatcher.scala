@@ -1,6 +1,6 @@
 package net.verdagon.vale.templar.infer.inferer
 
-import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
+import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
 import net.verdagon.vale.scout.patterns.{AbstractSP, AtomSP, OverrideSP}
 import net.verdagon.vale.scout.rules._
 import net.verdagon.vale.templar.infer._
@@ -49,7 +49,7 @@ class InfererMatcher[Env, State](
     state: State,
     inferences: InferencesBox,
     instance: ITemplata,
-    rune: String,
+    rune: AbsoluteNameA[IRuneA],
     expectedType: ITemplataType,
     ):
   (IInferMatchResult) = {
@@ -76,7 +76,7 @@ class InfererMatcher[Env, State](
     state: State,
     inferences: InferencesBox,
     instance: Coord,
-    coordRune: String):
+    coordRune: AbsoluteNameA[IRuneA]):
   (IInferMatchResult) = {
 
     inferences.templatasByRune.get(coordRune) match {
@@ -99,7 +99,7 @@ class InfererMatcher[Env, State](
     state: State,
     inferences: InferencesBox,
     instance: Kind,
-    kindRune: String):
+    kindRune: AbsoluteNameA[IRuneA]):
   (IInferMatchResult) = {
     inferences.templatasByRune.get(kindRune) match {
       case None => {
@@ -151,8 +151,11 @@ class InfererMatcher[Env, State](
       instance: ParamFilter,
       rule: AtomSP):
   (IInferMatchResult) = {
+    val ruleCoordRuneS = rule.coordRune
+    val runeCoordRuneA = Astronomer.translateRuneAbsoluteName(ruleCoordRuneS)
+
     val coordDeeplySatisfied =
-      matchReference2AgainstRuneSP(env, state, inferences, instance.tyype, rule.coordRune) match {
+      matchReference2AgainstRuneSP(env, state, inferences, instance.tyype, runeCoordRuneA) match {
         case (imc @ InferMatchConflict(_, _, _)) => return (imc)
         case (InferMatchSuccess(ds)) => (ds)
       }
@@ -173,8 +176,9 @@ class InfererMatcher[Env, State](
         case (None, _) => (true)
         case (Some(Abstract2), Some(AbstractSP)) => (true)
         case (Some(Abstract2), _) => return (InferMatchConflict(inferences.inferences, s"ParamFilter virtuality didn't match rule:\n${instance.virtuality}\n${rule.virtuality}", List()))
-        case (Some(Override2(instanceSuperInterfaceRef2)), Some(OverrideSP(kindRune))) => {
-          matchReferend2AgainstRuneSP(env, state, inferences, instanceSuperInterfaceRef2, kindRune) match {
+        case (Some(Override2(instanceSuperInterfaceRef2)), Some(OverrideSP(kindRuneS))) => {
+          val kindRuneA = Astronomer.translateRuneAbsoluteName(kindRuneS)
+          matchReferend2AgainstRuneSP(env, state, inferences, instanceSuperInterfaceRef2, kindRuneA) match {
             case (imc @ InferMatchConflict(_, _, _)) => return (imc)
             case (InferMatchSuccess(ds)) => (ds)
           }
@@ -263,10 +267,6 @@ class InfererMatcher[Env, State](
       rule: ITemplexA):
   (IInferMatchResult) = {
     (rule, instance) match {
-      case (AnonymousRuneAT(expectedType), _) => {
-        vassert(instance.tyype == expectedType)
-        (InferMatchSuccess(true))
-      }
       case (IntAT(expectedValue), IntegerTemplata(actualValue))
           if actualValue == expectedValue => {
         (InferMatchSuccess(true))

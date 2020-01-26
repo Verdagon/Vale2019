@@ -1,10 +1,9 @@
 package net.verdagon.vale.templar
 
 import net.verdagon.vale.astronomer._
-import net.verdagon.vale.scout.patterns.AtomSP
 import net.verdagon.vale.scout.ITemplexS
 import net.verdagon.vale.templar.citizen.{ImplTemplar, StructTemplar}
-import net.verdagon.vale.templar.env.{IEnvironment, IEnvironmentBox, TemplataLookupContext}
+import net.verdagon.vale.templar.env.{IEnvironment, TemplataLookupContext}
 import net.verdagon.vale.templar.infer._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar.types._
@@ -17,9 +16,9 @@ object InferTemplar {
     env: IEnvironment,
     state: TemputsBox,
     rules: List[IRulexAR],
-    typeByRune: Map[String, ITemplataType],
-    directInputs: Map[String, ITemplata],
-    paramAtoms: List[AtomSP],
+    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
+    directInputs: Map[AbsoluteNameA[IRuneA], ITemplata],
+    paramAtoms: List[AtomAP],
     maybeParamInputs: Option[List[ParamFilter]],
     checkAllRunesPresent: Boolean,
   ): (IInferSolveResult) = {
@@ -62,7 +61,7 @@ object InferTemplar {
         Templar.getMutability(state, kind)
       }
 
-      override def lookupTemplata(env: IEnvironment, name: String): ITemplata = {
+      override def lookupTemplata(env: IEnvironment, name: AbsoluteNameA[INameA]): ITemplata = {
         // We can only ever lookup types by name in expression context,
         // otherwise we have no idea what List<Str> means; it could
         // mean a list of strings or a list of the Str(:Int)Str function.
@@ -149,8 +148,8 @@ object InferTemplar {
     env0: IEnvironment,
     temputs: TemputsBox,
     rules: List[IRulexAR],
-    typeByRune: Map[String, ITemplataType]
-  ): (Map[String, ITemplata]) = {
+    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType]
+  ): (Map[AbsoluteNameA[IRuneA], ITemplata]) = {
     solve(env0, temputs, rules, typeByRune, Map(), List(), None, true) match {
       case (InferSolveSuccess(inferences)) => {
         (inferences.templatasByRune)
@@ -164,11 +163,11 @@ object InferTemplar {
   def inferFromExplicitTemplateArgs(
     env0: IEnvironment,
     temputs: TemputsBox,
-    identifyingRunes: List[String],
+    identifyingRunes: List[AbsoluteNameA[IRuneA]],
     rules: List[IRulexAR],
-    typeByRune: Map[String, ITemplataType],
-    patterns1: List[AtomSP],
-    maybeRetRune: Option[String],
+    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
+    patterns1: List[AtomAP],
+    maybeRetRune: Option[AbsoluteNameA[IRuneA]],
     explicits: List[ITemplata],
   ): (IInferSolveResult) = {
     if (identifyingRunes.size != explicits.size) {
@@ -189,11 +188,11 @@ object InferTemplar {
   def inferFromArgCoords(
     env0: IEnvironment,
     temputs: TemputsBox,
-    identifyingRunes: List[String],
+    identifyingRunes: List[AbsoluteNameA[IRuneA]],
     rules: List[IRulexAR],
-    typeByRune: Map[String, ITemplataType],
-    patterns1: List[AtomSP],
-    maybeRetRune: Option[String],
+    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
+    patterns1: List[AtomAP],
+    maybeRetRune: Option[AbsoluteNameA[IRuneA]],
     alreadySpecifiedTemplateArgs: List[ITemplata],
     patternInputCoords: List[ParamFilter]
   ): (IInferSolveResult) = {

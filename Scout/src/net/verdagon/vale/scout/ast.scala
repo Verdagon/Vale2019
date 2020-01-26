@@ -3,7 +3,7 @@ package net.verdagon.vale.scout
 import net.verdagon.vale.parser._
 import net.verdagon.vale.scout.patterns.{AtomSP, PatternSUtils, VirtualitySP}
 import net.verdagon.vale.scout.rules.{IRulexSR, ITypeSR, RuleSUtils, TypedSR}
-import net.verdagon.vale.vassert
+import net.verdagon.vale.{vassert, vwat}
 
 import scala.collection.immutable.List
 
@@ -39,36 +39,39 @@ case class ProgramS(
     interfaces: List[InterfaceS],
     impls: List[ImplS],
     implementedFunctions: List[FunctionS]) {
-  def lookupFunction(name: String) = {
-    val matches = implementedFunctions.find(_.name == name)
+  def lookupFunction(name: String): FunctionS = {
+    val matches =
+      implementedFunctions
+        .find(f => f.name.last match { case FunctionNameS(n, _) => n == name })
     vassert(matches.size == 1)
     matches.head
   }
-  def lookupInterface(name: String) = {
-    val matches = interfaces.find(_.name == name)
+  def lookupInterface(name: String): InterfaceS = {
+    val matches =
+      interfaces
+        .find(f => f.name.last match { case TopLevelCitizenDeclarationNameS(n, _) => n == name })
     vassert(matches.size == 1)
     matches.head
   }
-  def lookupStruct(name: String) = {
-    val matches = structs.find(_.name == name)
+  def lookupStruct(name: String): StructS = {
+    val matches =
+      structs
+        .find(f => f.name.last match { case TopLevelCitizenDeclarationNameS(n, _) => n == name })
     vassert(matches.size == 1)
     matches.head
   }
 }
 
 case class CodeLocationS(
-  file: String,
   line: Int,
   char: Int)
 
 case class StructS(
-    codeLocation: CodeLocationS,
-    namespace: List[String],
-    name: String,
+    name: AbsoluteNameS[TopLevelCitizenDeclarationNameS],
     mutability: MutabilityP,
     maybePredictedMutability: Option[MutabilityP],
-    identifyingRunes: List[String],
-    allRunes: Set[String],
+    identifyingRunes: List[AbsoluteNameS[IRuneS]],
+    allRunes: Set[AbsoluteNameS[IRuneS]],
     maybePredictedType: Option[ITypeSR],
     isTemplate: Boolean,
     rules: List[IRulexSR],
@@ -77,24 +80,22 @@ case class StructS(
 case class StructMemberS(
     name: String,
     variability: VariabilityP,
-    typeRune: String)
+    typeRune: AbsoluteNameS[IRuneS])
 
 case class ImplS(
-    codeLocation: CodeLocationS,
+    name: AbsoluteNameS[ImplNameS],
     rules: List[IRulexSR],
-    allRunes: Set[String],
+    allRunes: Set[AbsoluteNameS[IRuneS]],
     isTemplate: Boolean,
-    structKindRune: String,
-    interfaceKindRune: String)
+    structKindRune: AbsoluteNameS[IRuneS],
+    interfaceKindRune: AbsoluteNameS[IRuneS])
 
 case class InterfaceS(
-    codeLocation: CodeLocationS,
-    namespace: List[String],
-    name: String,
+    name: AbsoluteNameS[TopLevelCitizenDeclarationNameS],
     mutability: MutabilityP,
     maybePredictedMutability: Option[MutabilityP],
-    identifyingRunes: List[String],
-    allRunes: Set[String],
+    identifyingRunes: List[AbsoluteNameS[IRuneS]],
+    allRunes: Set[AbsoluteNameS[IRuneS]],
     maybePredictedType: Option[ITypeSR],
     isTemplate: Boolean,
     rules: List[IRulexSR],
@@ -103,14 +104,14 @@ case class InterfaceS(
 
 object interfaceSName {
   // The extraction method (mandatory)
-  def unapply(interfaceS: InterfaceS): Option[String] = {
+  def unapply(interfaceS: InterfaceS): Option[AbsoluteNameS[TopLevelCitizenDeclarationNameS]] = {
     Some(interfaceS.name)
   }
 }
 
 object structSName {
   // The extraction method (mandatory)
-  def unapply(structS: StructS): Option[String] = {
+  def unapply(structS: StructS): Option[AbsoluteNameS[TopLevelCitizenDeclarationNameS]] = {
     Some(structS.name)
   }
 }
@@ -131,11 +132,9 @@ object structSName {
 case class ParameterS(
     // Note the lack of a VariabilityP here. The only way to get a variability is with a Capture.
     pattern: AtomSP) {
-  vassert(pattern.name.nonEmpty)
-
   // The name they supplied, or a generated one. This is actually not used at all by the templar,
   // it's probably only used by IDEs. The templar gets arguments by index.
-  def name = pattern.name.get
+  def name = pattern.name
 }
 
 case class SimpleParameter1(
@@ -154,35 +153,46 @@ case class CodeBody1(body1: BodySE) extends IBody1
 
 // Underlying class for all XYZFunctionS types
 case class FunctionS(
-    codeLocation: CodeLocationS,
-    name: String,
-    namespace: List[String],
-    lambdaNumber: Int, // 0 if at top level
+    name: AbsoluteNameS[IFunctionDeclarationNameS],
     isUserFunction: Boolean,
 
     // This is not necessarily only what the user specified, the compiler can add
     // things to the end here, see CCAUIR.
-    identifyingRunes: List[String],
-    allRunes: Set[String],
+    identifyingRunes: List[AbsoluteNameS[IRuneS]],
+    allRunes: Set[AbsoluteNameS[IRuneS]],
     maybePredictedType: Option[ITypeSR],
 
     params: List[ParameterS],
 
     // We need to leave it an option to signal that the compiler can infer the return type.
-    maybeRetCoordRune: Option[String],
+    maybeRetCoordRune: Option[AbsoluteNameS[IRuneS]],
 
     isTemplate: Boolean,
     templateRules: List[IRulexSR],
     body: IBody1
 ) {
+  body match {
+    case ExternBody1 | AbstractBody1 | GeneratedBody1(_) => {
+      name.last match {
+        case LambdaNameS(_) => vwat()
+        case _ =>
+      }
+    }
+    case CodeBody1(body1) => {
+      if (body1.closuredNames.nonEmpty) {
+        name.last match {
+          case LambdaNameS(_) =>
+          case _ => vwat()
+        }
+      }
+    }
+  }
+
   def isLight(): Boolean = {
-    lambdaNumber == 0 ||
-      (body match {
-        case ExternBody1 => true
-        case AbstractBody1 => true
-        case GeneratedBody1(_) => true
-        case CodeBody1(body1) => body1.closuredNames.isEmpty
-      })
+    body match {
+      case ExternBody1 | AbstractBody1 | GeneratedBody1(_) => false
+      case CodeBody1(body1) => body1.closuredNames.nonEmpty
+    }
   }
 
   //  def orderedIdentifyingRunes: List[String] = {

@@ -3,7 +3,7 @@ package net.verdagon.vale.astronomer.externs
 import net.verdagon.vale.astronomer._
 import net.verdagon.vale.parser.{CaptureP, FinalP}
 import net.verdagon.vale.scout.patterns.AtomSP
-import net.verdagon.vale.scout.{CodeLocationS, ParameterS}
+import net.verdagon.vale.scout.{CodeLocationS, CodeRuneS, ParameterS}
 
 import scala.collection.immutable.List
 
@@ -44,13 +44,10 @@ object Externs {
         makeExtern("__greaterThanOrEqInt", List(("left", "Int"), ("right", "Int")), "Bool"))
 
   def makeExtern(functionName: String, params: List[(String, String)], retType: String): FunctionA = {
-    makeSimpleFunction(functionName, params, retType, ExternBodyA)
-  }
-
-  def simpleCoordRuneAR(rune: String, name: String): EqualsAR = {
-    EqualsAR(TemplexAR(RuneAT(rune, CoordTemplataType)), TemplexAR(NameAT(name, CoordTemplataType)))
-  }
-  def simpleParam(name: String, rune: String): ParameterS = {
-    ParameterS(AtomSP(Some(CaptureP(name, FinalP)), None, rune, None))
+    makeSimpleFunction(
+      AbsoluteNameA(functionName + ".forwarders.stl.vale", List(), FunctionNameA(functionName, CodeLocationS(0, 0))),
+      params,
+      retType,
+      ExternBodyA)
   }
 }

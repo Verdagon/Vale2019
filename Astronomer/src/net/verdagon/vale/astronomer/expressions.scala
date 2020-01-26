@@ -1,7 +1,7 @@
 package net.verdagon.vale.astronomer
 
 import net.verdagon.vale.parser.{MutabilityP, VariabilityP}
-import net.verdagon.vale.scout.{ITemplexS, LocalVariable1, RefCountCategory}
+import net.verdagon.vale.scout.{ITemplexS, IVariableUseCertainty, LocalVariable1, RefCountCategory}
 import net.verdagon.vale.scout.patterns.AtomSP
 import net.verdagon.vale.scout.rules.IRulexSR
 import net.verdagon.vale.vassert
@@ -9,10 +9,9 @@ import net.verdagon.vale.vassert
 // patternId is a unique number, can be used to make temporary variables that wont
 // collide with other things
 case class LetAE(
-    patternId: Int,
     rules: List[IRulexAR],
-    typeByRune: Map[String, ITemplataType],
-    pattern: AtomSP,
+    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
+    pattern: AtomAP,
     expr: IExpressionAE) extends IExpressionAE
 
 case class IfAE(condition: BlockAE, thenBody: BlockAE, elseBody: BlockAE) extends IExpressionAE
@@ -20,8 +19,8 @@ case class IfAE(condition: BlockAE, thenBody: BlockAE, elseBody: BlockAE) extend
 case class WhileAE(condition: BlockAE, body: BlockAE) extends IExpressionAE
 
 case class ExprMutateAE(mutatee: IExpressionAE, expr: IExpressionAE) extends IExpressionAE
-case class GlobalMutateAE(name: String, expr: IExpressionAE) extends IExpressionAE
-case class LocalMutateAE(name: String, expr: IExpressionAE) extends IExpressionAE
+case class GlobalMutateAE(name: ImpreciseNameA[IImpreciseNameStepA], expr: IExpressionAE) extends IExpressionAE
+case class LocalMutateAE(name: AbsoluteNameA[IVarNameA], expr: IExpressionAE) extends IExpressionAE
 
 case class ExpressionLendAE(innerExpr1: IExpressionAE) extends IExpressionAE
 case class ReturnAE(innerExpr1: IExpressionAE) extends IExpressionAE
@@ -44,7 +43,7 @@ case class BodyAE(
     // These are all the variables we use from parent environments.
     // We have these so templar doesn't have to dive through all the functions
     // that it calls (impossible) to figure out what's needed in a closure struct.
-    closuredNames: Set[String],
+    closuredNames: Set[AbsoluteNameA[INameA]],
 
     block: BlockAE
 ) extends IExpressionAE
@@ -52,7 +51,7 @@ case class BodyAE(
 case class BlockAE(
   // This shouldn't be ordered yet because we introduce new locals all the
   // time in templar, easier to just order them in hammer.
-  locals: Set[LocalVariable1],
+  locals: Set[LocalVariableA],
 
   exprs: List[IExpressionAE],
 ) extends IExpressionAE {
@@ -116,9 +115,20 @@ case class FunctionCallAE(callableExpr: IExpressionAE, argsPackExpr1: PackAE) ex
 
 case class TemplateSpecifiedLookupAE(name: String, templateArgs: List[ITemplexS]) extends IExpressionAE
 
-case class LocalLoadAE(name: String, borrow: Boolean) extends IExpressionAE
-case class GlobalLoadAE(name: String) extends IExpressionAE
+case class LocalLoadAE(name: AbsoluteNameA[IVarNameA], borrow: Boolean) extends IExpressionAE
+case class FunctionLoadAE(name: ImpreciseNameA[GlobalFunctionFamilyNameA]) extends IExpressionAE
 
 case class UnletAE(name: String) extends IExpressionAE
 
 case class ArrayLengthAE(arrayExpr: IExpressionAE) extends IExpressionAE
+
+
+case class LocalVariableA(
+  varName: AbsoluteNameA[INameA],
+  variability: VariabilityP,
+  selfBorrowed: IVariableUseCertainty,
+  selfMoved: IVariableUseCertainty,
+  selfMutated: IVariableUseCertainty,
+  childBorrowed: IVariableUseCertainty,
+  childMoved: IVariableUseCertainty,
+  childMutated: IVariableUseCertainty)

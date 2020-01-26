@@ -6,38 +6,36 @@ import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Env
 import net.verdagon.vale.scout.patterns.AtomSP
 
 object NotEquals {
+  val name = AbsoluteNameA("notEquals.stl.vale", List(), FunctionNameA("!=", CodeLocationS(0, 0)))
   val function =
     FunctionA(
-      CodeLocationS("notEquals.stl.vale", 0, 0),
-      "!=",
-      List("!="),
-      0,
+      name,
       false,
       TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
-      List("T"),
-      Map("T" -> CoordTemplataType),
+      List(name.addStep(CodeRuneA("T"))),
+      Map(name.addStep(CodeRuneA("T")) -> CoordTemplataType),
       List(
-        ParameterS(AtomSP(Some(CaptureP("left", FinalP)), None, "T", None)),
-        ParameterS(AtomSP(Some(CaptureP("right", FinalP)), None, "T", None))),
-      Some("B"),
+        ParameterA(AtomAP(CaptureA(name.addStep(CodeVarNameA("left")), FinalP), None, name.addStep(CodeRuneA("T")), None)),
+        ParameterA(AtomAP(CaptureA(name.addStep(CodeVarNameA("right")), FinalP), None, name.addStep(CodeRuneA("T")), None))),
+      Some(name.addStep(CodeRuneA("B"))),
       List(
-        TemplexAR(RuneAT("T", CoordTemplataType)),
-        EqualsAR(TemplexAR(RuneAT("B", CoordTemplataType)), TemplexAR(NameAT("Bool", CoordTemplataType)))),
+        TemplexAR(RuneAT(name.addStep(CodeRuneA("T")), CoordTemplataType)),
+        EqualsAR(TemplexAR(RuneAT(name.addStep(CodeRuneA("B")), CoordTemplataType)), TemplexAR(NameAT(ImpreciseNameA(List(), CodeTypeNameA("Bool")), CoordTemplataType)))),
       CodeBodyA(
         BodyAE(
           Set(),
           BlockAE(
             Set(
-              LocalVariable1("left", FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed),
-              LocalVariable1("right", FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
+              LocalVariableA(name.addStep(CodeVarNameA("left")), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed),
+              LocalVariableA(name.addStep(CodeVarNameA("right")), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
             List(FunctionCallAE(
-              GlobalLoadAE("not"),
+              FunctionLoadAE(ImpreciseNameA(List(), GlobalFunctionFamilyNameA("not"))),
               PackAE(
                 List(
                   FunctionCallAE(
-                    GlobalLoadAE("=="),
+                    FunctionLoadAE(ImpreciseNameA(List(), GlobalFunctionFamilyNameA("=="))),
                     PackAE(
                       List(
-                        LocalLoadAE("left", false),
-                        LocalLoadAE("right", false))))))))))))
+                        LocalLoadAE(name.addStep(CodeVarNameA("left")), false),
+                        LocalLoadAE(name.addStep(CodeVarNameA("right")), false))))))))))))
 }

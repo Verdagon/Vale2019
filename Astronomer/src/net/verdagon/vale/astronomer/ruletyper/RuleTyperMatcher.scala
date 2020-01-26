@@ -9,7 +9,8 @@ import net.verdagon.vale.astronomer._
 import scala.collection.immutable.List
 
 trait RuleTyperMatcherDelegate[Env, State] {
-  def lookupType(state: State, env: Env, name: String): (ITemplataType)
+  def lookupType(state: State, env: Env, name: ImpreciseNameS[CodeTypeNameS]): ITemplataType
+  def lookupType(state: State, env: Env, name: AbsoluteNameS[INameS]): ITemplataType
 }
 
 class RuleTyperMatcher[Env, State](
@@ -17,7 +18,7 @@ class RuleTyperMatcher[Env, State](
     delegate: RuleTyperMatcherDelegate[Env, State]) {
   private def addConclusion(
     conclusions: ConclusionsBox,
-    rune: String,
+    rune: AbsoluteNameA[IRuneA],
     tyype: ITemplataType):
   IRuleTyperMatchResult[Unit] = {
     conclusions.typeByRune.get(rune) match {
@@ -56,31 +57,34 @@ class RuleTyperMatcher[Env, State](
       conclusions: ConclusionsBox,
       rule: AtomSP):
   (IRuleTyperMatchResult[Unit]) = {
-      addConclusion(conclusions, rule.coordRune, CoordTemplataType) match {
-        case (imc @ RuleTyperMatchConflict(_, _, _)) => return (imc)
-        case (RuleTyperMatchSuccess(())) =>
-      }
+    val coordRuneA = Astronomer.translateRuneAbsoluteName(rule.coordRune)
 
-      rule.destructure match {
-        case None => ()
-        case Some(parts) => {
-          matchAgainstDestructure(state, env, conclusions, parts) match {
-            case (imc @ RuleTyperMatchConflict(_, _, _)) => return (imc)
-            case (RuleTyperMatchSuccess(())) => ()
-          }
+    addConclusion(conclusions, coordRuneA, CoordTemplataType) match {
+      case (imc @ RuleTyperMatchConflict(_, _, _)) => return (imc)
+      case (RuleTyperMatchSuccess(())) =>
+    }
+
+    rule.destructure match {
+      case None => ()
+      case Some(parts) => {
+        matchAgainstDestructure(state, env, conclusions, parts) match {
+          case (imc @ RuleTyperMatchConflict(_, _, _)) => return (imc)
+          case (RuleTyperMatchSuccess(())) => ()
         }
       }
+    }
 
-      rule.virtuality match {
-        case None => conclusions
-        case Some(AbstractSP) =>
-        case Some(OverrideSP(kindRune)) => {
-          addConclusion(conclusions, kindRune, KindTemplataType) match {
-            case (imc @ RuleTyperMatchConflict(_, _, _)) => return (imc)
-            case (RuleTyperMatchSuccess(())) =>
-          }
+    rule.virtuality match {
+      case None => conclusions
+      case Some(AbstractSP) =>
+      case Some(OverrideSP(kindRuneS)) => {
+        val kindRuneA = Astronomer.translateRuneAbsoluteName(kindRuneS)
+        addConclusion(conclusions, kindRuneA, KindTemplataType) match {
+          case (imc @ RuleTyperMatchConflict(_, _, _)) => return (imc)
+          case (RuleTyperMatchSuccess(())) =>
         }
       }
+    }
 
     (RuleTyperMatchSuccess(()))
   }
@@ -149,9 +153,8 @@ class RuleTyperMatcher[Env, State](
       conclusions: ConclusionsBox,
       expectedType: ITemplataType,
       rule: ITemplexS):
-  (IRuleTyperMatchResult[ITemplexA]) = {
+  IRuleTyperMatchResult[ITemplexA] = {
     (rule, expectedType) match {
-      case (AnonymousRuneST(), _) => (RuleTyperMatchSuccess(AnonymousRuneAT(expectedType)))
       case (IntST(value), IntegerTemplataType) => (RuleTyperMatchSuccess(IntAT(value)))
       case (BoolST(value), BooleanTemplataType) => (RuleTyperMatchSuccess(BoolAT(value)))
       case (MutabilityST(value), MutabilityTemplataType) => (RuleTyperMatchSuccess(MutabilityAT(value)))
@@ -159,91 +162,32 @@ class RuleTyperMatcher[Env, State](
       case (LocationST(value), LocationTemplataType) => (RuleTyperMatchSuccess(LocationAT(value)))
       case (OwnershipST(value), OwnershipTemplataType) => (RuleTyperMatchSuccess(OwnershipAT(value)))
       case (VariabilityST(value), VariabilityTemplataType) => (RuleTyperMatchSuccess(VariabilityAT(value)))
-      case (NameST(name), _) => {
-        val tyype = delegate.lookupType(state, env, name)
-        // Add something to this case to note that we've added it, and all its combinations,
-        // to the main match below.
-        tyype match {
-//          case TemplateTemplataType(_, _) =>
-          case KindTemplataType =>
-          case MutabilityTemplataType =>
-          case CoordTemplataType =>
-          case TemplateTemplataType(_, _) => // We check for strict equality, nothing fancy here.
-          case _ => vfail()
-        }
-        // Add something to this case to note that we've added it, and all its combinations,
-        // to the main match below.
-        expectedType match {
-//          case TemplateTemplataType(_, _) =>
-          case KindTemplataType =>
-          case CoordTemplataType =>
-          case MutabilityTemplataType =>
-          case IntegerTemplataType =>
-          case TemplateTemplataType(_, _) => // We check for strict equality, nothing fancy here.
-          case _ => vfail(expectedType.toString)
-        }
-        // When something's missing, consider all of the combinations it has with everything
-        // else, then once youve considered them, add them to the above matches.
-        (tyype, expectedType) match {
-          case (IntegerTemplataType, IntegerTemplataType) => {
-            (RuleTyperMatchSuccess(NameAT(name, expectedType)))
+      case (AbsoluteNameST(nameS), _) => {
+        val tyype = delegate.lookupType(state, env, nameS)
+        val nameA = Astronomer.translateAbsoluteName(nameS)
+        matchNameTypeAgainstTemplataType(conclusions, tyype, expectedType) match {
+          case RuleTyperMatchSuccess(()) => RuleTyperMatchSuccess(AbsoluteNameAT(nameA, expectedType))
+          case rtmc @ RuleTyperMatchConflict(_, _, _) => {
+            return (RuleTyperMatchConflict(conclusions.conclusions, nameA + "doesn't match needed " + expectedType, List(rtmc)))
           }
-          case (nonIntType, IntegerTemplataType) => {
-            (RuleTyperMatchConflict(conclusions.conclusions, "Expected an int, but was " + nonIntType, List()))
-          }
-          case (MutabilityTemplataType, MutabilityTemplataType) => {
-            (RuleTyperMatchSuccess(NameAT(name, expectedType)))
-          }
-          case (CoordTemplataType, CoordTemplataType) => {
-            (RuleTyperMatchSuccess(NameAT(name, expectedType)))
-          }
-          case (KindTemplataType, KindTemplataType | CoordTemplataType) => {
-            (RuleTyperMatchSuccess(NameAT(name, expectedType)))
-          }
-          case (TemplateTemplataType(paramTypes, returnType), TemplateTemplataType(expectedParamTypes, expectedReturnType)) => {
-            if (paramTypes.size != expectedParamTypes.size) {
-              return (RuleTyperMatchConflict(conclusions.conclusions, "Received " + paramTypes.size + " template params but expected " + expectedParamTypes.size, List()))
-            }
-            if (paramTypes != expectedParamTypes) {
-              return (RuleTyperMatchConflict(conclusions.conclusions, "Received " + paramTypes + " template params but expected " + expectedParamTypes, List()))
-            }
-            if (returnType != expectedReturnType) {
-              return (RuleTyperMatchConflict(conclusions.conclusions, "Received " + returnType + " return type but expected " + expectedReturnType, List()))
-            }
-            (RuleTyperMatchSuccess(NameAT(name, expectedType)))
-          }
-//          // Is this right? Can't we look it up as a coord, like we did with KindTemplata/CoordTemplataType?
-//          case (InterfaceTemplata(_, interfaceS), KindTemplataType | CoordTemplataType) => {
-//            if (Inferer.interfaceIsTemplate(interfaceS)) {
-//              RuleTyperMatchConflict(conclusions.conclusions, "Tried making a '" + name + "' but it's a template and no arguments were supplied!", List())
-//            } else {
-//              RuleTyperMatchSuccess(NameAT(name, expectedType))
-//            }
-//          }
-//          // Is this right? Can't we look it up as a coord, like we did with KindTemplata/CoordTemplataType?
-//          case (StructTemplata(_, structS), KindTemplataType | CoordTemplataType) => {
-//            if (Inferer.structIsTemplate(structS)) {
-//              RuleTyperMatchConflict(conclusions.conclusions, "Tried making a '" + name + "' but it's a template and no arguments were supplied!", List())
-//            } else {
-//              RuleTyperMatchSuccess(NameAT(name, expectedType))
-//            }
-//          }
-//          case (it @ InterfaceTemplata(_, _), TemplateTemplataType(paramTypes, KindTemplataType)) => {
-//            val TemplateTemplataType(paramTypes, resultType) = delegate.getInterfaceTemplataType(it)
-//            vimpl()
-//          }
-//          case (st @ StructTemplata(_, _), TemplateTemplataType(paramTypes, KindTemplataType)) => {
-//            val TemplateTemplataType(paramTypes, resultType) = delegate.getStructTemplataType(st)
-//            vimpl()
-//          }
-          case _ => (RuleTyperMatchConflict(conclusions.conclusions, "'" + name + "' doesn't match needed " + expectedType, List()))
         }
       }
-      case (RuneST(rune), _) => {
-        addConclusion(conclusions, rune, expectedType) match {
+      case (NameST(nameS), _) => {
+        val tyype = delegate.lookupType(state, env, nameS)
+        val nameA = Astronomer.translateImpreciseTypeName(nameS)
+        matchNameTypeAgainstTemplataType(conclusions, tyype, expectedType) match {
+          case RuleTyperMatchSuccess(()) => RuleTyperMatchSuccess(NameAT(nameA, expectedType))
+          case rtmc @ RuleTyperMatchConflict(_, _, _) => {
+            return (RuleTyperMatchConflict(conclusions.conclusions, nameA + "doesn't match needed " + expectedType, List(rtmc)))
+          }
+        }
+      }
+      case (RuneST(runeS), _) => {
+        val runeA = Astronomer.translateRuneAbsoluteName(runeS)
+        addConclusion(conclusions, runeA, expectedType) match {
           case (imc @ RuleTyperMatchConflict(_, _, _)) => return (RuleTyperMatchConflict(conclusions.conclusions, "Conflict in rune!", List(imc)))
           case (RuleTyperMatchSuccess(())) => {
-            (RuleTyperMatchSuccess(RuneAT(rune, expectedType)))
+            (RuleTyperMatchSuccess(RuneAT(runeA, expectedType)))
           }
         }
       }
@@ -375,6 +319,88 @@ class RuleTyperMatcher[Env, State](
     }
   }
 
+  def matchNameTypeAgainstTemplataType(
+    conclusions: ConclusionsBox,
+    tyype: ITemplataType,
+    expectedType: ITemplataType):
+  IRuleTyperMatchResult[Unit] = {
+    // Add something to this case to note that we've added it, and all its combinations,
+    // to the main match below.
+    tyype match {
+      case KindTemplataType =>
+      case MutabilityTemplataType =>
+      case CoordTemplataType =>
+      case TemplateTemplataType(_, _) => // We check for strict equality, nothing fancy here.
+      case _ => vfail()
+    }
+    // Add something to this case to note that we've added it, and all its combinations,
+    // to the main match below.
+    expectedType match {
+      case KindTemplataType =>
+      case CoordTemplataType =>
+      case MutabilityTemplataType =>
+      case IntegerTemplataType =>
+      case TemplateTemplataType(_, _) => // We check for strict equality, nothing fancy here.
+      case _ => vfail(expectedType.toString)
+    }
+    // When something's missing, consider all of the combinations it has with everything
+    // else, then once youve considered them, add them to the above matches.
+    (tyype, expectedType) match {
+      case (IntegerTemplataType, IntegerTemplataType) => {
+        (RuleTyperMatchSuccess(Unit))
+      }
+      case (nonIntType, IntegerTemplataType) => {
+        (RuleTyperMatchConflict(conclusions.conclusions, "Expected an int, but was " + nonIntType, List()))
+      }
+      case (MutabilityTemplataType, MutabilityTemplataType) => {
+        (RuleTyperMatchSuccess(Unit))
+      }
+      case (CoordTemplataType, CoordTemplataType) => {
+        (RuleTyperMatchSuccess(Unit))
+      }
+      case (KindTemplataType, KindTemplataType | CoordTemplataType) => {
+        (RuleTyperMatchSuccess(Unit))
+      }
+      case (TemplateTemplataType(paramTypes, returnType), TemplateTemplataType(expectedParamTypes, expectedReturnType)) => {
+        if (paramTypes.size != expectedParamTypes.size) {
+          return (RuleTyperMatchConflict(conclusions.conclusions, "Received " + paramTypes.size + " template params but expected " + expectedParamTypes.size, List()))
+        }
+        if (paramTypes != expectedParamTypes) {
+          return (RuleTyperMatchConflict(conclusions.conclusions, "Received " + paramTypes + " template params but expected " + expectedParamTypes, List()))
+        }
+        if (returnType != expectedReturnType) {
+          return (RuleTyperMatchConflict(conclusions.conclusions, "Received " + returnType + " return type but expected " + expectedReturnType, List()))
+        }
+        (RuleTyperMatchSuccess(Unit))
+      }
+      //          // Is this right? Can't we look it up as a coord, like we did with KindTemplata/CoordTemplataType?
+      //          case (InterfaceTemplata(_, interfaceS), KindTemplataType | CoordTemplataType) => {
+      //            if (Inferer.interfaceIsTemplate(interfaceS)) {
+      //              RuleTyperMatchConflict(conclusions.conclusions, "Tried making a '" + name + "' but it's a template and no arguments were supplied!", List())
+      //            } else {
+      //              RuleTyperMatchSuccess(NameAT(name, expectedType))
+      //            }
+      //          }
+      //          // Is this right? Can't we look it up as a coord, like we did with KindTemplata/CoordTemplataType?
+      //          case (StructTemplata(_, structS), KindTemplataType | CoordTemplataType) => {
+      //            if (Inferer.structIsTemplate(structS)) {
+      //              RuleTyperMatchConflict(conclusions.conclusions, "Tried making a '" + name + "' but it's a template and no arguments were supplied!", List())
+      //            } else {
+      //              RuleTyperMatchSuccess(NameAT(name, expectedType))
+      //            }
+      //          }
+      //          case (it @ InterfaceTemplata(_, _), TemplateTemplataType(paramTypes, KindTemplataType)) => {
+      //            val TemplateTemplataType(paramTypes, resultType) = delegate.getInterfaceTemplataType(it)
+      //            vimpl()
+      //          }
+      //          case (st @ StructTemplata(_, _), TemplateTemplataType(paramTypes, KindTemplataType)) => {
+      //            val TemplateTemplataType(paramTypes, resultType) = delegate.getStructTemplataType(st)
+      //            vimpl()
+      //          }
+      case _ => (RuleTyperMatchConflict(conclusions.conclusions, "Given name doesn't match needed " + expectedType, List()))
+    }
+  }
+
   def matchTypeAgainstRulexSR(
     state: State,
     env: Env,
@@ -439,20 +465,14 @@ class RuleTyperMatcher[Env, State](
       case _ => return (RuleTyperMatchConflict(conclusions.conclusions, "Type from above (" + expectedType + ") didn't match type from rule (" + rule.tyype + ")", List()))
     }
 
-    rule.rune match {
-      case None =>
-      case Some(rune) => {
-        addConclusion(conclusions, rune, expectedType) match {
-          case (imc @ RuleTyperMatchConflict(_, _, _)) => return (RuleTyperMatchConflict(conclusions.conclusions, "", List(imc)))
-          case (RuleTyperMatchSuccess(())) =>
-        }
-      }
+    val runeA = Astronomer.translateRuneAbsoluteName(rule.rune)
+
+    addConclusion(conclusions, runeA, expectedType) match {
+      case (imc @ RuleTyperMatchConflict(_, _, _)) => return (RuleTyperMatchConflict(conclusions.conclusions, "", List(imc)))
+      case (RuleTyperMatchSuccess(())) =>
     }
 
-    rule.rune match {
-      case Some(rune) => (RuleTyperMatchSuccess(TemplexAR(RuneAT(rune, expectedType))))
-      case None => (RuleTyperMatchSuccess(TemplexAR(AnonymousRuneAT(expectedType))))
-    }
+    RuleTyperMatchSuccess(TemplexAR(RuneAT(runeA, expectedType)))
   }
 
   def matchTypeAgainstCallSR(

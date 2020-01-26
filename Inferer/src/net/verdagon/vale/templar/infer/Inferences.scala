@@ -1,13 +1,14 @@
 package net.verdagon.vale.templar.infer
 
+import net.verdagon.vale.astronomer.{AbsoluteNameA, IRuneA}
 import net.verdagon.vale.templar.templata.ITemplata
 import net.verdagon.vale.{vassert, vwat}
 
 
 case class Inferences(
-  templatasByRune: Map[String, ITemplata],
-  possibilitiesByRune: Map[String, List[ITemplata]]) {
-  def addConclusion(rune: String, templata: ITemplata): Inferences = {
+  templatasByRune: Map[AbsoluteNameA[IRuneA], ITemplata],
+  possibilitiesByRune: Map[AbsoluteNameA[IRuneA], List[ITemplata]]) {
+  def addConclusion(rune: AbsoluteNameA[IRuneA], templata: ITemplata): Inferences = {
     templatasByRune.get(rune) match {
       case None =>
       case Some(existingConclusion) => vassert(templata == existingConclusion)
@@ -16,7 +17,7 @@ case class Inferences(
       templatasByRune + (rune -> templata),
       possibilitiesByRune - rune)
   }
-  def addPossibilities(rune: String, possibilities: List[ITemplata]): Inferences = {
+  def addPossibilities(rune: AbsoluteNameA[IRuneA], possibilities: List[ITemplata]): Inferences = {
     if (possibilities.size == 0) {
       vwat()
     } else if (possibilities.size == 1) {
@@ -33,24 +34,24 @@ case class Inferences(
     }
   }
   // Returns an Inferences without this rune, and gives all the possibilities for that rune
-  def pop(rune: String): (Inferences, List[ITemplata]) = {
+  def pop(rune: AbsoluteNameA[IRuneA]): (Inferences, List[ITemplata]) = {
     val inferencesWithoutThatRune = Inferences(templatasByRune, possibilitiesByRune - rune)
     (inferencesWithoutThatRune, possibilitiesByRune(rune))
   }
 }
 
 case class InferencesBox(var inferences: Inferences) {
-  def templatasByRune: Map[String, ITemplata] = inferences.templatasByRune
-  def possibilitiesByRune: Map[String, List[ITemplata]] = inferences.possibilitiesByRune
+  def templatasByRune: Map[AbsoluteNameA[IRuneA], ITemplata] = inferences.templatasByRune
+  def possibilitiesByRune: Map[AbsoluteNameA[IRuneA], List[ITemplata]] = inferences.possibilitiesByRune
 
-  def addConclusion(rune: String, templata: ITemplata): Unit = {
+  def addConclusion(rune: AbsoluteNameA[IRuneA], templata: ITemplata): Unit = {
     inferences = inferences.addConclusion(rune, templata)
   }
-  def addPossibilities(rune: String, possibilities: List[ITemplata]): Unit = {
+  def addPossibilities(rune: AbsoluteNameA[IRuneA], possibilities: List[ITemplata]): Unit = {
     inferences = inferences.addPossibilities(rune, possibilities)
   }
   // Returns an Inferences without this rune, and gives all the possibilities for that rune
-  def pop(rune: String): List[ITemplata] = {
+  def pop(rune: AbsoluteNameA[IRuneA]): List[ITemplata] = {
     val (newInferences, result) = inferences.pop(rune)
     inferences = newInferences
     result

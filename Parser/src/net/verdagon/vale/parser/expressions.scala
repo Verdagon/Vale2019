@@ -26,7 +26,7 @@ case class LetPE(
     templateRules: List[IRulexPR],
     pattern: PatternPP,
     expr: IExpressionPE
-) extends IExpressionPE
+) extends IExpressionPE with Positional
 
 case class RepeaterBlockPE(expression: IExpressionPE) extends IExpressionPE
 

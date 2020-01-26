@@ -39,7 +39,6 @@ object BuiltInFunctions {
       .addEntry(
         CallTemplar.DESTRUCTOR_NAME,
         FunctionEnvEntry(
-          None,
           FunctionA(
             s.CodeLocationS(CallTemplar.DESTRUCTOR_NAME + ".builtin.vale", 0, 0),
             CallTemplar.DESTRUCTOR_NAME,
@@ -61,7 +60,7 @@ object BuiltInFunctions {
                     OrAR(List(TemplexAR(OwnershipAT(OwnP)), TemplexAR(OwnershipAT(ShareP)))),
                     CallAR(
                       "passThroughIfConcrete",
-                      List(TemplexAR(AnonymousRuneAT(KindTemplataType))),
+                      List(TemplexAR(RuneAT(ImplicitRuneS(0), KindTemplataType))),
                       KindTemplataType)))),
               EqualsAR(
                 TemplexAR(RuneAT("V", CoordTemplataType)),
@@ -121,7 +120,6 @@ object BuiltInFunctions {
     (
     currentlyConstructingEnv
       .addFunction(
-        None,
         FunctionA(
           s.CodeLocationS(CallTemplar.INTERFACE_DESTRUCTOR_NAME + ".builtin.vale", 0, 0),
           CallTemplar.INTERFACE_DESTRUCTOR_NAME,
@@ -143,7 +141,7 @@ object BuiltInFunctions {
                   OrAR(List(TemplexAR(OwnershipAT(OwnP)), TemplexAR(OwnershipAT(ShareP)))),
                   CallAR(
                     "passThroughIfInterface",
-                    List(TemplexAR(AnonymousRuneAT(KindTemplataType))),
+                    List(TemplexAR(RuneAT(ImplicitRuneS(0), KindTemplataType))),
                     KindTemplataType)))),
             EqualsAR(
               TemplexAR(RuneAT("V", CoordTemplataType)),
@@ -186,7 +184,6 @@ object BuiltInFunctions {
     (
     currentlyConstructingEnv
       .addFunction(
-        None,
         FunctionA(
           s.CodeLocationS(CallTemplar.INTERFACE_DESTRUCTOR_NAME + ".builtin.vale", 0, 1),
           CallTemplar.INTERFACE_DESTRUCTOR_NAME,
@@ -208,7 +205,7 @@ object BuiltInFunctions {
                   OrAR(List(TemplexAR(OwnershipAT(OwnP)), TemplexAR(OwnershipAT(ShareP)))),
                   CallAR(
                     "passThroughIfStruct",
-                    List(TemplexAR(AnonymousRuneAT(KindTemplataType))),
+                    List(TemplexAR(RuneAT(ImplicitRuneS(0), KindTemplataType))),
                     KindTemplataType)))),
             CallAR("passThroughIfInterface", List(TemplexAR(RuneAT("I", KindTemplataType))), KindTemplataType),
             EqualsAR(
@@ -263,7 +260,6 @@ object BuiltInFunctions {
     (
       currentlyConstructingEnv
         .addFunction(
-          None,
           FunctionA(
             s.CodeLocationS(CallTemplar.DROP_FUNCTION_NAME + ".builtin.vale", 0, 0),
             CallTemplar.DROP_FUNCTION_NAME,
@@ -305,9 +301,8 @@ object BuiltInFunctions {
   private def addArrayLen(currentlyConstructingEnv: NamespaceEnvironment): NamespaceEnvironment = {
     currentlyConstructingEnv
       .addFunction(
-        None,
         FunctionA(
-          s.CodeLocationS("len.builtin.vale", 0, 0),
+          s.CodeLocationS(0, 0),
           "len",
           List(),
           0,
@@ -329,8 +324,8 @@ object BuiltInFunctions {
                     CallAT(
                       NameAT("Array", TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), KindTemplataType)),
                       List(
-                        AnonymousRuneAT(MutabilityTemplataType),
-                        AnonymousRuneAT(CoordTemplataType)),
+                        RuneAT(ImplicitRuneS(0), MutabilityTemplataType),
+                        RuneAT("__1", CoordTemplataType)),
                       KindTemplataType))))),
             EqualsAR(
               TemplexAR(RuneAT("I", CoordTemplataType)),
@@ -344,9 +339,8 @@ object BuiltInFunctions {
                   ArrayLengthAE(
                     LocalLoadAE("arr", false))))))))
       .addFunction(
-        None,
         FunctionA(
-          s.CodeLocationS("len.builtin.vale", 0, 1),
+          s.CodeLocationS(0, 1),
           "len",
           List(),
           0,
@@ -389,9 +383,8 @@ object BuiltInFunctions {
   private def addPanic(currentlyConstructingEnv: NamespaceEnvironment): NamespaceEnvironment = {
     currentlyConstructingEnv
       .addFunction(
-        None,
         FunctionA(
-          s.CodeLocationS("panic.builtin.vale", 0, 0),
+          s.CodeLocationS(0, 0),
           "panic",
           List(),
           0,

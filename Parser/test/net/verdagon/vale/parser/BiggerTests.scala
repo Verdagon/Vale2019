@@ -49,10 +49,6 @@ class BiggerTests extends FunSuite with Matchers with Collector {
     }
   }
 
-  test("Empty lambda") {
-    compile(VParser.expression, "{}") shouldEqual VParser.emptyParamlessLambda(true)
-  }
-
   test("Simple while loop") {
     compile(VParser.statement,"while () {}") shouldEqual
         WhilePE(BlockPE(List(VoidPE())), BlockPE(List(VoidPE())))
@@ -159,9 +155,10 @@ class BiggerTests extends FunSuite with Matchers with Collector {
     compile(
       VParser.impl,
       """
-        |impl SomeStruct<T> for MyInterface<T>;
+        |impl<T> SomeStruct<T> for MyInterface<T>;
       """.stripMargin) shouldEqual
       ImplP(
+        List("T"),
         List(),
         CallPPT(NameOrRunePPT("SomeStruct"),List(NameOrRunePPT("T"))),
         CallPPT(NameOrRunePPT("MyInterface"),List(NameOrRunePPT("T"))))
@@ -174,6 +171,7 @@ class BiggerTests extends FunSuite with Matchers with Collector {
         |impl MyIntIdentity for IFunction1<mut, Int, Int>;
         |""".stripMargin) shouldEqual
       ImplP(
+        List(),
         List(),
         NameOrRunePPT("MyIntIdentity"),
         CallPPT(NameOrRunePPT("IFunction1"),List(MutabilityPPT(MutableP), NameOrRunePPT("Int"), NameOrRunePPT("Int"))))

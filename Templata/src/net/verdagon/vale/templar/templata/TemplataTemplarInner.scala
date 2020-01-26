@@ -2,7 +2,7 @@ package net.verdagon.vale.templar.templata
 
 import net.verdagon.vale.astronomer._
 import net.verdagon.vale.parser.ShareP
-import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
+import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.{vassert, vfail, vimpl}
 
@@ -20,7 +20,8 @@ case class TypeDistance(upcastDistance: Int, ownershipDistance: Int) {
 }
 
 trait ITemplataTemplarInnerDelegate[Env, State] {
-  def lookupTemplata(env: Env, name: String): ITemplata
+  def lookupTemplata(env: Env, name: AbsoluteNameA[INameA]): ITemplata
+  def lookupTemplata(env: Env, name: ImpreciseNameA[IImpreciseNameStepA]): ITemplata
 
   def getMutability(state: State, kind: Kind): Mutability
 
@@ -429,7 +430,17 @@ class TemplataTemplarInner[Env, State](delegate: ITemplataTemplarInnerDelegate[E
   def lookupTemplata(
     env: Env,
     state: State,
-    name: String,
+    name: AbsoluteNameA[INameA],
+    expectedType: ITemplataType):
+  (ITemplata) = {
+    val uncoercedTemplata = delegate.lookupTemplata(env, name)
+    coerce(state, uncoercedTemplata, expectedType)
+  }
+
+  def lookupTemplata(
+    env: Env,
+    state: State,
+    name: ImpreciseNameA[IImpreciseNameStepA],
     expectedType: ITemplataType):
   (ITemplata) = {
     val uncoercedTemplata = delegate.lookupTemplata(env, name)

@@ -1,7 +1,7 @@
 package net.verdagon.vale.templar.templata
 
 import net.verdagon.vale.astronomer._
-import net.verdagon.vale.templar.env.{IEnvironment, NamespaceEnvironment}
+import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.{vassert, vfail}
 
@@ -38,8 +38,23 @@ case class ArrayTemplateTemplata() extends ITemplata {
   }
 }
 
+
 case class FunctionTemplata(
-  outerEnv: IEnvironment, // has the name of the surrounding environment, does NOT include function's name.
+  // The environment this function was declared in.
+  // Has the name of the surrounding environment, does NOT include function's name.
+  // We need this because, for example, lambdas need to find their underlying struct
+  // somewhere.
+  // See TMRE for more on these environments.
+  outerEnv: IEnvironment,
+
+  // The containers are the structs/interfaces/impls/functions that this thing is inside.
+  // E.g. if LinkedList has a Node substruct, then the Node's templata will have one
+  // container, the LinkedList.
+  // See NTKPRR for why we have these parents.
+  unevaluatedContainers: List[IContainer],
+
+  // This is the env entry that the function came from originally. It has all the parent
+  // structs and interfaces. See NTKPRR for more.
   function: FunctionA
 ) extends ITemplata {
   override def order: Int = 6
@@ -58,7 +73,19 @@ case class FunctionTemplata(
 }
 
 case class StructTemplata(
-  env: NamespaceEnvironment, // has the name of the surrounding environment, does NOT include struct's name.
+  // The namespace this interface was declared in.
+  // has the name of the surrounding environment, does NOT include struct's name.
+  // See TMRE for more on these environments.
+  env: NamespaceEnvironment,
+//
+//  // The containers are the structs/interfaces/impls/functions that this thing is inside.
+//  // E.g. if LinkedList has a Node substruct, then the Node's templata will have one
+//  // container, the LinkedList.
+//  // See NTKPRR for why we have these parents.
+//  containers: List[IContainer],
+
+  // This is the env entry that the struct came from originally. It has all the parent
+  // structs and interfaces. See NTKPRR for more.
   originStruct: StructA,
 ) extends ITemplata {
   override def order: Int = 7
@@ -71,14 +98,31 @@ case class StructTemplata(
   // feel free to remove this assertion.
   vassert(!env.fullName.steps.lastOption.map(_.humanName).contains(originStruct.name))
 
-
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func)
   }
 }
 
+sealed trait IContainer
+case class ContainerInterface(interface: InterfaceA) extends IContainer
+case class ContainerStruct(struct: StructA) extends IContainer
+case class ContainerFunction(function: FunctionA) extends IContainer
+case class ContainerImpl(impl: ImplA) extends IContainer
+
 case class InterfaceTemplata(
-  env: NamespaceEnvironment, // has the name of the surrounding environment, does NOT include interface's name.
+  // The namespace this interface was declared in.
+  // Has the name of the surrounding environment, does NOT include interface's name.
+  // See TMRE for more on these environments.
+  env: NamespaceEnvironment,
+//
+//  // The containers are the structs/interfaces/impls/functions that this thing is inside.
+//  // E.g. if LinkedList has a Node substruct, then the Node's templata will have one
+//  // container, the LinkedList.
+//  // See NTKPRR for why we have these parents.
+//  containers: List[IContainer],
+
+  // This is the env entry that the interface came from originally. It has all the parent
+  // structs and interfaces. See NTKPRR for more.
   originInterface: InterfaceA
 ) extends ITemplata {
   override def order: Int = 8
@@ -97,7 +141,18 @@ case class InterfaceTemplata(
 }
 
 case class ImplTemplata(
+  // The namespace this interface was declared in.
+  // See TMRE for more on these environments.
   env: IEnvironment,
+//
+//  // The containers are the structs/interfaces/impls/functions that this thing is inside.
+//  // E.g. if LinkedList has a Node substruct, then the Node's templata will have one
+//  // container, the LinkedList.
+//  // See NTKPRR for why we have these parents.
+//  containers: List[IContainer],
+
+  // This is the impl that the interface came from originally. It has all the parent
+  // structs and interfaces. See NTKPRR for more.
   impl: ImplA
 ) extends ITemplata {
   override def order: Int = 9

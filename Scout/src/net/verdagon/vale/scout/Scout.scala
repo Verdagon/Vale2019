@@ -1,63 +1,59 @@
 package net.verdagon.vale.scout
 
 import net.verdagon.vale.parser._
-import net.verdagon.vale.scout.patterns.PatternScout
-import net.verdagon.vale.scout.patterns.PatternScout.{InitialRulesAndRunes, RuleState, RuleStateBox}
+import net.verdagon.vale.scout.patterns.{PatternScout, RuleState, RuleStateBox}
 import net.verdagon.vale.scout.predictor.Conclusions
 import net.verdagon.vale.scout.rules._
 import net.verdagon.vale.scout.templatepredictor.PredictorEvaluator
 import net.verdagon.vale.vimpl
 
 sealed trait IEnvironment {
-  def allUserDeclaredRunes(): Set[String]
-  def file: String
+  def name: AbsoluteNameS[INameS]
+  def allUserDeclaredRunes(): Set[AbsoluteNameS[IRuneS]]
 }
 
 // Someday we might split this into NamespaceEnvironment and CitizenEnvironment
 case class Environment(
-    file: String,
     parentEnv: Option[Environment],
-    userDeclaredRunes: Set[String]
+    name: AbsoluteNameS[INameS],
+    userDeclaredRunes: Set[AbsoluteNameS[IRuneS]]
 ) extends IEnvironment {
-  override def allUserDeclaredRunes(): Set[String] = {
+  override def allUserDeclaredRunes(): Set[AbsoluteNameS[IRuneS]] = {
     userDeclaredRunes ++ parentEnv.toList.flatMap(pe => pe.allUserDeclaredRunes())
   }
 }
 
 case class FunctionEnvironment(
-    parentEnv: IEnvironment,
-    userDeclaredRunes: Set[String],
+    name: AbsoluteNameS[IFunctionDeclarationNameS],
+    parentEnv: Option[IEnvironment],
+    userDeclaredRunes: Set[AbsoluteNameS[IRuneS]],
     // So that when we run into a magic param, we can add this to the number of previous magic
     // params to get the final param index.
     numExplicitParams: Int
 ) extends IEnvironment {
-  def file: String = parentEnv.file
-  override def allUserDeclaredRunes(): Set[String] = {
-    userDeclaredRunes ++ parentEnv.allUserDeclaredRunes()
+  override def allUserDeclaredRunes(): Set[AbsoluteNameS[IRuneS]] = {
+    userDeclaredRunes ++ parentEnv.toList.flatMap(_.allUserDeclaredRunes())
   }
 }
 
 case class StackFrame(
+    name: AbsoluteNameS[IFunctionDeclarationNameS],
     parentEnv: FunctionEnvironment,
     maybeParent: Option[StackFrame],
     locals: VariableDeclarations) {
   def ++(newVars: VariableDeclarations): StackFrame = {
-    StackFrame(parentEnv, maybeParent, locals ++ newVars)
+    StackFrame(name, parentEnv, maybeParent, locals ++ newVars)
   }
   def allDeclarations: VariableDeclarations = {
     locals ++ maybeParent.map(_.allDeclarations).getOrElse(Scout.noDeclarations)
   }
-  def getJumps(name: String): Option[Int] = {
-    if (locals.contains(name)) {
-      Some(0)
-    } else {
-      maybeParent match {
-        case None => None
-        case Some(parent) => {
-          parent.getJumps(name) match {
-            case None => None
-            case Some(num) => Some(num + 1)
-          }
+  def findVariable(name: String): Option[AbsoluteNameS[IVarNameS]] = {
+    locals.find(name) match {
+      case Some(fullNameS) => Some(fullNameS)
+      case None => {
+        maybeParent match {
+          case None => None
+          case Some(parent) => parent.findVariable(name)
         }
       }
     }
@@ -68,87 +64,93 @@ object Scout {
   def noVariableUses = VariableUses(Set())
   def noDeclarations = VariableDeclarations(Set())
 
-  val unnamedParamNamePrefix = "__param_"
-  val unrunedParamRunePrefix = "__ParamRune_"
-  val unrunedParamOverrideRuneSuffix = "Override"
-  val unnamedMemberNameSeparator = "_mem_"
-  val memberRuneSeparator = "_Mem_"
+//  val unnamedParamNamePrefix = "__param_"
+//  val unrunedParamOverrideRuneSuffix = "Override"
+//  val unnamedMemberNameSeparator = "_mem_"
 
   def scoutProgram(program: Program0): ProgramS = {
     val Program0(structsP, interfacesP, implsP, functions0) = program;
-    val rootEnv = Environment("userInput.vale", None, Set())
-    val structsS = structsP.map(scoutStruct(rootEnv, _));
-    val interfacesS = interfacesP.map(scoutInterface(rootEnv, _));
-    val implsS = implsP.map(scoutImpl(rootEnv, _))
-    val functionsS = functions0.map(FunctionScout.scoutTopLevelFunction(rootEnv, _))
+    val file = "in.vale"
+    val structsS = structsP.map(scoutStruct(file, _));
+    val interfacesS = interfacesP.map(scoutInterface(file, _));
+    val implsS = implsP.map(scoutImpl(file, _))
+    val functionsS = functions0.map(FunctionScout.scoutTopLevelFunction("in.vale", _))
     ProgramS(structsS, interfacesS, implsS, functionsS)
   }
 
-  private def scoutImpl(rootEnv: Environment, impl0: ImplP): ImplS = {
-    val ImplP(templateRulesP, struct, interface) = impl0
+  private def scoutImpl(file: String, impl0: ImplP): ImplS = {
+    val ImplP(identifyingRuneNames, templateRulesP, struct, interface) = impl0
 
-    val userDeclaredRunes =
+    val codeLocation = CodeLocationS(impl0.pos.line, impl0.pos.column)
+    val nameS = AbsoluteNameS(file, List(), ImplNameS(codeLocation))
+
+    val identifyingRunes: List[AbsoluteNameS[IRuneS]] =
+      identifyingRuneNames
+        .map(identifyingRuneName => nameS.addStep(CodeRuneS(identifyingRuneName)))
+    val runesFromRules =
       RulePUtils.getOrderedRuneDeclarationsFromRulexesWithDuplicates(templateRulesP)
-    val implEnv = Environment(rootEnv.file, Some(rootEnv), userDeclaredRunes.toSet)
+        .map(identifyingRuneName => nameS.addStep(CodeRuneS(identifyingRuneName)))
+    val userDeclaredRunes = identifyingRunes ++ runesFromRules
 
-    val codeLocation = CodeLocationS("userInput.vale", impl0.pos.line, impl0.pos.column)
+    val implEnv = Environment(None, nameS, userDeclaredRunes.toSet)
 
-    val initialRulesAndRunes = InitialRulesAndRunes(List(), templateRulesP, List(), None)
+    val rate = RuleStateBox(RuleState(implEnv.name, 0))
+    val userRulesS =
+      RuleScout.translateRulexes(rate, implEnv.allUserDeclaredRunes(), templateRulesP)
 
-    val rate = RuleStateBox(RuleState(RuleScout.translateRulexes(implEnv.allUserDeclaredRunes(), templateRulesP)))
-
-    val declaredRunes = vimpl()
-
-    val structRune =
-      PatternScout.translateMaybeTypeIntoRune(
-        declaredRunes,
-        initialRulesAndRunes,
-        rate,
-        Some(struct),
-        KindTypePR,
-        None)
-
-    val interfaceRune =
-      PatternScout.translateMaybeTypeIntoRune(
-        declaredRunes,
-        initialRulesAndRunes,
-        rate,
-        Some(interface),
-        KindTypePR,
-        None)
-
-    val rulesS = rate.rate.rulexesS
-    val allRunes = PredictorEvaluator.getAllRunes(List(), rulesS, List(), None)
-    val Conclusions(knowableValueRunes, _) =
-      PredictorEvaluator.solve(rate.rate.rulexesS, List())
+    // We gather all the runes from the scouted rules to be consistent with the function scout.
+    val allRunes = PredictorEvaluator.getAllRunes(implEnv.name, identifyingRunes, userRulesS, List(), None)
+    val Conclusions(knowableValueRunes, _) = PredictorEvaluator.solve(userRulesS, List())
     val isTemplate = knowableValueRunes != allRunes
 
-    ImplS(codeLocation, rulesS, allRunes, isTemplate, structRune, interfaceRune)
+    val (implicitRulesFromStruct, structRune) =
+      PatternScout.translateMaybeTypeIntoRune(
+        userDeclaredRunes.toSet,
+        rate,
+        Some(struct),
+        KindTypePR)
+
+    val (implicitRulesFromInterface, interfaceRune) =
+      PatternScout.translateMaybeTypeIntoRune(
+        userDeclaredRunes.toSet,
+        rate,
+        Some(interface),
+        KindTypePR)
+
+    val rulesS = userRulesS ++ implicitRulesFromStruct ++ implicitRulesFromInterface
+
+    ImplS(nameS, rulesS, allRunes, isTemplate, structRune, interfaceRune)
   }
 
-  private def scoutStruct(rootEnv: Environment, head: StructP): StructS = {
-    val StructP(structName, mutability, maybeIdentifyingRunes, rulesP, members) = head
-    val codeLocation = CodeLocationS(rootEnv.file, head.pos.line, head.pos.column)
+  private def scoutStruct(file: String, head: StructP): StructS = {
+    val StructP(structHumanName, mutability, maybeIdentifyingRunes, rulesP, members) = head
+    val codeLocation = CodeLocationS(head.pos.line, head.pos.column)
+    val structName = AbsoluteNameS(file, List(), TopLevelCitizenDeclarationNameS(structHumanName, codeLocation))
 
-    val identifyingRunes = maybeIdentifyingRunes.getOrElse(List())
-    val userDeclaredRunes =
-      identifyingRunes ++
+    val identifyingRunes: List[AbsoluteNameS[IRuneS]] =
+      maybeIdentifyingRunes.getOrElse(List())
+        .map(identifyingRuneName => structName.addStep(CodeRuneS(identifyingRuneName)))
+    val runesFromRules =
       RulePUtils.getOrderedRuneDeclarationsFromRulexesWithDuplicates(head.templateRules)
-    val structEnv = Environment(rootEnv.file, Some(rootEnv), userDeclaredRunes.toSet)
+        .map(identifyingRuneName => structName.addStep(CodeRuneS(identifyingRuneName)))
+    val userDeclaredRunes = identifyingRunes ++ runesFromRules
+    val structEnv = Environment(None, structName, userDeclaredRunes.toSet)
 
-    val memberRunes = members.indices.map(Scout.makeMemberRune(codeLocation, _))
+    val memberRunes = members.indices.map(index => structName.addStep(MemberRuneS(index)))
     val memberRules =
       memberRunes.zip(members.map(_.tyype)).map({ case (memberRune, memberType) =>
         EqualsSR(
-          TypedSR(Some(memberRune), CoordTypeSR),
+          TypedSR(memberRune, CoordTypeSR),
           TemplexSR(TemplexScout.translateTemplex(structEnv.allUserDeclaredRunes(), memberType)))
       })
+
+    val rate = RuleStateBox(RuleState(structEnv.name, 0))
     val rulesS =
-      RuleScout.translateRulexes(structEnv.allUserDeclaredRunes(), rulesP) ++
+      RuleScout.translateRulexes(rate, structEnv.allUserDeclaredRunes(), rulesP) ++
       memberRules
 
     // We gather all the runes from the scouted rules to be consistent with the function scout.
-    val allRunes = PredictorEvaluator.getAllRunes(identifyingRunes, rulesS, List(), None)
+    val allRunes = PredictorEvaluator.getAllRunes(structEnv.name, identifyingRunes, rulesS, List(), None)
     val Conclusions(knowableValueRunes, predictedTypeByRune) = PredictorEvaluator.solve(rulesS, List())
     val isTemplate = knowableValueRunes != allRunes
 
@@ -171,8 +173,6 @@ object Scout {
     val maybePredictedMutability = Some(mutability)
 
     StructS(
-      codeLocation,
-      List(),
       structName,
       mutability,
       maybePredictedMutability,
@@ -184,20 +184,25 @@ object Scout {
       membersS)
   }
 
-  private def scoutInterface(rootEnv: Environment, headP: InterfaceP): InterfaceS = {
-    val InterfaceP(name, mutability, maybeIdentifyingRunes, rulesP, internalMethodsP) = headP
-    val codeLocation = CodeLocationS(rootEnv.file, headP.pos.line, headP.pos.column)
+  private def scoutInterface(file: String, headP: InterfaceP): InterfaceS = {
+    val InterfaceP(interfaceHumanName, mutability, maybeIdentifyingRunes, rulesP, internalMethodsP) = headP
+    val codeLocation = CodeLocationS(headP.pos.line, headP.pos.column)
+    val interfaceFullName = AbsoluteNameS(file, List(), TopLevelCitizenDeclarationNameS(interfaceHumanName, codeLocation))
 
-    val identifyingRunes = maybeIdentifyingRunes.getOrElse(List())
-    val userDeclaredRunes =
-      identifyingRunes ++
-      RulePUtils.getOrderedRuneDeclarationsFromRulexesWithDuplicates(headP.templateRules)
-    val interfaceEnv = Environment(rootEnv.file, Some(rootEnv), userDeclaredRunes.toSet)
+    val identifyingRunes: List[AbsoluteNameS[IRuneS]] =
+      maybeIdentifyingRunes.getOrElse(List())
+        .map(identifyingRuneName => interfaceFullName.addStep(CodeRuneS(identifyingRuneName)))
+    val runesFromRules =
+      RulePUtils.getOrderedRuneDeclarationsFromRulexesWithDuplicates(rulesP)
+        .map(identifyingRuneName => interfaceFullName.addStep(CodeRuneS(identifyingRuneName)))
+    val userDeclaredRunes = identifyingRunes ++ runesFromRules
+    val interfaceEnv = Environment(None, interfaceFullName, userDeclaredRunes.toSet)
 
-    val rulesS = RuleScout.translateRulexes(interfaceEnv.allUserDeclaredRunes(), rulesP)
+    val ruleState = RuleStateBox(RuleState(interfaceEnv.name, 0))
+    val rulesS = RuleScout.translateRulexes(ruleState, interfaceEnv.allUserDeclaredRunes(), rulesP)
 
     // We gather all the runes from the scouted rules to be consistent with the function scout.
-    val allRunes = PredictorEvaluator.getAllRunes(identifyingRunes, rulesS, List(), None)
+    val allRunes = PredictorEvaluator.getAllRunes(interfaceFullName, identifyingRunes, rulesS, List(), None)
     val Conclusions(knowableValueRunes, predictedTypeByRune) =
       PredictorEvaluator.solve(rulesS, List())
     val isTemplate = knowableValueRunes != userDeclaredRunes.toSet
@@ -219,9 +224,7 @@ object Scout {
 
     val interfaceS =
       InterfaceS(
-        codeLocation,
-        List(),
-        name,
+        interfaceFullName,
         mutability,
         maybePredictedMutability,
         identifyingRunes,
@@ -241,9 +244,5 @@ object Scout {
         Some(scoutProgram(program0))
       }
     }
-  }
-
-  def makeMemberRune(structCodeLocation: CodeLocationS, index: Int): String = {
-    structCodeLocation.file + ":" + structCodeLocation.line + ":" + structCodeLocation.char + memberRuneSeparator + index
   }
 }

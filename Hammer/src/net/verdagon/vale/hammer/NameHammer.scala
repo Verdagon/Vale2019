@@ -3,6 +3,7 @@ package net.verdagon.vale.hammer
 import net.verdagon.vale.hinputs.Hinputs
 import net.verdagon.vale.metal._
 import net.verdagon.vale.scout.CodeLocationS
+import net.verdagon.vale.templar.Templar
 import net.verdagon.vale.templar.env.{IEnvironment, NamespaceEnvironment}
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar.types._
@@ -40,17 +41,17 @@ object NameHammer {
         (KindTemplataH(kindH))
       }
       case ArrayTemplateTemplata() => ArrayTemplateTemplataH()
-      case FunctionTemplata(outerEnv, function) => {
+      case FunctionTemplata(outerEnv, unevaluatedContainers, function) => {
         val (outerEnvNameH) = translateName(hinputs, hamuts, outerEnv.fullName)
-        (FunctionTemplataH(outerEnvNameH, function.name, Conversions.evaluateCodeLocation(function.codeLocation)))
+        (FunctionTemplataH(outerEnvNameH, unevaluatedContainers.map(translateContainer), function.name, Conversions.evaluateCodeLocation(function.codeLocation)))
       }
       case StructTemplata(outerEnv, struct) => {
         val (outerEnvNameH) = translateName(hinputs, hamuts, outerEnv.fullName)
         (StructTemplataH(outerEnvNameH, struct.name, Conversions.evaluateCodeLocation(struct.codeLocation)))
       }
-      case InterfaceTemplata(outerEnv, struct) => {
+      case InterfaceTemplata(outerEnv, interface) => {
         val (outerEnvNameH) = translateName(hinputs, hamuts, outerEnv.fullName)
-        (InterfaceTemplataH(outerEnvNameH, struct.name, Conversions.evaluateCodeLocation(struct.codeLocation)))
+        (InterfaceTemplataH(outerEnvNameH, interface.name, Conversions.evaluateCodeLocation(interface.codeLocation)))
       }
       case ImplTemplata(outerEnv, impl) => {
         val (outerEnvNameH) = translateName(hinputs, hamuts, outerEnv.fullName)
@@ -67,6 +68,15 @@ object NameHammer {
       case LocationTemplata(location) => LocationTemplataH(Conversions.evaluateLocation(location))
       case BooleanTemplata(value) => BooleanTemplataH(value)
       case IntegerTemplata(value) => IntegerTemplataH(value)
+    }
+  }
+
+  def translateContainer(container: IContainer): IContainerH = {
+    container match {
+      case ContainerInterface(interface) => IContainerH(interface.name, Conversions.evaluateCodeLocation(interface.codeLocation))
+      case ContainerStruct(struct) => IContainerH(struct.name, Conversions.evaluateCodeLocation(struct.codeLocation))
+      case ContainerFunction(function) => IContainerH(function.name, Conversions.evaluateCodeLocation(function.codeLocation))
+      case ContainerImpl(impl) => IContainerH(Templar.IMPL_NAME, Conversions.evaluateCodeLocation(impl.codeLocation))
     }
   }
 }

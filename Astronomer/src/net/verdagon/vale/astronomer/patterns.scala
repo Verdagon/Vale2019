@@ -8,17 +8,17 @@ case class AtomAP(
   // This is an option because in PatternTemplar, if it's None, we'll explode the
   // expression into the destructure, and if it's Some, we'll make this variable
   // an owning ref.
-  name: Option[CaptureP],
+  name: CaptureA,
   virtuality: Option[VirtualityAP],
-  coordRune: String,
-  destructure: Option[List[Option[AtomAP]]])
+  coordRune: AbsoluteNameA[IRuneA],
+  destructure: Option[List[AtomAP]])
 
 sealed trait VirtualityAP
 case object AbstractAP extends VirtualityAP
-case class OverrideAP(kindRune: String) extends VirtualityAP
+case class OverrideAP(kindRune: AbsoluteNameA[IRuneA]) extends VirtualityAP
 
 object PatternSUtils {
-  def getDistinctOrderedRunesForPattern(pattern: AtomAP): List[String] = {
+  def getDistinctOrderedRunesForPattern(pattern: AtomAP): List[AbsoluteNameA[IRuneA]] = {
     val runesFromVirtuality =
       pattern.virtuality match {
         case None => List()
@@ -26,7 +26,7 @@ object PatternSUtils {
         case Some(OverrideAP(kindRune)) => List(kindRune)
       }
     val runesFromDestructures =
-      pattern.destructure.toList.flatten.flatten.flatMap(getDistinctOrderedRunesForPattern)
+      pattern.destructure.toList.flatten.flatMap(getDistinctOrderedRunesForPattern)
     (runesFromVirtuality ++ runesFromDestructures :+ pattern.coordRune).distinct
   }
 

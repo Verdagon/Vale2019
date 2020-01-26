@@ -26,7 +26,7 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
     }
   }
 
-  private[parser] def let: Parser[LetPE] = {
+  private[parser] def let: Parser[LetPE] = positioned {
 //    (opt(templateRulesPR) <~ optWhite) ~
         (atomPattern <~ white <~ "=" <~ white) ~
         (expression <~ optWhite <~ ";") ^^ {
@@ -270,32 +270,32 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
     }
   }
 
-  private[parser] def filledParamLambda: Parser[LambdaPE] = {
+  private[parser] def filledParamLambda: Parser[FunctionP] = positioned {
     (patternPrototypeParams <~ optWhite) ~ opt(":" ~> optWhite ~> patternTemplex <~ optWhite) ~ ("{" ~> optWhite ~> block <~ optWhite <~ "}") ^^ {
-      case patternParams ~ maybeReturn ~ maybeBody => LambdaPE(FunctionP(None, false, false, true, List(), List(), patternParams, maybeReturn, Some(maybeBody)))
+      case patternParams ~ maybeReturn ~ maybeBody => FunctionP(None, false, false, true, List(), List(), patternParams, maybeReturn, Some(maybeBody))
     }
   }
 
-  private[parser] def emptyParamLambda: Parser[LambdaPE] = {
+  private[parser] def emptyParamLambda: Parser[FunctionP] = positioned {
     (patternPrototypeParams <~ optWhite) ~ opt(":" ~> optWhite ~> patternTemplex <~ optWhite) <~ "{" <~ optWhite <~ "}" ^^ {
-      case patternParams ~ maybeReturn => LambdaPE(FunctionP(None, false, false, true, List(), List(), patternParams, maybeReturn, Some(BlockPE(List(VoidPE())))))
+      case patternParams ~ maybeReturn => FunctionP(None, false, false, true, List(), List(), patternParams, maybeReturn, Some(BlockPE(List(VoidPE()))))
     }
   }
 
-  private[parser] def filledParamLessLambda: Parser[LambdaPE] = {
+  private[parser] def filledParamLessLambda: Parser[FunctionP] = positioned {
     "{" ~> optWhite ~> block <~ optWhite <~ "}" ^^ {
-      case b => LambdaPE(FunctionP(None, false, false, true, List(), List(), List(), None, Some(b)))
+      case b => FunctionP(None, false, false, true, List(), List(), List(), None, Some(b))
     }
   }
 
-  private[parser] def emptyParamLessLambda: Parser[LambdaPE] = {
+  private[parser] def emptyParamLessLambda: Parser[FunctionP] = positioned {
     "{" ~> optWhite <~ "}" ^^^ {
-      LambdaPE(FunctionP(None, false, false, true, List(), List(), List(), None, Some(BlockPE(List(VoidPE())))))
+      FunctionP(None, false, false, true, List(), List(), List(), None, Some(BlockPE(List(VoidPE()))))
     }
   }
 
   private[parser] def lambda: Parser[LambdaPE] = {
-    filledParamLambda | emptyParamLambda | filledParamLessLambda | emptyParamLessLambda
+    (filledParamLambda | emptyParamLambda | filledParamLessLambda | emptyParamLessLambda) ^^ LambdaPE
   }
 
   private[parser] def patternPrototypeParam: Parser[PatternPP] = {

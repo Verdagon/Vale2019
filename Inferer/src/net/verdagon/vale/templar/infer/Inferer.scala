@@ -29,7 +29,8 @@ trait IInfererDelegate[Env, State] {
 
   def getMutability(state: State, kind: Kind): Mutability
 
-  def lookupTemplata(env: Env, name: String): ITemplata
+  def lookupTemplata(env: Env, name: AbsoluteNameA[INameA]): ITemplata
+  def lookupTemplata(env: Env, name: ImpreciseNameA[IImpreciseNameStepA]): ITemplata
 
   def evaluateStructTemplata(
     state: State,
@@ -71,9 +72,9 @@ object Inferer {
     env: Env,
     state: State,
     rules: List[IRulexAR],
-    typeByRune: Map[String, ITemplataType],
-    directInputs: Map[String, ITemplata],
-    paramAtoms: List[AtomSP],
+    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
+    directInputs: Map[AbsoluteNameA[IRuneA], ITemplata],
+    paramAtoms: List[AtomAP],
     maybeParamInputs: Option[List[ParamFilter]],
     checkAllRunesPresent: Boolean):
   (IInferSolveResult) = {
@@ -111,7 +112,11 @@ object Inferer {
         delegate.getPackKind(env, state, members)
       }
 
-      override def lookupTemplata(env: Env, name: String): ITemplata = {
+      override def lookupTemplata(env: Env, name: AbsoluteNameA[INameA]): ITemplata = {
+        delegate.lookupTemplata(env, name)
+      }
+
+      override def lookupTemplata(env: Env, name: ImpreciseNameA[IImpreciseNameStepA]): ITemplata = {
         delegate.lookupTemplata(env, name)
       }
 

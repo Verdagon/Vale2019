@@ -11,7 +11,7 @@ case class Program0(
     functions: List[FunctionP])
 
 case class ImplP(
-  // Impls don't need ordered runes, see IDHIR.
+  identifyingRunes: List[String],
   rules: List[IRulexPR],
   struct: ITemplexPPT,
   interface: ITemplexPPT) extends Positional

@@ -52,7 +52,7 @@ object ExpressionTemplar {
   private def evaluateLookup(
     temputs: TemputsBox,
     fate: FunctionEnvironmentBox,
-    name: String,
+    name: AbsoluteNameA[IVarNameA],
     borrow: Boolean):
   (Option[Expression2]) = {
     evaluateAddressibleLookup(temputs, fate, name) match {
@@ -61,7 +61,7 @@ object ExpressionTemplar {
         (Some(thing))
       }
       case None => {
-        fate.getNearestTemplataWithName(name, Set(TemplataLookupContext)) match {
+        fate.getNearestTemplataWithAbsoluteName(name, Set(TemplataLookupContext)) match {
           case Some(IntegerTemplata(num)) => (Some(IntLiteral2(num)))
           case Some(BooleanTemplata(bool)) => (Some(BoolLiteral2(bool)))
           case None => (None)
@@ -73,7 +73,7 @@ object ExpressionTemplar {
   private def evaluateAddressibleLookup(
       temputs: TemputsBox,
       fate: FunctionEnvironmentBox,
-      name: String):
+      name: AbsoluteNameA[IVarNameA]):
   Option[AddressExpression2] = {
     fate.getVariable(name) match {
       case Some(alv @ AddressibleLocalVariable2(_, _, reference)) => {
@@ -200,7 +200,7 @@ object ExpressionTemplar {
   }
 
   // See ClosureTests for requirements here
-  def determineIfLocalIsAddressible(mutability: Mutability, variable1: LocalVariable1): Boolean = {
+  def determineIfLocalIsAddressible(mutability: Mutability, variable1: LocalVariableA): Boolean = {
     if (mutability == Mutable) {
       variable1.childMutated != NotUsed || variable1.selfMoved == MaybeUsed || variable1.childMoved != NotUsed
     } else {
@@ -261,7 +261,7 @@ object ExpressionTemplar {
       case FloatLiteralAE(f) => (FloatLiteral2(f), Set())
       case ArgLookupAE(index) => {
         val paramCoordRune = fate.function.params(index).pattern.coordRune
-        val paramCoordTemplata = fate.getNearestTemplataWithName(paramCoordRune, Set(TemplataLookupContext)).get
+        val paramCoordTemplata = fate.getNearestTemplataWithName(RuneSymbol(paramCoordRune), Set(TemplataLookupContext)).get
         val CoordTemplata(paramCoord) = paramCoordTemplata
         (ArgLookup2(index, paramCoord), Set())
       }
@@ -284,7 +284,7 @@ object ExpressionTemplar {
           CallTemplar.evaluateNamedPrefixCall(temputs, fate, name, templateArgTemplexesS, flattenedArgsExpr2)
         (callExpr2, returnsFromArgs)
       }
-      case FunctionCallAE(GlobalLoadAE(name), argsPackExpr1) => {
+      case FunctionCallAE(FunctionLoadAE(name), argsPackExpr1) => {
         val (flattenedArgsExpr2, returnsFromArgs) =
           PackTemplar.evaluate(temputs, fate, argsPackExpr1)
         val callExpr2 =
@@ -321,7 +321,7 @@ object ExpressionTemplar {
           }
         (lookupExpr1, Set())
       }
-      case GlobalLoadAE(name) => {
+      case FunctionLoadAE(name) => {
         // Note, we don't get here if we're about to call something with this, that's handled
         // by a different case.
 
@@ -332,7 +332,7 @@ object ExpressionTemplar {
           fate.getAllTemplatasWithName(name, Set(ExpressionLookupContext)) match {
             case List(BooleanTemplata(value)) => BoolLiteral2(value)
             case List(IntegerTemplata(value)) => IntLiteral2(value)
-            case templatas if templatas.nonEmpty && templatas.collect({ case FunctionTemplata(_, _) => case ExternFunctionTemplata(_) => }).size == templatas.size => {
+            case templatas if templatas.nonEmpty && templatas.collect({ case FunctionTemplata(_, _, _) => case ExternFunctionTemplata(_) => }).size == templatas.size => {
               newGlobalFunctionGroupExpression(fate, name)
             }
             case things if things.size > 1 => {
@@ -480,8 +480,7 @@ object ExpressionTemplar {
       }
       case FunctionAE(function1 @ FunctionA(_, name, _, _, _, _, _, _, _, _, _, CodeBodyA(body))) => {
         val bfunction1 = BFunctionA(function1, name, body)
-        val callExpr2 =
-          evaluateClosure(temputs, fate, bfunction1)
+        val callExpr2 = evaluateClosure(temputs, fate, bfunction1)
         (callExpr2, Set())
       }
       case p @ PackAE(_) => {
@@ -743,8 +742,7 @@ object ExpressionTemplar {
       r: ReferenceExpression2):
   (Defer2) = {
     val varNameCounter = fate.nextVarCounter()
-    val varName = "__" + varNameCounter + "_temp"
-    val varId = VariableId2(fate.function.lambdaNumber, varName)
+    val varId = VariableId2(fate.functionEnvironment.fullName.addStep(TemplarImplicitVarNameA(varNameCounter)))
     val rlv = ReferenceLocalVariable2(varId, Final, r.resultRegister.reference)
     val letExpr2 = LetAndLend2(rlv, r)
     fate.addVariable(rlv)

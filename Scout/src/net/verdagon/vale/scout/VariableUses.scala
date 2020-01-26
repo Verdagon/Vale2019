@@ -5,33 +5,36 @@ import net.verdagon.vale.vfail
 
 
 case class VariableUse(
-    name: String,
+    name: AbsoluteNameS[IVarNameS],
     borrowed: Option[IVariableUseCertainty],
     moved: Option[IVariableUseCertainty],
     mutated: Option[IVariableUseCertainty])
 
 case class VariableDeclaration(
-    name: String,
+    name: AbsoluteNameS[IVarNameS],
     variability: VariabilityP)
 
 case class VariableDeclarations(vars: Set[VariableDeclaration]) {
   def ++(that: VariableDeclarations): VariableDeclarations = {
     VariableDeclarations(vars ++ that.vars)
   }
-  def contains(name: String): Boolean = {
-    vars.exists(_.name == name)
+  def find(needle: String): Option[AbsoluteNameS[IVarNameS]] = {
+    vars.map(_.name).find(name => name.last match {
+      case CodeVarNameS(humanName) => humanName == needle
+      case MagicParamNameS(magicParamNumber) => false
+    })
   }
 }
 
 case class VariableUses(uses: Set[VariableUse]) {
-  def allUsedNames: Set[String] = uses.map(_.name)
-  def markBorrowed(name: String): VariableUses = {
+  def allUsedNames: Set[AbsoluteNameS[IVarNameS]] = uses.map(_.name)
+  def markBorrowed(name: AbsoluteNameS[IVarNameS]): VariableUses = {
     merge(VariableUse(name, Some(Used), None, None), thenMerge)
   }
-  def markMoved(name: String): VariableUses = {
+  def markMoved(name: AbsoluteNameS[IVarNameS]): VariableUses = {
     merge(VariableUse(name, None, Some(Used), None), thenMerge)
   }
-  def markMutated(name: String): VariableUses = {
+  def markMutated(name: AbsoluteNameS[IVarNameS]): VariableUses = {
     merge(VariableUse(name, None, None, Some(Used)), thenMerge)
   }
   // Incorporate this new use into
@@ -41,19 +44,19 @@ case class VariableUses(uses: Set[VariableUse]) {
   def branchMerge(newUses: VariableUses): VariableUses = {
     combine(newUses, branchMerge)
   }
-  def isBorrowed(name: String): IVariableUseCertainty = {
+  def isBorrowed(name: AbsoluteNameS[IVarNameS]): IVariableUseCertainty = {
     uses.find(_.name == name) match {
       case None => NotUsed
       case Some(use) => use.borrowed.getOrElse(NotUsed)
     }
   }
-  def isMoved(name: String): IVariableUseCertainty = {
+  def isMoved(name: AbsoluteNameS[IVarNameS]): IVariableUseCertainty = {
     uses.find(_.name == name) match {
       case None => NotUsed
       case Some(use) => use.moved.getOrElse(NotUsed)
     }
   }
-  def isMutated(name: String): IVariableUseCertainty = {
+  def isMutated(name: AbsoluteNameS[IVarNameS]): IVariableUseCertainty = {
     uses.find(_.name == name) match {
       case None => NotUsed
       case Some(use) => use.mutated.getOrElse(NotUsed)

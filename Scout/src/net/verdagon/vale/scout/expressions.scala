@@ -8,9 +8,8 @@ import net.verdagon.vale.vassert
 // patternId is a unique number, can be used to make temporary variables that wont
 // collide with other things
 case class LetSE(
-    patternId: Int,
     rules: List[IRulexSR],
-    allRunes: Set[String],
+    allRunes: Set[AbsoluteNameS[IRuneS]],
     pattern: AtomSP,
     expr: IExpressionSE) extends IExpressionSE
 
@@ -19,8 +18,8 @@ case class IfSE(condition: BlockSE, thenBody: BlockSE, elseBody: BlockSE) extend
 case class WhileSE(condition: BlockSE, body: BlockSE) extends IExpressionSE
 
 case class ExprMutateSE(mutatee: IExpressionSE, expr: IExpressionSE) extends IExpressionSE
-case class GlobalMutateSE(name: String, expr: IExpressionSE) extends IExpressionSE
-case class LocalMutateSE(name: String, expr: IExpressionSE) extends IExpressionSE
+case class GlobalMutateSE(name: ImpreciseNameS[ImpreciseCodeVarNameS], expr: IExpressionSE) extends IExpressionSE
+case class LocalMutateSE(name: AbsoluteNameS[IVarNameS], expr: IExpressionSE) extends IExpressionSE
 
 case class ExpressionLendSE(innerExpr1: IExpressionSE) extends IExpressionSE
 
@@ -39,7 +38,7 @@ case object NotUsed extends IVariableUseCertainty
 case object MaybeUsed extends IVariableUseCertainty
 
 case class LocalVariable1(
-    varName: String,
+    varName: AbsoluteNameS[IVarNameS],
     variability: VariabilityP,
     selfBorrowed: IVariableUseCertainty,
     selfMoved: IVariableUseCertainty,
@@ -52,7 +51,7 @@ case class BodySE(
     // These are all the variables we use from parent environments.
     // We have these so templar doesn't have to dive through all the functions
     // that it calls (impossible) to figure out what's needed in a closure struct.
-    closuredNames: Set[String],
+    closuredNames: Set[AbsoluteNameS[IVarNameS]],
 
     block: BlockSE
 )// extends IExpressionSE
@@ -124,8 +123,8 @@ case class FunctionCallSE(callableExpr: IExpressionSE, argsPackExpr1: PackSE) ex
 
 case class TemplateSpecifiedLookupSE(name: String, templateArgs: List[ITemplexS]) extends IExpressionSE
 
-case class LocalLoadSE(name: String, borrow: Boolean) extends IExpressionSE
-case class GlobalLoadSE(name: String) extends IExpressionSE
+case class LocalLoadSE(name: AbsoluteNameS[IVarNameS], borrow: Boolean) extends IExpressionSE
+case class FunctionLoadSE(name: ImpreciseNameS[GlobalFunctionFamilyNameS]) extends IExpressionSE
 
 case class UnletSE(name: String) extends IExpressionSE
 

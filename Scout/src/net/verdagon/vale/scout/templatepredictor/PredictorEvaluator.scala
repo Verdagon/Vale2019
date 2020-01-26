@@ -16,15 +16,16 @@ import scala.collection.immutable.List
 object PredictorEvaluator {
 
   private[scout] def getAllRunes(
-    identifyingRunes: List[String],
+    envFullName: AbsoluteNameS[INameS],
+    identifyingRunes: List[AbsoluteNameS[IRuneS]],
     rules: List[IRulexSR],
     patterns1: List[AtomSP],
-    maybeRetRune: Option[String]
-  ): Set[String] = {
+    maybeRetRune: Option[AbsoluteNameS[IRuneS]]
+  ): Set[AbsoluteNameS[IRuneS]] = {
     (
       identifyingRunes ++
         patterns1.flatMap(PatternSUtils.getDistinctOrderedRunesForPattern) ++
-        RuleSUtils.getDistinctOrderedRunesForRulexes(rules) ++
+        RuleSUtils.getDistinctOrderedRunesForRulexes(envFullName, rules) ++
         maybeRetRune.toList
       ).toSet
   }
@@ -126,7 +127,7 @@ object PredictorEvaluator {
       case OwnershipST(_) => true
       case VariabilityST(_) => true
       case NameST(_) => true
-      case AnonymousRuneST() => false
+      case AbsoluteNameST(_) => true
       case RuneST(rune) => {
         conclusions.knowableValueRunes.contains(rune)
       }
@@ -167,14 +168,9 @@ object PredictorEvaluator {
     conclusions: ConclusionsBox,
     rule: TypedSR):
   Boolean = {
-    val TypedSR(maybeRune, tyype) = rule
-    maybeRune match {
-      case None => false
-      case Some(rune) => {
-        conclusions.markRuneTypeKnown(rune, tyype)
-        conclusions.knowableValueRunes.contains(rune)
-      }
-    }
+    val TypedSR(rune, tyype) = rule
+    conclusions.markRuneTypeKnown(rune, tyype)
+    conclusions.knowableValueRunes.contains(rune)
   }
 
   private def evaluateEqualsRule(

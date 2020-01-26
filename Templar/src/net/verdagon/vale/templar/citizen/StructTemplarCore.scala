@@ -22,20 +22,20 @@ object StructTemplarCore {
   def makeInterface(
     interfaceRunesEnv: NamespaceEnvironment,
     temputs: TemputsBox,
-    interface1: InterfaceA,
+    interfaceA: InterfaceA,
     coercedFinalTemplateArgs2: List[ITemplata]):
   (InterfaceDefinition2) = {
-    if (interface1.namespace.nonEmpty) {
+    if (interfaceA.namespace.nonEmpty) {
       vimpl()
     }
-    val fullName = FullName2(List(NamePart2(interface1.name, Some(coercedFinalTemplateArgs2), None, None)))
+    val fullName = FullName2(List(NamePart2(interfaceA.name, Some(coercedFinalTemplateArgs2), None, None)))
     val temporaryInferfaceRef = InterfaceRef2(fullName)
 
     val interfaceInnerEnv =
       NamespaceEnvironment(
         Some(interfaceRunesEnv),
         fullName,
-        interface1.identifyingRunes.zip(coercedFinalTemplateArgs2)
+        interfaceA.identifyingRunes.zip(coercedFinalTemplateArgs2)
           .map({ case (rune, templata) => (rune, List(TemplataEnvEntry(templata))) })
           .toMap)
 
@@ -45,15 +45,20 @@ object StructTemplarCore {
           interfaceInnerEnv)
 
     val internalMethods2 =
-      interface1.internalMethods.map(internalMethod => {
+      interfaceA.internalMethods.map(internalMethod => {
         FunctionTemplar.evaluateOrdinaryFunctionFromNonCallForHeader(
-          temputs, FunctionTemplata(interfaceInnerEnv, internalMethod))
+          temputs,
+          FunctionTemplata(
+            interfaceInnerEnv,
+            // There are no unevaluated containers, all containers are in the environment.
+            List(),
+            internalMethod))
       })
 
     val interfaceDef2 =
       InterfaceDefinition2(
         fullName,
-        Conversions.evaluateMutability(interface1.mutability),
+        Conversions.evaluateMutability(interfaceA.mutability),
         internalMethods2)
     temputs.add(interfaceDef2)
 
@@ -208,14 +213,14 @@ object StructTemplarCore {
   def makeClosureUnderstruct(
     env: IEnvironment,
     temputs: TemputsBox,
-    functionS: FunctionA,
+    functionA: FunctionA,
     functionFullName: FullName2,
     members: List[StructMember2]):
   (StructRef2, Mutability, FunctionTemplata) = {
     val mutability =
       getCompoundTypeMutability(temputs, members.map(_.tyype.reference))
 
-    val nearName = FunctionScout.CLOSURE_STRUCT_NAME + functionS.name // For example "__Closure<main>:lam1"
+    val nearName = FunctionScout.CLOSURE_STRUCT_NAME + functionA.name // For example "__Closure<main>:lam1"
     val fullName = FullName2(functionFullName.steps :+ NamePart2(nearName, Some(List()), None, None))
 
     val structRef = StructRef2(fullName)
@@ -229,12 +234,17 @@ object StructTemplarCore {
         Some(env),
         fullName,
         Map(
-          CallTemplar.CALL_FUNCTION_NAME -> List(FunctionEnvEntry(None, functionS)),
+          CallTemplar.CALL_FUNCTION_NAME -> List(FunctionEnvEntry(functionA)),
           nearName -> List(TemplataEnvEntry(KindTemplata(structRef))),
           FunctionScout.CLOSURE_STRUCT_ENV_ENTRY_NAME -> List(TemplataEnvEntry(KindTemplata(structRef)))))
     // We return this from the function in case we want to eagerly compile it (which we do
     // if it's not a template).
-    val functionTemplata = FunctionTemplata(structEnv, functionS)
+    val functionTemplata =
+        FunctionTemplata(
+          structEnv,
+          // There are no unevaluated containers, all containers are in the environment.
+          List(),
+          functionA)
 
     temputs.declareStruct(structRef);
     temputs.declareStructMutability(structRef, mutability)

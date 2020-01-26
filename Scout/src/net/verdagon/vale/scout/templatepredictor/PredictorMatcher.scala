@@ -11,7 +11,6 @@ object PredictorMatcher {
       rule: ITemplexS):
   Unit = {
     rule match {
-      case AnonymousRuneST() =>
       case IntST(_) =>
       case BoolST(_) =>
       case MutabilityST(_) =>
@@ -20,6 +19,7 @@ object PredictorMatcher {
       case OwnershipST(_) =>
       case VariabilityST(_) =>
       case NameST(_) =>
+      case AbsoluteNameST(_) =>
       case RuneST(rune) => conclusions.markRuneValueKnowable(rune)
       case CallST(template, args) => {
         matchAgainstTemplexSR(conclusions, template)
@@ -47,11 +47,8 @@ object PredictorMatcher {
   }
 
   def matchAgainstTypedSR(conclusions: ConclusionsBox, rule: TypedSR): Unit = {
-    val TypedSR(maybeRune, _) = rule
-    maybeRune match {
-      case None =>
-      case Some(rune) => conclusions.markRuneValueKnowable(rune)
-    }
+    val TypedSR(rune, _) = rule
+    conclusions.markRuneValueKnowable(rune)
   }
 
   def matchAgainstCallSR(conclusions: ConclusionsBox, rule: CallSR): Unit = {

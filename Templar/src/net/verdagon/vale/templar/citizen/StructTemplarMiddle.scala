@@ -3,9 +3,9 @@ package net.verdagon.vale.templar.citizen
 import net.verdagon.vale.astronomer.{FunctionA, InterfaceA, StructA}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
-import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
+import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
 import net.verdagon.vale.templar._
-import net.verdagon.vale.templar.env.{IEnvironment, NamespaceEnvironment, TemplataEnvEntry}
+import net.verdagon.vale.templar.env.{IEnvironment, InterfaceEnvEntry, NamespaceEnvironment, TemplataEnvEntry}
 import net.verdagon.vale.templar.function.{FunctionTemplar, FunctionTemplarCore, VirtualTemplar}
 import net.verdagon.vale.vfail
 
@@ -33,17 +33,17 @@ object StructTemplarMiddle {
   def getInterfaceRef(
     interfaceOuterEnv: NamespaceEnvironment,
     temputs: TemputsBox,
-    interfaceS: InterfaceA,
+    interfaceA: InterfaceA,
     templatasByRune: Map[String, ITemplata]):
   (InterfaceRef2) = {
-    val coercedFinalTemplateArgs2 = interfaceS.identifyingRunes.map(templatasByRune)
+    val coercedFinalTemplateArgs2 = interfaceA.identifyingRunes.map(templatasByRune)
 
     val localEnv =
       interfaceOuterEnv.addEntries(
         templatasByRune.mapValues(templata => List(TemplataEnvEntry(templata))))
     val interfaceDefinition2 =
       StructTemplarCore.makeInterface(
-        localEnv, temputs, interfaceS, coercedFinalTemplateArgs2);
+        localEnv, temputs, interfaceA, coercedFinalTemplateArgs2);
 
 // Now that we have an env, we can use it for the internal methods.
 //      interfaceS.internalMethods.foldLeft(temputs)({
