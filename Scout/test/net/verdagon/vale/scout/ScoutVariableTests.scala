@@ -26,7 +26,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     vassert(body.block.locals.size == 1)
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP, NotUsed, NotUsed, NotUsed, NotUsed, NotUsed, NotUsed) =>
     }
   }
@@ -37,7 +37,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-      AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+      CodeVarNameS("x"),
       VaryingP, NotUsed, NotUsed, NotUsed, NotUsed, NotUsed, NotUsed) =>
     }
   }
@@ -48,7 +48,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-      AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+      CodeVarNameS("x"),
       FinalP,Used, NotUsed, NotUsed, NotUsed, NotUsed, NotUsed) =>
     }
   }
@@ -59,7 +59,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-      AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+      CodeVarNameS("x"),
       FinalP,Used, NotUsed, NotUsed, NotUsed, NotUsed, NotUsed) =>
     }
   }
@@ -70,7 +70,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-      AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+      CodeVarNameS("x"),
       FinalP,NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed) =>
     }
   }
@@ -81,7 +81,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-      AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+      CodeVarNameS("x"),
       FinalP,NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed) =>
     }
   }
@@ -92,7 +92,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-      AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+      CodeVarNameS("x"),
       VaryingP, NotUsed, NotUsed, Used, NotUsed, NotUsed, NotUsed) =>
     }
   }
@@ -103,7 +103,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-      AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+      CodeVarNameS("x"),
       VaryingP, NotUsed, Used, Used, NotUsed, NotUsed, NotUsed) =>
     }
   }
@@ -120,7 +120,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP, NotUsed, NotUsed, NotUsed, MaybeUsed, NotUsed, NotUsed) =>
     }
   }
@@ -137,7 +137,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP, NotUsed, NotUsed, NotUsed, NotUsed, MaybeUsed, NotUsed) =>
     }
   }
@@ -154,7 +154,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP, NotUsed, NotUsed, NotUsed, NotUsed, NotUsed, MaybeUsed) =>
     }
   }
@@ -171,7 +171,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP, MaybeUsed, NotUsed, NotUsed, NotUsed, NotUsed, NotUsed) =>
     }
   }
@@ -188,7 +188,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP, NotUsed, MaybeUsed, NotUsed, NotUsed, NotUsed, NotUsed) =>
     }
   }
@@ -205,7 +205,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP, NotUsed, NotUsed, MaybeUsed, NotUsed, NotUsed, NotUsed) =>
     }
   }
@@ -222,7 +222,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP,NotUsed, NotUsed, NotUsed, MaybeUsed, NotUsed, NotUsed) =>
     }
   }
@@ -239,7 +239,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP,NotUsed, NotUsed, NotUsed, NotUsed, MaybeUsed, NotUsed) =>
     }
   }
@@ -256,7 +256,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP,NotUsed, NotUsed, NotUsed, NotUsed, NotUsed, MaybeUsed) =>
     }
   }
@@ -273,7 +273,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP, Used, NotUsed, NotUsed, NotUsed, NotUsed, NotUsed) =>
     }
   }
@@ -290,7 +290,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP,NotUsed, NotUsed, NotUsed, MaybeUsed, NotUsed, NotUsed) =>
     }
   }
@@ -307,7 +307,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed) =>
     }
   }
@@ -324,7 +324,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP,NotUsed, NotUsed, NotUsed, NotUsed, MaybeUsed, NotUsed) =>
     }
   }
@@ -341,7 +341,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP, NotUsed, NotUsed, Used, NotUsed, NotUsed, NotUsed) =>
     }
   }
@@ -358,7 +358,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP, NotUsed, NotUsed, NotUsed, NotUsed, NotUsed, MaybeUsed) =>
     }
   }
@@ -375,7 +375,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP, MaybeUsed, MaybeUsed, NotUsed, NotUsed, NotUsed, NotUsed) =>
     }
   }
@@ -392,7 +392,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP,NotUsed, NotUsed, NotUsed, MaybeUsed, MaybeUsed, NotUsed) =>
     }
   }
@@ -409,7 +409,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP, NotUsed, MaybeUsed, MaybeUsed, NotUsed, NotUsed, NotUsed) =>
     }
   }
@@ -426,7 +426,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP, NotUsed, NotUsed, NotUsed, NotUsed, MaybeUsed, MaybeUsed) =>
     }
   }
@@ -437,7 +437,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           VaryingP, NotUsed, Used, Used, NotUsed, NotUsed, NotUsed) =>
     }
   }
@@ -448,7 +448,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           VaryingP, NotUsed, NotUsed, NotUsed, NotUsed, MaybeUsed, MaybeUsed) =>
     }
   }
@@ -464,7 +464,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP, Used, NotUsed, NotUsed, NotUsed, NotUsed, NotUsed) =>
     }
   }
@@ -480,7 +480,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP,NotUsed, NotUsed, NotUsed, MaybeUsed, NotUsed, NotUsed) =>
     }
   }
@@ -497,7 +497,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP, MaybeUsed, MaybeUsed, MaybeUsed, NotUsed, NotUsed, NotUsed) =>
     }
   }
@@ -514,7 +514,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP, NotUsed, NotUsed, NotUsed, MaybeUsed, MaybeUsed, MaybeUsed) =>
     }
   }
@@ -532,7 +532,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP, Used, NotUsed, NotUsed, NotUsed, NotUsed, NotUsed) =>
     }
   }
@@ -549,7 +549,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     val CodeBody1(body) = main.body
     body.block.locals.head match {
       case LocalVariable1(
-          AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeVarNameS("x")),
+          CodeVarNameS("x"),
           FinalP, MaybeUsed, NotUsed, NotUsed, NotUsed, NotUsed, NotUsed) =>
     }
   }
@@ -574,7 +574,7 @@ class ScoutVariableTests extends FunSuite with Matchers {
     lamBlock.locals.head match {
       case LocalVariable1(name, FinalP,NotUsed, NotUsed, NotUsed, NotUsed, NotUsed, NotUsed) => {
         name match {
-          case AbsoluteNameS(_, List(FunctionNameS("main",_), LambdaNameS(_)), ClosureParamNameS()) =>
+          case ClosureParamNameS() =>
         }
       }
     }
@@ -597,9 +597,8 @@ class ScoutVariableTests extends FunSuite with Matchers {
       case FunctionCallSE(FunctionSE(FunctionS(_, _, _, _, _, _, _, _, _, CodeBody1(innerBody))), _) => innerBody.block
     }).head
     val locals = lamBlock.locals
-    locals.find(_.varName.last == ClosureParamNameS()).get match {
-      case LocalVariable1(
-        AbsoluteNameS(_, List(FunctionNameS("main",_), LambdaNameS(_)), ClosureParamNameS()),
+    locals.find(_.varName == ClosureParamNameS()).get match {
+      case LocalVariable1(ClosureParamNameS(),
         FinalP,NotUsed, NotUsed, NotUsed, NotUsed, NotUsed, NotUsed) =>
     }
   }

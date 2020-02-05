@@ -6,7 +6,7 @@ import net.verdagon.vale.scout._
 import scala.collection.immutable.List
 
 case class CaptureS(
-  name: AbsoluteNameS[IVarNameS],
+  name: IVarNameS,
   variability: VariabilityP)
 
 case class AtomSP(
@@ -15,15 +15,15 @@ case class AtomSP(
   // an owning ref.
   name: CaptureS,
   virtuality: Option[VirtualitySP],
-  coordRune: AbsoluteNameS[IRuneS],
+  coordRune: IRuneS,
   destructure: Option[List[AtomSP]])
 
 sealed trait VirtualitySP
 case object AbstractSP extends VirtualitySP
-case class OverrideSP(kindRune: AbsoluteNameS[IRuneS]) extends VirtualitySP
+case class OverrideSP(kindRune: IRuneS) extends VirtualitySP
 
 object PatternSUtils {
-  def getDistinctOrderedRunesForPattern(pattern: AtomSP): List[AbsoluteNameS[IRuneS]] = {
+  def getDistinctOrderedRunesForPattern(pattern: AtomSP): List[IRuneS] = {
     val runesFromVirtuality =
       pattern.virtuality match {
         case None => List()

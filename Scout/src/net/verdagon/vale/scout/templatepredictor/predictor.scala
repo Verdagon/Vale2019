@@ -4,25 +4,25 @@ import net.verdagon.vale.scout.rules.ITypeSR
 
 package object predictor {
   case class ConclusionsBox(var conclusions: Conclusions) {
-    def knowableValueRunes: Set[AbsoluteNameS[IRuneS]] = conclusions.knowableValueRunes
-    def predictedTypeByRune: Map[AbsoluteNameS[IRuneS], ITypeSR] = conclusions.predictedTypeByRune
-    def markRuneValueKnowable(rune: AbsoluteNameS[IRuneS]): Unit = {
+    def knowableValueRunes: Set[IRuneS] = conclusions.knowableValueRunes
+    def predictedTypeByRune: Map[IRuneS, ITypeSR] = conclusions.predictedTypeByRune
+    def markRuneValueKnowable(rune: IRuneS): Unit = {
       conclusions = conclusions.markRuneValueKnowable(rune)
     }
-    def markRuneTypeKnown(rune: AbsoluteNameS[IRuneS], tyype: ITypeSR): Unit = {
+    def markRuneTypeKnown(rune: IRuneS, tyype: ITypeSR): Unit = {
       conclusions = conclusions.markRuneTypeKnown(rune, tyype)
     }
   }
 
   case class Conclusions(
-      knowableValueRunes: Set[AbsoluteNameS[IRuneS]],
-      predictedTypeByRune: Map[AbsoluteNameS[IRuneS], ITypeSR]) {
-    def markRuneValueKnowable(rune: AbsoluteNameS[IRuneS]): Conclusions = {
+      knowableValueRunes: Set[IRuneS],
+      predictedTypeByRune: Map[IRuneS, ITypeSR]) {
+    def markRuneValueKnowable(rune: IRuneS): Conclusions = {
       Conclusions(
         knowableValueRunes + rune,
         predictedTypeByRune)
     }
-    def markRuneTypeKnown(rune: AbsoluteNameS[IRuneS], tyype: ITypeSR): Conclusions = {
+    def markRuneTypeKnown(rune: IRuneS, tyype: ITypeSR): Conclusions = {
       Conclusions(
         knowableValueRunes,
         predictedTypeByRune + (rune -> tyype))

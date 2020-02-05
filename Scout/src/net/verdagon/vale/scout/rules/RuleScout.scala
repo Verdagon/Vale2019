@@ -3,7 +3,7 @@ package net.verdagon.vale.scout.rules
 import net.verdagon.vale.parser._
 import net.verdagon.vale.scout.patterns.RuleStateBox
 import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
-import net.verdagon.vale.vassertSome
+import net.verdagon.vale.{vassert, vassertSome}
 
 object RuleScout {
   // Returns:
@@ -11,14 +11,14 @@ object RuleScout {
   // - the translated versions of the given rules
   def translateRulexes(
     ruleState: RuleStateBox,
-    userDeclaredRunes: Set[AbsoluteNameS[IRuneS]],
+    userDeclaredRunes: Set[IRuneS],
     rulesP: List[IRulexPR]):
   List[IRulexSR] = {
     rulesP.map(translateRulex(ruleState, userDeclaredRunes, _))
   }
   def translateRulex(
     ruleState: RuleStateBox,
-    userDeclaredRunes: Set[AbsoluteNameS[IRuneS]],
+    userDeclaredRunes: Set[IRuneS],
     rulex: IRulexPR):
   IRulexSR = {
     rulex match {
@@ -35,7 +35,7 @@ object RuleScout {
       case ComponentsPR(TypedPR(Some(rune), tyype), componentsP) => {
         ComponentsSR(
           TypedSR(
-            ruleState.rate.envFullName.addStep(CodeRuneS(rune)),
+            CodeRuneS(rune),
             translateType(tyype)),
           translateRulexes(ruleState, userDeclaredRunes, componentsP))
       }
@@ -44,8 +44,8 @@ object RuleScout {
         TypedSR(rune, translateType(tyype))
       }
       case TypedPR(Some(runeName), tyype) => {
-        val rune = vassertSome(userDeclaredRunes.find(_.last == CodeRuneS(runeName)))
-        TypedSR(rune, translateType(tyype))
+        vassert(userDeclaredRunes.contains(CodeRuneS(runeName)))
+        TypedSR(CodeRuneS(runeName), translateType(tyype))
       }
       case TemplexPR(templex) => TemplexSR(translateTemplex(ruleState, userDeclaredRunes, templex))
       case CallPR(name, args) => CallSR(name, args.map(translateRulex(ruleState, userDeclaredRunes, _)))
@@ -71,7 +71,7 @@ object RuleScout {
 
   def translateTemplex(
     ruleState: RuleStateBox,
-    userDeclaredRunes: Set[AbsoluteNameS[IRuneS]],
+    userDeclaredRunes: Set[IRuneS],
     templex: ITemplexPRT):
   ITemplexS = {
     templex match {
@@ -83,9 +83,10 @@ object RuleScout {
       case VariabilityPRT(variability) => VariabilityST(variability)
       case BoolPRT(value) => BoolST(value)
       case NameOrRunePRT(name) => {
-        userDeclaredRunes.find(_.last == CodeRuneS(name)) match {
-          case None => NameST(ImpreciseNameS(List(), CodeTypeNameS(name)))
-          case Some(rune) => RuneST(rune)
+        if (userDeclaredRunes.contains(CodeRuneS(name))) {
+          RuneST(CodeRuneS(name))
+        } else {
+          NameST(CodeTypeNameS(name))
         }
       }
       case AnonymousRunePRT() => {
@@ -95,7 +96,7 @@ object RuleScout {
       case CallPRT(template, args) => CallST(translateTemplex(ruleState, userDeclaredRunes, template), args.map(translateTemplex(ruleState, userDeclaredRunes, _)))
       case FunctionPRT(mutability, paramsPack, returnType) => {
         CallST(
-          NameST(ImpreciseNameS(List(), CodeTypeNameS("IFunction"))),
+          NameST(CodeTypeNameS("IFunction")),
           List(
             mutability match { case None => MutabilityST(MutableP) case Some(m) => translateTemplex(ruleState, userDeclaredRunes, m) },
             translateTemplex(ruleState, userDeclaredRunes, paramsPack),

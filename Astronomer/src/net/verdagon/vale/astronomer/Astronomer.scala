@@ -14,7 +14,7 @@ import scala.collection.immutable.List
 // Environments dont have an AbsoluteName, because an environment can span multiple
 // files.
 case class Environment(
-    maybeName: Option[AbsoluteNameS[INameS]],
+    maybeName: Option[INameS],
     maybeParentEnv: Option[Environment],
     primitives: Map[String, ITypeSR],
     structs: List[StructS],
@@ -30,9 +30,9 @@ case class Environment(
   // the absolute name. Otherwise returns None.
   // See MINAAN for what we're doing here.
   def absoluteNameEndsWithImpreciseName(
-    absoluteName: AbsoluteNameS[INameS],
+    absoluteName: INameS,
     impreciseName: ImpreciseNameS[IImpreciseNameStepS]):
-  Option[AbsoluteNameS[INameS]] = {
+  Option[INameS] = {
     impreciseName.last match {
       case CodeTypeNameS(impreciseNameStr) => {
         absoluteName.last match {
@@ -49,7 +49,7 @@ case class Environment(
   // Returns whether the imprecise name could be referring to the absolute name.
   // See MINAAN for what we're doing here.
   def impreciseNameMatchesAbsoluteName(
-    absoluteName: AbsoluteNameS[INameS],
+    absoluteName: INameS,
     needleImpreciseNameS: ImpreciseNameS[IImpreciseNameStepS]):
   Boolean = {
     val envNameSteps = maybeName.map(_.steps).getOrElse(List())
@@ -97,7 +97,7 @@ case class Environment(
     }
   }
 
-  def lookupType(name: AbsoluteNameS[INameS]):
+  def lookupType(name: INameS):
   (List[StructS], List[InterfaceS]) = {
     val nearStructs = structs.filter(_.name == name)
     val nearInterfaces = interfaces.filter(_.name == name)
@@ -194,7 +194,7 @@ object Astronomer {
     }
   }
 
-  def lookupType(astrouts: AstroutsBox, env: Environment, name: AbsoluteNameS[INameS]): ITemplataType = {
+  def lookupType(astrouts: AstroutsBox, env: Environment, name: INameS): ITemplataType = {
     // When the scout comes across a lambda, it doesn't put the e.g. main:lam1:__Closure struct into
     // the environment or anything, it lets templar to do that (because templar knows the actual types).
     // However, this means that when the lambda function gets to the astronomer, the astronomer doesn't
@@ -281,7 +281,7 @@ object Astronomer {
           Astronomer.lookupType(state, env, name)
         }
 
-        override def lookupType(state: AstroutsBox, env: Environment, name: AbsoluteNameS[INameS]): ITemplataType = {
+        override def lookupType(state: AstroutsBox, env: Environment, name: INameS): ITemplataType = {
           Astronomer.lookupType(state, env, name)
         }
       })
@@ -497,12 +497,12 @@ object Astronomer {
     ImpreciseCodeVarNameA(name)
   }
 
-  def translateRuneAbsoluteName(absoluteNameS: AbsoluteNameS[IRuneS]): AbsoluteNameA[IRuneA] = {
+  def translateRuneAbsoluteName(absoluteNameS: IRuneS): AbsoluteNameA[IRuneA] = {
     val AbsoluteNameS(file, initS, lastS) = absoluteNameS
     AbsoluteNameA(file, initS.map(translateNameStep), translateRune(lastS))
   }
 
-  def translateVarAbsoluteName(absoluteNameS: AbsoluteNameS[IVarNameS]): AbsoluteNameA[IVarNameA] = {
+  def translateVarAbsoluteName(absoluteNameS: IVarNameS): AbsoluteNameA[IVarNameA] = {
     val AbsoluteNameS(file, initS, lastS) = absoluteNameS
     AbsoluteNameA(file, initS.map(translateNameStep), translateVarNameStep(lastS))
   }
@@ -524,7 +524,7 @@ object Astronomer {
     GlobalFunctionFamilyNameA(name)
   }
 
-  def translateAbsoluteName(absoluteNameS: AbsoluteNameS[INameS]): AbsoluteNameA[INameA] = {
+  def translateAbsoluteName(absoluteNameS: INameS): AbsoluteNameA[INameA] = {
     val AbsoluteNameS(file, initS, lastS) = absoluteNameS
     AbsoluteNameA(file, initS.map(translateNameStep), translateNameStep(lastS))
   }

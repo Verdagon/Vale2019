@@ -55,6 +55,7 @@ case class FunctionCallPE(
 //case class MethodCall0(callableExpr: Expression0, objectExpr: Expression0, argsExpr: Pack0) extends Expression0
 
 case class LookupPE(name: String, templateArgs: List[ITemplexPT]) extends IExpressionPE
+case class MagicParamLookupPE() extends IExpressionPE with Positional
 
 case class LambdaPE(function: FunctionP) extends IExpressionPE
 

@@ -14,7 +14,7 @@ case class ComponentsSR(
   container: TypedSR,
   components: List[IRulexSR]
 ) extends IRulexSR
-case class TypedSR(rune: AbsoluteNameS[IRuneS], tyype: ITypeSR) extends IRulexSR
+case class TypedSR(rune: IRuneS, tyype: ITypeSR) extends IRulexSR
 case class TemplexSR(templex: ITemplexS) extends IRulexSR
 // This is for built-in parser functions, such as exists() or isBaseOf() etc.
 case class CallSR(name: String, args: List[IRulexSR]) extends IRulexSR {
@@ -43,7 +43,7 @@ case object VariabilityTypeSR extends ITypeSR
 
 object RuleSUtils {
 
-  def getDistinctOrderedRunesForRulex(envFullName: AbsoluteNameS[INameS], rulex: IRulexSR): List[AbsoluteNameS[IRuneS]] = {
+  def getDistinctOrderedRunesForRulex(envFullName: INameS, rulex: IRulexSR): List[IRuneS] = {
     rulex match {
       case EqualsSR(left, right) => (getDistinctOrderedRunesForRulex(envFullName, left) ++ getDistinctOrderedRunesForRulex(envFullName, right)).distinct
       case IsaSR(left, right) => (getDistinctOrderedRunesForRulex(envFullName, left) ++ getDistinctOrderedRunesForRulex(envFullName, right)).distinct
@@ -58,8 +58,8 @@ object RuleSUtils {
     }
   }
 
-  def getDistinctOrderedRunesForRulexes(envFullName: AbsoluteNameS[INameS], rulexes: List[IRulexSR]):
-  List[AbsoluteNameS[IRuneS]] = {
+  def getDistinctOrderedRunesForRulexes(envFullName: INameS, rulexes: List[IRulexSR]):
+  List[IRuneS] = {
     rulexes.flatMap(getDistinctOrderedRunesForRulex(envFullName, _)).distinct
   }
 

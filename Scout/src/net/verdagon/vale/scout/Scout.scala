@@ -8,36 +8,36 @@ import net.verdagon.vale.scout.templatepredictor.PredictorEvaluator
 import net.verdagon.vale.vimpl
 
 sealed trait IEnvironment {
-  def name: AbsoluteNameS[INameS]
-  def allUserDeclaredRunes(): Set[AbsoluteNameS[IRuneS]]
+  def name: INameS
+  def allUserDeclaredRunes(): Set[IRuneS]
 }
 
 // Someday we might split this into NamespaceEnvironment and CitizenEnvironment
 case class Environment(
     parentEnv: Option[Environment],
-    name: AbsoluteNameS[INameS],
-    userDeclaredRunes: Set[AbsoluteNameS[IRuneS]]
+    name: INameS,
+    userDeclaredRunes: Set[IRuneS]
 ) extends IEnvironment {
-  override def allUserDeclaredRunes(): Set[AbsoluteNameS[IRuneS]] = {
+  override def allUserDeclaredRunes(): Set[IRuneS] = {
     userDeclaredRunes ++ parentEnv.toList.flatMap(pe => pe.allUserDeclaredRunes())
   }
 }
 
 case class FunctionEnvironment(
-    name: AbsoluteNameS[IFunctionDeclarationNameS],
+    name: IFunctionDeclarationNameS,
     parentEnv: Option[IEnvironment],
-    userDeclaredRunes: Set[AbsoluteNameS[IRuneS]],
+    userDeclaredRunes: Set[IRuneS],
     // So that when we run into a magic param, we can add this to the number of previous magic
     // params to get the final param index.
     numExplicitParams: Int
 ) extends IEnvironment {
-  override def allUserDeclaredRunes(): Set[AbsoluteNameS[IRuneS]] = {
+  override def allUserDeclaredRunes(): Set[IRuneS] = {
     userDeclaredRunes ++ parentEnv.toList.flatMap(_.allUserDeclaredRunes())
   }
 }
 
 case class StackFrame(
-    name: AbsoluteNameS[IFunctionDeclarationNameS],
+    name: IFunctionDeclarationNameS,
     parentEnv: FunctionEnvironment,
     maybeParent: Option[StackFrame],
     locals: VariableDeclarations) {
@@ -47,7 +47,7 @@ case class StackFrame(
   def allDeclarations: VariableDeclarations = {
     locals ++ maybeParent.map(_.allDeclarations).getOrElse(Scout.noDeclarations)
   }
-  def findVariable(name: String): Option[AbsoluteNameS[IVarNameS]] = {
+  def findVariable(name: String): Option[IVarNameS] = {
     locals.find(name) match {
       case Some(fullNameS) => Some(fullNameS)
       case None => {
@@ -61,8 +61,8 @@ case class StackFrame(
 }
 
 object Scout {
-  def noVariableUses = VariableUses(Set())
-  def noDeclarations = VariableDeclarations(Set())
+  def noVariableUses = VariableUses(List())
+  def noDeclarations = VariableDeclarations(List())
 
 //  val unnamedParamNamePrefix = "__param_"
 //  val unrunedParamOverrideRuneSuffix = "Override"
@@ -82,14 +82,14 @@ object Scout {
     val ImplP(identifyingRuneNames, templateRulesP, struct, interface) = impl0
 
     val codeLocation = CodeLocationS(impl0.pos.line, impl0.pos.column)
-    val nameS = AbsoluteNameS(file, List(), ImplNameS(codeLocation))
+    val nameS = ImplNameS(codeLocation)
 
-    val identifyingRunes: List[AbsoluteNameS[IRuneS]] =
+    val identifyingRunes: List[IRuneS] =
       identifyingRuneNames
-        .map(identifyingRuneName => nameS.addStep(CodeRuneS(identifyingRuneName)))
+        .map(identifyingRuneName => CodeRuneS(identifyingRuneName))
     val runesFromRules =
       RulePUtils.getOrderedRuneDeclarationsFromRulexesWithDuplicates(templateRulesP)
-        .map(identifyingRuneName => nameS.addStep(CodeRuneS(identifyingRuneName)))
+        .map(identifyingRuneName => CodeRuneS(identifyingRuneName))
     val userDeclaredRunes = identifyingRunes ++ runesFromRules
 
     val implEnv = Environment(None, nameS, userDeclaredRunes.toSet)
@@ -125,18 +125,18 @@ object Scout {
   private def scoutStruct(file: String, head: StructP): StructS = {
     val StructP(structHumanName, mutability, maybeIdentifyingRunes, rulesP, members) = head
     val codeLocation = CodeLocationS(head.pos.line, head.pos.column)
-    val structName = AbsoluteNameS(file, List(), TopLevelCitizenDeclarationNameS(structHumanName, codeLocation))
+    val structName = TopLevelCitizenDeclarationNameS(structHumanName, codeLocation)
 
-    val identifyingRunes: List[AbsoluteNameS[IRuneS]] =
+    val identifyingRunes: List[IRuneS] =
       maybeIdentifyingRunes.getOrElse(List())
-        .map(identifyingRuneName => structName.addStep(CodeRuneS(identifyingRuneName)))
+        .map(identifyingRuneName => CodeRuneS(identifyingRuneName))
     val runesFromRules =
       RulePUtils.getOrderedRuneDeclarationsFromRulexesWithDuplicates(head.templateRules)
-        .map(identifyingRuneName => structName.addStep(CodeRuneS(identifyingRuneName)))
+        .map(identifyingRuneName => CodeRuneS(identifyingRuneName))
     val userDeclaredRunes = identifyingRunes ++ runesFromRules
     val structEnv = Environment(None, structName, userDeclaredRunes.toSet)
 
-    val memberRunes = members.indices.map(index => structName.addStep(MemberRuneS(index)))
+    val memberRunes = members.indices.map(index => MemberRuneS(index))
     val memberRules =
       memberRunes.zip(members.map(_.tyype)).map({ case (memberRune, memberType) =>
         EqualsSR(
@@ -187,14 +187,14 @@ object Scout {
   private def scoutInterface(file: String, headP: InterfaceP): InterfaceS = {
     val InterfaceP(interfaceHumanName, mutability, maybeIdentifyingRunes, rulesP, internalMethodsP) = headP
     val codeLocation = CodeLocationS(headP.pos.line, headP.pos.column)
-    val interfaceFullName = AbsoluteNameS(file, List(), TopLevelCitizenDeclarationNameS(interfaceHumanName, codeLocation))
+    val interfaceFullName = TopLevelCitizenDeclarationNameS(interfaceHumanName, codeLocation)
 
-    val identifyingRunes: List[AbsoluteNameS[IRuneS]] =
+    val identifyingRunes: List[IRuneS] =
       maybeIdentifyingRunes.getOrElse(List())
-        .map(identifyingRuneName => interfaceFullName.addStep(CodeRuneS(identifyingRuneName)))
+        .map(identifyingRuneName => CodeRuneS(identifyingRuneName))
     val runesFromRules =
       RulePUtils.getOrderedRuneDeclarationsFromRulexesWithDuplicates(rulesP)
-        .map(identifyingRuneName => interfaceFullName.addStep(CodeRuneS(identifyingRuneName)))
+        .map(identifyingRuneName => CodeRuneS(identifyingRuneName))
     val userDeclaredRunes = identifyingRunes ++ runesFromRules
     val interfaceEnv = Environment(None, interfaceFullName, userDeclaredRunes.toSet)
 

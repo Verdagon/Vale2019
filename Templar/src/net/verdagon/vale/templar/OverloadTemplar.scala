@@ -205,7 +205,7 @@ object OverloadTemplar {
                       val ruleTyper =
                         new RuleTyperEvaluator[IEnvironment, TemputsBox](
                           new IRuleTyperEvaluatorDelegate[IEnvironment, TemputsBox] {
-                            override def lookupType(state: TemputsBox, env: IEnvironment, name: AbsoluteNameS[INameS]): ITemplataType = {
+                            override def lookupType(state: TemputsBox, env: IEnvironment, name: INameS): ITemplataType = {
                               val templata =
                                 env.getNearestTemplataWithName(name, Set(TemplataLookupContext)) match {
                                   case None => vfail("Nothing found with name " + name)

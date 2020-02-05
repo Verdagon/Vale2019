@@ -22,7 +22,7 @@ case class SimpleEnvironment(entries: Map[String, List[ITemplataType]]) {
 }
 
 class FakeRuleTyperEvaluatorDelegate extends IRuleTyperEvaluatorDelegate[SimpleEnvironment, FakeState] {
-  override def lookupType(state: FakeState, env: SimpleEnvironment, absoluteName: AbsoluteNameS[INameS]): ITemplataType = {
+  override def lookupType(state: FakeState, env: SimpleEnvironment, absoluteName: INameS): ITemplataType = {
     absoluteName.last match {
       case TopLevelCitizenDeclarationNameS(name, _) => env.lookupType(name)
     }
@@ -51,7 +51,7 @@ class RuleTyperTests extends FunSuite with Matchers {
   def makeCannedRuleTyper(): RuleTyperEvaluator[SimpleEnvironment, FakeState] = {
     new RuleTyperEvaluator[SimpleEnvironment, FakeState](
       new FakeRuleTyperEvaluatorDelegate() {
-        override def lookupType(state: FakeState, env: SimpleEnvironment, absoluteName: AbsoluteNameS[INameS]): ITemplataType = {
+        override def lookupType(state: FakeState, env: SimpleEnvironment, absoluteName: INameS): ITemplataType = {
           absoluteName.last match {
             case TopLevelCitizenDeclarationNameS(name, _) => env.lookupType(name)
           }

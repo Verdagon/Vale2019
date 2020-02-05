@@ -42,21 +42,21 @@ case class ProgramS(
   def lookupFunction(name: String): FunctionS = {
     val matches =
       implementedFunctions
-        .find(f => f.name.last match { case FunctionNameS(n, _) => n == name })
+        .find(f => f.name match { case FunctionNameS(n, _) => n == name })
     vassert(matches.size == 1)
     matches.head
   }
   def lookupInterface(name: String): InterfaceS = {
     val matches =
       interfaces
-        .find(f => f.name.last match { case TopLevelCitizenDeclarationNameS(n, _) => n == name })
+        .find(f => f.name match { case TopLevelCitizenDeclarationNameS(n, _) => n == name })
     vassert(matches.size == 1)
     matches.head
   }
   def lookupStruct(name: String): StructS = {
     val matches =
       structs
-        .find(f => f.name.last match { case TopLevelCitizenDeclarationNameS(n, _) => n == name })
+        .find(f => f.name match { case TopLevelCitizenDeclarationNameS(n, _) => n == name })
     vassert(matches.size == 1)
     matches.head
   }
@@ -67,11 +67,11 @@ case class CodeLocationS(
   char: Int)
 
 case class StructS(
-    name: AbsoluteNameS[TopLevelCitizenDeclarationNameS],
+    name: TopLevelCitizenDeclarationNameS,
     mutability: MutabilityP,
     maybePredictedMutability: Option[MutabilityP],
-    identifyingRunes: List[AbsoluteNameS[IRuneS]],
-    allRunes: Set[AbsoluteNameS[IRuneS]],
+    identifyingRunes: List[IRuneS],
+    allRunes: Set[IRuneS],
     maybePredictedType: Option[ITypeSR],
     isTemplate: Boolean,
     rules: List[IRulexSR],
@@ -80,22 +80,22 @@ case class StructS(
 case class StructMemberS(
     name: String,
     variability: VariabilityP,
-    typeRune: AbsoluteNameS[IRuneS])
+    typeRune: IRuneS)
 
 case class ImplS(
-    name: AbsoluteNameS[ImplNameS],
+    name: ImplNameS,
     rules: List[IRulexSR],
-    allRunes: Set[AbsoluteNameS[IRuneS]],
+    allRunes: Set[IRuneS],
     isTemplate: Boolean,
-    structKindRune: AbsoluteNameS[IRuneS],
-    interfaceKindRune: AbsoluteNameS[IRuneS])
+    structKindRune: IRuneS,
+    interfaceKindRune: IRuneS)
 
 case class InterfaceS(
-    name: AbsoluteNameS[TopLevelCitizenDeclarationNameS],
+    name: TopLevelCitizenDeclarationNameS,
     mutability: MutabilityP,
     maybePredictedMutability: Option[MutabilityP],
-    identifyingRunes: List[AbsoluteNameS[IRuneS]],
-    allRunes: Set[AbsoluteNameS[IRuneS]],
+    identifyingRunes: List[IRuneS],
+    allRunes: Set[IRuneS],
     maybePredictedType: Option[ITypeSR],
     isTemplate: Boolean,
     rules: List[IRulexSR],
@@ -104,14 +104,14 @@ case class InterfaceS(
 
 object interfaceSName {
   // The extraction method (mandatory)
-  def unapply(interfaceS: InterfaceS): Option[AbsoluteNameS[TopLevelCitizenDeclarationNameS]] = {
+  def unapply(interfaceS: InterfaceS): Option[TopLevelCitizenDeclarationNameS] = {
     Some(interfaceS.name)
   }
 }
 
 object structSName {
   // The extraction method (mandatory)
-  def unapply(structS: StructS): Option[AbsoluteNameS[TopLevelCitizenDeclarationNameS]] = {
+  def unapply(structS: StructS): Option[TopLevelCitizenDeclarationNameS] = {
     Some(structS.name)
   }
 }
@@ -153,19 +153,19 @@ case class CodeBody1(body1: BodySE) extends IBody1
 
 // Underlying class for all XYZFunctionS types
 case class FunctionS(
-    name: AbsoluteNameS[IFunctionDeclarationNameS],
+    name: IFunctionDeclarationNameS,
     isUserFunction: Boolean,
 
     // This is not necessarily only what the user specified, the compiler can add
     // things to the end here, see CCAUIR.
-    identifyingRunes: List[AbsoluteNameS[IRuneS]],
-    allRunes: Set[AbsoluteNameS[IRuneS]],
+    identifyingRunes: List[IRuneS],
+    allRunes: Set[IRuneS],
     maybePredictedType: Option[ITypeSR],
 
     params: List[ParameterS],
 
     // We need to leave it an option to signal that the compiler can infer the return type.
-    maybeRetCoordRune: Option[AbsoluteNameS[IRuneS]],
+    maybeRetCoordRune: Option[IRuneS],
 
     isTemplate: Boolean,
     templateRules: List[IRulexSR],
@@ -173,15 +173,15 @@ case class FunctionS(
 ) {
   body match {
     case ExternBody1 | AbstractBody1 | GeneratedBody1(_) => {
-      name.last match {
-        case LambdaNameS(_) => vwat()
+      name match {
+        case LambdaNameS(_, _) => vwat()
         case _ =>
       }
     }
     case CodeBody1(body1) => {
       if (body1.closuredNames.nonEmpty) {
-        name.last match {
-          case LambdaNameS(_) =>
+        name match {
+          case LambdaNameS(_, _) =>
           case _ => vwat()
         }
       }

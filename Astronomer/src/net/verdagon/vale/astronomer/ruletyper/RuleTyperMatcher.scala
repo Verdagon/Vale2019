@@ -10,7 +10,7 @@ import scala.collection.immutable.List
 
 trait RuleTyperMatcherDelegate[Env, State] {
   def lookupType(state: State, env: Env, name: ImpreciseNameS[CodeTypeNameS]): ITemplataType
-  def lookupType(state: State, env: Env, name: AbsoluteNameS[INameS]): ITemplataType
+  def lookupType(state: State, env: Env, name: INameS): ITemplataType
 }
 
 class RuleTyperMatcher[Env, State](

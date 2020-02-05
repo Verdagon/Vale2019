@@ -10,7 +10,7 @@ import scala.collection.immutable.List
 
 trait IRuleTyperEvaluatorDelegate[Env, State] {
   def lookupType(state: State, env: Env, name: ImpreciseNameS[CodeTypeNameS]): ITemplataType
-  def lookupType(state: State, env: Env, name: AbsoluteNameS[INameS]): ITemplataType
+  def lookupType(state: State, env: Env, name: INameS): ITemplataType
 }
 
 // Given enough user specified template params and param inputs, we should be able to
@@ -687,7 +687,7 @@ class RuleTyperEvaluator[Env, State](
           delegate.lookupType(state, env, name)
         }
 
-        override def lookupType(state: State, env: Env, name: AbsoluteNameS[INameS]): ITemplataType = {
+        override def lookupType(state: State, env: Env, name: INameS): ITemplataType = {
           delegate.lookupType(state, env, name)
         }
       })

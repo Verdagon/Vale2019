@@ -3,19 +3,20 @@ package net.verdagon.vale.scout
 import net.verdagon.vale.parser._
 
 object TemplexScout {
-  def translateMaybeTemplex(declaredRunes: Set[AbsoluteNameS[IRuneS]], maybeTemplexP: Option[ITemplexPT]): Option[ITemplexS] = {
+  def translateMaybeTemplex(declaredRunes: Set[IRuneS], maybeTemplexP: Option[ITemplexPT]): Option[ITemplexS] = {
     maybeTemplexP match {
       case None => None
       case Some(t) => Some(translateTemplex(declaredRunes, t))
     }
   }
 
-  def translateTemplex(declaredRunes: Set[AbsoluteNameS[IRuneS]], templexP: ITemplexPT): ITemplexS = {
+  def translateTemplex(declaredRunes: Set[IRuneS], templexP: ITemplexPT): ITemplexS = {
     templexP match {
       case NameOrRunePT(nameOrRune) => {
-        declaredRunes.find(_.last == CodeRuneS(nameOrRune)) match {
-          case None => NameST(ImpreciseNameS(List(), CodeTypeNameS(nameOrRune)))
-          case Some(rune) => RuneST(rune)
+        if (declaredRunes.contains(CodeRuneS(nameOrRune))) {
+          RuneST(CodeRuneS(nameOrRune))
+        } else {
+          NameST(CodeTypeNameS(nameOrRune))
         }
       }
       case MutabilityPT(mutability) => MutabilityST(mutability)
