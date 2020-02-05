@@ -12,8 +12,6 @@ import net.verdagon.vale.templar.function.{BuiltInFunctions, FunctionTemplar, Fu
 import scala.collection.immutable.{List, ListMap, Map, Set}
 
 object Templar {
-  val IMPL_NAME = "__impl"
-
   def evaluate(program: ProgramA):
   CompleteProgram2 = {
 
@@ -173,7 +171,7 @@ object Templar {
     env2
   }
 
-  def stampNeededOverridesUntilSettled(env: NamespaceEnvironment, temputs: TemputsBox): Unit = {
+  def stampNeededOverridesUntilSettled(env: NamespaceEnvironment[IName2], temputs: TemputsBox): Unit = {
     val neededOverrides = EdgeTemplar.assembleEdges(temputs.functions, temputs.getAllInterfaces(), temputs.impls)
 
     if (neededOverrides.isEmpty) {

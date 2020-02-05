@@ -16,9 +16,9 @@ import scala.collection.immutable.List
 
 object BuiltInFunctions {
   def addBuiltInFunctions(
-    currentlyConstructingEnv0: NamespaceEnvironment,
+    currentlyConstructingEnv0: NamespaceEnvironment[IName2],
     functionGeneratorByName0: Map[String, IFunctionGenerator]):
-  (NamespaceEnvironment, Map[String, IFunctionGenerator]) = {
+  (NamespaceEnvironment[IName2], Map[String, IFunctionGenerator]) = {
     val (currentlyConstructingEnv1, functionGeneratorByName1) = addConcreteDestructor(currentlyConstructingEnv0, functionGeneratorByName0)
     val (currentlyConstructingEnv2, functionGeneratorByName2) = addInterfaceDestructor(currentlyConstructingEnv1, functionGeneratorByName1)
     val (currentlyConstructingEnvH, functionGeneratorByNameH) = addImplDestructor(currentlyConstructingEnv2, functionGeneratorByName2)
@@ -29,9 +29,9 @@ object BuiltInFunctions {
   }
 
   private def addConcreteDestructor(
-    currentlyConstructingEnv: NamespaceEnvironment,
+    currentlyConstructingEnv: NamespaceEnvironment[IName2],
     functionGeneratorByName: Map[String, IFunctionGenerator]
-  ): (NamespaceEnvironment, Map[String, IFunctionGenerator]) = {
+  ): (NamespaceEnvironment[IName2], Map[String, IFunctionGenerator]) = {
     // Note the virtuality None in the header, and how we filter so this only applies
     // to structs and not interfaces. We use a different template for interface destructors.
     (
@@ -113,9 +113,9 @@ object BuiltInFunctions {
   }
 
   private def addInterfaceDestructor(
-    currentlyConstructingEnv: NamespaceEnvironment,
+    currentlyConstructingEnv: NamespaceEnvironment[IName2],
     functionGeneratorByName: Map[String, IFunctionGenerator]
-  ): (NamespaceEnvironment, Map[String, IFunctionGenerator]) = {
+  ): (NamespaceEnvironment[IName2], Map[String, IFunctionGenerator]) = {
 
     (
     currentlyConstructingEnv
@@ -178,9 +178,9 @@ object BuiltInFunctions {
   }
 
   private def addImplDestructor(
-    currentlyConstructingEnv: NamespaceEnvironment,
+    currentlyConstructingEnv: NamespaceEnvironment[IName2],
     functionGeneratorByName: Map[String, IFunctionGenerator]
-  ): (NamespaceEnvironment, Map[String, IFunctionGenerator]) = {
+  ): (NamespaceEnvironment[IName2], Map[String, IFunctionGenerator]) = {
     (
     currentlyConstructingEnv
       .addFunction(
@@ -231,7 +231,7 @@ object BuiltInFunctions {
               val List(
                 CoordTemplata(Coord(_, overridingStructRef2FromTemplateArg @ StructRef2(_))),
                 KindTemplata(implementedInterfaceRef2 @ InterfaceRef2(_))) =
-                  namedEnv.fullName.steps.last.templateArgs.get
+                  namedEnv.fullName.last.templateArgs.get
 
               params.map(_.tyype) match {
                 case List(Coord(_, structRef2 @ StructRef2(_))) => {
@@ -249,9 +249,9 @@ object BuiltInFunctions {
   }
 
   private def addDrop(
-    currentlyConstructingEnv: NamespaceEnvironment,
+    currentlyConstructingEnv: NamespaceEnvironment[IName2],
     functionGeneratorByName: Map[String, IFunctionGenerator]
-  ): (NamespaceEnvironment, Map[String, IFunctionGenerator]) = {
+  ): (NamespaceEnvironment[IName2], Map[String, IFunctionGenerator]) = {
     // Drop is a function that:
     // - If received an owning pointer, will call the destructor
     // - If received a share pointer, will decrement it and if was last, call its destructor
@@ -289,7 +289,7 @@ object BuiltInFunctions {
               maybeReturnType2: Option[Coord]):
             (FunctionHeader2) = {
               vassert(maybeReturnType2 == Some(Coord(Share, Void2())))
-              val List(CoordTemplata(ref2)) = namedEnv.fullName.steps.last.templateArgs.get
+              val List(CoordTemplata(ref2)) = namedEnv.fullName.last.templateArgs.get
               val List(Parameter2("x", None, paramType2)) = params
               vassert(paramType2 == ref2)
               DestructorTemplar.generateDropFunction(
@@ -298,7 +298,7 @@ object BuiltInFunctions {
           }))
   }
 
-  private def addArrayLen(currentlyConstructingEnv: NamespaceEnvironment): NamespaceEnvironment = {
+  private def addArrayLen(currentlyConstructingEnv: NamespaceEnvironment[IName2]): NamespaceEnvironment[IName2] = {
     currentlyConstructingEnv
       .addFunction(
         FunctionA(
@@ -380,7 +380,7 @@ object BuiltInFunctions {
   }
 
 
-  private def addPanic(currentlyConstructingEnv: NamespaceEnvironment): NamespaceEnvironment = {
+  private def addPanic(currentlyConstructingEnv: NamespaceEnvironment[IName2]): NamespaceEnvironment[IName2] = {
     currentlyConstructingEnv
       .addFunction(
         FunctionA(

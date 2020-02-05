@@ -210,7 +210,7 @@ class InfererMatcher[Env, State](
           if (actualCitizen.fullName.steps.size > 1) {
             vimpl()
           }
-          val actualArgs = actualCitizen.fullName.steps.last.templateArgs.get
+          val actualArgs = actualCitizen.fullName.last.templateArgs
 
           // Check to see that the actual template args match the expected template args
           val argsDeeplySatisfied =

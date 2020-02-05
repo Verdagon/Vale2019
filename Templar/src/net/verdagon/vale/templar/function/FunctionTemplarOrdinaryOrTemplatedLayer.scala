@@ -407,7 +407,7 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
   FunctionEnvironment = {
 
     val identifyingTemplatas = identifyingRunes.map(templatasByRune)
-    val fullName = FullName2(nearEnv.fullName.steps.init :+ nearEnv.fullName.steps.last.copy(templateArgs = Some(identifyingTemplatas)))
+    val fullName = FullName2(nearEnv.fullName.steps.init :+ nearEnv.fullName.last.copy(templateArgs = Some(identifyingTemplatas)))
     val maybeReturnType = maybeRetCoordRune.map(retCoordRune => {
       templatasByRune.get(retCoordRune) match {
         case Some(CoordTemplata(coord)) => coord

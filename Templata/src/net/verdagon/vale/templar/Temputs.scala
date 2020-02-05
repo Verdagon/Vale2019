@@ -46,14 +46,14 @@ case class Temputs(
     // Not too sure about the type of declaredStructs, we might need something else
     declaredStructs: Set[StructRef2],
     structDefsByRef: ListMap[StructRef2, StructDefinition2],
-    envByStructRef: Map[StructRef2, NamespaceEnvironment],
+    envByStructRef: Map[StructRef2, NamespaceEnvironment[IName2]],
     // declaredInterfaces is the interfaces that we're currently in the process of defining
     // Things will appear here before they appear in interfaceDefsByRef
     // This is to prevent infinite recursion / stack overflow when templaring recursive types
     // Not too sure about the type of declaredInterfaces, we might need something else
     declaredInterfaces: Set[InterfaceRef2],
     interfaceDefsByRef: ListMap[InterfaceRef2, InterfaceDefinition2],
-    envByInterfaceRef: Map[InterfaceRef2, NamespaceEnvironment],
+    envByInterfaceRef: Map[InterfaceRef2, NamespaceEnvironment[IName2]],
 
     impls: List[Impl2],
 
@@ -207,7 +207,7 @@ case class Temputs(
 
   def declareStructEnv(
     structRef: StructRef2,
-    env: NamespaceEnvironment,
+    env: NamespaceEnvironment[IName2],
   ): Temputs = {
     vassert(declaredStructs.contains(structRef))
     vassert(!envByStructRef.contains(structRef))
@@ -282,7 +282,7 @@ case class Temputs(
 
   def declareInterfaceEnv(
     interfaceRef: InterfaceRef2,
-    env: NamespaceEnvironment
+    env: NamespaceEnvironment[InterfaceName2]
   ): Temputs = {
     vassert(declaredInterfaces.contains(interfaceRef))
     vassert(!envByInterfaceRef.contains(interfaceRef))
@@ -440,7 +440,7 @@ case class Temputs(
       unknownSizeArrayTypes)
   }
 
-  def structDeclared(fullName: FullName2): Option[StructRef2] = {
+  def structDeclared(fullName: FullName2[IStructName2]): Option[StructRef2] = {
     // This is the only place besides StructDefinition2 and declareStruct thats allowed to make one of these
     val structRef = StructRef2(fullName)
     if (declaredStructs.contains(structRef)) {
@@ -472,7 +472,7 @@ case class Temputs(
     }
   }
 
-  def interfaceDeclared(fullName: FullName2): Option[InterfaceRef2] = {
+  def interfaceDeclared(fullName: FullName2[InterfaceName2]): Option[InterfaceRef2] = {
     // This is the only place besides InterfaceDefinition2 and declareInterface thats allowed to make one of these
     val interfaceRef = InterfaceRef2(fullName)
     if (declaredInterfaces.contains(interfaceRef)) {
@@ -490,7 +490,7 @@ case class Temputs(
   }
 
   def exactDeclaredSignatureExists(
-      fullName: FullName2,
+      fullName: FullName2[IFunctionName2],
       paramTypes: List[Coord]):
   Boolean = {
     declaredSignatures.contains(Signature2(fullName, paramTypes))
@@ -523,10 +523,10 @@ case class TemputsBox(var temputs: Temputs) {
   def mutabilitiesByCitizenRef: Map[CitizenRef2, Mutability] = temputs.mutabilitiesByCitizenRef
   def declaredStructs: Set[StructRef2] = temputs.declaredStructs
   def structDefsByRef: ListMap[StructRef2, StructDefinition2] = temputs.structDefsByRef
-  def envByStructRef: Map[StructRef2, NamespaceEnvironment] = temputs.envByStructRef
+  def envByStructRef: Map[StructRef2, NamespaceEnvironment[IName2]] = temputs.envByStructRef
   def declaredInterfaces: Set[InterfaceRef2] = temputs.declaredInterfaces
   def interfaceDefsByRef: ListMap[InterfaceRef2, InterfaceDefinition2] = temputs.interfaceDefsByRef
-  def envByInterfaceRef: Map[InterfaceRef2, NamespaceEnvironment] = temputs.envByInterfaceRef
+  def envByInterfaceRef: Map[InterfaceRef2, NamespaceEnvironment[IName2]] = temputs.envByInterfaceRef
   def impls: List[Impl2] = temputs.impls
   def packTypes: Map[List[Coord], StructRef2] = temputs.packTypes
   def arraySequenceTypes: Map[(Int, RawArrayT2), ArraySequenceT2] = temputs.arraySequenceTypes
@@ -556,7 +556,7 @@ case class TemputsBox(var temputs: Temputs) {
     temputs = temputs.declareStructMutability(structRef, mutability)
   }
 
-  def declareStructEnv(structRef: StructRef2, env: NamespaceEnvironment): Unit = {
+  def declareStructEnv(structRef: StructRef2, env: NamespaceEnvironment[IStructName2]): Unit = {
     temputs = temputs.declareStructEnv(structRef, env)
   }
 
@@ -568,7 +568,7 @@ case class TemputsBox(var temputs: Temputs) {
     temputs = temputs.declareInterfaceMutability(interfaceRef, mutability)
   }
 
-  def declareInterfaceEnv(interfaceRef: InterfaceRef2, env: NamespaceEnvironment): Unit = {
+  def declareInterfaceEnv(interfaceRef: InterfaceRef2, env: NamespaceEnvironment[InterfaceName2]): Unit = {
     temputs = temputs.declareInterfaceEnv(interfaceRef, env)
   }
 
@@ -596,7 +596,7 @@ case class TemputsBox(var temputs: Temputs) {
     temputs = temputs.addImpl(structRef2, interfaceRef2)
   }
 
-  def structDeclared(fullName: FullName2): Option[StructRef2] = temputs.structDeclared(fullName)
+  def structDeclared(fullName: FullName2[IStructName2]): Option[StructRef2] = temputs.structDeclared(fullName)
 
   def lookupMutability(citizenRef2: CitizenRef2): Mutability = temputs.lookupMutability(citizenRef2)
 
@@ -604,11 +604,11 @@ case class TemputsBox(var temputs: Temputs) {
 
   def lookupCitizen(citizenRef: CitizenRef2): CitizenDefinition2 = temputs.lookupCitizen(citizenRef)
 
-  def interfaceDeclared(fullName: FullName2): Option[InterfaceRef2] = temputs.interfaceDeclared(fullName)
+  def interfaceDeclared(fullName: FullName2[InterfaceName2]): Option[InterfaceRef2] = temputs.interfaceDeclared(fullName)
 
   def lookupInterface(interfaceRef: InterfaceRef2): InterfaceDefinition2 = temputs.lookupInterface(interfaceRef)
 
-  def exactDeclaredSignatureExists(fullName: FullName2, paramTypes: List[Coord]): Boolean = {
+  def exactDeclaredSignatureExists(fullName: FullName2[IFunctionName2], paramTypes: List[Coord]): Boolean = {
     temputs.exactDeclaredSignatureExists(fullName, paramTypes)
   }
 
@@ -633,7 +633,7 @@ case class Edge2(
   methods: List[Prototype2])
 
 object Program2 {
-  val emptyPackStructRef = StructRef2(FullName2(List(NamePart2("__Pack", Some(List()), None, None))))
+  val emptyTupleStructRef = StructRef2(FullName2(List(), TupleName2(List())))
 }
 
 //trait Program2 {
@@ -692,7 +692,10 @@ case class CompleteProgram2(
   }
 
   def lookupUserFunction(humanName: String): Function2 = {
-    val matches = functions.filter(_.header.fullName.steps.last.humanName == humanName).filter(_.header.isUserFunction)
+    val matches =
+      functions
+        .filter(function => simpleName.unapply(function.header.fullName).contains(humanName))
+        .filter(_.header.isUserFunction)
     if (matches.size == 0) {
       vfail("Not found!")
     } else if (matches.size > 1) {
@@ -702,7 +705,7 @@ case class CompleteProgram2(
   }
 
   def lookupFunction(humanName: String): Function2 = {
-    val matches = functions.filter(_.header.fullName.steps.last.humanName == humanName)
+    val matches = functions.filter(function => simpleName.unapply(function.header.fullName).contains(humanName))
     if (matches.size == 0) {
       vfail("Function \"" + humanName + "\" not found!")
     } else if (matches.size > 1) {

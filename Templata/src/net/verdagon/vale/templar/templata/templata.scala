@@ -1,6 +1,7 @@
 package net.verdagon.vale.templar.templata
 
 import net.verdagon.vale.astronomer._
+import net.verdagon.vale.templar.{FunctionName2, IName2, IStructName2, StructName2}
 import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.{vassert, vfail}
@@ -65,7 +66,10 @@ case class FunctionTemplata(
   // This assertion is helpful now, but will false-positive trip when someone
   // tries to make an interface with the same name as its containing. At that point,
   // feel free to remove this assertion.
-  vassert(!outerEnv.fullName.steps.lastOption.map(_.humanName).contains(function.name))
+  (outerEnv.fullName.last, function.name.last) match {
+    case (FunctionName2(envFunctionName, _, _), FunctionNameA(sourceName, _)) => vassert(envFunctionName != sourceName)
+    case _ =>
+  }
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func)
@@ -76,7 +80,7 @@ case class StructTemplata(
   // The namespace this interface was declared in.
   // has the name of the surrounding environment, does NOT include struct's name.
   // See TMRE for more on these environments.
-  env: NamespaceEnvironment,
+  env: NamespaceEnvironment[IName2],
 //
 //  // The containers are the structs/interfaces/impls/functions that this thing is inside.
 //  // E.g. if LinkedList has a Node substruct, then the Node's templata will have one
@@ -91,12 +95,15 @@ case class StructTemplata(
   override def order: Int = 7
   override def tyype: ITemplataType = originStruct.tyype
 
-  // Make sure we didn't accidentally code something to include the struct's name as
+  // Make sure we didn't accidentally code something to include the structs's name as
   // the last step.
   // This assertion is helpful now, but will false-positive trip when someone
   // tries to make an interface with the same name as its containing. At that point,
   // feel free to remove this assertion.
-  vassert(!env.fullName.steps.lastOption.map(_.humanName).contains(originStruct.name))
+  (env.fullName.last, originStruct.name.last) match {
+    case (StructName2(envFunctionName, _), TopLevelCitizenDeclarationNameA(sourceName, _)) => vassert(envFunctionName != sourceName)
+    case _ =>
+  }
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func)
@@ -113,7 +120,7 @@ case class InterfaceTemplata(
   // The namespace this interface was declared in.
   // Has the name of the surrounding environment, does NOT include interface's name.
   // See TMRE for more on these environments.
-  env: NamespaceEnvironment,
+  env: NamespaceEnvironment[IName2],
 //
 //  // The containers are the structs/interfaces/impls/functions that this thing is inside.
 //  // E.g. if LinkedList has a Node substruct, then the Node's templata will have one
@@ -133,7 +140,10 @@ case class InterfaceTemplata(
   // This assertion is helpful now, but will false-positive trip when someone
   // tries to make an interface with the same name as its containing. At that point,
   // feel free to remove this assertion.
-  vassert(!env.fullName.steps.lastOption.map(_.humanName).contains(originInterface.name))
+  (env.fullName.last, originInterface.name.last) match {
+    case (StructName2(envFunctionName, _), TopLevelCitizenDeclarationNameA(sourceName, _)) => vassert(envFunctionName != sourceName)
+    case _ =>
+  }
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func)

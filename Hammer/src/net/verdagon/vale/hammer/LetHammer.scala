@@ -5,7 +5,7 @@ import net.verdagon.vale.hinputs.Hinputs
 import net.verdagon.vale.{metal => m}
 import net.verdagon.vale.metal.{Variability => _, _}
 import net.verdagon.vale.templar._
-import net.verdagon.vale.templar.env.{AddressibleLocalVariable2, ReferenceLocalVariable2, VariableId2}
+import net.verdagon.vale.templar.env.{AddressibleLocalVariable2, ReferenceLocalVariable2, FullName2}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.vfail
 
@@ -83,7 +83,7 @@ object LetHammer {
       nodesByLine: NodesBox,
       sourceExprResultLine: RegisterAccessH[ReferendH],
       sourceResultPointerTypeH: ReferenceH[ReferendH],
-      varId: VariableId2,
+      varId: FullName2,
       variability: Variability,
       reference: Coord):
   Unit = {
@@ -120,7 +120,7 @@ object LetHammer {
       sourceExprResultLine: RegisterAccessH[ReferendH],
       sourceResultPointerTypeH: ReferenceH[ReferendH],
       let2: LetAndLend2,
-      varId: VariableId2,
+      varId: FullName2,
       variability: Variability,
       reference: Coord):
   (RegisterAccessH[ReferendH]) = {
@@ -149,7 +149,7 @@ object LetHammer {
       nodesByLine: NodesBox,
       sourceExprResultLine: RegisterAccessH[ReferendH],
       sourceResultPointerTypeH: ReferenceH[ReferendH],
-      varId: VariableId2):
+      varId: FullName2):
   Unit = {
     val localIndex =
       locals.addTemplarLocal(varId, stackHeight.snapshot, sourceResultPointerTypeH)
@@ -174,7 +174,7 @@ object LetHammer {
         sourceExprResultLine: RegisterAccessH[ReferendH],
         sourceResultPointerTypeH: ReferenceH[ReferendH],
         let2: LetAndLend2,
-        varId: VariableId2):
+        varId: FullName2):
     RegisterAccessH[ReferendH] = {
 
         translateMundaneLet(

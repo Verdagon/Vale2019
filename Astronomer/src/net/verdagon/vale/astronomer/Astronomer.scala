@@ -33,9 +33,9 @@ case class Environment(
     absoluteName: AbsoluteNameS[INameS],
     impreciseName: ImpreciseNameS[IImpreciseNameStepS]):
   Option[AbsoluteNameS[INameS]] = {
-    impreciseName.steps.last match {
+    impreciseName.last match {
       case CodeTypeNameS(impreciseNameStr) => {
-        absoluteName.steps.last match {
+        absoluteName.last match {
           case TopLevelCitizenDeclarationNameS(citizenNameStr, _) => {
             if (impreciseNameStr == citizenNameStr) Some(absoluteName.init) else None
           }

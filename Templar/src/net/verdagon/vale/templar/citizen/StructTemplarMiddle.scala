@@ -13,7 +13,7 @@ import scala.collection.immutable.List
 
 object StructTemplarMiddle {
   def getStructRef(
-    structOuterEnv: NamespaceEnvironment,
+    structOuterEnv: NamespaceEnvironment[IName2],
     temputs: TemputsBox,
     structS: StructA,
     templatasByRune: Map[String, ITemplata]):
@@ -31,7 +31,7 @@ object StructTemplarMiddle {
   }
 
   def getInterfaceRef(
-    interfaceOuterEnv: NamespaceEnvironment,
+    interfaceOuterEnv: NamespaceEnvironment[IName2],
     temputs: TemputsBox,
     interfaceA: InterfaceA,
     templatasByRune: Map[String, ITemplata]):
@@ -61,7 +61,7 @@ object StructTemplarMiddle {
     env: IEnvironment,
     temputs: TemputsBox,
     functionS: FunctionA,
-    functionFullName: FullName2,
+    functionFullName: FullName2[IFunctionName2],
     members: List[StructMember2]):
   (StructRef2, Mutability, FunctionTemplata) = {
     StructTemplarCore.makeClosureUnderstruct(env, temputs, functionS, functionFullName, members)
@@ -69,7 +69,7 @@ object StructTemplarMiddle {
 
   // Makes a struct to back a pack or tuple
   def makeSeqOrPackUnderstruct(
-    env: NamespaceEnvironment,
+    env: NamespaceEnvironment[IName2],
     temputs: TemputsBox,
     memberTypes2: List[Coord],
     prefix: String):
@@ -82,7 +82,7 @@ object StructTemplarMiddle {
     outerEnv: IEnvironment,
     temputs: TemputsBox,
     maybeConstructorOriginFunctionA: Option[FunctionA],
-    functionFullName: FullName2,
+    functionFullName: FullName2[IFunctionName2],
     interfaceRef: InterfaceRef2,
     lambdas: List[Coord]):
   (StructRef2, Mutability, FunctionHeader2) = {

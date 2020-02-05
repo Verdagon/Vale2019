@@ -2,7 +2,7 @@ package net.verdagon.vale.hammer
 
 import net.verdagon.vale.hinputs.Hinputs
 import net.verdagon.vale.metal._
-import net.verdagon.vale.templar.env.VariableId2
+import net.verdagon.vale.templar.env.FullName2
 import net.verdagon.vale.{vassert, vfail}
 
 case class FunctionRefH(prototype: PrototypeH) {
@@ -13,14 +13,14 @@ case class FunctionRefH(prototype: PrototypeH) {
 case class LocalsBox(var inner: Locals) {
   def snapshot = inner
 
-  def templarLocals: Map[VariableId2, VariableIdH] = inner.templarLocals
+  def templarLocals: Map[FullName2, VariableIdH] = inner.templarLocals
   def unstackifiedVars: Set[VariableIdH] = inner.unstackifiedVars
   def locals: Map[VariableIdH, Local] = inner.locals
 
-  def get(id: VariableId2) = inner.get(id)
+  def get(id: FullName2) = inner.get(id)
   def get(id: VariableIdH) = inner.get(id)
 
-  def markUnstackified(varId2: VariableId2): Unit = {
+  def markUnstackified(varId2: FullName2): Unit = {
     inner = inner.markUnstackified(varId2)
   }
 
@@ -38,7 +38,7 @@ case class LocalsBox(var inner: Locals) {
   }
 
   def addTemplarLocal(
-    varId2: VariableId2,
+    varId2: FullName2,
     height: StackHeight,
     tyype: ReferenceH[ReferendH]):
   Local = {
@@ -55,7 +55,7 @@ case class LocalsBox(var inner: Locals) {
 case class Locals(
     // This doesn't have all the locals that are in the locals list, this just
     // has any locals added by templar.
-    templarLocals: Map[VariableId2, VariableIdH],
+    templarLocals: Map[FullName2, VariableIdH],
 
     unstackifiedVars: Set[VariableIdH],
 
@@ -63,7 +63,7 @@ case class Locals(
     locals: Map[VariableIdH, Local]) {
 
   def addTemplarLocal(
-    varId2: VariableId2,
+    varId2: FullName2,
     height: StackHeight,
     tyype: ReferenceH[ReferendH]):
   (Locals, Local) = {
@@ -96,7 +96,7 @@ case class Locals(
     (newLocals, newLocal)
   }
 
-  def markUnstackified(varId2: VariableId2): Locals = {
+  def markUnstackified(varId2: FullName2): Locals = {
     markUnstackified(templarLocals(varId2))
   }
 
@@ -109,7 +109,7 @@ case class Locals(
     Locals(templarLocals, unstackifiedVars + varIdH, locals)
   }
 
-  def get(varId: VariableId2): Option[Local] = {
+  def get(varId: FullName2): Option[Local] = {
     templarLocals.get(varId) match {
       case None => None
       case Some(index) => Some(locals(index))

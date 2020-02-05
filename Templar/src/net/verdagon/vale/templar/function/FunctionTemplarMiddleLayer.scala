@@ -247,7 +247,7 @@ object FunctionTemplarMiddleLayer {
   FunctionEnvironment = {
     // The last step is the name, but it doesn't have the params filled out.
     // (these asserts are just to make sure that's still the case)
-    vassert(runedEnv.fullName.steps.last.parameters.isEmpty)
+    vassert(runedEnv.fullName.last.parameters.isEmpty)
     // We fill out the params here to get the function's full name.
     val functionFullName = makeFunctionFullName(runedEnv.fullName, paramTypes)
     val namedEnv = runedEnv.copy(fullName = functionFullName)
@@ -255,12 +255,12 @@ object FunctionTemplarMiddleLayer {
   }
 
   def makeFunctionFullName(runedEnvFullName: FullName2, paramTypes: List[Coord]): FullName2 = {
-    vassert(runedEnvFullName.steps.last.parameters.isEmpty)
+    vassert(runedEnvFullName.last.parameters.isEmpty)
     // We fill out the params here to get the function's full name.
     val functionFullName =
       FullName2(
         runedEnvFullName.steps.init :+
-          runedEnvFullName.steps.last.copy(parameters = Some(paramTypes)))
+          runedEnvFullName.last.copy(parameters = Some(paramTypes)))
     functionFullName
   }
 }

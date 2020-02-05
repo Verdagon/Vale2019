@@ -135,14 +135,14 @@ object StructTemplarTemplateArgsLayer {
     env: IEnvironment,
     temputs: TemputsBox,
     functionS: FunctionA,
-    functionFullName: FullName2,
+    functionFullName: FullName2[IFunctionName2],
     members: List[StructMember2]):
   (StructRef2, Mutability, FunctionTemplata) = {
     StructTemplarMiddle.makeClosureUnderstruct(env, temputs, functionS, functionFullName, members)
   }
 
   // Makes a struct to back a pack or tuple
-  def makeSeqOrPackUnderstruct(env: NamespaceEnvironment, temputs: TemputsBox, memberTypes2: List[Coord], prefix: String):
+  def makeSeqOrPackUnderstruct(env: NamespaceEnvironment[IName2], temputs: TemputsBox, memberTypes2: List[Coord], prefix: String):
   (StructRef2, Mutability) = {
     StructTemplarMiddle.makeSeqOrPackUnderstruct(env, temputs, memberTypes2, prefix)
   }
@@ -152,7 +152,7 @@ object StructTemplarTemplateArgsLayer {
     outerEnv: IEnvironment,
     temputs: TemputsBox,
     maybeConstructorOriginFunctionA: Option[FunctionA],
-    functionFullName: FullName2,
+    functionFullName: FullName2[IFunctionName2],
     interfaceRef: InterfaceRef2,
     lambdas: List[Coord]):
   (StructRef2, Mutability, FunctionHeader2) = {

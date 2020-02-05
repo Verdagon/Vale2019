@@ -12,8 +12,6 @@ import net.verdagon.vale.templar.types.{Kind, _}
 
 import scala.collection.immutable.List
 
-case class SolverKindRuneA(ints: List[Int]) extends IRuneA
-
 private[infer] trait IInfererEvaluatorDelegate[Env, State] {
   def lookupMemberTypes(
     state: State,
@@ -163,7 +161,7 @@ class InfererEvaluator[Env, State](
         case c: CitizenRef2 => {
           val ancestorInterfaces = delegate.getAncestorInterfaces(state, c)
           val selfAndAncestors = List(c) ++ ancestorInterfaces
-          val kindRune = patternCoordRuneA.addStep(SolverKindRuneA(paramLocation))
+          val kindRune = patternCoordRuneA.addStep(SolverKindRuneA())
           inferences.addPossibilities(kindRune, selfAndAncestors.map(KindTemplata))
           val rule =
             EqualsAR(

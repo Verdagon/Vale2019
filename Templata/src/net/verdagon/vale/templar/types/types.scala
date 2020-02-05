@@ -1,29 +1,14 @@
 package net.verdagon.vale.templar.types
 
-import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
+import net.verdagon.vale.astronomer.{AbsoluteNameA, INameA}
+import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
+import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.env.IEnvironment
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.{vassert, vcurious, vfail}
 
 import scala.collection.immutable.List
-
-// See NOTAN and ESNTA for why we need this optional template args at every step.
-case class NamePart2(
-    humanName: String,
-    templateArgs: Option[List[ITemplata]],
-    parameters: Option[List[Coord]],
-    codeLocation: Option[CodeLocation2]
-) extends Queriable2 {
-  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
-    List(this).collect(func) ++ templateArgs.toList.flatMap(_.flatMap(_.all(func))) ++ parameters.toList.flatMap(_.flatMap(_.all(func))) ++ codeLocation.toList.flatMap(_.all(func))
-  }
-}
-case class FullName2(steps: List[NamePart2]) extends Queriable2 {
-  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
-    List(this).collect(func) ++ steps.flatMap(_.all(func))
-  }
-}
 
 sealed trait Ownership extends Queriable2 {
   def order: Int;
@@ -279,7 +264,7 @@ trait CitizenDefinition2 {
 
 // We include templateArgTypes to aid in looking this up... same reason we have name
 case class StructDefinition2(
-  fullName: FullName2,
+  fullName: FullName2[IStructName2],
   mutability: Mutability,
   members: List[StructMember2],
   isClosure: Boolean
@@ -314,7 +299,7 @@ case class StructDefinition2(
     }
   }
 
-  private def getMemberAndIndex(memberName: String): (StructMember2, Int) = {
+  def getMemberAndIndex(memberName: String): (StructMember2, Int) = {
     members.zipWithIndex.find(p => p._1.name.equals(memberName)) match {
       case None => vfail("wat")
       case Some((member, index)) => (member, index)
@@ -323,7 +308,7 @@ case class StructDefinition2(
 }
 
 case class InterfaceDefinition2(
-    fullName: FullName2,
+    fullName: FullName2[InterfaceName2],
     mutability: Mutability,
     // This does not include abstract functions declared outside the interface.
     // See IMRFDI for why we need to remember only the internal methods here.
@@ -337,14 +322,14 @@ case class InterfaceDefinition2(
 }
 
 trait CitizenRef2 extends Kind {
-  def fullName: FullName2
+  def fullName: FullName2[ICitizenName2]
 }
 
 // These should only be made by struct templar, which puts the definition into temputs at the same time
-case class StructRef2(fullName: FullName2) extends CitizenRef2 {
+case class StructRef2(fullName: FullName2[IStructName2]) extends CitizenRef2 {
   override def order: Int = 14;
 
-  vassert(fullName.steps.last.templateArgs.nonEmpty)
+  vassert(fullName.last.templateArgs.nonEmpty)
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func) ++ fullName.all(func)
@@ -399,11 +384,11 @@ case class OverloadSet(
 //}
 
 case class InterfaceRef2(
-  fullName: FullName2
+  fullName: FullName2[InterfaceName2]
 ) extends CitizenRef2 with Queriable2 {
   override def order: Int = 15;
 
-  vassert(fullName.steps.last.templateArgs.nonEmpty)
+  vassert(fullName.last.templateArgs.nonEmpty)
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func) ++ fullName.all(func)
@@ -448,10 +433,10 @@ object ReferendComparator extends Ordering[Kind] {
   }
 }
 
-object FullNameComparator extends Ordering[FullName2] {
-  override def compare(a: FullName2, b: FullName2): Int = {
-    val FullName2(aSteps) = a
-    val FullName2(bSteps) = b
+object FullNameComparator extends Ordering[FullName2[IName2]] {
+  override def compare(a: FullName2[IName2], b: FullName2[IName2]): Int = {
+    val aSteps = a.steps
+    val bSteps = b.steps
 
     if (aSteps.length == 0) {
       if (bSteps.length == 0) {
@@ -463,26 +448,75 @@ object FullNameComparator extends Ordering[FullName2] {
       if (bSteps.length == 0) {
         1
       } else {
-        val humanNameDiff = aSteps.head.humanName.compare(bSteps.head.humanName)
+        val humanNameDiff = aSteps.head.order.compare(bSteps.head.order)
         if (humanNameDiff != 0) {
           humanNameDiff
         } else {
-          (aSteps.head.templateArgs, bSteps.head.templateArgs) match {
-            case (None, None) => 0
-            case (None, Some(_)) => -1
-            case (Some(_), None) => 1
-            case (Some(aTemplateArgs), Some(bTemplateArgs)) => {
-              val firstDiff = TemplataTypeListComparator.compare(aTemplateArgs, bTemplateArgs);
-              if (firstDiff != 0) {
-                firstDiff
-              } else {
-                compare(FullName2(aSteps.tail), FullName2(bSteps.tail))
-              }
+          (aSteps.head, bSteps.head) match {
+            case (ImplName2(codeLocationA), ImplName2(codeLocationB)) => compare(codeLocationA, codeLocationB)
+            case (LetName2(codeLocationA), LetName2(codeLocationB)) => compare(codeLocationA, codeLocationB)
+            case (UnnamedLocalName2(codeLocationA), UnnamedLocalName2(codeLocationB)) => compare(codeLocationA, codeLocationB)
+            case (ClosureParamName2(), ClosureParamName2()) => 0
+            case (MagicParamName2(magicParamNumberA), MagicParamName2(magicParamNumberB)) => magicParamNumberA.compareTo(magicParamNumberB)
+            case (CodeVarName2(nameA), CodeVarName2(nameB)) => nameA.compareTo(nameB)
+            case (CodeRune2(nameA), CodeRune2(nameB)) => nameA.compareTo(nameB)
+            case (ImplicitRune2(nameA), ImplicitRune2(nameB)) => nameA.compareTo(nameB)
+            case (MemberRune2(memberIndexA), MemberRune2(memberIndexB)) => memberIndexA.compareTo(memberIndexB)
+            case (MagicImplicitRune2(magicParamIndexA), MagicImplicitRune2(magicParamIndexB)) => magicParamIndexA.compareTo(magicParamIndexB)
+            case (ReturnRune2(), ReturnRune2()) => 0
+            case (FunctionName2(humanNameA, templateArgsA, parametersA), FunctionName2(humanNameB, templateArgsB, parametersB)) => {
+              val nameDiff = humanNameA.compareTo(humanNameB)
+              if (nameDiff != 0)
+                return nameDiff
+              val templateArgsDiff = TemplataTypeListComparator.compare(templateArgsA, templateArgsB)
+              if (templateArgsDiff != 0)
+                return templateArgsDiff
+              TemplataTypeListComparator.compare(parametersA.map(CoordTemplata), parametersB.map(CoordTemplata))
+            }
+            case (LambdaName2(codeLocationA, templateArgsA, parametersA), LambdaName2(codeLocationB, templateArgsB, parametersB)) => {
+              val locDiff = compare(codeLocationA, codeLocationB)
+              if (locDiff != 0)
+                return locDiff
+              val templateArgsDiff = TemplataTypeListComparator.compare(templateArgsA, templateArgsB)
+              if (templateArgsDiff != 0)
+                return templateArgsDiff
+              TemplataTypeListComparator.compare(parametersA.map(CoordTemplata), parametersB.map(CoordTemplata))
+            }
+            case (StructName2(humanNameA, templateArgsA), StructName2(humanNameB, templateArgsB)) => {
+              val nameDiff = humanNameA.compareTo(humanNameB)
+              if (nameDiff != 0)
+                return nameDiff
+              TemplataTypeListComparator.compare(templateArgsA, templateArgsB)
+            }
+            case (TupleName2(membersA), TupleName2(membersB)) => {
+              TemplataTypeListComparator.compare(membersA.map(CoordTemplata), membersB.map(CoordTemplata))
+            }
+            case (LambdaStructName2(codeLocationA, templateArgsA), LambdaStructName2(codeLocationB, templateArgsB)) => {
+              val locDiff = compare(codeLocationA, codeLocationB)
+              if (locDiff != 0)
+                return locDiff
+              TemplataTypeListComparator.compare(templateArgsA, templateArgsB)
+            }
+            case (InterfaceName2(humanNameA, templateArgsA), InterfaceName2(humanNameB, templateArgsB)) => {
+              val nameDiff = humanNameA.compareTo(humanNameB)
+              if (nameDiff != 0)
+                return nameDiff
+              TemplataTypeListComparator.compare(templateArgsA, templateArgsB)
             }
           }
         }
       }
     }
+  }
+
+  def compare(a: CodeLocation2, b: CodeLocation2): Int = {
+    val fileDiff = a.file.compareTo(b.file)
+    if (fileDiff != 0)
+      return fileDiff
+    val lineDiff = a.line.compareTo(b.line)
+    if (lineDiff != 0)
+      return lineDiff
+    a.char.compareTo(b.char)
   }
 }
 

@@ -110,7 +110,7 @@ object BlockTemplar {
           (undecayedExprs2, None)
         } else {
           val resultVarNum = fate.nextVarCounter()
-          val resultVarId = VariableId2(fate.function.lambdaNumber, "__blockresult_" + resultVarNum)
+          val resultVarId = fate.fullName.addStep(TemplarBlockResultVarName2(resultVarNum))
           val resultVariable = ReferenceLocalVariable2(resultVarId, Final, lastExpr.resultRegister.reference)
           val resultLet = LetNormal2(resultVariable, lastExpr)
           fate.addVariable(resultVariable)

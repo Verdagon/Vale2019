@@ -20,7 +20,7 @@ object OverloadTemplar {
       // The environment to look in.
       env: IEnvironment,
       temputs: TemputsBox,
-      humanName: String,
+      functionName: ImpreciseNameA[GlobalFunctionFamilyNameA],
       explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
       args: List[ParamFilter],
       exact: Boolean):
@@ -35,7 +35,7 @@ object OverloadTemplar {
   ) = {
     val (maybePotentialBanner, outscoredReasonByPotentialBanner, rejectedReasonByBanner, rejectedReasonByFunction) =
       scoutPotentialFunction(
-        env, temputs, humanName, explicitlySpecifiedTemplateArgTemplexesS, args, exact)
+        env, temputs, functionName, explicitlySpecifiedTemplateArgTemplexesS, args, exact)
     maybePotentialBanner match {
       case None => {
         (None, outscoredReasonByPotentialBanner, rejectedReasonByBanner, rejectedReasonByFunction)
@@ -61,12 +61,12 @@ object OverloadTemplar {
     rejectedReasonByFunction: Map[FunctionA, String]
   ) extends IScoutExpectedFunctionResult {
     override def toString = {
-      "Couldn't find a fn " + humanName + "(" + args.map(NameTemplar.getIdentifierName(_)).mkString(", ") + ")\n" +
+      "Couldn't find a fn " + humanName + "(" + args.map(TemplataNamer.getIdentifierName(_)).mkString(", ") + ")\n" +
         "Outscored:\n" + outscoredReasonByPotentialBanner.map({
-          case (potentialBanner, outscoredReason) => NameTemplar.getFullNameIdentifierName(potentialBanner.banner.fullName) + ":\n  " + outscoredReason
+          case (potentialBanner, outscoredReason) => TemplataNamer.getFullNameIdentifierName(potentialBanner.banner.fullName) + ":\n  " + outscoredReason
         }).mkString("\n") + "\n" +
         "Rejected:\n" + rejectedReasonByBanner.map({
-          case (banner, rejectedReason) => NameTemplar.getFullNameIdentifierName(banner.fullName) + ":\n  " + rejectedReason
+          case (banner, rejectedReason) => TemplataNamer.getFullNameIdentifierName(banner.fullName) + ":\n  " + rejectedReason
         }).mkString("\n") + "\n" +
         "Rejected:\n" + rejectedReasonByFunction.map({
           case (functionS, rejectedReason) => functionS + ":\n  " + rejectedReason
@@ -77,17 +77,17 @@ object OverloadTemplar {
   def scoutExpectedFunctionForPrototype(
     env: IEnvironment,
     temputs: TemputsBox,
-    humanName: String,
+    functionName: ImpreciseNameA[GlobalFunctionFamilyNameA],
     explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
     args: List[ParamFilter],
     exact: Boolean):
   (IScoutExpectedFunctionResult) = {
     val (maybeFunction, outscoredReasonByPotentialBanner, rejectedReasonByBanner, rejectedReasonByFunction) =
       scoutMaybeFunctionForPrototype(
-        env, temputs, humanName, explicitlySpecifiedTemplateArgTemplexesS, args, exact)
+        env, temputs, functionName, explicitlySpecifiedTemplateArgTemplexesS, args, exact)
     maybeFunction match {
       case None => {
-        (ScoutExpectedFunctionFailure(humanName, args, outscoredReasonByPotentialBanner, rejectedReasonByBanner, rejectedReasonByFunction))
+        (ScoutExpectedFunctionFailure(functionName, args, outscoredReasonByPotentialBanner, rejectedReasonByBanner, rejectedReasonByFunction))
       }
       case Some(function) => {
         (ScoutExpectedFunctionSuccess(function))
@@ -108,7 +108,7 @@ object OverloadTemplar {
       if (source == destination) {
         (None)
       } else {
-        (Some(NameTemplar.getReferenceIdentifierName(source) + " is not " + NameTemplar.getReferenceIdentifierName(destination)))
+        (Some(TemplataNamer.getReferenceIdentifierName(source) + " is not " + TemplataNamer.getReferenceIdentifierName(destination)))
       }
     } else {
       TemplataTemplar.isTypeConvertible(temputs, source, destination) match {
@@ -155,7 +155,7 @@ object OverloadTemplar {
   private def getCandidateBanners(
     env: IEnvironment,
     temputs: TemputsBox,
-    humanName: String,
+    functionName: ImpreciseNameA[GlobalFunctionFamilyNameA],
     explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
     paramFilters: List[ParamFilter],
     exact: Boolean):
@@ -166,7 +166,7 @@ object OverloadTemplar {
     // rejection reason by function
     Map[FunctionA, String]
   ) = {
-    val hayTemplatas = findHayTemplatas(env, temputs, humanName, paramFilters)
+    val hayTemplatas = findHayTemplatas(env, temputs, functionName, paramFilters)
 
     val (allPotentialBanners, allRejectionReasonByBanner, allRejectionReasonByFunction) =
       hayTemplatas.foldLeft((Set[IPotentialBanner](), Map[FunctionBanner2, String](), Map[FunctionA, String]()))({
@@ -335,7 +335,7 @@ object OverloadTemplar {
   private def findHayTemplatas(
       env: IEnvironment,
       temputs: TemputsBox,
-      impreciseName: ImpreciseNameA[INameA],
+      impreciseName: ImpreciseNameA[IImpreciseNameStepA],
       paramFilters: List[ParamFilter]):
   Set[ITemplata] = {
     val environments = env :: getParamEnvironments(temputs, paramFilters)
@@ -352,7 +352,7 @@ object OverloadTemplar {
   def scoutPotentialFunction(
       env: IEnvironment,
       temputs: TemputsBox,
-      humanName: String,
+      functionName: ImpreciseNameA[GlobalFunctionFamilyNameA],
       explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
       args: List[ParamFilter],
       exact: Boolean):
@@ -367,7 +367,7 @@ object OverloadTemplar {
     Map[FunctionA, String]
   ) = {
     val (candidateBanners, rejectionReasonByBanner, rejectionReasonByFunction) =
-      getCandidateBanners(env, temputs, humanName, explicitlySpecifiedTemplateArgTemplexesS, args, exact);
+      getCandidateBanners(env, temputs, functionName, explicitlySpecifiedTemplateArgTemplexesS, args, exact);
     if (candidateBanners.isEmpty) {
       (None, Map(), rejectionReasonByBanner, rejectionReasonByFunction)
     } else if (candidateBanners.size == 1) {
@@ -514,7 +514,7 @@ object OverloadTemplar {
       case PotentialBannerFromFunctionS(signature, ft @ FunctionTemplata(_, _, _)) => {
         if (EnvironmentUtils.functionIsTemplateInContext(ft.unevaluatedContainers, ft.function)) {
           FunctionTemplar.evaluateTemplatedFunctionFromCallForPrototype(
-              temputs, ft, signature.fullName.steps.last.templateArgs.get, args) match {
+              temputs, ft, signature.fullName.last.templateArgs.get, args) match {
             case (EvaluateFunctionSuccess(prototype)) => (prototype)
             case (eff @ EvaluateFunctionFailure(_)) => vfail(eff.toString)
           }

@@ -223,7 +223,7 @@ object DestructorTemplar {
     val memberLocalVariables =
       structDef.members.flatMap({
         case StructMember2(name, variability, ReferenceMemberType2(reference)) => {
-          List(ReferenceLocalVariable2(VariableId2(0, name), Final, reference))
+          List(ReferenceLocalVariable2(FullName2(0, name), Final, reference))
         }
         case StructMember2(name, variability, AddressMemberType2(reference)) => {
           // See Destructure2 and its handling of addressible members for why

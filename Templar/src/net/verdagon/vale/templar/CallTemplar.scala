@@ -1,5 +1,6 @@
 package net.verdagon.vale.templar
 
+import net.verdagon.vale.astronomer.{GlobalFunctionFamilyNameA, ImpreciseNameA}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.parser.MutableP
@@ -96,7 +97,7 @@ object CallTemplar {
   private def evaluateNamedCall(
     temputs: TemputsBox,
     fate: FunctionEnvironment,
-    functionName: String,
+    functionName: ImpreciseNameA[GlobalFunctionFamilyNameA],
     explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
     givenArgsExprs2: List[ReferenceExpression2]):
   (FunctionCall2) = {
@@ -294,7 +295,7 @@ object CallTemplar {
   def evaluateNamedPrefixCall(
     temputs: TemputsBox,
     fate: FunctionEnvironmentBox,
-    functionName: String,
+    functionName: ImpreciseNameA[GlobalFunctionFamilyNameA],
     explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
     argsExpr2: Expression2):
   (FunctionCall2) = {

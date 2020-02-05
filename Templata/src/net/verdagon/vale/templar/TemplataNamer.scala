@@ -3,7 +3,7 @@ package net.verdagon.vale.templar
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar.types._
 
-object NameTemplar {
+object TemplataNamer {
   // Identifier names need to come from the Templar output because some things are erased
   // by Hammer types, such as template args. Hammer will sometimes output many functions
   // with the same signature because of this.
@@ -19,24 +19,37 @@ object NameTemplar {
     ownershipString + getReferendIdentifierName(referend)
   }
 
-  def getFullNameIdentifierName(fullName: FullName2): String = {
+  def stringifyTemplateArgs(templateArgs: List[ITemplata]): String = {
+    "<" + templateArgs.map(templateArg => getIdentifierName(templateArg)).mkString(", ") + ">"
+  }
+
+  def stringifyParametersArgs(parameters: List[Coord]): String = {
+    "(" + parameters.map(parameter => getReferenceIdentifierName(parameter)).mkString(", ") + ")"
+  }
+
+  def getFullNameIdentifierName(fullName: FullName2[IName2]): String = {
+    // Some nice rune symbols: ᚠᚢᚣᚥᚨᚫᚬᚮᚱᚳᚴᚻᛃᛄᛇᛈᛉᛊᛋᛒᛗᛘᛝᛞᛟᛥ
+    // Here's the ones we haven't used below: ᚢᚨᚬᚮᚳᚴᛃᛄᛇ
+    // We should probably not use these long term since they're super unrecognizable,
+    // we can switch to nicer symbols once things settle.
     fullName.steps.map({
-      case NamePart2(humanName, maybeTemplateArgs, maybeParameters, maybeCodeLocation) => {
-        humanName +
-          (maybeTemplateArgs match {
-            case None => ""
-            case Some(templateArgs) => "<" + templateArgs.map(templateArg => getIdentifierName(templateArg)).mkString(", ") + ">"
-          }) +
-          (maybeParameters match {
-            case None => ""
-            case Some(parameters) => "(" + parameters.map(parameter => getReferenceIdentifierName(parameter)).mkString(", ") + ")"
-          }) +
-          (maybeCodeLocation match {
-            case None => ""
-            case Some(CodeLocation2(file, line, char)) => "@" + file + ":" + line + ":" + char
-          })
-      }
-    }).mkString("::")
+      case ImplName2(codeLocation) => "ᚠ" + codeLocation
+      case LetName2(codeLocation) => "ᚥ" + codeLocation
+      case UnnamedLocalName2(codeLocation) => "ᚣ" + codeLocation
+      case ClosureParamName2() => "ᛋ"
+      case MagicParamName2(magicParamNumber) => "ᛞ" + magicParamNumber
+      case CodeVarName2(name) => "ᛗ" + name
+      case CodeRune2(name) => "ᛝ" + name
+      case ImplicitRune2(name) => "ᚻ" + name
+      case MemberRune2(memberIndex) => "ᛒ" + memberIndex
+      case MagicImplicitRune2(magicParamIndex) => "ᛥ" + magicParamIndex
+      case ReturnRune2() => "ᚱ"
+      case FunctionName2(humanName, templateArgs, parameters) => "ᚫ" + humanName + stringifyTemplateArgs(templateArgs) + stringifyParametersArgs(parameters)
+      case LambdaName2(codeLocation, templateArgs, parameters) => "ᛈ" + codeLocation + stringifyTemplateArgs(templateArgs) + stringifyParametersArgs(parameters)
+      case StructName2(humanName, templateArgs) => "ᛟ" + humanName + stringifyTemplateArgs(templateArgs)
+      case InterfaceName2(humanName, templateArgs) => "ᛘ" + humanName + stringifyTemplateArgs(templateArgs)
+      case LambdaStructName2(codeLocation, templateArgs) => "ᛊ" + codeLocation + stringifyTemplateArgs(templateArgs)
+    }).mkString(".")
   }
 
   def getReferendIdentifierName(tyype: Kind): String = {
@@ -48,12 +61,12 @@ object NameTemplar {
       case Void2() => "∅"
       case UnknownSizeArrayT2(array) => "𝔸" + getReferenceIdentifierName(array.memberType)
       case ArraySequenceT2(size, arrayT2) => "𝔸" + size + getReferenceIdentifierName(arrayT2.memberType)
-      case PackT2(innerTypes, underlyingStruct) => {
+      case PackT2(_, underlyingStruct) => {
         getReferendIdentifierName(underlyingStruct)
       }
       case StructRef2(fullName) => "𝕊" + getFullNameIdentifierName(fullName)
       case InterfaceRef2(fullName) => "𝕋" + getFullNameIdentifierName(fullName)
-      case OverloadSet(env, name, voidStructRef) => {
+      case OverloadSet(env, name, _) => {
         "𝔾" + " " + env + " " + name
       }
     }

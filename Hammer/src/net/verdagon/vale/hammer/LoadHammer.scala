@@ -6,7 +6,7 @@ import net.verdagon.vale.metal.{Borrow => _, Ownership => _, Share => _, Variabi
 import net.verdagon.vale.{metal => m}
 import net.verdagon.vale.templar.{types => t}
 import net.verdagon.vale.templar._
-import net.verdagon.vale.templar.env.{AddressibleLocalVariable2, ReferenceLocalVariable2, VariableId2}
+import net.verdagon.vale.templar.env.{AddressibleLocalVariable2, ReferenceLocalVariable2, FullName2}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.{vassert, vfail}
 
@@ -256,7 +256,7 @@ object LoadHammer {
       locals: LocalsBox,
       stackHeight: StackHeightBox,
       nodesByLine: NodesBox,
-      varId: VariableId2,
+      varId: FullName2,
       variability: Variability,
       localReference2: Coord,
       targetOwnershipT: t.Ownership
@@ -310,7 +310,7 @@ object LoadHammer {
       locals: LocalsBox,
       stackHeight: StackHeightBox,
       nodesByLine: NodesBox,
-      varId: VariableId2,
+      varId: FullName2,
       expectedType2: Coord,
       targetOwnershipT: t.Ownership
   ): (RegisterAccessH[ReferendH], List[Expression2]) = {

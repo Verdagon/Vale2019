@@ -15,10 +15,8 @@ import net.verdagon.vale._
 import scala.collection.immutable.List
 
 object StructTemplar {
-  val anonymousSubstructParentInterfaceRune = "__Interface"
-
-  def addBuiltInStructs(env: NamespaceEnvironment, temputs: TemputsBox): (StructRef2) = {
-    val structDef2 = StructDefinition2(FullName2(List(NamePart2("__Pack", Some(List()), None, None))), Immutable, List(), false)
+  def addBuiltInStructs(env: NamespaceEnvironment[IName2], temputs: TemputsBox): (StructRef2) = {
+    val structDef2 = StructDefinition2(FullName2(List(PackName2(List()))), Immutable, List(), false)
     temputs.declareStruct(structDef2.getRef)
     temputs.declareStructMutability(structDef2.getRef, Immutable)
     temputs.declareStructEnv(structDef2.getRef, env)
@@ -200,14 +198,14 @@ object StructTemplar {
     env: IEnvironment,
     temputs: TemputsBox,
     functionS: FunctionA,
-    functionFullName: FullName2,
+    functionFullName: FullName2[IFunctionName2],
     members: List[StructMember2]):
   (StructRef2, Mutability, FunctionTemplata) = {
     StructTemplarTemplateArgsLayer.makeClosureUnderstruct(env, temputs, functionS, functionFullName, members)
   }
 
   // Makes a struct to back a pack or tuple
-  def makeSeqOrPackUnderstruct(env: NamespaceEnvironment, temputs: TemputsBox, memberTypes2: List[Coord], prefix: String):
+  def makeSeqOrPackUnderstruct(env: NamespaceEnvironment[IName2], temputs: TemputsBox, memberTypes2: List[Coord], prefix: String):
   (StructRef2, Mutability) = {
     StructTemplarTemplateArgsLayer.makeSeqOrPackUnderstruct(env, temputs, memberTypes2, prefix)
   }
@@ -217,7 +215,7 @@ object StructTemplar {
     outerEnv: IEnvironment,
     temputs: TemputsBox,
     maybeConstructorOriginFunctionA: Option[FunctionA],
-    functionFullName: FullName2,
+    functionFullName: FullName2[IFunctionName2],
     interfaceRef: InterfaceRef2,
     lambdas: List[Coord]):
   (StructRef2, Mutability, FunctionHeader2) = {
@@ -267,7 +265,7 @@ object StructTemplar {
         if (interfaceA.namespace.nonEmpty) {
           vimpl()
         }
-        val lastStep = fullName.steps.last
+        val lastStep = fullName.last
         (lastStep.humanName == interfaceA.name)
       }
       case (StructRef2(fullName), StructTemplata(_, structA)) => {
@@ -277,7 +275,7 @@ object StructTemplar {
         if (structA.namespace.nonEmpty) {
           vimpl()
         }
-        val lastStep = fullName.steps.last
+        val lastStep = fullName.last
         (lastStep.humanName == structA.name)
       }
       case _ => (false)

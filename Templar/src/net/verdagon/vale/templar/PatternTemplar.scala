@@ -145,7 +145,7 @@ object PatternTemplar {
       // function's parameters. Ignore them.
     }
 
-    val expectedTemplata = fate.getNearestTemplataWithName(RuneSymbol(coordRuneA), Set(TemplataLookupContext))
+    val expectedTemplata = fate.getAllTemplatasWithAbsoluteName(coordRuneA, Set(TemplataLookupContext))
     val expectedCoord =
       expectedTemplata match {
         case Some(CoordTemplata(coord)) => coord
@@ -158,27 +158,20 @@ object PatternTemplar {
     val inputExpr =
       TypeTemplar.convert(fate.snapshot, temputs, unconvertedInputExpr, expectedCoord);
 
-    val (inputOrLookupExpr, lets0) =
-      maybeCapture match {
-        case None => {
-          (inputExpr, List())
-        }
-        case Some(CaptureP(name, variability)) => {
-          val variableId = VariableId2(fate.function.lambdaNumber, name)
+    val CaptureA(name, variability) = maybeCapture
+    val variableId = NameTranslator.translateNameStep(name.last)
 
-          val export =
-            ExpressionTemplar.makeUserLocalVariable(
-              temputs, fate, variableId, Conversions.evaluateVariability(variability), expectedCoord)
-          val let = LetNormal2(export, inputExpr);
+    val export =
+      ExpressionTemplar.makeUserLocalVariable(
+        temputs, fate, variableId, Conversions.evaluateVariability(variability), expectedCoord)
+    val let = LetNormal2(export, inputExpr);
 
-          val localLookupExpr =
-            ExpressionTemplar.borrowSoftLoad(
-              temputs, LocalLookup2(export, inputExpr.resultRegister.reference))
-          fate.addVariable(export)
+    val localLookupExpr =
+      ExpressionTemplar.borrowSoftLoad(
+        temputs, LocalLookup2(export, inputExpr.resultRegister.reference))
+    fate.addVariable(export)
 
-          (localLookupExpr, List(let))
-        }
-      }
+    val lets0 = List(let)
 
     maybeDestructure match {
       case None => {
@@ -197,7 +190,7 @@ object PatternTemplar {
 
             val innerLets =
               nonCheckingTranslateStructInner(
-                temputs, fate, listOfMaybeDestructureMemberPatterns, expectedCoord, inputOrLookupExpr)
+                temputs, fate, listOfMaybeDestructureMemberPatterns, expectedCoord, localLookupExpr)
             (lets0 ++ innerLets)
           }
           case PackT2(_, _) => {
@@ -267,7 +260,7 @@ object PatternTemplar {
 //        // In this case, name = 'b' and inner1 = 'Bork'
 //
 //        // This is local variable b
-//        val variableId = VariableId2(env.currentFunction1.get.lambdaNumber, name)
+//        val variableId = FullName2(env.currentFunction1.get.lambdaNumber, name)
 //        // This is where we figure out that b should be an owning Bork
 //        val expectedPointerType =
 //          TypeTemplar.evaluateAndReferencifyType(
@@ -295,7 +288,7 @@ object PatternTemplar {
 //        // make sense, what would b point to? A dead object?).
 //
 //        // This is local variable m
-//        val variableId = VariableId2(env.currentFunction1.get.lambdaNumber, name)
+//        val variableId = FullName2(env.currentFunction1.get.lambdaNumber, name)
 //        // This is where we figure out that m should be an owning Marine
 //        val (expectedPointerType @ Coord(_, StructRef2(_))) =
 //          TypeTemplar.evaluateAndReferencifyType(
@@ -369,7 +362,7 @@ object PatternTemplar {
         val memberLocalVariables =
           memberTypes.zipWithIndex.map({
             case ((memberType, index)) => {
-              val variableId = VariableId2(fate.function.lambdaNumber, "__pack_" + counter + "_member_" + index)
+              val variableId =  FullName2(fate.function.lambdaNumber, "__pack_" + counter + "_member_" + index)
               val localVariable = ReferenceLocalVariable2(variableId, Final, memberType)
               fate.addVariable(localVariable)
               localVariable
@@ -393,7 +386,7 @@ object PatternTemplar {
         // loading from it.
 
         val packLocalVarName = "__pack_" + counter
-        val packLocalVariableId = VariableId2(fate.function.lambdaNumber, packLocalVarName)
+        val packLocalVariableId = FullName2(fate.function.lambdaNumber, packLocalVarName)
         val packLocalVariable = ReferenceLocalVariable2(packLocalVariableId, Final, structType2)
         val packLet = LetNormal2(packLocalVariable, inputStructExpr);
         fate.addVariable(packLocalVariable)

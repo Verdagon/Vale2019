@@ -2,6 +2,7 @@ package net.verdagon.vale.templar.templata
 
 
 import net.verdagon.vale.astronomer._
+import net.verdagon.vale.templar.{FullName2, IFunctionName2}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.{vassert, vassertSome, vfail}
 
@@ -94,18 +95,18 @@ case class PotentialBannerFromExternFunction(
 // it takes a complete templar evaluate to deduce a function's return type.
 
 case class Signature2(
-    fullName: FullName2,
+    fullName: FullName2[IFunctionName2],
     paramTypes: List[Coord]) {
-  vassert(vassertSome(fullName.steps.last.parameters) == paramTypes)
+  vassert(fullName.last.parameters == paramTypes)
 }
 
 case class FunctionBanner2(
     originFunction: Option[FunctionA],
-    fullName: FullName2,
+    fullName: FullName2[IFunctionName2],
     params: List[Parameter2]) extends Queriable2  {
 
-  vassert(fullName.steps.last.parameters.nonEmpty)
-  fullName.steps.last.parameters.foreach(parameters => vassert(parameters == params.map(_.tyype)))
+  vassert(fullName.last.parameters.nonEmpty)
+  vassert(fullName.last.parameters == params.map(_.tyype))
 
   def toSignature: Signature2 = Signature2(fullName, paramTypes)
   def paramTypes: List[Coord] = params.map(_.tyype)
@@ -143,7 +144,7 @@ case class FunctionBanner2(
   }
 
   def unapply(arg: FunctionBanner2):
-  Option[(FullName2, List[Parameter2])] =
+  Option[(FullName2[IFunctionName2], List[Parameter2])] =
     Some(fullName, params)
 
   override def toString: String = {
@@ -153,7 +154,7 @@ case class FunctionBanner2(
 }
 
 case class FunctionHeader2(
-    fullName: FullName2,
+    fullName: FullName2[IFunctionName2],
     lambdaNumber: Int,
     isExtern: Boolean, // For optimization later
     isUserFunction: Boolean, // Whether it was written by a human. Mostly for tests right now.
@@ -161,19 +162,19 @@ case class FunctionHeader2(
     returnType: Coord,
     maybeOriginFunction: Option[FunctionA]) extends Queriable2 {
 
-  vassert(fullName.steps.last.templateArgs.nonEmpty)
+  vassert(fullName.last.templateArgs.nonEmpty)
 
   // Make sure there's no duplicate names
   vassert(params.map(_.name).toSet.size == params.size);
   
-  vassert(vassertSome(fullName.steps.last.parameters) == paramTypes)
+  vassert(fullName.last.parameters == paramTypes)
 
   def getAbstractInterface: Option[InterfaceRef2] = toBanner.getAbstractInterface
   def getOverride: Option[(StructRef2, InterfaceRef2)] = toBanner.getOverride
   def getVirtualIndex: Option[Int] = toBanner.getVirtualIndex
 
   maybeOriginFunction.foreach(originFunction => {
-    if (originFunction.identifyingRunes.size != fullName.steps.last.templateArgs.get.size) {
+    if (originFunction.identifyingRunes.size != fullName.last.templateArgs.size) {
       vfail("wtf m8")
     }
   })
@@ -188,12 +189,12 @@ case class FunctionHeader2(
     List(this).collect(func) ++ params.flatMap(_.all(func)) ++ returnType.all(func)
   }
 
-  def unapply(arg: FunctionHeader2): Option[(FullName2, List[Parameter2], Coord)] =
+  def unapply(arg: FunctionHeader2): Option[(FullName2[IFunctionName2], List[Parameter2], Coord)] =
     Some(fullName, params, returnType)
 }
 
 case class Prototype2(
-    fullName: FullName2,
+    fullName: FullName2[IFunctionName2],
     paramTypes: List[Coord],
     returnType: Coord) extends Queriable2 {
   def toSignature: Signature2 = Signature2(fullName, paramTypes)
@@ -204,11 +205,12 @@ case class Prototype2(
 }
 
 case class CodeLocation2(
-    file: String,
     line: Int,
     char: Int
 ) extends Queriable2 {
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func)
   }
+
+  override def toString: String = line + ":" + char
 }

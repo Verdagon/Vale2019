@@ -111,7 +111,7 @@ object VirtualTemplar {
           })
 
         OverloadTemplar.scoutExpectedFunctionForPrototype(
-          env, temputs, sparkHeader.fullName.steps.last.humanName, List(), needleSuperFunctionParamFilters, true) match {
+          env, temputs, sparkHeader.fullName.last.humanName, List(), needleSuperFunctionParamFilters, true) match {
           case (ScoutExpectedFunctionSuccess(_)) => {
             // Throw away the prototype, we just want it to be in the temputs.
 
