@@ -7,22 +7,33 @@ import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnv
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.function.FunctionTemplar
-import net.verdagon.vale.templar.infer.{InferSolveFailure, InferSolveSuccess}
-import net.verdagon.vale.vfail
+import net.verdagon.vale.templar.infer.infer.{InferSolveFailure, InferSolveSuccess}
+import net.verdagon.vale.{vfail, vimpl}
 
 import scala.collection.immutable.List
 
 object StructTemplarTemplateArgsLayer {
+
+  def translateStructNameWithTemplateArgs(nameA: INameA, templateArgs: List[ITemplata]): IStructName2 = {
+    nameA match {
+      case _ => vimpl()
+    }
+  }
+
+  def translateInterfaceNameWithTemplateArgs(nameA: INameA, templateArgs: List[ITemplata]): InterfaceName2 = {
+    nameA match {
+      case _ => vimpl()
+    }
+  }
 
   def getStructRef(
     temputs: TemputsBox,
     structTemplata: StructTemplata,
     templateArgs: List[ITemplata]):
   (StructRef2) = {
-    val StructTemplata(env, structAndParents) = structTemplata
-    val struct = structTemplata.originStruct
+    val StructTemplata(env, structA) = structTemplata
 
-    val fullName = FullName2(env.fullName.steps :+ NamePart2(struct.name, Some(templateArgs), None, None))
+    val fullName = env.fullName.addStep(translateStructNameWithTemplateArgs(structA.name, templateArgs))
 
     temputs.structDeclared(fullName) match {
       case Some(structRef2) => {
@@ -30,24 +41,24 @@ object StructTemplarTemplateArgsLayer {
       }
       case None => {
         // not sure if this is okay or not, do we allow this?
-        if (templateArgs.size != struct.identifyingRunes.size) {
+        if (templateArgs.size != structA.identifyingRunes.size) {
           vfail("wat?")
         }
         val temporaryStructRef = StructRef2(fullName)
         temputs.declareStruct(temporaryStructRef)
 
-        struct.maybePredictedMutability match {
+        structA.maybePredictedMutability match {
           case None => temputs
           case Some(predictedMutability) => temputs.declareStructMutability(temporaryStructRef, Conversions.evaluateMutability(predictedMutability))
         }
         val (rulesForStructAndParents, typeByRuneForStructAndParents) =
 //          EnvironmentUtils.assembleRulesFromEnvEntryAndParents(structAndParents)
-          (struct.rules, struct.typeByRune)
+          (structA.rules, structA.typeByRune)
         val result =
           InferTemplar.inferFromExplicitTemplateArgs(
             env,
             temputs,
-            struct.identifyingRunes,
+            structA.identifyingRunes,
             rulesForStructAndParents,
             typeByRuneForStructAndParents,
             List(),
@@ -62,12 +73,12 @@ object StructTemplarTemplateArgsLayer {
             case InferSolveSuccess(i) => i
           }
 
-        struct.maybePredictedMutability match {
-          case None => temputs.declareStructMutability(temporaryStructRef, Conversions.evaluateMutability(struct.mutability))
+        structA.maybePredictedMutability match {
+          case None => temputs.declareStructMutability(temporaryStructRef, Conversions.evaluateMutability(structA.mutability))
           case Some(_) => temputs
         }
 
-        StructTemplarMiddle.getStructRef(env, temputs, struct, inferences.templatasByRune)
+        StructTemplarMiddle.getStructRef(env, temputs, structA, inferences.templatasByRune)
       }
     }
   }
@@ -78,7 +89,7 @@ object StructTemplarTemplateArgsLayer {
     templateArgs: List[ITemplata]):
   (InterfaceRef2) = {
     val InterfaceTemplata(env, interfaceS) = interfaceTemplata
-    val fullName = FullName2(env.fullName.steps :+ NamePart2(interfaceS.name, Some(templateArgs), None, None))
+    val fullName = env.fullName.addStep(translateInterfaceNameWithTemplateArgs(interfaceS.name, templateArgs))
 
     temputs.interfaceDeclared(fullName) match {
       case Some(interfaceRef2) => {
@@ -132,19 +143,19 @@ object StructTemplarTemplateArgsLayer {
 
   // Makes a struct to back a closure
   def makeClosureUnderstruct(
-    env: IEnvironment,
+    containingFunctionEnv: IEnvironment,
     temputs: TemputsBox,
+    name: LambdaNameA,
     functionS: FunctionA,
-    functionFullName: FullName2[IFunctionName2],
     members: List[StructMember2]):
   (StructRef2, Mutability, FunctionTemplata) = {
-    StructTemplarMiddle.makeClosureUnderstruct(env, temputs, functionS, functionFullName, members)
+    StructTemplarMiddle.makeClosureUnderstruct(containingFunctionEnv, temputs, name, functionS, members)
   }
 
   // Makes a struct to back a pack or tuple
-  def makeSeqOrPackUnderstruct(env: NamespaceEnvironment[IName2], temputs: TemputsBox, memberTypes2: List[Coord], prefix: String):
+  def makeSeqOrPackUnderstruct(env: NamespaceEnvironment[IName2], temputs: TemputsBox, memberTypes2: List[Coord], name: IStructName2):
   (StructRef2, Mutability) = {
-    StructTemplarMiddle.makeSeqOrPackUnderstruct(env, temputs, memberTypes2, prefix)
+    StructTemplarMiddle.makeSeqOrPackUnderstruct(env, temputs, memberTypes2, name)
   }
 
   // Makes an anonymous substruct of the given interface, with the given lambdas as its members.

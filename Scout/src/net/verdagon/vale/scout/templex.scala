@@ -52,7 +52,7 @@ case class CodeVarNameS(name: String) extends IVarNameS
 // containers. That's much easier for the scout, so thats a nice bonus.
 // We have all these subclasses instead of a string so we don't have to have
 // prefixes and names like __implicit_0, __paramRune_0, etc.
-sealed trait IRuneS extends INameS
+sealed trait IRuneS
 case class CodeRuneS(name: String) extends IRuneS
 case class ImplicitRuneS(name: Int) extends IRuneS
 case class MagicParamRuneS(codeLocationS: CodeLocationS) extends IRuneS

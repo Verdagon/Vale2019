@@ -10,15 +10,15 @@ case class AtomAP(
   // an owning ref.
   name: CaptureA,
   virtuality: Option[VirtualityAP],
-  coordRune: AbsoluteNameA[IRuneA],
+  coordRune: IRuneA,
   destructure: Option[List[AtomAP]])
 
 sealed trait VirtualityAP
 case object AbstractAP extends VirtualityAP
-case class OverrideAP(kindRune: AbsoluteNameA[IRuneA]) extends VirtualityAP
+case class OverrideAP(kindRune: IRuneA) extends VirtualityAP
 
 object PatternSUtils {
-  def getDistinctOrderedRunesForPattern(pattern: AtomAP): List[AbsoluteNameA[IRuneA]] = {
+  def getDistinctOrderedRunesForPattern(pattern: AtomAP): List[IRuneA] = {
     val runesFromVirtuality =
       pattern.virtuality match {
         case None => List()

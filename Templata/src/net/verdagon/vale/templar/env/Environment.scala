@@ -13,10 +13,12 @@ trait IEnvironment {
     "#Environment"
   }
   def globalEnv: NamespaceEnvironment[IName2]
-  def getAllTemplatasWithAbsoluteName(name: AbsoluteNameA[INameA], lookupFilter: Set[ILookupContext]): List[ITemplata]
-  def getNearestTemplataWithAbsoluteName(name: AbsoluteNameA[INameA], lookupFilter: Set[ILookupContext]): Option[ITemplata]
-  def getAllTemplatasWithName(name: ImpreciseNameA[IImpreciseNameStepA], lookupFilter: Set[ILookupContext]): List[ITemplata]
-  def getNearestTemplataWithName(name: ImpreciseNameA[IImpreciseNameStepA], lookupFilter: Set[ILookupContext]): Option[ITemplata]
+  def getAllTemplatasWithAbsoluteName(name: IName2, lookupFilter: Set[ILookupContext]): List[ITemplata]
+  def getNearestTemplataWithAbsoluteName(name: IName2, lookupFilter: Set[ILookupContext]): Option[ITemplata]
+  def getAllTemplatasWithAbsoluteName(name: INameA, lookupFilter: Set[ILookupContext]): List[ITemplata]
+  def getNearestTemplataWithAbsoluteName(name: INameA, lookupFilter: Set[ILookupContext]): Option[ITemplata]
+  def getAllTemplatasWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): List[ITemplata]
+  def getNearestTemplataWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): Option[ITemplata]
   def fullName: FullName2[IName2]
 }
 
@@ -26,8 +28,10 @@ trait IEnvironmentBox {
     "#Environment"
   }
   def globalEnv: NamespaceEnvironment[IName2]
-  def getAllTemplatasWithAbsoluteName(name: AbsoluteNameA[INameA], lookupFilter: Set[ILookupContext]): List[ITemplata]
-  def getNearestTemplataWithAbsoluteName(name: AbsoluteNameA[INameA], lookupFilter: Set[ILookupContext]): Option[ITemplata]
+  def getAllTemplatasWithAbsoluteName(name: INameA, lookupFilter: Set[ILookupContext]): List[ITemplata]
+  def getNearestTemplataWithAbsoluteName(name: INameA, lookupFilter: Set[ILookupContext]): Option[ITemplata]
+  def getAllTemplatasWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): List[ITemplata]
+  def getNearestTemplataWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): Option[ITemplata]
   def fullName: FullName2[IName2]
 }
 
@@ -38,7 +42,7 @@ case object ExpressionLookupContext extends ILookupContext
 case class NamespaceEnvironment[+T <: IName2](
   maybeParentEnv: Option[IEnvironment],
   fullName: FullName2[T],
-  entries: Map[FullName2[IName2], List[IEnvEntry]]
+  entries: Map[IName2, List[IEnvEntry]]
 ) extends IEnvironment {
   maybeParentEnv match {
     case None =>
@@ -53,7 +57,7 @@ case class NamespaceEnvironment[+T <: IName2](
   }
 
   override def getAllTemplatasWithAbsoluteName(
-    name: AbsoluteNameA[INameA],
+    name: INameA,
     lookupFilter: Set[ILookupContext]):
   List[ITemplata] = {
     entries
@@ -66,7 +70,7 @@ case class NamespaceEnvironment[+T <: IName2](
       maybeParentEnv.toList.flatMap(_.getAllTemplatasWithAbsoluteName(name, lookupFilter))
   }
 
-  override def getNearestTemplataWithAbsoluteName(name: AbsoluteNameA[INameA], lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
+  override def getNearestTemplataWithAbsoluteName(name: INameA, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
     entries
       .filter({ case (key, _) => EnvironmentUtils.namesMatch(name, key) })
       .values
@@ -83,11 +87,19 @@ case class NamespaceEnvironment[+T <: IName2](
     }
   }
 
-  override def getAllTemplatasWithName(name: ImpreciseNameA[IImpreciseNameStepA], lookupFilter: Set[ILookupContext]): List[ITemplata] = {
+  override def getAllTemplatasWithAbsoluteName(name: IName2, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
     vimpl()
   }
 
-  override def getNearestTemplataWithName(name: ImpreciseNameA[IImpreciseNameStepA], lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
+  override def getAllTemplatasWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
+    vimpl()
+  }
+
+  override def getNearestTemplataWithAbsoluteName(name: IName2, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
+    vimpl()
+  }
+
+  override def getNearestTemplataWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
     vimpl()
   }
 
@@ -98,14 +110,14 @@ case class NamespaceEnvironment[+T <: IName2](
       EnvironmentUtils.addFunction(entries, function))
   }
 
-  def addEntry(name: FullName2[IName2], entry: IEnvEntry): NamespaceEnvironment[T] = {
+  def addEntry(name: IName2, entry: IEnvEntry): NamespaceEnvironment[T] = {
     NamespaceEnvironment(
       maybeParentEnv,
       fullName,
       EnvironmentUtils.addEntry(entries, name, entry))
   }
 
-  def addEntries(newEntries: Map[FullName2[IName2], List[IEnvEntry]]): NamespaceEnvironment[T] = {
+  def addEntries(newEntries: Map[IName2, List[IEnvEntry]]): NamespaceEnvironment[T] = {
     NamespaceEnvironment(
       maybeParentEnv,
       fullName,
@@ -132,9 +144,9 @@ object EnvironmentUtils {
   }
 
   def addEntries(
-      oldEntries: Map[FullName2[IName2], List[IEnvEntry]],
-      newEntries: Map[FullName2[IName2], List[IEnvEntry]]):
-  Map[FullName2[IName2], List[IEnvEntry]] = {
+      oldEntries: Map[IName2, List[IEnvEntry]],
+      newEntries: Map[IName2, List[IEnvEntry]]):
+  Map[IName2, List[IEnvEntry]] = {
     oldEntries ++
       newEntries ++
       oldEntries.keySet.intersect(newEntries.keySet)
@@ -143,17 +155,17 @@ object EnvironmentUtils {
   }
 
   def addEntry(
-      oldEntries: Map[FullName2[IName2], List[IEnvEntry]],
-      name: FullName2[IName2],
+      oldEntries: Map[IName2, List[IEnvEntry]],
+      name: IName2,
       entry: IEnvEntry):
-  Map[FullName2[IName2], List[IEnvEntry]] = {
+  Map[IName2, List[IEnvEntry]] = {
     addEntries(oldEntries, Map(name -> List(entry)))
   }
 
   def addFunction(
-    oldEntries: Map[FullName2[IName2], List[IEnvEntry]],
+    oldEntries: Map[IName2, List[IEnvEntry]],
     functionA: FunctionA
-  ): Map[FullName2[IName2], List[IEnvEntry]] = {
+  ): Map[IName2, List[IEnvEntry]] = {
     val name = vimpl()//functionA.name
     addEntry(oldEntries, name, FunctionEnvEntry(functionA))
   }
@@ -190,7 +202,7 @@ object EnvironmentUtils {
 
   // See NTKPRR
   def assembleRulesFromFunctionAndContainers(containers: List[IContainer], function: FunctionA):
-  (List[IRulexAR], Map[AbsoluteNameA[IRuneA], ITemplataType]) = {
+  (List[IRulexAR], Map[IRuneA, ITemplataType]) = {
     val (containersRules, containersTypeByRune) =
       containers
         .map({
@@ -201,7 +213,7 @@ object EnvironmentUtils {
         })
         .unzip
     val rules = containersRules.foldLeft(List[IRulexAR]())(_ ++ _)
-    val typeByRune = containersTypeByRune.foldLeft(Map[AbsoluteNameA[IRuneA], ITemplataType]())(_ ++ _)
+    val typeByRune = containersTypeByRune.foldLeft(Map[IRuneA, ITemplataType]())(_ ++ _)
     (rules ++ function.templateRules, typeByRune ++ function.typeByRune)
   }
 
@@ -216,29 +228,31 @@ object EnvironmentUtils {
     })
   }
 
-  def namesMatch(nameA: AbsoluteNameA[INameA], name2: FullName2[IName2]): Boolean = {
-    if (nameA.steps.size != name2.steps.size) {
-      return false
-    }
-    nameA.steps.zip(name2.steps).forall({
-      case (LambdaNameA(codeLocationA), LambdaName2(codeLocation2, templateArgs2, parameters2)) => vimpl()//codeLocationsMatch(codeLocationA, codeLocation2)
+  def namesMatch(nameA: INameA, name2: IName2): Boolean = {
+    (nameA, name2) match {
+      case (LambdaNameA(parent, codeLocationA), LambdaName2(codeLocation2, templateArgs2, parameters2)) => vimpl()//codeLocationsMatch(codeLocationA, codeLocation2)
       case (FunctionNameA(nameA, codeLocationA), FunctionName2(name2, templateArgs2, codeLocation2)) => vimpl()//nameA == name2 && codeLocationsMatch(codeLocationA, codeLocation2)
       case (TopLevelCitizenDeclarationNameA(nameA, codeLocationA), StructName2(name2, templateArgs)) => vimpl()//nameA == name2 && codeLocationsMatch(codeLocationA, codeLocation2)
       case (TopLevelCitizenDeclarationNameA(nameA, codeLocationA), InterfaceName2(name2, templateArgs)) => vimpl()//nameA == name2 && codeLocationsMatch(codeLocationA, codeLocation2)
-      case (LambdaStructNameA(codeLocationA), LambdaStructName2(codeLocation2, templateArgs2)) => vimpl()//codeLocationsMatch(codeLocationA, codeLocation2)
-      case (ImplNameA(codeLocationA), ImplName2(codeLocation2)) => codeLocationsMatch(codeLocationA, codeLocation2)
+      case (LambdaStructNameA(_), LambdaStructName2(codeLocation2)) => vimpl()//codeLocationsMatch(codeLocationA, codeLocation2)
+      case (ImplNameA(codeLocationA), ImplDeclareName2(codeLocation2)) => codeLocationsMatch(codeLocationA, codeLocation2)
       case (LetNameA(codeLocationA), LetName2(codeLocation2)) => codeLocationsMatch(codeLocationA, codeLocation2)
       case (UnnamedLocalNameA(codeLocationA), UnnamedLocalName2(codeLocation2)) => codeLocationsMatch(codeLocationA, codeLocation2)
       case (ClosureParamNameA(), ClosureParamName2()) => true
       case (MagicParamNameA(magicParamNumberA), MagicParamName2(magicParamNumber2)) => magicParamNumberA == magicParamNumber2
       case (CodeVarNameA(nameA), CodeVarName2(name2)) => nameA == name2
-      case (CodeRuneA(nameA), CodeRune2(name2)) => nameA == name2
-      case (ImplicitRuneA(nameA), ImplicitRune2(name2)) => nameA == name2
-      case (MemberRuneA(memberIndexA), MemberRune2(memberIndex2)) => memberIndexA == memberIndex2
-      case (MagicImplicitRuneA(magicParamIndexA), MagicImplicitRune2(magicParamIndex2)) => magicParamIndexA == magicParamIndex2
-      case (ReturnRuneA(), ReturnRune2()) => true
-    })
+    }
   }
+
+//  def runesMatch(runeA: IRuneA, rune2: IRune2): Boolean = {
+//    (runeA, rune2) match {
+//      case (CodeRuneA(nameA), CodeRune2(name2)) => nameA == name2
+//      case (ImplicitRuneA(nameA), ImplicitRune2(name2)) => nameA == name2
+//      case (MemberRuneA(memberIndexA), MemberRune2(memberIndex2)) => memberIndexA == memberIndex2
+//      case (MagicImplicitRuneA(magicParamIndexA), MagicImplicitRune2(magicParamIndex2)) => magicParamIndexA == magicParamIndex2
+//      case (ReturnRuneA(), ReturnRune2()) => true
+//    }
+//  }
 
   def codeLocationsMatch(codeLocationA: CodeLocationS, codeLocation2: CodeLocation2): Boolean = {
     val CodeLocationS(lineS, charS) = codeLocationA

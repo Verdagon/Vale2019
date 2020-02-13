@@ -2,6 +2,7 @@ package net.verdagon.vale.templar;
 
 import net.verdagon.vale._
 import net.verdagon.vale.astronomer._
+import net.verdagon.vale.scout.CodeLocationS
 import net.verdagon.vale.templar.OverloadTemplar.{ScoutExpectedFunctionFailure, ScoutExpectedFunctionSuccess}
 import net.verdagon.vale.templar.citizen.StructTemplar
 import net.verdagon.vale.templar.env._
@@ -80,7 +81,7 @@ object Templar {
     val emptyPackStructRef = StructTemplar.addBuiltInStructs(env11, temputs)
 
       structsA.foreach({
-        case (structS @ StructA(_, _, _, _, _, _, _, _, _, _)) => {
+        case (structS @ StructA(_, _, _, _, _, _, _, _)) => {
           if (structS.isTemplate) {
             // Do nothing, it's a template
           } else {
@@ -91,7 +92,7 @@ object Templar {
       })
 
       interfacesA.foreach({
-        case (interfaceS @ InterfaceA(_, _, _, _, _, _, _, _, _, _)) => {
+        case (interfaceS @ InterfaceA(_, _, _, _, _, _, _, _)) => {
           if (interfaceS.isTemplate) {
             // Do nothing, it's a template
           } else {

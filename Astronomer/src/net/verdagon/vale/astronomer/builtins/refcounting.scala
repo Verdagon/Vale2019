@@ -6,66 +6,66 @@ import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Env
 import net.verdagon.vale.scout.patterns.AtomSP
 
 object RefCounting {
-  val checkVarRcName = AbsoluteNameA("checkVarRc.stl.vale", List(), FunctionNameA("checkvarrc", CodeLocationS(0, 0)))
+  val checkVarRcName = FunctionNameA("checkvarrc", CodeLocationS(0, 0))
   val checkvarrc =
     FunctionA(
       checkVarRcName,
       false,
       TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
-      List(checkVarRcName.addStep(CodeRuneA("T"))),
-      Map(checkVarRcName.addStep(CodeRuneA("T")) -> CoordTemplataType),
+      List(CodeRuneA("T")),
+      Map(CodeRuneA("T") -> CoordTemplataType),
       List(
-        ParameterA(AtomAP(CaptureA(checkVarRcName.addStep(CodeVarNameA("obj")), FinalP), None, checkVarRcName.addStep(CodeRuneA("T")), None)),
-        ParameterA(AtomAP(CaptureA(checkVarRcName.addStep(CodeVarNameA("num")), FinalP), None, checkVarRcName.addStep(CodeRuneA("I")), None))),
-      Some(checkVarRcName.addStep(CodeRuneA("V"))),
+        ParameterA(AtomAP(CaptureA(CodeVarNameA("obj"), FinalP), None, CodeRuneA("T"), None)),
+        ParameterA(AtomAP(CaptureA(CodeVarNameA("num"), FinalP), None, CodeRuneA("I"), None))),
+      Some(CodeRuneA("V")),
       List(
-        EqualsAR(TemplexAR(RuneAT(checkVarRcName.addStep(CodeRuneA("I")), CoordTemplataType)), TemplexAR(NameAT(ImpreciseNameA(List(), CodeTypeNameA("Int")), CoordTemplataType))),
-        EqualsAR(TemplexAR(RuneAT(checkVarRcName.addStep(CodeRuneA("T")), CoordTemplataType)), ComponentsAR(CoordTemplataType, List(TemplexAR(OwnershipAT(BorrowP)), TemplexAR(RuneAT(checkVarRcName.addStep(ImplicitRuneA(0)), KindTemplataType))))),
-        EqualsAR(TemplexAR(RuneAT(checkVarRcName.addStep(CodeRuneA("V")), CoordTemplataType)), ComponentsAR(CoordTemplataType, List(TemplexAR(OwnershipAT(ShareP)), TemplexAR(PackAT(List(), KindTemplataType)))))),
+        EqualsAR(TemplexAR(RuneAT(CodeRuneA("I"), CoordTemplataType)), TemplexAR(NameAT(CodeTypeNameA("Int"), CoordTemplataType))),
+        EqualsAR(TemplexAR(RuneAT(CodeRuneA("T"), CoordTemplataType)), ComponentsAR(CoordTemplataType, List(TemplexAR(OwnershipAT(BorrowP)), TemplexAR(RuneAT(ImplicitRuneA(0), KindTemplataType))))),
+        EqualsAR(TemplexAR(RuneAT(CodeRuneA("V"), CoordTemplataType)), ComponentsAR(CoordTemplataType, List(TemplexAR(OwnershipAT(ShareP)), TemplexAR(PackAT(List(), KindTemplataType)))))),
       CodeBodyA(
         BodyAE(
-          Set(),
+          List(),
           BlockAE(
-            Set(
-              LocalVariableA(checkVarRcName.addStep(CodeVarNameA("obj")), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed),
-              LocalVariableA(checkVarRcName.addStep(CodeVarNameA("num")), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
+            List(
+              LocalVariableA(CodeVarNameA("obj"), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed),
+              LocalVariableA(CodeVarNameA("num"), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
             List(
               CheckRefCountAE(
-                LocalLoadAE(checkVarRcName.addStep(CodeVarNameA("obj")), false),
+                LocalLoadAE(CodeVarNameA("obj"), false),
                 VariableRefCount,
                 FunctionCallAE(
                   // We add 1 because that "obj" is also a borrow ref
-                  FunctionLoadAE(ImpreciseNameA(List(), GlobalFunctionFamilyNameA("+"))),
+                  FunctionLoadAE(GlobalFunctionFamilyNameA("+")),
                   PackAE(
                     List(
-                      LocalLoadAE(checkVarRcName.addStep(CodeVarNameA("num")), false),
+                      LocalLoadAE(CodeVarNameA("num"), false),
                       IntLiteralAE(1))))),
               PackAE(List()))))))
 
-  val checkMemberRcName = AbsoluteNameA("checkVarRc.stl.vale", List(), FunctionNameA("checkmemberrc", CodeLocationS(0, 0)))
+  val checkMemberRcName = FunctionNameA("checkmemberrc", CodeLocationS(0, 0))
   val checkmemberrc =
     FunctionA(
       checkMemberRcName,
       false,
       TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
-      List(checkMemberRcName.addStep(CodeRuneA("T"))),
-      Map(checkMemberRcName.addStep(CodeRuneA("T")) -> CoordTemplataType),
+      List(CodeRuneA("T")),
+      Map(CodeRuneA("T") -> CoordTemplataType),
       List(
-        ParameterA(AtomAP(CaptureA(checkMemberRcName.addStep(CodeVarNameA("obj")), FinalP), None, checkMemberRcName.addStep(CodeRuneA("T")), None)),
-        ParameterA(AtomAP(CaptureA(checkMemberRcName.addStep(CodeVarNameA("num")), FinalP), None, checkMemberRcName.addStep(CodeRuneA("I")), None))),
-      Some(checkMemberRcName.addStep(CodeRuneA("V"))),
+        ParameterA(AtomAP(CaptureA(CodeVarNameA("obj"), FinalP), None, CodeRuneA("T"), None)),
+        ParameterA(AtomAP(CaptureA(CodeVarNameA("num"), FinalP), None, CodeRuneA("I"), None))),
+      Some(CodeRuneA("V")),
       List(
-        EqualsAR(TemplexAR(RuneAT(checkMemberRcName.addStep(CodeRuneA("I")), CoordTemplataType)), TemplexAR(NameAT(ImpreciseNameA(List(), CodeTypeNameA("Int")), CoordTemplataType))),
-        EqualsAR(TemplexAR(RuneAT(checkMemberRcName.addStep(CodeRuneA("T")), CoordTemplataType)), ComponentsAR(CoordTemplataType, List(TemplexAR(OwnershipAT(BorrowP)), TemplexAR(RuneAT(checkMemberRcName.addStep(ImplicitRuneA(0)), KindTemplataType))))),
-        EqualsAR(TemplexAR(RuneAT(checkMemberRcName.addStep(CodeRuneA("V")), CoordTemplataType)), ComponentsAR(CoordTemplataType, List(TemplexAR(OwnershipAT(ShareP)), TemplexAR(PackAT(List(), KindTemplataType)))))),
+        EqualsAR(TemplexAR(RuneAT(CodeRuneA("I"), CoordTemplataType)), TemplexAR(NameAT(CodeTypeNameA("Int"), CoordTemplataType))),
+        EqualsAR(TemplexAR(RuneAT(CodeRuneA("T"), CoordTemplataType)), ComponentsAR(CoordTemplataType, List(TemplexAR(OwnershipAT(BorrowP)), TemplexAR(RuneAT(ImplicitRuneA(0), KindTemplataType))))),
+        EqualsAR(TemplexAR(RuneAT(CodeRuneA("V"), CoordTemplataType)), ComponentsAR(CoordTemplataType, List(TemplexAR(OwnershipAT(ShareP)), TemplexAR(PackAT(List(), KindTemplataType)))))),
       CodeBodyA(
         BodyAE(
-          Set(),
+          List(),
           BlockAE(
-            Set(
-              LocalVariableA(checkMemberRcName.addStep(CodeVarNameA("obj")), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed),
-              LocalVariableA(checkMemberRcName.addStep(CodeVarNameA("num")), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
             List(
-              CheckRefCountAE(LocalLoadAE(checkMemberRcName.addStep(CodeVarNameA("obj")), false), MemberRefCount, LocalLoadAE(checkMemberRcName.addStep(CodeVarNameA("num")), false)),
+              LocalVariableA(CodeVarNameA("obj"), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed),
+              LocalVariableA(CodeVarNameA("num"), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
+            List(
+              CheckRefCountAE(LocalLoadAE(CodeVarNameA("obj"), false), MemberRefCount, LocalLoadAE(CodeVarNameA("num"), false)),
               PackAE(List()))))))
 }

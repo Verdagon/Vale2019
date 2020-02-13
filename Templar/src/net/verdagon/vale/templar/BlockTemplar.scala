@@ -21,7 +21,7 @@ object BlockTemplar {
     val fate =
       FunctionEnvironmentBox(
         FunctionEnvironment(
-          parentFate.snapshot, parentFate.fullName, parentFate.function, Map(), parentFate.maybeReturnType, Set(), newCounter, List(), Set()))
+          parentFate.snapshot, parentFate.fullName, parentFate.function, Map(), parentFate.maybeReturnType, List(), newCounter, List(), Set()))
     val startingFate = fate.snapshot
 
     fate.addScoutedLocals(block1.locals)

@@ -3,12 +3,12 @@ package net.verdagon.vale.templar.function
 import net.verdagon.vale.astronomer.{CodeBodyA, FunctionA}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
-import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
+import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
 import net.verdagon.vale.scout.patterns.{AbstractSP, OverrideSP, VirtualitySP}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.citizen.StructTemplar
 import net.verdagon.vale.templar.env._
-import net.verdagon.vale.{vassert, vcurious, vfail}
+import net.verdagon.vale.{vassert, vcurious, vfail, vimpl}
 
 import scala.collection.immutable.{List, Set}
 
@@ -247,7 +247,11 @@ object FunctionTemplarMiddleLayer {
   FunctionEnvironment = {
     // The last step is the name, but it doesn't have the params filled out.
     // (these asserts are just to make sure that's still the case)
-    vassert(runedEnv.fullName.last.parameters.isEmpty)
+    runedEnv.fullName.last match {
+      case FunctionName2(_, _, parameters) => vassert(parameters.isEmpty)
+      case _ => vimpl()
+    }
+
     // We fill out the params here to get the function's full name.
     val functionFullName = makeFunctionFullName(runedEnv.fullName, paramTypes)
     val namedEnv = runedEnv.copy(fullName = functionFullName)

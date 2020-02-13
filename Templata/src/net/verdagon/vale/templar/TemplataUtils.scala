@@ -8,22 +8,22 @@ object simpleName {
 //  }
   def unapply(fullName: FullName2[IName2]): Option[String] = {
     fullName.last match {
-      case ImplName2(_) => None
+      case ImplDeclareName2(_) => None
       case LetName2(_) => None
       case UnnamedLocalName2(_) => None
       case ClosureParamName2() => None
       case MagicParamName2(_) => None
       case CodeVarName2(name) => Some(name)
-      case CodeRune2(name) => Some(name)
-      case ImplicitRune2(_) => None
-      case MemberRune2(_) => None
-      case MagicImplicitRune2(_) => None
-      case ReturnRune2() => None
+//      case CodeRune2(name) => Some(name)
+//      case ImplicitRune2(_) => None
+//      case MemberRune2(_) => None
+//      case MagicImplicitRune2(_) => None
+//      case ReturnRune2() => None
       case FunctionName2(humanName, _, _) => Some(humanName)
       case LambdaName2(_, _, _) => None
       case StructName2(humanName, _) => Some(humanName)
       case TupleName2(_) => None
-      case LambdaStructName2(_, _) => None
+      case LambdaStructName2(_) => None
       case InterfaceName2(humanName, _) => Some(humanName)
     }
   }

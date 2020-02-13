@@ -5,12 +5,11 @@ import net.verdagon.vale.astronomer.ruletyper.{IRuleTyperEvaluatorDelegate, Rule
 import net.verdagon.vale.scout.rules.{EqualsSR, TemplexSR, TypedSR}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata.{IPotentialBanner, _}
-import net.verdagon.vale.scout.{AbsoluteNameS, CodeBody1, INameS, ITemplexS}
+import net.verdagon.vale.scout.{CodeRuneS, CodeTypeNameS, INameS, ITemplexS}
 import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.function.FunctionTemplar
 import net.verdagon.vale.templar.function.FunctionTemplar.{EvaluateFunctionFailure, EvaluateFunctionSuccess, IEvaluateFunctionResult}
-import net.verdagon.vale.templar.infer.{InferSolveFailure, InferSolveSuccess}
-import net.verdagon.vale.templar.infer.inferer.InfererEvaluator
+import net.verdagon.vale.templar.infer.infer.{InferSolveFailure, InferSolveSuccess}
 import net.verdagon.vale.{vassert, vfail}
 
 import scala.collection.immutable.List
@@ -20,7 +19,7 @@ object OverloadTemplar {
       // The environment to look in.
       env: IEnvironment,
       temputs: TemputsBox,
-      functionName: ImpreciseNameA[GlobalFunctionFamilyNameA],
+      functionName: GlobalFunctionFamilyNameA,
       explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
       args: List[ParamFilter],
       exact: Boolean):
@@ -51,7 +50,7 @@ object OverloadTemplar {
   sealed trait IScoutExpectedFunctionResult
   case class ScoutExpectedFunctionSuccess(prototype: Prototype2) extends IScoutExpectedFunctionResult
   case class ScoutExpectedFunctionFailure(
-    humanName: String,
+    humanName: GlobalFunctionFamilyNameA,
     args: List[ParamFilter],
     // All the ones that could have worked, but were outscored by the best match
     outscoredReasonByPotentialBanner: Map[IPotentialBanner, String],
@@ -77,7 +76,7 @@ object OverloadTemplar {
   def scoutExpectedFunctionForPrototype(
     env: IEnvironment,
     temputs: TemputsBox,
-    functionName: ImpreciseNameA[GlobalFunctionFamilyNameA],
+    functionName: GlobalFunctionFamilyNameA,
     explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
     args: List[ParamFilter],
     exact: Boolean):
@@ -155,7 +154,7 @@ object OverloadTemplar {
   private def getCandidateBanners(
     env: IEnvironment,
     temputs: TemputsBox,
-    functionName: ImpreciseNameA[GlobalFunctionFamilyNameA],
+    functionName: GlobalFunctionFamilyNameA,
     explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
     paramFilters: List[ParamFilter],
     exact: Boolean):
@@ -180,12 +179,12 @@ object OverloadTemplar {
               case KindTemplata(sr @ StructRef2(_)) => {
                 val structEnv = temputs.envByStructRef(sr)
                 getCandidateBanners(
-                  structEnv, temputs, CallTemplar.CALL_FUNCTION_NAME, explicitlySpecifiedTemplateArgTemplexesS, paramFilters, exact)
+                  structEnv, temputs, GlobalFunctionFamilyNameA(CallTemplar.CALL_FUNCTION_NAME), explicitlySpecifiedTemplateArgTemplexesS, paramFilters, exact)
               }
               case KindTemplata(sr @ InterfaceRef2(_)) => {
                 val interfaceEnv = temputs.envByInterfaceRef(sr)
                 getCandidateBanners(
-                  interfaceEnv, temputs, CallTemplar.CALL_FUNCTION_NAME, explicitlySpecifiedTemplateArgTemplexesS, paramFilters, exact)
+                  interfaceEnv, temputs, GlobalFunctionFamilyNameA(CallTemplar.CALL_FUNCTION_NAME), explicitlySpecifiedTemplateArgTemplexesS, paramFilters, exact)
               }
               case ExternFunctionTemplata(header) => {
                 paramsMatch(temputs, paramFilters, header.params, exact) match {
@@ -207,7 +206,15 @@ object OverloadTemplar {
                           new IRuleTyperEvaluatorDelegate[IEnvironment, TemputsBox] {
                             override def lookupType(state: TemputsBox, env: IEnvironment, name: INameS): ITemplataType = {
                               val templata =
-                                env.getNearestTemplataWithName(name, Set(TemplataLookupContext)) match {
+                                env.getNearestTemplataWithAbsoluteName(Astronomer.translateName(name), Set[ILookupContext](TemplataLookupContext)) match {
+                                  case None => vfail("Nothing found with name " + name)
+                                  case Some(t) => t
+                                }
+                              (templata.tyype)
+                            }
+                            override def lookupType(state: TemputsBox, env: IEnvironment, name: CodeTypeNameS): ITemplataType = {
+                              val templata =
+                                env.getNearestTemplataWithName(Astronomer.translateImpreciseName(name), Set(TemplataLookupContext)) match {
                                   case None => vfail("Nothing found with name " + name)
                                   case Some(t) => t
                                 }
@@ -226,20 +233,22 @@ object OverloadTemplar {
 
                       // There might be less explicitly specified template args than there are types, and that's
                       // fine. Hopefully the rest will be figured out by the rule evaluator.
-                      val runeNames = explicitlySpecifiedTemplateArgTemplexesS.indices.toList.map("Rune" + _)
+                      val runeNamesS = explicitlySpecifiedTemplateArgTemplexesS.indices.toList.map(i => CodeRuneS(i.toString))
                       val equalsRules =
-                        explicitlySpecifiedTemplateArgTemplexesS.zip(identifyingRuneTemplataTypes).zip(runeNames).map({
+                        explicitlySpecifiedTemplateArgTemplexesS.zip(identifyingRuneTemplataTypes).zip(runeNamesS).map({
                           case ((explicitlySpecifiedTemplateArgTemplexS, identifyingRuneTemplataType), runeName) => {
                             EqualsSR(
                               TypedSR(runeName, Conversions.unevaluateTemplataType(identifyingRuneTemplataType)),
                               TemplexSR(explicitlySpecifiedTemplateArgTemplexS))
                           }
                         })
+                      val runeNamesA = runeNamesS.map(Astronomer.translateRune)
+                      val runeNames2 = runeNamesA.map(NameTranslator.translateRune)
 
                       // And now that we know the types that are expected of these template arguments, we can
                       // run these template argument templexes through the solver so it can evaluate them in
                       // context of the current environment and spit out some templatas.
-                      ruleTyper.solve(temputs, env, equalsRules, List(), Some(runeNames.toSet)) match {
+                      ruleTyper.solve(temputs, env, equalsRules, List(), Some(runeNamesA.toSet)) match {
                         case (_, rtsf @ RuleTyperSolveFailure(_, _, _)) => (List(), Map(), Map(function -> ("Specified template args don't match expected types!\nExpected types: (" + identifyingRuneTemplataTypes.mkString(",") + ")\nSpecified template args: " + explicitlySpecifiedTemplateArgTemplexesS + "\nCause: " + rtsf.toString)))
                         case (runeTypeConclusions, RuleTyperSolveSuccess(rulesA)) => {
                           // rulesA is the equals rules, but rule typed. Now we'll run them through the solver to get
@@ -249,7 +258,7 @@ object OverloadTemplar {
                               env, temputs, List(), rulesA, runeTypeConclusions.typeByRune, List(), None, List()) match {
                             case (isf @ InferSolveFailure(_, _, _, _, _, _)) => (List(), Map(), Map(function -> ("Couldn't evaluate template args: " + isf.toString)))
                             case (InferSolveSuccess(inferences)) => {
-                              val explicitlySpecifiedTemplateArgTemplatas = runeNames.map(inferences.templatasByRune)
+                              val explicitlySpecifiedTemplateArgTemplatas = runeNames2.map(inferences.templatasByRune)
 
                               FunctionTemplar.evaluateTemplatedFunctionFromCallForBanner(
                                 temputs, ft, explicitlySpecifiedTemplateArgTemplatas, paramFilters) match {
@@ -335,7 +344,7 @@ object OverloadTemplar {
   private def findHayTemplatas(
       env: IEnvironment,
       temputs: TemputsBox,
-      impreciseName: ImpreciseNameA[IImpreciseNameStepA],
+      impreciseName: IImpreciseNameStepA,
       paramFilters: List[ParamFilter]):
   Set[ITemplata] = {
     val environments = env :: getParamEnvironments(temputs, paramFilters)
@@ -352,7 +361,7 @@ object OverloadTemplar {
   def scoutPotentialFunction(
       env: IEnvironment,
       temputs: TemputsBox,
-      functionName: ImpreciseNameA[GlobalFunctionFamilyNameA],
+      functionName: GlobalFunctionFamilyNameA,
       explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
       args: List[ParamFilter],
       exact: Boolean):
@@ -514,7 +523,7 @@ object OverloadTemplar {
       case PotentialBannerFromFunctionS(signature, ft @ FunctionTemplata(_, _, _)) => {
         if (EnvironmentUtils.functionIsTemplateInContext(ft.unevaluatedContainers, ft.function)) {
           FunctionTemplar.evaluateTemplatedFunctionFromCallForPrototype(
-              temputs, ft, signature.fullName.last.templateArgs.get, args) match {
+              temputs, ft, signature.fullName.last.templateArgs, args) match {
             case (EvaluateFunctionSuccess(prototype)) => (prototype)
             case (eff @ EvaluateFunctionFailure(_)) => vfail(eff.toString)
           }

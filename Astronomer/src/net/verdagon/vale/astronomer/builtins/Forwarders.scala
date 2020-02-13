@@ -40,22 +40,22 @@ object Forwarders {
       makeForwarder(">=", List(("left", "Int"), ("right", "Int")), "Bool", "__greaterThanOrEqInt"))
 
   def makeForwarder(functionName: String, params: List[(String, String)], ret: String, callee: String): FunctionA = {
-    val name = AbsoluteNameA(functionName + ".builtin.vale", List(), FunctionNameA(functionName, CodeLocationS(0, 0)))
+    val name = FunctionNameA(functionName, CodeLocationS(0, 0))
     makeSimpleFunction(
       name,
       params,
       ret,
       CodeBodyA(
         BodyAE(
-          Set(),
+          List(),
           BlockAE(
             params.map(_._1).map(param => {
-              LocalVariableA(name.addStep(CodeVarNameA(param)), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)
-            }).toSet,
+              LocalVariableA(CodeVarNameA(param), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)
+            }),
             List(
               FunctionCallAE(
-                FunctionLoadAE(ImpreciseNameA(List(), GlobalFunctionFamilyNameA(callee))),
+                FunctionLoadAE(GlobalFunctionFamilyNameA(callee)),
                 PackAE(
-                    params.map(param => LocalLoadAE(name.addStep(CodeVarNameA(param._1)), false)))))))))
+                    params.map(param => LocalLoadAE(CodeVarNameA(param._1), false)))))))))
   }
 }

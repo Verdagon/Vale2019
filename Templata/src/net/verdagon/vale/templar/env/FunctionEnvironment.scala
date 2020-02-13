@@ -2,7 +2,7 @@ package net.verdagon.vale.templar.env
 
 import net.verdagon.vale.astronomer._
 import net.verdagon.vale.scout.LocalVariable1
-import net.verdagon.vale.templar.{FullName2, IFunctionName2, IName2, IVarName2}
+import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.templata.{ITemplata, Queriable2}
 import net.verdagon.vale.templar.types.{Coord, StructRef2, Variability}
 import net.verdagon.vale.{vassert, vfail, vimpl}
@@ -14,11 +14,11 @@ case class FunctionEnvironment(
   parentEnv: IEnvironment,
   fullName: FullName2[IFunctionName2], // Includes the name of the function
   function: FunctionA,
-  entries: Map[FullName2[IName2], List[IEnvEntry]],
+  entries: Map[IName2, List[IEnvEntry]],
   maybeReturnType: Option[Coord],
 
   // The scout information for locals for this block and all parent blocks in this function.
-  scoutedLocals: Set[LocalVariableA],
+  scoutedLocals: List[LocalVariableA],
 
   // The things below are the "state"; they can be different for any given line in a function.
   varCounter: Int,
@@ -34,9 +34,12 @@ case class FunctionEnvironment(
 ) extends IEnvironment {
   vassert(fullName.steps.startsWith(parentEnv.fullName.steps))
 
+  vassert(scoutedLocals == scoutedLocals.distinct)
+  vassert(variables == variables.distinct)
+
   override def globalEnv: NamespaceEnvironment[IName2] = parentEnv.globalEnv
 
-  def addScoutedLocals(newScoutedLocals: Set[LocalVariableA]): FunctionEnvironment = {
+  def addScoutedLocals(newScoutedLocals: List[LocalVariableA]): FunctionEnvironment = {
     FunctionEnvironment(parentEnv, fullName, function, entries, maybeReturnType, scoutedLocals ++ newScoutedLocals, varCounter, variables, moveds)
   }
   def addVariables(newVars: List[IVariable2]): FunctionEnvironment = {
@@ -70,7 +73,7 @@ case class FunctionEnvironment(
       (0 until n).map(_ + varCounter).toList)
   }
 
-  def addEntry(name: FullName2[IName2], entry: IEnvEntry): FunctionEnvironment = {
+  def addEntry(name: IName2, entry: IEnvEntry): FunctionEnvironment = {
     FunctionEnvironment(
       parentEnv,
       fullName,
@@ -82,7 +85,7 @@ case class FunctionEnvironment(
       variables,
       moveds)
   }
-  def addEntries(newEntries: Map[FullName2[IName2], List[IEnvEntry]]): FunctionEnvironment = {
+  def addEntries(newEntries: Map[IName2, List[IEnvEntry]]): FunctionEnvironment = {
     FunctionEnvironment(
       parentEnv,
       fullName,
@@ -95,7 +98,7 @@ case class FunctionEnvironment(
       moveds)
   }
 
-  override def getAllTemplatasWithAbsoluteName(name: AbsoluteNameA[INameA], lookupFilter: Set[ILookupContext]): List[ITemplata] = {
+  override def getAllTemplatasWithAbsoluteName(name: INameA, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
     entries
       .filter({ case (key, _) => EnvironmentUtils.namesMatch(name, key) })
       .values
@@ -106,7 +109,7 @@ case class FunctionEnvironment(
       parentEnv.getAllTemplatasWithAbsoluteName(name, lookupFilter)
   }
 
-  override def getNearestTemplataWithAbsoluteName(name: AbsoluteNameA[INameA], lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
+  override def getNearestTemplataWithAbsoluteName(name: INameA, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
     entries
       .filter({ case (key, _) => EnvironmentUtils.namesMatch(name, key) })
       .values
@@ -118,16 +121,24 @@ case class FunctionEnvironment(
     }
   }
 
-  override def getAllTemplatasWithName(name: ImpreciseNameA[IImpreciseNameStepA], lookupFilter: Set[ILookupContext]): List[ITemplata] = {
+  override def getAllTemplatasWithAbsoluteName(name: IName2, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
     vimpl()
   }
 
-  override def getNearestTemplataWithName(name: ImpreciseNameA[IImpreciseNameStepA], lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
+  override def getNearestTemplataWithAbsoluteName(name: IName2, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
     vimpl()
   }
 
-  def getVariable(name: AbsoluteNameA[IVarNameA]): Option[IVariable2] = {
-    variables.find(_.id == name) match {
+  override def getAllTemplatasWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
+    vimpl()
+  }
+
+  override def getNearestTemplataWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
+    vimpl()
+  }
+
+  def getVariable(name: IVarName2): Option[IVariable2] = {
+    variables.find(_.id.last == name) match {
       case Some(v) => Some(v)
       case None => {
         parentEnv match {
@@ -160,9 +171,9 @@ case class FunctionEnvironmentBox(var functionEnvironment: FunctionEnvironment) 
   def parentEnv: IEnvironment = functionEnvironment.parentEnv
   def fullName: FullName2[IFunctionName2] = functionEnvironment.fullName
   def function: FunctionA = functionEnvironment.function
-  def entries: Map[AbsoluteNameA[INameA], List[IEnvEntry]] = functionEnvironment.entries
+  def entries: Map[IName2, List[IEnvEntry]] = functionEnvironment.entries
   def maybeReturnType: Option[Coord] = functionEnvironment.maybeReturnType
-  def scoutedLocals: Set[LocalVariableA] = functionEnvironment.scoutedLocals
+  def scoutedLocals: List[LocalVariableA] = functionEnvironment.scoutedLocals
   def varCounter: Int = functionEnvironment.varCounter
   def variables: List[IVariable2] = functionEnvironment.variables
   def moveds: Set[FullName2[IVarName2]] = functionEnvironment.moveds
@@ -176,7 +187,7 @@ case class FunctionEnvironmentBox(var functionEnvironment: FunctionEnvironment) 
     functionEnvironment = functionEnvironment.copy(fullName = fullName)
   }
 
-  def addScoutedLocals(newScoutedLocals: Set[LocalVariableA]): Unit = {
+  def addScoutedLocals(newScoutedLocals: List[LocalVariableA]): Unit = {
     functionEnvironment = functionEnvironment.addScoutedLocals(newScoutedLocals)
   }
   def addVariables(newVars: List[IVariable2]): Unit= {
@@ -203,22 +214,30 @@ case class FunctionEnvironmentBox(var functionEnvironment: FunctionEnvironment) 
     counters
   }
 
-  def addEntry(name: AbsoluteNameA[INameA], entry: IEnvEntry): Unit = {
+  def addEntry(name: IName2, entry: IEnvEntry): Unit = {
     functionEnvironment = functionEnvironment.addEntry(name, entry)
   }
-  def addEntries(newEntries: Map[AbsoluteNameA[INameA], List[IEnvEntry]]): Unit= {
+  def addEntries(newEntries: Map[IName2, List[IEnvEntry]]): Unit= {
     functionEnvironment = functionEnvironment.addEntries(newEntries)
   }
 
-  override def getAllTemplatasWithAbsoluteName(name: AbsoluteNameA[INameA], lookupFilter: Set[ILookupContext]): List[ITemplata] = {
+  override def getAllTemplatasWithAbsoluteName(name: INameA, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
     functionEnvironment.getAllTemplatasWithAbsoluteName(name, lookupFilter)
   }
 
-  override def getNearestTemplataWithAbsoluteName(name: AbsoluteNameA[INameA], lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
+  override def getNearestTemplataWithAbsoluteName(name: INameA, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
     functionEnvironment.getNearestTemplataWithAbsoluteName(name, lookupFilter)
   }
 
-  def getVariable(name: AbsoluteNameA[IVarNameA]): Option[IVariable2] = {
+  override def getAllTemplatasWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
+    functionEnvironment.getAllTemplatasWithName(name, lookupFilter)
+  }
+
+  override def getNearestTemplataWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
+    functionEnvironment.getNearestTemplataWithName(name, lookupFilter)
+  }
+
+  def getVariable(name: IVarName2): Option[IVariable2] = {
     functionEnvironment.getVariable(name)
   }
 

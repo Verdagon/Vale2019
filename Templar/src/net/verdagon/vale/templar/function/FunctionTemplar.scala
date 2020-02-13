@@ -1,6 +1,6 @@
 package net.verdagon.vale.templar.function
 
-import net.verdagon.vale.astronomer.{BFunctionA, FunctionA}
+import net.verdagon.vale.astronomer.{BFunctionA, FunctionA, INameA, LambdaNameA}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.parser._
@@ -28,9 +28,9 @@ object FunctionTemplar {
   private def determineClosureVariableMember(
       env: FunctionEnvironment,
       temputs: TemputsBox,
-      name: String) = {
+      name: INameA) = {
     val (variability2, memberType) =
-      env.getVariable(name).get match {
+      env.getVariable(NameTranslator.translateVarNameStep(name)).get match {
         case ReferenceLocalVariable2(_, variability, reference) => {
           // See "Captured own is borrow" test for why we do this
           val tyype =
@@ -62,10 +62,11 @@ object FunctionTemplar {
   def evaluateClosureStruct(
       temputs: TemputsBox,
       containingFunctionEnv: FunctionEnvironment,
-      function: BFunctionA):
+      name: LambdaNameA,
+      function1: BFunctionA):
   (StructRef2) = {
 
-    val closuredNames = function.body.closuredNames;
+    val closuredNames = function1.body.closuredNames;
 
     // Note, this is where the unordered closuredNames set becomes ordered.
     val closuredVarNamesAndTypes =
@@ -75,16 +76,16 @@ object FunctionTemplar {
 
     val (structRef, _, functionTemplata) =
       StructTemplar.makeClosureUnderstruct(
-        containingFunctionEnv, temputs, function.origin, containingFunctionEnv.fullName, closuredVarNamesAndTypes)
+        containingFunctionEnv, temputs, name, function1.origin, closuredVarNamesAndTypes)
 
     // Eagerly evaluate the function if it's not a template.
-    if (function.origin.isTemplate) {
+    if (function1.origin.isTemplate) {
     // Do nothing
     } else {
       val unevaluatedContainers = vimpl()
       val _ =
         FunctionTemplar.evaluateOrdinaryClosureFunctionFromNonCallForHeader(
-          functionTemplata.outerEnv, temputs, structRef, unevaluatedContainers, function.origin)
+          functionTemplata.outerEnv, temputs, structRef, unevaluatedContainers, function1.origin)
     }
 
     (structRef)

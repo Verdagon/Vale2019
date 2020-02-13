@@ -10,7 +10,6 @@ import net.verdagon.vale.templar.BlockTemplar.unletAll
 import net.verdagon.vale.templar.citizen.StructTemplar
 import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.function.{DestructorTemplar, FunctionTemplar}
-import net.verdagon.vale.templar.infer.{InferSolveFailure, InferSolveSuccess}
 import net.verdagon.vale.templar.templata.TemplataTemplar
 import net.verdagon.vale.{vassert, vfail, vimpl, vwat}
 
@@ -52,7 +51,7 @@ object ExpressionTemplar {
   private def evaluateLookup(
     temputs: TemputsBox,
     fate: FunctionEnvironmentBox,
-    name: AbsoluteNameA[IVarNameA],
+    name: IVarNameA,
     borrow: Boolean):
   (Option[Expression2]) = {
     evaluateAddressibleLookup(temputs, fate, name) match {
@@ -73,9 +72,9 @@ object ExpressionTemplar {
   private def evaluateAddressibleLookup(
       temputs: TemputsBox,
       fate: FunctionEnvironmentBox,
-      nameA: AbsoluteNameA[IVarNameA]):
+      nameA: IVarNameA):
   Option[AddressExpression2] = {
-    fate.getVariable(nameA) match {
+    fate.getVariable(NameTranslator.translateVarNameStep(nameA)) match {
       case Some(alv @ AddressibleLocalVariable2(_, _, reference)) => {
         Some(LocalLookup2(alv, reference))
       }
@@ -94,27 +93,82 @@ object ExpressionTemplar {
               ReferenceLocalVariable2(name2, Final, closuredVarsStructRefRef),
               closuredVarsStructRefRef))
         val closuredVarsStructDef = temputs.lookupStruct(closuredVarsStructRef)
-        val varName = nameA.last match { case CodeVarNameA(n) => n case _ => vwat() }
+        val varName = nameA match { case CodeVarNameA(n) => n case _ => vwat() }
         val index =
           closuredVarsStructDef.members.indexWhere(_.name == varName)
         vassert(index >= 0)
         val lookup = AddressMemberLookup2(borrowExpr, index, id, tyype)
         Some(lookup)
       }
-      case Some(ReferenceClosureVariable2(id, closuredVarsStructRef, _, tyype)) => {
+      case Some(ReferenceClosureVariable2(varName, closuredVarsStructRef, _, tyype)) => {
         val mutability = Templar.getMutability(temputs, closuredVarsStructRef)
         val ownership = if (mutability == Mutable) Borrow else Share
-        val closuredVarsStructRefRef = Coord(ownership, closuredVarsStructRef)
+        val closuredVarsStructRefCoord = Coord(ownership, closuredVarsStructRef)
+        val closuredVarsStructDef = temputs.lookupStruct(closuredVarsStructRef)
         val borrowExpr =
           ExpressionTemplar.borrowSoftLoad(
             temputs,
             LocalLookup2(
-              ReferenceLocalVariable2(fate.fullName.addStep(ClosureParamName2()), Final, closuredVarsStructRefRef),
-              closuredVarsStructRefRef))
+              ReferenceLocalVariable2(fate.fullName.addStep(ClosureParamName2()), Final, closuredVarsStructRefCoord),
+              closuredVarsStructRefCoord))
+        val index = closuredVarsStructDef.members.indexWhere(_.name == varName)
         val lookup =
           ReferenceMemberLookup2(
             borrowExpr,
-            name,
+            index,
+            tyype)
+        Some(lookup)
+      }
+      case None => None
+    }
+  }
+
+  private def evaluateAddressibleLookup(
+    temputs: TemputsBox,
+    fate: FunctionEnvironmentBox,
+    name2: IVarName2):
+  Option[AddressExpression2] = {
+    fate.getVariable(name2) match {
+      case Some(alv @ AddressibleLocalVariable2(_, _, reference)) => {
+        Some(LocalLookup2(alv, reference))
+      }
+      case Some(rlv @ ReferenceLocalVariable2(id, _, reference)) => {
+        Some(LocalLookup2(rlv, reference))
+      }
+      case Some(AddressibleClosureVariable2(id, closuredVarsStructRef, variability, tyype)) => {
+        val mutability = Templar.getMutability(temputs, closuredVarsStructRef)
+        val ownership = if (mutability == Mutable) Borrow else Share
+        val closuredVarsStructRefRef = Coord(ownership, closuredVarsStructRef)
+        val name2 = fate.fullName.addStep(ClosureParamName2())
+        val borrowExpr =
+          ExpressionTemplar.borrowSoftLoad(
+            temputs,
+            LocalLookup2(
+              ReferenceLocalVariable2(name2, Final, closuredVarsStructRefRef),
+              closuredVarsStructRefRef))
+        val closuredVarsStructDef = temputs.lookupStruct(closuredVarsStructRef)
+        val index =
+          closuredVarsStructDef.members.indexWhere(_.name == name2)
+        vassert(index >= 0)
+        val lookup = AddressMemberLookup2(borrowExpr, index, id, tyype)
+        Some(lookup)
+      }
+      case Some(ReferenceClosureVariable2(varName, closuredVarsStructRef, _, tyype)) => {
+        val mutability = Templar.getMutability(temputs, closuredVarsStructRef)
+        val ownership = if (mutability == Mutable) Borrow else Share
+        val closuredVarsStructRefCoord = Coord(ownership, closuredVarsStructRef)
+        val closuredVarsStructDef = temputs.lookupStruct(closuredVarsStructRef)
+        val borrowExpr =
+          ExpressionTemplar.borrowSoftLoad(
+            temputs,
+            LocalLookup2(
+              ReferenceLocalVariable2(fate.fullName.addStep(ClosureParamName2()), Final, closuredVarsStructRefCoord),
+              closuredVarsStructRefCoord))
+        val index = closuredVarsStructDef.members.indexWhere(_.name == varName)
+        val lookup =
+          ReferenceMemberLookup2(
+            borrowExpr,
+            index,
             tyype)
         Some(lookup)
       }
@@ -218,7 +272,7 @@ object ExpressionTemplar {
   def makeUserLocalVariable(
       temputs: TemputsBox,
       fate: FunctionEnvironmentBox,
-      varId: FullName2[IVarName2],
+      varId: IVarName2,
       variability: Variability,
       referenceType2: Coord):
   ILocalVariable2 = {
@@ -228,18 +282,19 @@ object ExpressionTemplar {
 
     val variable1 =
       fate.scoutedLocals.find(_.varName == varId) match {
-        case None => vfail("Missing local variable information from FunctionA for " + fate.function.name + " for variable " + varId.variableName)
+        case None => vfail("Missing local variable information from FunctionA for " + fate.function.name + " for variable " + varId)
         case Some(v) => v
       }
 
     val mutable = Templar.getMutability(temputs, referenceType2.referend)
     val addressible = determineIfLocalIsAddressible(mutable, variable1)
 
+    val fullVarName = fate.fullName.addStep(varId)
     val localVar =
       if (addressible) {
-        AddressibleLocalVariable2(varId, variability, referenceType2)
+        AddressibleLocalVariable2(fullVarName, variability, referenceType2)
       } else {
-        ReferenceLocalVariable2(varId, variability, referenceType2)
+        ReferenceLocalVariable2(fullVarName, variability, referenceType2)
       }
     localVar
   }
@@ -273,7 +328,7 @@ object ExpressionTemplar {
           CallTemplar.evaluatePrefixCall(
             temputs,
             fate,
-            newGlobalFunctionGroupExpression(fate, name),
+            newGlobalFunctionGroupExpression(fate, GlobalFunctionFamilyNameA(name)),
             templateArgTemplexesS,
             flattenedArgsExpr2)
         (callExpr2, returnsFromArgs)
@@ -282,7 +337,7 @@ object ExpressionTemplar {
         val (flattenedArgsExpr2, returnsFromArgs) =
           PackTemplar.evaluate(temputs, fate, argsPackExpr1)
         val callExpr2 =
-          CallTemplar.evaluateNamedPrefixCall(temputs, fate, name, templateArgTemplexesS, flattenedArgsExpr2)
+          CallTemplar.evaluateNamedPrefixCall(temputs, fate, GlobalFunctionFamilyNameA(name), templateArgTemplexesS, flattenedArgsExpr2)
         (callExpr2, returnsFromArgs)
       }
       case FunctionCallAE(FunctionLoadAE(name), argsPackExpr1) => {
@@ -416,7 +471,7 @@ object ExpressionTemplar {
               indexExpr2 match {
                 case IntLiteral2(index) => {
                   val memberType = members(index);
-                  ReferenceMemberLookup2(containerExpr2, index.toString, memberType)
+                  ReferenceMemberLookup2(containerExpr2, index, memberType)
                 }
                 case _ => vimpl("impl random access of structs' members")
               }
@@ -481,9 +536,8 @@ object ExpressionTemplar {
 
         (expr2, returnsFromContainerExpr)
       }
-      case FunctionAE(function1 @ FunctionA(_, name, _, _, _, _, _, _, CodeBodyA(body))) => {
-        val bfunction1 = BFunctionA(function1, name, body)
-        val callExpr2 = evaluateClosure(temputs, fate, bfunction1)
+      case FunctionAE(name, function1 @ FunctionA(_, _, _, _, _, _, _, _, CodeBodyA(body))) => {
+        val callExpr2 = evaluateClosure(temputs, fate, name, BFunctionA(function1, body))
         (callExpr2, Set())
       }
       case p @ PackAE(_) => {
@@ -676,7 +730,7 @@ object ExpressionTemplar {
         val variablesToDestruct = fate.getAllLiveLocals()
         val reversedVariablesToDestruct = variablesToDestruct.reverse
 
-        val resultVarId = fate.fullName.addStep(FunctionResultVarName2())
+        val resultVarId = fate.fullName.addStep(TemplarFunctionResultVarName2())
         val resultVariable = ReferenceLocalVariable2(resultVarId, Final, innerExpr2.resultRegister.reference)
         val resultLet = LetNormal2(resultVariable, innerExpr2)
         fate.addVariable(resultVariable)
@@ -743,7 +797,7 @@ object ExpressionTemplar {
       r: ReferenceExpression2):
   (Defer2) = {
     val varNameCounter = fate.nextVarCounter()
-    val varId = fate.functionEnvironment.fullName.addStep(TemplarImplicitVarNameA(varNameCounter))
+    val varId = fate.functionEnvironment.fullName.addStep(TemplarTemporaryVarName2(varNameCounter))
     val rlv = ReferenceLocalVariable2(varId, Final, r.resultRegister.reference)
     val letExpr2 = LetAndLend2(rlv, r)
     fate.addVariable(rlv)
@@ -765,11 +819,12 @@ object ExpressionTemplar {
   def evaluateClosure(
       temputs: TemputsBox,
       fate: FunctionEnvironmentBox,
+      name: LambdaNameA,
       function1: BFunctionA):
   (ReferenceExpression2) = {
 
     val closureStructRef2 =
-      FunctionTemplar.evaluateClosureStruct(temputs, fate.snapshot, function1);
+      FunctionTemplar.evaluateClosureStruct(temputs, fate.snapshot, name, function1);
     val closureCoord =
       TemplataTemplar.pointifyReferend(temputs, closureStructRef2, Own)
 
@@ -890,7 +945,7 @@ object ExpressionTemplar {
     Unlet2(localVar)
   }
 
-  private def newGlobalFunctionGroupExpression(env: IEnvironmentBox, name: String): ReferenceExpression2 = {
+  private def newGlobalFunctionGroupExpression(env: IEnvironmentBox, name: GlobalFunctionFamilyNameA): ReferenceExpression2 = {
     TemplarReinterpret2(
       PackTemplar.emptyPackExpression,
       Coord(
@@ -898,6 +953,6 @@ object ExpressionTemplar {
         OverloadSet(
           env.snapshot,
           name,
-          Program2.emptyPackStructRef)))
+          Program2.emptyTupleStructRef)))
   }
 }

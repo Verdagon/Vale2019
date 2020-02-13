@@ -66,7 +66,7 @@ case class FunctionTemplata(
   // This assertion is helpful now, but will false-positive trip when someone
   // tries to make an interface with the same name as its containing. At that point,
   // feel free to remove this assertion.
-  (outerEnv.fullName.last, function.name.last) match {
+  (outerEnv.fullName.last, function.name) match {
     case (FunctionName2(envFunctionName, _, _), FunctionNameA(sourceName, _)) => vassert(envFunctionName != sourceName)
     case _ =>
   }
@@ -100,7 +100,7 @@ case class StructTemplata(
   // This assertion is helpful now, but will false-positive trip when someone
   // tries to make an interface with the same name as its containing. At that point,
   // feel free to remove this assertion.
-  (env.fullName.last, originStruct.name.last) match {
+  (env.fullName.last, originStruct.name) match {
     case (StructName2(envFunctionName, _), TopLevelCitizenDeclarationNameA(sourceName, _)) => vassert(envFunctionName != sourceName)
     case _ =>
   }
@@ -140,7 +140,7 @@ case class InterfaceTemplata(
   // This assertion is helpful now, but will false-positive trip when someone
   // tries to make an interface with the same name as its containing. At that point,
   // feel free to remove this assertion.
-  (env.fullName.last, originInterface.name.last) match {
+  (env.fullName.last, originInterface.name) match {
     case (StructName2(envFunctionName, _), TopLevelCitizenDeclarationNameA(sourceName, _)) => vassert(envFunctionName != sourceName)
     case _ =>
   }

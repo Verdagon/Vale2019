@@ -21,7 +21,6 @@
     <orderEntry type="module" module-name="Templata" />
     <orderEntry type="library" name="sbt: org.scala-lang.modules:scala-parser-combinators_2.12:1.1.1:jar" level="project" />
     <orderEntry type="module" module-name="Utils" />
-    <orderEntry type="module" module-name="Inferer" />
     <orderEntry type="module" module-name="Samples" />
     <orderEntry type="module" module-name="Astronomer" />
     <orderEntry type="module" module-name="Metal" />

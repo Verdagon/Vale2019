@@ -1,6 +1,6 @@
 package net.verdagon.vale.templar
 
-import net.verdagon.vale.astronomer.{AbsoluteNameA, IVarNameA}
+import net.verdagon.vale.astronomer.IVarNameA
 import net.verdagon.vale.templar.env.{ILocalVariable2, ReferenceLocalVariable2}
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar.types._

@@ -9,7 +9,7 @@ import net.verdagon.vale.astronomer._
 import scala.collection.immutable.List
 
 trait RuleTyperMatcherDelegate[Env, State] {
-  def lookupType(state: State, env: Env, name: ImpreciseNameS[CodeTypeNameS]): ITemplataType
+  def lookupType(state: State, env: Env, name: CodeTypeNameS): ITemplataType
   def lookupType(state: State, env: Env, name: INameS): ITemplataType
 }
 
@@ -18,7 +18,7 @@ class RuleTyperMatcher[Env, State](
     delegate: RuleTyperMatcherDelegate[Env, State]) {
   private def addConclusion(
     conclusions: ConclusionsBox,
-    rune: AbsoluteNameA[IRuneA],
+    rune: IRuneA,
     tyype: ITemplataType):
   IRuleTyperMatchResult[Unit] = {
     conclusions.typeByRune.get(rune) match {
@@ -57,7 +57,7 @@ class RuleTyperMatcher[Env, State](
       conclusions: ConclusionsBox,
       rule: AtomSP):
   (IRuleTyperMatchResult[Unit]) = {
-    val coordRuneA = Astronomer.translateRuneAbsoluteName(rule.coordRune)
+    val coordRuneA = Astronomer.translateRune(rule.coordRune)
 
     addConclusion(conclusions, coordRuneA, CoordTemplataType) match {
       case (imc @ RuleTyperMatchConflict(_, _, _)) => return (imc)
@@ -78,7 +78,7 @@ class RuleTyperMatcher[Env, State](
       case None => conclusions
       case Some(AbstractSP) =>
       case Some(OverrideSP(kindRuneS)) => {
-        val kindRuneA = Astronomer.translateRuneAbsoluteName(kindRuneS)
+        val kindRuneA = Astronomer.translateRune(kindRuneS)
         addConclusion(conclusions, kindRuneA, KindTemplataType) match {
           case (imc @ RuleTyperMatchConflict(_, _, _)) => return (imc)
           case (RuleTyperMatchSuccess(())) =>
@@ -164,7 +164,7 @@ class RuleTyperMatcher[Env, State](
       case (VariabilityST(value), VariabilityTemplataType) => (RuleTyperMatchSuccess(VariabilityAT(value)))
       case (AbsoluteNameST(nameS), _) => {
         val tyype = delegate.lookupType(state, env, nameS)
-        val nameA = Astronomer.translateAbsoluteName(nameS)
+        val nameA = Astronomer.translateName(nameS)
         matchNameTypeAgainstTemplataType(conclusions, tyype, expectedType) match {
           case RuleTyperMatchSuccess(()) => RuleTyperMatchSuccess(AbsoluteNameAT(nameA, expectedType))
           case rtmc @ RuleTyperMatchConflict(_, _, _) => {
@@ -174,7 +174,7 @@ class RuleTyperMatcher[Env, State](
       }
       case (NameST(nameS), _) => {
         val tyype = delegate.lookupType(state, env, nameS)
-        val nameA = Astronomer.translateImpreciseTypeName(nameS)
+        val nameA = Astronomer.translateImpreciseName(nameS)
         matchNameTypeAgainstTemplataType(conclusions, tyype, expectedType) match {
           case RuleTyperMatchSuccess(()) => RuleTyperMatchSuccess(NameAT(nameA, expectedType))
           case rtmc @ RuleTyperMatchConflict(_, _, _) => {
@@ -183,7 +183,7 @@ class RuleTyperMatcher[Env, State](
         }
       }
       case (RuneST(runeS), _) => {
-        val runeA = Astronomer.translateRuneAbsoluteName(runeS)
+        val runeA = Astronomer.translateRune(runeS)
         addConclusion(conclusions, runeA, expectedType) match {
           case (imc @ RuleTyperMatchConflict(_, _, _)) => return (RuleTyperMatchConflict(conclusions.conclusions, "Conflict in rune!", List(imc)))
           case (RuleTyperMatchSuccess(())) => {
@@ -465,7 +465,7 @@ class RuleTyperMatcher[Env, State](
       case _ => return (RuleTyperMatchConflict(conclusions.conclusions, "Type from above (" + expectedType + ") didn't match type from rule (" + rule.tyype + ")", List()))
     }
 
-    val runeA = Astronomer.translateRuneAbsoluteName(rule.rune)
+    val runeA = Astronomer.translateRune(rule.rune)
 
     addConclusion(conclusions, runeA, expectedType) match {
       case (imc @ RuleTyperMatchConflict(_, _, _)) => return (RuleTyperMatchConflict(conclusions.conclusions, "", List(imc)))

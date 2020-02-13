@@ -8,7 +8,7 @@ import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnv
 import net.verdagon.vale.scout.rules.IRulexSR
 import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.function.DestructorTemplar
-import net.verdagon.vale.templar.infer.{InferSolveFailure, InferSolveSuccess}
+import net.verdagon.vale.templar.infer.infer.{InferSolveFailure, InferSolveSuccess}
 import net.verdagon.vale.templar.templata.TemplataTemplar
 import net.verdagon.vale.vfail
 
@@ -38,7 +38,7 @@ object PatternTemplar {
     temputs: TemputsBox,
     fate: FunctionEnvironmentBox,
     rules: List[IRulexAR],
-    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
+    typeByRune: Map[IRuneA, ITemplataType],
     patterns1: List[AtomAP],
     patternInputExprs2: List[ReferenceExpression2]):
   List[ReferenceExpression2] = {
@@ -51,7 +51,7 @@ object PatternTemplar {
         case (InferSolveSuccess(tbr)) => (tbr.templatasByRune.mapValues(v => List(TemplataEnvEntry(v))))
       }
 
-    fate.addEntries(templatasByRune.map({ case (key, value) => (RuneSymbol(key), value) }))
+    fate.addEntries(templatasByRune.map({ case (key, value) => (key, value) }))
 
     nonCheckingTranslateList(temputs, fate, patterns1, patternInputExprs2)
   }
@@ -96,7 +96,7 @@ object PatternTemplar {
       temputs: TemputsBox,
       fate: FunctionEnvironmentBox,
       rules: List[IRulexAR],
-      typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
+      typeByRune: Map[IRuneA, ITemplataType],
       pattern: AtomAP,
       inputExpr: ReferenceExpression2):
   (List[ReferenceExpression2]) = {
@@ -107,7 +107,7 @@ object PatternTemplar {
         case (InferSolveSuccess(tbr)) => (tbr.templatasByRune.mapValues(v => List(TemplataEnvEntry(v))))
       }
 
-    fate.addEntries(templatasByRune.map({ case (key, value) => (RuneSymbol(key), value) }))
+    fate.addEntries(templatasByRune.map({ case (key, value) => (key, value) }))
 
     innerNonCheckingTranslate(
       temputs, fate, pattern, inputExpr)
@@ -145,7 +145,7 @@ object PatternTemplar {
       // function's parameters. Ignore them.
     }
 
-    val expectedTemplata = fate.getAllTemplatasWithAbsoluteName(coordRuneA, Set(TemplataLookupContext))
+    val expectedTemplata = fate.getNearestTemplataWithAbsoluteName(coordRuneA, Set(TemplataLookupContext))
     val expectedCoord =
       expectedTemplata match {
         case Some(CoordTemplata(coord)) => coord
@@ -159,7 +159,7 @@ object PatternTemplar {
       TypeTemplar.convert(fate.snapshot, temputs, unconvertedInputExpr, expectedCoord);
 
     val CaptureA(name, variability) = maybeCapture
-    val variableId = NameTranslator.translateNameStep(name.last)
+    val variableId = NameTranslator.translateVarNameStep(name)
 
     val export =
       ExpressionTemplar.makeUserLocalVariable(
@@ -362,7 +362,7 @@ object PatternTemplar {
         val memberLocalVariables =
           memberTypes.zipWithIndex.map({
             case ((memberType, index)) => {
-              val variableId =  FullName2(fate.function.lambdaNumber, "__pack_" + counter + "_member_" + index)
+              val variableId = fate.fullName.addStep(TemplarPatternMemberName2(counter, index))
               val localVariable = ReferenceLocalVariable2(variableId, Final, memberType)
               fate.addVariable(localVariable)
               localVariable
@@ -385,8 +385,7 @@ object PatternTemplar {
         // This is different from the Own case because we're not destructuring the incoming thing, we're just
         // loading from it.
 
-        val packLocalVarName = "__pack_" + counter
-        val packLocalVariableId = FullName2(fate.function.lambdaNumber, packLocalVarName)
+        val packLocalVariableId = fate.fullName.addStep(TemplarPatternPackName2(counter))
         val packLocalVariable = ReferenceLocalVariable2(packLocalVariableId, Final, structType2)
         val packLet = LetNormal2(packLocalVariable, inputStructExpr);
         fate.addVariable(packLocalVariable)
@@ -399,7 +398,7 @@ object PatternTemplar {
                   SoftLoad2(
                     ReferenceMemberLookup2(
                       SoftLoad2(LocalLookup2(packLocalVariable, structType2), Share),
-                      index.toString, memberType),
+                      index, memberType),
                     Share)
                 innerNonCheckingTranslate(temputs, fate, innerPattern, loadExpr)
               }

@@ -33,22 +33,22 @@ object TemplataNamer {
     // We should probably not use these long term since they're super unrecognizable,
     // we can switch to nicer symbols once things settle.
     fullName.steps.map({
-      case ImplName2(codeLocation) => "ᚠ" + codeLocation
+      case ImplDeclareName2(codeLocation) => "ᚠ" + codeLocation
       case LetName2(codeLocation) => "ᚥ" + codeLocation
       case UnnamedLocalName2(codeLocation) => "ᚣ" + codeLocation
       case ClosureParamName2() => "ᛋ"
       case MagicParamName2(magicParamNumber) => "ᛞ" + magicParamNumber
       case CodeVarName2(name) => "ᛗ" + name
-      case CodeRune2(name) => "ᛝ" + name
-      case ImplicitRune2(name) => "ᚻ" + name
-      case MemberRune2(memberIndex) => "ᛒ" + memberIndex
-      case MagicImplicitRune2(magicParamIndex) => "ᛥ" + magicParamIndex
-      case ReturnRune2() => "ᚱ"
+//      case CodeRune2(name) => "ᛝ" + name
+//      case ImplicitRune2(name) => "ᚻ" + name
+//      case MemberRune2(memberIndex) => "ᛒ" + memberIndex
+//      case MagicImplicitRune2(magicParamIndex) => "ᛥ" + magicParamIndex
+//      case ReturnRune2() => "ᚱ"
       case FunctionName2(humanName, templateArgs, parameters) => "ᚫ" + humanName + stringifyTemplateArgs(templateArgs) + stringifyParametersArgs(parameters)
       case LambdaName2(codeLocation, templateArgs, parameters) => "ᛈ" + codeLocation + stringifyTemplateArgs(templateArgs) + stringifyParametersArgs(parameters)
       case StructName2(humanName, templateArgs) => "ᛟ" + humanName + stringifyTemplateArgs(templateArgs)
       case InterfaceName2(humanName, templateArgs) => "ᛘ" + humanName + stringifyTemplateArgs(templateArgs)
-      case LambdaStructName2(codeLocation, templateArgs) => "ᛊ" + codeLocation + stringifyTemplateArgs(templateArgs)
+      case LambdaStructName2(codeLocation) => "ᛊ" + codeLocation
     }).mkString(".")
   }
 

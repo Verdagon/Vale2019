@@ -138,14 +138,14 @@ case class VariabilityAT(variability: VariabilityP) extends ITemplexA {
 }
 
 case class NameAT(
-  name: ImpreciseNameA[IImpreciseNameStepA],
+  name: IImpreciseNameStepA,
   resultType: ITemplataType
 ) extends ITemplexA {
   println("hi")
 }
 
 case class AbsoluteNameAT(
-  name: AbsoluteNameA[INameA],
+  name: INameA,
   resultType: ITemplataType
 ) extends ITemplexA {
   println("hi")
@@ -157,7 +157,7 @@ case class AbsoluteNameAT(
 // from the environment and make sure it matches. For RuneAT, we might put
 // something into the environment.
 case class RuneAT(
-  rune: AbsoluteNameA[IRuneA],
+  rune: IRuneA,
   resultType: ITemplataType
 ) extends ITemplexA
 
