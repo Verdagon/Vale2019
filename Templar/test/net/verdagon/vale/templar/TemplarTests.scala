@@ -2,9 +2,9 @@ package net.verdagon.vale.templar
 
 import net.verdagon.vale.parser.{Program0, VParser}
 import net.verdagon.vale.scout.{ProgramS, Scout}
-import net.verdagon.vale.templar.env.{ReferenceLocalVariable2, VariableId2}
+import net.verdagon.vale.templar.env.{ReferenceLocalVariable2, FullName2}
 import net.verdagon.vale.templar.templata._
-import net.verdagon.vale.templar.types.{NamePart2, _}
+import net.verdagon.vale.templar.types.{INamePart2, _}
 import net.verdagon.vale._
 import net.verdagon.vale.astronomer.{Astronomer, ProgramA}
 import org.scalatest.{FunSuite, Matchers, _}
@@ -178,7 +178,7 @@ class TemplarTests extends FunSuite with Matchers {
   test("Test mutating a local var") {
     val compile = new Compilation("fn main(){a! = 3; mut a = 4; }")
     val temputs = compile.getTemputs();
-    temputs.only({ case Mutate2(LocalLookup2(ReferenceLocalVariable2(VariableId2(_, "a"), Varying, _), _), IntLiteral2(4)) => })
+    temputs.only({ case Mutate2(LocalLookup2(ReferenceLocalVariable2(FullName2(_, "a"), Varying, _), _), IntLiteral2(4)) => })
   }
 
   test("Test taking a callable param") {
@@ -276,10 +276,10 @@ class TemplarTests extends FunSuite with Matchers {
     val temputs = compile.getTemputs()
 
     temputs.interfaces match {
-      case List(InterfaceDefinition2(FullName2(List(NamePart2("MyOption", Some(List(CoordTemplata(Coord(Share, Int2())))), None, None))), Mutable, List())) =>
+      case List(InterfaceDefinition2(FullName2(List(INamePart2("MyOption", Some(List(CoordTemplata(Coord(Share, Int2())))), None, None))), Mutable, List())) =>
     }
     vassert(temputs.lookupFunction("main").header.params.head.tyype ==
-        Coord(Own,InterfaceRef2(FullName2(List(NamePart2("MyOption",Some(List(CoordTemplata(Coord(Share, Int2())))), None, None))))))
+        Coord(Own,InterfaceRef2(FullName2(List(INamePart2("MyOption",Some(List(CoordTemplata(Coord(Share, Int2())))), None, None))))))
 
     // Can't run it because there's nothing implementing that interface >_>
   }
@@ -295,12 +295,12 @@ class TemplarTests extends FunSuite with Matchers {
     val temputs = compile.getTemputs()
 
     temputs.only({
-      case InterfaceDefinition2(FullName2(List(NamePart2("MyOption", Some(List(CoordTemplata(Coord(Share, Int2())))), None, None))), Immutable, List()) =>
+      case InterfaceDefinition2(FullName2(List(INamePart2("MyOption", Some(List(CoordTemplata(Coord(Share, Int2())))), None, None))), Immutable, List()) =>
     })
-    val struct = temputs.lookupStruct(StructRef2(FullName2(List(NamePart2("MySome", Some(List(CoordTemplata(Coord(Share, Int2())))), None, None)))));
+    val struct = temputs.lookupStruct(StructRef2(FullName2(List(INamePart2("MySome", Some(List(CoordTemplata(Coord(Share, Int2())))), None, None)))));
 
     temputs.impls.find(impl => {
-      impl.struct == struct.getRef && impl.interface == InterfaceRef2(FullName2(List(NamePart2("MyOption", Some(List(CoordTemplata(Coord(Share, Int2())))), None, None))))
+      impl.struct == struct.getRef && impl.interface == InterfaceRef2(FullName2(List(INamePart2("MyOption", Some(List(CoordTemplata(Coord(Share, Int2())))), None, None))))
     }).get
   }
 
@@ -328,7 +328,7 @@ class TemplarTests extends FunSuite with Matchers {
 
     val temputs = compile.getTemputs()
 
-    temputs.lookupStruct(StructRef2(FullName2(List(NamePart2("MySome", Some(List(CoordTemplata(Coord(Share, Int2())))), None, None)))));
+    temputs.lookupStruct(StructRef2(FullName2(List(INamePart2("MySome", Some(List(CoordTemplata(Coord(Share, Int2())))), None, None)))));
 
     val constructor = temputs.lookupFunction("MySome")
     constructor.header match {
@@ -339,7 +339,7 @@ class TemplarTests extends FunSuite with Matchers {
         false,
         _,
         _,
-        Coord(Own, StructRef2(FullName2(List(NamePart2("MySome", Some(List(CoordTemplata(Coord(Share, Int2())))), None, None))))),
+        Coord(Own, StructRef2(FullName2(List(INamePart2("MySome", Some(List(CoordTemplata(Coord(Share, Int2())))), None, None))))),
         _) =>
     }
 
@@ -354,7 +354,7 @@ class TemplarTests extends FunSuite with Matchers {
 
     val main = temputs.lookupFunction("main")
 
-    main.only({ case ReferenceLocalVariable2(VariableId2(_,"x"),Final,Coord(Own,InterfaceRef2(simpleName("MyInterface")))) => })
+    main.only({ case ReferenceLocalVariable2(FullName2(_,"x"),Final,Coord(Own,InterfaceRef2(simpleName("MyInterface")))) => })
 
     val upcast = main.onlyOf(classOf[StructToInterfaceUpcast2])
     vassert(upcast.resultRegister.reference == Coord(Own, InterfaceRef2(simpleName("MyInterface"))))
@@ -534,7 +534,7 @@ class TemplarTests extends FunSuite with Matchers {
     val temputs = compile.getTemputs()
     val main = temputs.lookupFunction("main")
     val destructorCalls =
-      main.all({ case fpc @ FunctionCall2(Prototype2(FullName2(List(NamePart2("destructor",Some(List(CoordTemplata(Coord(Own,StructRef2(simpleName("Marine")))))), _, None))), _, _),_) => fpc })
+      main.all({ case fpc @ FunctionCall2(Prototype2(FullName2(List(INamePart2("destructor",Some(List(CoordTemplata(Coord(Own,StructRef2(simpleName("Marine")))))), _, None))), _, _),_) => fpc })
     destructorCalls.size shouldEqual 2
   }
 

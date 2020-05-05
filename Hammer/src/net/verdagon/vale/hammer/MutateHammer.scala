@@ -5,7 +5,7 @@ import net.verdagon.vale.hinputs.Hinputs
 import net.verdagon.vale.metal.{Borrow => _, Variability => _, _}
 import net.verdagon.vale.{metal => m}
 import net.verdagon.vale.templar._
-import net.verdagon.vale.templar.env.{AddressibleLocalVariable2, ReferenceLocalVariable2, VariableId2}
+import net.verdagon.vale.templar.env.{AddressibleLocalVariable2, ReferenceLocalVariable2, FullName2}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.vassert
 
@@ -216,7 +216,7 @@ object MutateHammer {
       nodesByLine: NodesBox,
       sourceExprResultLine: RegisterAccessH[ReferendH],
       sourceResultPointerTypeH: ReferenceH[ReferendH],
-      varId: VariableId2,
+      varId: FullName2,
       variability: Variability,
       reference: Coord
   ): (RegisterAccessH[ReferendH], List[Expression2]) = {
@@ -257,7 +257,7 @@ object MutateHammer {
       stackHeight: StackHeightBox,
       nodesByLine: NodesBox,
       sourceExprResultLine: RegisterAccessH[ReferendH],
-      varId: VariableId2
+      varId: FullName2
   ): (RegisterAccessH[ReferendH], List[Expression2]) = {
     val local = locals.get(varId).get
     val newStoreNode =

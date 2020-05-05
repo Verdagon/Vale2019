@@ -7,62 +7,61 @@ import net.verdagon.vale.scout.patterns.AtomSP
 
 object Arrays {
   def makeArrayFunction(mutability: MutabilityP): FunctionA = {
-    val fileName = if (mutability == MutableP) { "MutArray.builtin.vale" } else { "ImmArray.builtin.vale" }
-    val location = CodeLocationS(0, 0)
-    val name = AbsoluteNameA(fileName, List(), FunctionNameA("!=", location))
+    val location = if (mutability == MutableP) { CodeLocationS(0, 0) } else { CodeLocationS(1, 0) }
+    val name = FunctionNameA("!=", location)
 //    List(
       FunctionA(
         name,
         false,
         TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), FunctionTemplataType),
-        List(name.addStep(CodeRuneA("ArrayMutability")), name.addStep(CodeRuneA("T")), name.addStep(CodeRuneA("Generator"))),
+        List(CodeRuneA("ArrayMutability"), CodeRuneA("T"), CodeRuneA("Generator")),
         Map(
-          name.addStep(CodeRuneA("ArrayMutability")) -> MutabilityTemplataType,
-          name.addStep(CodeRuneA("T")) -> CoordTemplataType,
-          name.addStep(CodeRuneA("Generator")) -> CoordTemplataType),
+          CodeRuneA("ArrayMutability") -> MutabilityTemplataType,
+          CodeRuneA("T") -> CoordTemplataType,
+          CodeRuneA("Generator") -> CoordTemplataType),
         List(
-          ParameterA(AtomAP(CaptureA(name.addStep(CodeVarNameA("size")), FinalP), None, name.addStep(CodeRuneA("I")), None)),
-          ParameterA(AtomAP(CaptureA(name.addStep(CodeVarNameA("generator")), FinalP), None, name.addStep(CodeRuneA("Generator")), None))),
-        Some(name.addStep(CodeRuneA("R"))),
+          ParameterA(AtomAP(CaptureA(CodeVarNameA("size"), FinalP), None, CodeRuneA("I"), None)),
+          ParameterA(AtomAP(CaptureA(CodeVarNameA("generator"), FinalP), None, CodeRuneA("Generator"), None))),
+        Some(CodeRuneA("R")),
         List(
-          EqualsAR(TemplexAR(RuneAT(name.addStep(CodeRuneA("ArrayMutability")), MutabilityTemplataType)), TemplexAR(MutabilityAT(mutability))),
-          EqualsAR(TemplexAR(RuneAT(name.addStep(CodeRuneA("I")), CoordTemplataType)), TemplexAR(NameAT(ImpreciseNameA(List(), CodeTypeNameA("Int")), CoordTemplataType))),
-          TemplexAR(RuneAT(name.addStep(CodeRuneA("T")), CoordTemplataType)),
+          EqualsAR(TemplexAR(RuneAT(CodeRuneA("ArrayMutability"), MutabilityTemplataType)), TemplexAR(MutabilityAT(mutability))),
+          EqualsAR(TemplexAR(RuneAT(CodeRuneA("I"), CoordTemplataType)), TemplexAR(NameAT(CodeTypeNameA("Int"), CoordTemplataType))),
+          TemplexAR(RuneAT(CodeRuneA("T"), CoordTemplataType)),
           EqualsAR(
-            TemplexAR(RuneAT(name.addStep(CodeRuneA("Generator")), CoordTemplataType)),
+            TemplexAR(RuneAT(CodeRuneA("Generator"), CoordTemplataType)),
             ComponentsAR(
               CoordTemplataType,
               List(
-                TemplexAR(RuneAT(name.addStep(ImplicitRuneA(0)), OwnershipTemplataType)),
+                TemplexAR(RuneAT(ImplicitRuneA(0), OwnershipTemplataType)),
                 TemplexAR(
                   CallAT(
-                    NameAT(ImpreciseNameA(List(), GlobalFunctionFamilyNameA("IFunction1")), TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType, CoordTemplataType), KindTemplataType)),
+                    NameAT(GlobalFunctionFamilyNameA("IFunction1"), TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType, CoordTemplataType), KindTemplataType)),
                     List(
-                      RuneAT(name.addStep(CodeRuneA("M")), MutabilityTemplataType),
-                      NameAT(ImpreciseNameA(List(), CodeTypeNameA("Int")), CoordTemplataType),
-                      RuneAT(name.addStep(CodeRuneA("T")), CoordTemplataType)),
+                      RuneAT(CodeRuneA("M"), MutabilityTemplataType),
+                      NameAT(CodeTypeNameA("Int"), CoordTemplataType),
+                      RuneAT(CodeRuneA("T"), CoordTemplataType)),
                     KindTemplataType))))),
           EqualsAR(
-            TemplexAR(RuneAT(name.addStep(CodeRuneA("R")), CoordTemplataType)),
+            TemplexAR(RuneAT(CodeRuneA("R"), CoordTemplataType)),
             TemplexAR(
               CallAT(
                 NameAT(
-                  ImpreciseNameA(List(), CodeTypeNameA("Array")),
+                  CodeTypeNameA("Array"),
                   TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), KindTemplataType)),
-                List(RuneAT(name.addStep(CodeRuneA("ArrayMutability")), MutabilityTemplataType), RuneAT(name.addStep(CodeRuneA("T")), CoordTemplataType)),
+                List(RuneAT(CodeRuneA("ArrayMutability"), MutabilityTemplataType), RuneAT(CodeRuneA("T"), CoordTemplataType)),
                 CoordTemplataType)))),
         CodeBodyA(
           BodyAE(
-            Set(),
+            List(),
             BlockAE(
-              Set(
-                LocalVariableA(name.addStep(CodeVarNameA("size")), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed),
-                LocalVariableA(name.addStep(CodeVarNameA("generator")), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
+              List(
+                LocalVariableA(CodeVarNameA("size"), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed),
+                LocalVariableA(CodeVarNameA("generator"), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
               List(
                 ConstructArrayAE(
-                  RuneAT(name.addStep(CodeRuneA("T")), CoordTemplataType),
-                  LocalLoadAE(name.addStep(CodeVarNameA("size")), false),
-                  LocalLoadAE(name.addStep(CodeVarNameA("generator")), false),
+                  RuneAT(CodeRuneA("T"), CoordTemplataType),
+                  LocalLoadAE(CodeVarNameA("size"), false),
+                  LocalLoadAE(CodeVarNameA("generator"), false),
                   mutability))))))
 //      FunctionA(
 //        CodeLocation("Array.builtin.vale", 0, 0),

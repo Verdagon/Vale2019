@@ -2,7 +2,7 @@ package net.verdagon.vale
 
 import net.verdagon.vale.parser.FinalP
 import net.verdagon.vale.templar._
-import net.verdagon.vale.templar.env.{ReferenceLocalVariable2, VariableId2}
+import net.verdagon.vale.templar.env.{ReferenceLocalVariable2, FullName2}
 import net.verdagon.vale.templar.types.{Coord, Final, Int2, Share}
 import net.verdagon.von.VonInt
 import org.scalatest.{FunSuite, Matchers}

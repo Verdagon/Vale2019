@@ -1,14 +1,11 @@
 package net.verdagon.vale.templar.infer
 
 import net.verdagon.vale.astronomer._
-import net.verdagon.vale.scout.patterns.AtomSP
-import net.verdagon.vale.scout.{FunctionS, InterfaceS, StructS}
-import net.verdagon.vale.templar.Temputs
-import net.verdagon.vale.templar.env.{IEnvironment, TemplataLookupContext}
-import net.verdagon.vale.templar.infer.inferer._
+import net.verdagon.vale.templar.IRune2
+import net.verdagon.vale.templar.infer.infer.IInferSolveResult
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar.types._
-import net.verdagon.vale.{vassertSome, vfail, vimpl}
+import net.verdagon.vale.vimpl
 
 import scala.collection.immutable.List
 
@@ -29,8 +26,8 @@ trait IInfererDelegate[Env, State] {
 
   def getMutability(state: State, kind: Kind): Mutability
 
-  def lookupTemplata(env: Env, name: AbsoluteNameA[INameA]): ITemplata
-  def lookupTemplata(env: Env, name: ImpreciseNameA[IImpreciseNameStepA]): ITemplata
+  def lookupTemplata(env: Env, name: INameA): ITemplata
+  def lookupTemplata(env: Env, name: IImpreciseNameStepA): ITemplata
 
   def evaluateStructTemplata(
     state: State,
@@ -71,9 +68,9 @@ object Inferer {
     delegate: IInfererDelegate[Env, State],
     env: Env,
     state: State,
-    rules: List[IRulexAR],
-    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
-    directInputs: Map[AbsoluteNameA[IRuneA], ITemplata],
+    rules: List[IRulexTR],
+    typeByRune: Map[IRune2, ITemplataType],
+    directInputs: Map[IRune2, ITemplata],
     paramAtoms: List[AtomAP],
     maybeParamInputs: Option[List[ParamFilter]],
     checkAllRunesPresent: Boolean):
@@ -112,11 +109,11 @@ object Inferer {
         delegate.getPackKind(env, state, members)
       }
 
-      override def lookupTemplata(env: Env, name: AbsoluteNameA[INameA]): ITemplata = {
+      override def lookupTemplata(env: Env, name: INameA): ITemplata = {
         delegate.lookupTemplata(env, name)
       }
 
-      override def lookupTemplata(env: Env, name: ImpreciseNameA[IImpreciseNameStepA]): ITemplata = {
+      override def lookupTemplata(env: Env, name: IImpreciseNameStepA): ITemplata = {
         delegate.lookupTemplata(env, name)
       }
 

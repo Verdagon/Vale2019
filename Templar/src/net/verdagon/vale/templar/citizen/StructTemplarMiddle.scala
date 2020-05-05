@@ -1,6 +1,6 @@
 package net.verdagon.vale.templar.citizen
 
-import net.verdagon.vale.astronomer.{FunctionA, InterfaceA, StructA}
+import net.verdagon.vale.astronomer.{FunctionA, InterfaceA, LambdaNameA, StructA}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
@@ -13,16 +13,16 @@ import scala.collection.immutable.List
 
 object StructTemplarMiddle {
   def getStructRef(
-    structOuterEnv: NamespaceEnvironment,
+    structOuterEnv: NamespaceEnvironment[IName2],
     temputs: TemputsBox,
     structS: StructA,
-    templatasByRune: Map[String, ITemplata]):
+    templatasByRune: Map[IRune2, ITemplata]):
   (StructRef2) = {
-    val coercedFinalTemplateArgs2 = structS.identifyingRunes.map(templatasByRune)
+    val coercedFinalTemplateArgs2 = structS.identifyingRunes.map(NameTranslator.translateRune).map(templatasByRune)
 
     val localEnv =
       structOuterEnv.addEntries(
-        templatasByRune.mapValues(templata => List(TemplataEnvEntry(templata))))
+        templatasByRune.map({ case (rune, templata) => (rune, List(TemplataEnvEntry(templata))) }))
     val structDefinition2 =
       StructTemplarCore.makeStruct(
         localEnv, temputs, structS, coercedFinalTemplateArgs2);
@@ -31,16 +31,16 @@ object StructTemplarMiddle {
   }
 
   def getInterfaceRef(
-    interfaceOuterEnv: NamespaceEnvironment,
+    interfaceOuterEnv: NamespaceEnvironment[IName2],
     temputs: TemputsBox,
     interfaceA: InterfaceA,
-    templatasByRune: Map[String, ITemplata]):
+    templatasByRune: Map[IRune2, ITemplata]):
   (InterfaceRef2) = {
-    val coercedFinalTemplateArgs2 = interfaceA.identifyingRunes.map(templatasByRune)
+    val coercedFinalTemplateArgs2 = interfaceA.identifyingRunes.map(NameTranslator.translateRune).map(templatasByRune)
 
     val localEnv =
       interfaceOuterEnv.addEntries(
-        templatasByRune.mapValues(templata => List(TemplataEnvEntry(templata))))
+        templatasByRune.map({ case (rune, templata) => (rune, List(TemplataEnvEntry(templata))) }))
     val interfaceDefinition2 =
       StructTemplarCore.makeInterface(
         localEnv, temputs, interfaceA, coercedFinalTemplateArgs2);
@@ -58,23 +58,23 @@ object StructTemplarMiddle {
 
   // Makes a struct to back a closure
   def makeClosureUnderstruct(
-    env: IEnvironment,
+    containingFunctionEnv: IEnvironment,
     temputs: TemputsBox,
+    name: LambdaNameA,
     functionS: FunctionA,
-    functionFullName: FullName2,
     members: List[StructMember2]):
   (StructRef2, Mutability, FunctionTemplata) = {
-    StructTemplarCore.makeClosureUnderstruct(env, temputs, functionS, functionFullName, members)
+    StructTemplarCore.makeClosureUnderstruct(containingFunctionEnv, temputs, name, functionS, members)
   }
 
   // Makes a struct to back a pack or tuple
   def makeSeqOrPackUnderstruct(
-    env: NamespaceEnvironment,
+    env: NamespaceEnvironment[IStructName2],
     temputs: TemputsBox,
     memberTypes2: List[Coord],
-    prefix: String):
+    name: IStructName2):
   (StructRef2, Mutability) = {
-    StructTemplarCore.makeSeqOrPackUnderstruct(env, temputs, memberTypes2, prefix)
+    StructTemplarCore.makeSeqOrPackUnderstruct(env, temputs, memberTypes2, name)
   }
 
   // Makes an anonymous substruct of the given interface, with the given lambdas as its members.
@@ -82,7 +82,7 @@ object StructTemplarMiddle {
     outerEnv: IEnvironment,
     temputs: TemputsBox,
     maybeConstructorOriginFunctionA: Option[FunctionA],
-    functionFullName: FullName2,
+    functionFullName: FullName2[IFunctionName2],
     interfaceRef: InterfaceRef2,
     lambdas: List[Coord]):
   (StructRef2, Mutability, FunctionHeader2) = {

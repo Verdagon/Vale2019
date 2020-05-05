@@ -9,8 +9,8 @@ import net.verdagon.vale.vfail
 import scala.collection.immutable.List
 
 trait IRuleTyperEvaluatorDelegate[Env, State] {
-  def lookupType(state: State, env: Env, name: ImpreciseNameS[CodeTypeNameS]): ITemplataType
-  def lookupType(state: State, env: Env, name: AbsoluteNameS[INameS]): ITemplataType
+  def lookupType(state: State, env: Env, name: CodeTypeNameS): ITemplataType
+  def lookupType(state: State, env: Env, name: INameS): ITemplataType
 }
 
 // Given enough user specified template params and param inputs, we should be able to
@@ -26,7 +26,7 @@ class RuleTyperEvaluator[Env, State](
     env: Env,
     rules: List[IRulexSR],
     paramAtoms: List[AtomSP],
-    maybeNeededRunes: Option[Set[AbsoluteNameA[IRuneA]]]
+    maybeNeededRunes: Option[Set[IRuneA]]
   ): (Conclusions, IRuleTyperSolveResult[List[IRulexAR]]) = {
     // First, we feed into the system the things the user already specified.
 
@@ -254,7 +254,7 @@ class RuleTyperEvaluator[Env, State](
         }
       }
       case RuneST(runeS) => {
-        val runeA = Astronomer.translateRuneAbsoluteName(runeS)
+        val runeA = Astronomer.translateRune(runeS)
         conclusions.typeByRune.get(runeA) match {
           case Some(tyype) => (RuleTyperEvaluateSuccess(RuneAT(runeA, tyype)))
           case None => (RuleTyperEvaluateUnknown())
@@ -400,7 +400,7 @@ class RuleTyperEvaluator[Env, State](
     rule: TypedSR,
   ): (IRuleTyperEvaluateResult[TemplexAR]) = {
     val TypedSR(runeS, typeSR) = rule
-    val runeA = Astronomer.translateRuneAbsoluteName(runeS)
+    val runeA = Astronomer.translateRune(runeS)
 
     val templataType =
       typeSR match {
@@ -683,11 +683,11 @@ class RuleTyperEvaluator[Env, State](
     new RuleTyperMatcher[Env, State](
       evaluateTemplex,
       new RuleTyperMatcherDelegate[Env, State] {
-        override def lookupType(state: State, env: Env, name: ImpreciseNameS[CodeTypeNameS]): ITemplataType = {
+        override def lookupType(state: State, env: Env, name: CodeTypeNameS): ITemplataType = {
           delegate.lookupType(state, env, name)
         }
 
-        override def lookupType(state: State, env: Env, name: AbsoluteNameS[INameS]): ITemplataType = {
+        override def lookupType(state: State, env: Env, name: INameS): ITemplataType = {
           delegate.lookupType(state, env, name)
         }
       })

@@ -7,32 +7,30 @@ import net.verdagon.vale.scout.patterns._
 import net.verdagon.vale.scout.predictor.Conclusions
 import net.verdagon.vale.scout.rules._
 import net.verdagon.vale.scout.templatepredictor.PredictorEvaluator
-import net.verdagon.vale.{vassert, vassertSome, vfail, vwat}
+import net.verdagon.vale._
 
 import scala.collection.immutable.{List, Range}
 
-// Fate is short for Function State. It tracks how many magic params have been used.
-// This is similar to StackFrame, which tracks all the locals that have been declared.
-
-// Maybe we should combine them?
-// As of this writing, we use fate to keep track of magic params, and StackFrame at the
-// block level receives (via return type) declarations from the individual expressions
-// to accumulate them itself.
-case class ScoutFate(private val numMagicParams: Int) {
-  def nextMagicParamNumber(): (ScoutFate, Int) = {
-    (ScoutFate(numMagicParams + 1), numMagicParams)
-  }
-  def countMagicParams() = numMagicParams
-}
-
-case class ScoutFateBox(var fate: ScoutFate) {
-  def nextMagicParamNumber(): Int = {
-    val (newFate, num) = fate.nextMagicParamNumber()
-    fate = newFate
-    num
-  }
-  def countMagicParams(): Int = fate.countMagicParams()
-}
+//// Fate is short for Function State. It tracks how many magic params have been used.
+//// This is similar to StackFrame, which tracks all the locals that have been declared.
+//
+//// Maybe we should combine them?
+//// As of this writing, we use fate to keep track of magic params, and StackFrame at the
+//// block level receives (via return type) declarations from the individual expressions
+//// to accumulate them itself.
+//case class ScoutFate(private val magicParams: Set[MagicParamNameS]) {
+//  def addMagicParam(magicParam: MagicParamNameS): ScoutFate = {
+//    ScoutFate(magicParams + magicParam)
+//  }
+//  def countMagicParams() = magicParams.size
+//}
+//
+//case class ScoutFateBox(var fate: ScoutFate) {
+//  def addMagicParam(codeLocation: MagicParamNameS): Unit = {
+//    fate = fate.addMagicParam(codeLocation)
+//  }
+//  def countMagicParams(): Int = fate.countMagicParams()
+//}
 
 object FunctionScout {
 //  // All closure structs start with this
@@ -56,26 +54,24 @@ object FunctionScout {
       maybeBody0
     ) = functionP
     val codeLocation = CodeLocationS(functionP.pos.line, functionP.pos.column)
-    val name = AbsoluteNameS(file, List(), FunctionNameS(codeName, codeLocation))
+    val name = FunctionNameS(codeName, codeLocation)
 
     val userSpecifiedIdentifyingRunes =
       userSpecifiedIdentifyingRuneNames
-        .map(identifyingRuneName => name.addStep(CodeRuneS(identifyingRuneName)))
+        .map(identifyingRuneName => CodeRuneS(identifyingRuneName))
     val userRunesFromRules =
       RulePUtils.getOrderedRuneDeclarationsFromRulexesWithDuplicates(templateRulesP)
-        .map(identifyingRuneName => name.addStep(CodeRuneS(identifyingRuneName)))
+        .map(identifyingRuneName => CodeRuneS(identifyingRuneName))
     val userDeclaredRunes = userSpecifiedIdentifyingRunes ++ userRunesFromRules
 
     val functionEnv = FunctionEnvironment(name, None, userDeclaredRunes.toSet, paramsP.size)
-
-    val fate = ScoutFateBox(ScoutFate(0))
 
     val rate = RuleStateBox(RuleState(name, 0))
     val userRulesS = RuleScout.translateRulexes(rate, functionEnv.allUserDeclaredRunes(), templateRulesP)
 
     val myStackFrameWithoutParams = StackFrame(name, functionEnv, None, noDeclarations)
     val (implicitRulesFromPatterns, explicitParamsPatterns1) =
-      PatternScout.scoutPatterns(myStackFrameWithoutParams, fate, rate, paramsP)
+      PatternScout.scoutPatterns(myStackFrameWithoutParams, rate, paramsP)
     val explicitParams1 = explicitParamsPatterns1.map(ParameterS)
     val captureDeclarations =
       explicitParams1
@@ -83,7 +79,7 @@ object FunctionScout {
         .foldLeft(noDeclarations)(_ ++ _)
     val myStackFrame = StackFrame(name, functionEnv, None, captureDeclarations)
 
-    val identifyingRunes: List[AbsoluteNameS[IRuneS]] =
+    val identifyingRunes: List[IRuneS] =
       (
         userSpecifiedIdentifyingRunes //++
         // Patterns can't define runes
@@ -108,7 +104,7 @@ object FunctionScout {
         ExternBody1
       } else {
         vassert(maybeBody0.nonEmpty)
-        val (body1, _) = scoutBody(fate, myStackFrame, maybeBody0.get, captureDeclarations)
+        val (body1, _, List()) = scoutBody(myStackFrame, maybeBody0.get, captureDeclarations)
         CodeBody1(body1)
       }
 
@@ -151,47 +147,41 @@ object FunctionScout {
   }
 
   def scoutLambda(
-      fate: ScoutFateBox,
       parentStackFrame: StackFrame,
       lambdaFunction0: FunctionP):
   (FunctionS, VariableUses) = {
     val FunctionP(_, false, false, isUserFunction, userSpecifiedIdentifyingRuneNames, List(), paramsP, maybeRetPT, Some(body0)) = lambdaFunction0;
     val codeLocation = CodeLocationS(lambdaFunction0.pos.line, lambdaFunction0.pos.column)
-    val userSpecifiedIdentifyingRunes: List[AbsoluteNameS[IRuneS]] =
-      userSpecifiedIdentifyingRuneNames
-        .map(identifyingRuneName => parentStackFrame.name.addStep(CodeRuneS(identifyingRuneName)))
+    val userSpecifiedIdentifyingRunes: List[IRuneS] =
+      userSpecifiedIdentifyingRuneNames.map(identifyingRuneName => CodeRuneS(identifyingRuneName))
 
-    val funcName = parentStackFrame.name.addStep(LambdaNameS(codeLocation))
+    val lambdaName = LambdaNameS(parentStackFrame.name, codeLocation)
     // Every lambda has a closure as its first arg, even if its empty
-    val closureStructName = parentStackFrame.name.addStep(LambdaStructNameS(codeLocation))
+    val closureStructName = LambdaStructNameS(lambdaName)
 
-    val rate = RuleStateBox(RuleState(funcName, 0))
-
-    val ScoutFate(numMagicParamsBefore) = fate.fate
-    val lambdaFate = ScoutFateBox(ScoutFate(0))
+    val rate = RuleStateBox(RuleState(lambdaName, 0))
 
     val functionEnv =
       FunctionEnvironment(
-        funcName,
+        lambdaName,
         Some(parentStackFrame.parentEnv),
         userSpecifiedIdentifyingRunes.toSet,
         paramsP.size)
 
-    val myStackFrameWithoutParams = StackFrame(funcName, functionEnv, None, noDeclarations)
+    val myStackFrameWithoutParams = StackFrame(lambdaName, functionEnv, None, noDeclarations)
 
     val (implicitRulesFromParams, explicitParamPatterns1) =
       PatternScout.scoutPatterns(
         myStackFrameWithoutParams,
-        lambdaFate,
         rate,
         paramsP);
     val explicitParams1 = explicitParamPatterns1.map(ParameterS)
 //    vassert(exportedTemplateParamNames.size == exportedTemplateParamNames.toSet.size)
 
-    val closureParamName = funcName.addStep(ClosureParamNameS())
+    val closureParamName = ClosureParamNameS()
 
     val closureDeclaration =
-      VariableDeclarations(Set(VariableDeclaration(closureParamName, FinalP)))
+      VariableDeclarations(List(VariableDeclaration(closureParamName, FinalP)))
 
     val paramDeclarations =
       explicitParams1.map(_.pattern)
@@ -200,16 +190,15 @@ object FunctionScout {
 
     // Don't add the closure to the environment, we don't want the user to be able
     // to access it.
-    val myStackFrame = StackFrame(funcName, parentStackFrame.parentEnv, Some(parentStackFrame), paramDeclarations)
+    val myStackFrame = StackFrame(lambdaName, parentStackFrame.parentEnv, Some(parentStackFrame), paramDeclarations)
 
-    val (body1, variableUses) =
+    val (body1, variableUses, lambdaMagicParamNames) =
       scoutBody(
-        lambdaFate,
         myStackFrame,
         body0,
         closureDeclaration ++ paramDeclarations)
 
-    if ((lambdaFate.countMagicParams() != 0) && (explicitParams1.nonEmpty)) {
+    if (lambdaMagicParamNames.nonEmpty && (explicitParams1.nonEmpty)) {
       vfail("Cant have a lambda with _ and params");
     }
 
@@ -224,12 +213,11 @@ object FunctionScout {
     val closureParamS = ParameterS(AtomSP(CaptureS(closureParamName,FinalP),None,closureParamTypeRune,None))
 
     val (magicParamsRules, magicParams) =
-      (0 until lambdaFate.countMagicParams())
-        .map({
-          case (magicParamIndex) => {
-            val magicParamRune = funcName.addStep(MagicParamRuneS(magicParamIndex))
+        lambdaMagicParamNames.map({
+          case mpn @ MagicParamNameS(codeLocation) => {
+            val magicParamRune = MagicParamRuneS(codeLocation)
             val ruleS = TypedSR(magicParamRune,CoordTypeSR)
-            val paramS = ParameterS(AtomSP(CaptureS(funcName.addStep(MagicParamNameS(magicParamIndex)),FinalP),None,magicParamRune,None))
+            val paramS = ParameterS(AtomSP(CaptureS(mpn,FinalP),None,magicParamRune,None))
             (ruleS, paramS)
           }
         })
@@ -257,7 +245,7 @@ object FunctionScout {
 
     val allRunes =
       PredictorEvaluator.getAllRunes(
-        funcName,
+        lambdaName,
         identifyingRunes,
         rulesS,
         explicitParams1.map(_.pattern),
@@ -279,12 +267,9 @@ object FunctionScout {
         Some(FunctionTypeSR)
       }
 
-    val ScoutFate(_) = lambdaFate.fate
-    fate.fate = ScoutFate(numMagicParamsBefore)
-
     val function1 =
       FunctionS(
-        funcName,
+        lambdaName,
         isUserFunction,
         identifyingRunes,
         allRunes,
@@ -297,19 +282,21 @@ object FunctionScout {
     (function1, variableUses)
   }
 
+  // Returns:
+  // - Body.
+  // - Uses of parent variables.
+  // - Magic params made/used inside.
   private def scoutBody(
-    fate: ScoutFateBox,
     stackFrame: StackFrame,
     body0: BlockPE,
     paramDeclarations: VariableDeclarations):
-  (BodySE, VariableUses) = {
+  (BodySE, VariableUses, List[MagicParamNameS]) = {
     // There's an interesting consequence of calling this function here...
     // If we have a lone lookup node, like "m = Marine(); m;" then that
     // 'm' will be turned into an expression, which means that's how it's
     // destroyed. So, thats how we destroy things before their time.
     val (NormalResult(block1WithoutParamLocals), selfUses, childUses) =
-      ExpressionScout.scoutBlock(
-        fate, stackFrame, body0)
+      ExpressionScout.scoutBlock(stackFrame, body0)
 
     val paramLocals =
       paramDeclarations.vars.map({ declared =>
@@ -349,40 +336,39 @@ object FunctionScout {
     // that it needs to capture them for us.
     val usesOfParentVariables =
       allUses.uses.filter(use => {
-        val usedName = use.name
-        val usedVarFunctionName = getContainingFunctionName(usedName)
-        // Doublechecking that it came from a function.
-        usedVarFunctionName.last match {
-          case FunctionNameS(_, _) =>
-          case LambdaNameS(_) =>
-          case _ => vwat()
-        }
-        // If usedName is something like main/lam1/x then
-        // usedVarFunctionName would be main/lam1
-        // If we're in main/lam1/lam2, then we mark it as used.
-        // Can't imagine a case where tlfName is shorter than usedName.
-        // We also had a bug where variables that were declared and used
-        // in child lambdas made it up to here, which made no sense, we
-        // never care about those.
-        vassert(stackFrame.name.steps.size >= usedVarFunctionName.steps.size)
-        if (stackFrame.name == usedVarFunctionName) {
+        if (block1WithParamLocals.locals.exists(_.varName == use.name)) {
           // This is a use of a variable declared in this function.
           false
         } else {
-          // This is a use of a variable from somewhere above.
-          true
+          use.name match {
+            case MagicParamNameS(_) => {
+              // We're using a magic param, which we'll have in this function's params.
+              false
+            }
+            case _ => {
+              // This is a use of a variable from somewhere above.
+              true
+            }
+          }
         }
       })
 
-    (BodySE(usesOfParentVariables.map(_.name), block1WithParamLocals), VariableUses(usesOfParentVariables))
+    val magicParams =
+      allUses.uses.flatMap(_.name match {
+        case mpn @ MagicParamNameS(_) => List(mpn)
+        case _ => List()
+      })
+
+    (BodySE(usesOfParentVariables.map(_.name), block1WithParamLocals), VariableUses(usesOfParentVariables), magicParams)
   }
 
-  def getContainingFunctionName(name: AbsoluteNameS[INameS]): AbsoluteNameS[IFunctionDeclarationNameS] = {
-    val (functionNameStep, functionNameStepIndex) =
-      vassertSome(name.steps.zipWithIndex.reverse.collectFirst({
-        case (nameStep : IFunctionDeclarationNameS, nameStepIndex) => (nameStep, nameStepIndex)
-      }))
-    AbsoluteNameS(name.file, name.steps.slice(0, functionNameStepIndex), functionNameStep)
+  def getContainingFunctionName(name: INameS): IFunctionDeclarationNameS = {
+    vimpl()
+//    val (functionNameStep, functionNameStepIndex) =
+//      vassertSome(name.steps.zipWithIndex.reverse.collectFirst({
+//        case (nameStep : IFunctionDeclarationNameS, nameStepIndex) => (nameStep, nameStepIndex)
+//      }))
+//    AbsoluteNameS(name.file, name.steps.slice(0, functionNameStepIndex), functionNameStep)
   }
 
   def scoutInterfaceMember(interfaceEnv: Environment, functionP: FunctionP): FunctionS = {
@@ -397,19 +383,18 @@ object FunctionScout {
       maybeReturnType,
       None) = functionP;
     val codeLocation = CodeLocationS(functionP.pos.line, functionP.pos.column)
-    val funcName = interfaceEnv.name.addStep(FunctionNameS(codeName, codeLocation))
+    val funcName = FunctionNameS(codeName, codeLocation)
     val userSpecifiedIdentifyingRunes =
       userSpecifiedIdentifyingRuneNames
-        .map(identifyingRuneName => interfaceEnv.name.addStep(CodeRuneS(identifyingRuneName)))
+        .map(identifyingRuneName => CodeRuneS(identifyingRuneName))
 
-    val identifyingRunes: List[AbsoluteNameS[IRuneS]] =
+    val identifyingRunes: List[IRuneS] =
       (
         userSpecifiedIdentifyingRunes// ++
         // Patterns can't define runes
         // filledParamsP.flatMap(PatternPUtils.getOrderedIdentifyingRunesFromPattern)
       ).distinct
 
-    val fate = ScoutFateBox(ScoutFate(0))
     val rate = RuleStateBox(RuleState(funcName, 0))
 
     val userRulesS = RuleScout.translateRulexes(rate, interfaceEnv.allUserDeclaredRunes(), templateRulesP)
@@ -417,10 +402,7 @@ object FunctionScout {
     val functionEnv = FunctionEnvironment(funcName, Some(interfaceEnv), userSpecifiedIdentifyingRunes.toSet, paramsP.size)
     val myStackFrame = StackFrame(funcName, functionEnv, None, noDeclarations)
     val (implicitRulesFromParams, patternsS) =
-      PatternScout.scoutPatterns(myStackFrame, fate, rate, paramsP)
-
-    // Theres no body, no need to keep the fate around.
-    val _ = fate
+      PatternScout.scoutPatterns(myStackFrame, rate, paramsP)
 
     val paramsS = patternsS.map(ParameterS)
 

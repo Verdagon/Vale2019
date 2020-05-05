@@ -8,7 +8,7 @@ import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnv
 import net.verdagon.vale.scout.rules.IRulexSR
 import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.function.DestructorTemplar
-import net.verdagon.vale.templar.infer.{InferSolveFailure, InferSolveSuccess}
+import net.verdagon.vale.templar.infer.infer.{InferSolveFailure, InferSolveSuccess}
 import net.verdagon.vale.templar.templata.TemplataTemplar
 import net.verdagon.vale.vfail
 
@@ -38,7 +38,7 @@ object PatternTemplar {
     temputs: TemputsBox,
     fate: FunctionEnvironmentBox,
     rules: List[IRulexAR],
-    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
+    typeByRune: Map[IRuneA, ITemplataType],
     patterns1: List[AtomAP],
     patternInputExprs2: List[ReferenceExpression2]):
   List[ReferenceExpression2] = {
@@ -51,7 +51,7 @@ object PatternTemplar {
         case (InferSolveSuccess(tbr)) => (tbr.templatasByRune.mapValues(v => List(TemplataEnvEntry(v))))
       }
 
-    fate.addEntries(templatasByRune.map({ case (key, value) => (RuneSymbol(key), value) }))
+    fate.addEntries(templatasByRune.map({ case (key, value) => (key, value) }))
 
     nonCheckingTranslateList(temputs, fate, patterns1, patternInputExprs2)
   }
@@ -96,7 +96,7 @@ object PatternTemplar {
       temputs: TemputsBox,
       fate: FunctionEnvironmentBox,
       rules: List[IRulexAR],
-      typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
+      typeByRune: Map[IRuneA, ITemplataType],
       pattern: AtomAP,
       inputExpr: ReferenceExpression2):
   (List[ReferenceExpression2]) = {
@@ -107,7 +107,7 @@ object PatternTemplar {
         case (InferSolveSuccess(tbr)) => (tbr.templatasByRune.mapValues(v => List(TemplataEnvEntry(v))))
       }
 
-    fate.addEntries(templatasByRune.map({ case (key, value) => (RuneSymbol(key), value) }))
+    fate.addEntries(templatasByRune.map({ case (key, value) => (key, value) }))
 
     innerNonCheckingTranslate(
       temputs, fate, pattern, inputExpr)
@@ -145,7 +145,7 @@ object PatternTemplar {
       // function's parameters. Ignore them.
     }
 
-    val expectedTemplata = fate.getNearestTemplataWithName(RuneSymbol(coordRuneA), Set(TemplataLookupContext))
+    val expectedTemplata = fate.getNearestTemplataWithAbsoluteName(coordRuneA, Set(TemplataLookupContext))
     val expectedCoord =
       expectedTemplata match {
         case Some(CoordTemplata(coord)) => coord
@@ -158,27 +158,20 @@ object PatternTemplar {
     val inputExpr =
       TypeTemplar.convert(fate.snapshot, temputs, unconvertedInputExpr, expectedCoord);
 
-    val (inputOrLookupExpr, lets0) =
-      maybeCapture match {
-        case None => {
-          (inputExpr, List())
-        }
-        case Some(CaptureP(name, variability)) => {
-          val variableId = VariableId2(fate.function.lambdaNumber, name)
+    val CaptureA(name, variability) = maybeCapture
+    val variableId = NameTranslator.translateVarNameStep(name)
 
-          val export =
-            ExpressionTemplar.makeUserLocalVariable(
-              temputs, fate, variableId, Conversions.evaluateVariability(variability), expectedCoord)
-          val let = LetNormal2(export, inputExpr);
+    val export =
+      ExpressionTemplar.makeUserLocalVariable(
+        temputs, fate, variableId, Conversions.evaluateVariability(variability), expectedCoord)
+    val let = LetNormal2(export, inputExpr);
 
-          val localLookupExpr =
-            ExpressionTemplar.borrowSoftLoad(
-              temputs, LocalLookup2(export, inputExpr.resultRegister.reference))
-          fate.addVariable(export)
+    val localLookupExpr =
+      ExpressionTemplar.borrowSoftLoad(
+        temputs, LocalLookup2(export, inputExpr.resultRegister.reference))
+    fate.addVariable(export)
 
-          (localLookupExpr, List(let))
-        }
-      }
+    val lets0 = List(let)
 
     maybeDestructure match {
       case None => {
@@ -197,7 +190,7 @@ object PatternTemplar {
 
             val innerLets =
               nonCheckingTranslateStructInner(
-                temputs, fate, listOfMaybeDestructureMemberPatterns, expectedCoord, inputOrLookupExpr)
+                temputs, fate, listOfMaybeDestructureMemberPatterns, expectedCoord, localLookupExpr)
             (lets0 ++ innerLets)
           }
           case PackT2(_, _) => {
@@ -267,7 +260,7 @@ object PatternTemplar {
 //        // In this case, name = 'b' and inner1 = 'Bork'
 //
 //        // This is local variable b
-//        val variableId = VariableId2(env.currentFunction1.get.lambdaNumber, name)
+//        val variableId = FullName2(env.currentFunction1.get.lambdaNumber, name)
 //        // This is where we figure out that b should be an owning Bork
 //        val expectedPointerType =
 //          TypeTemplar.evaluateAndReferencifyType(
@@ -295,7 +288,7 @@ object PatternTemplar {
 //        // make sense, what would b point to? A dead object?).
 //
 //        // This is local variable m
-//        val variableId = VariableId2(env.currentFunction1.get.lambdaNumber, name)
+//        val variableId = FullName2(env.currentFunction1.get.lambdaNumber, name)
 //        // This is where we figure out that m should be an owning Marine
 //        val (expectedPointerType @ Coord(_, StructRef2(_))) =
 //          TypeTemplar.evaluateAndReferencifyType(
@@ -369,7 +362,7 @@ object PatternTemplar {
         val memberLocalVariables =
           memberTypes.zipWithIndex.map({
             case ((memberType, index)) => {
-              val variableId = VariableId2(fate.function.lambdaNumber, "__pack_" + counter + "_member_" + index)
+              val variableId = fate.fullName.addStep(TemplarPatternMemberName2(counter, index))
               val localVariable = ReferenceLocalVariable2(variableId, Final, memberType)
               fate.addVariable(localVariable)
               localVariable
@@ -392,8 +385,7 @@ object PatternTemplar {
         // This is different from the Own case because we're not destructuring the incoming thing, we're just
         // loading from it.
 
-        val packLocalVarName = "__pack_" + counter
-        val packLocalVariableId = VariableId2(fate.function.lambdaNumber, packLocalVarName)
+        val packLocalVariableId = fate.fullName.addStep(TemplarPatternPackName2(counter))
         val packLocalVariable = ReferenceLocalVariable2(packLocalVariableId, Final, structType2)
         val packLet = LetNormal2(packLocalVariable, inputStructExpr);
         fate.addVariable(packLocalVariable)
@@ -406,7 +398,7 @@ object PatternTemplar {
                   SoftLoad2(
                     ReferenceMemberLookup2(
                       SoftLoad2(LocalLookup2(packLocalVariable, structType2), Share),
-                      index.toString, memberType),
+                      index, memberType),
                     Share)
                 innerNonCheckingTranslate(temputs, fate, innerPattern, loadExpr)
               }

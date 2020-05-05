@@ -76,21 +76,21 @@ object FunctionTemplarClosureOrLightLayer {
             member.tyype match {
               case AddressMemberType2(reference) => {
                 AddressibleClosureVariable2(
-                  VariableId2(containingFunctionLambdaNumber, member.name),
+                  FullName2(containingFunctionLambdaNumber, member.name),
                   closureStructRef,
                   member.variability,
                   reference)
               }
               case ReferenceMemberType2(reference) => {
                 ReferenceClosureVariable2(
-                  VariableId2(containingFunctionLambdaNumber, member.name),
+                  FullName2(containingFunctionLambdaNumber, member.name),
                   closureStructRef,
                   member.variability,
                   reference)
               }
             }
           }))
-        .addEntry(closureStructRef.fullName.steps.last.humanName, TemplataEnvEntry(KindTemplata(closureStructRef)))
+        .addEntry(closureStructRef.fullName.last.humanName, TemplataEnvEntry(KindTemplata(closureStructRef)))
     // Now that the variables are added, we've modified the outerEnv to be the nearEnv.
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateTemplatedFunctionFromCallForBanner(
@@ -117,21 +117,21 @@ object FunctionTemplarClosureOrLightLayer {
             member.tyype match {
               case AddressMemberType2(reference) => {
                 AddressibleClosureVariable2(
-                  VariableId2(containingFunctionLambdaNumber, member.name),
+                  FullName2(containingFunctionLambdaNumber, member.name),
                   closureStructRef,
                   member.variability,
                   reference)
               }
               case ReferenceMemberType2(reference) => {
                 ReferenceClosureVariable2(
-                  VariableId2(containingFunctionLambdaNumber, member.name),
+                  FullName2(containingFunctionLambdaNumber, member.name),
                   closureStructRef,
                   member.variability,
                   reference)
               }
             }
           }))
-        .addEntry(closureStructRef.fullName.steps.last.humanName, TemplataEnvEntry(KindTemplata(closureStructRef)))
+        .addEntry(closureStructRef.fullName.last.humanName, TemplataEnvEntry(KindTemplata(closureStructRef)))
     // Now that the variables are added, we've modified the outerEnv to be the nearEnv.
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateTemplatedFunctionFromCallForPrototype(
@@ -217,7 +217,7 @@ object FunctionTemplarClosureOrLightLayer {
         .addVariables(
         closureStructDef.members.map(member => {
           val containingFunctionLambdaNumber = outerEnv.function.lambdaNumber
-          val variableId = VariableId2(containingFunctionLambdaNumber, member.name)
+          val variableId = FullName2(containingFunctionLambdaNumber, member.name)
           member.tyype match {
             case AddressMemberType2(reference) => {
               AddressibleClosureVariable2(variableId, closureStructRef, member.variability, reference)
@@ -228,7 +228,7 @@ object FunctionTemplarClosureOrLightLayer {
           }
         }))
       .addEntry(
-        closureStructRef.fullName.steps.last.humanName,
+        closureStructRef.fullName.last.humanName,
         TemplataEnvEntry(KindTemplata(closureStructRef)))
       // Now that the variables are added, we've modified the outerEnv to be the nearEnv.
 
@@ -253,7 +253,7 @@ object FunctionTemplarClosureOrLightLayer {
         .addVariables(
           closureStructDef.members.map(member => {
             val containingFunctionLambdaNumber = outerEnv.function.lambdaNumber
-            val variableId = VariableId2(containingFunctionLambdaNumber, member.name)
+            val variableId = FullName2(containingFunctionLambdaNumber, member.name)
             member.tyype match {
               case AddressMemberType2(reference) => {
                 AddressibleClosureVariable2(variableId, closureStructRef, member.variability, reference)
@@ -264,7 +264,7 @@ object FunctionTemplarClosureOrLightLayer {
             }
           }))
         .addEntry(
-          closureStructRef.fullName.steps.last.humanName,
+          closureStructRef.fullName.last.humanName,
           TemplataEnvEntry(KindTemplata(closureStructRef)))
     // Now that the variables are added, we've modified the outerEnv to be the nearEnv.
 

@@ -1,40 +1,44 @@
 package net.verdagon.vale.scout
 
 import net.verdagon.vale.parser.VariabilityP
-import net.verdagon.vale.vfail
+import net.verdagon.vale.{vassert, vfail}
 
 
 case class VariableUse(
-    name: AbsoluteNameS[IVarNameS],
+    name: IVarNameS,
     borrowed: Option[IVariableUseCertainty],
     moved: Option[IVariableUseCertainty],
     mutated: Option[IVariableUseCertainty])
 
 case class VariableDeclaration(
-    name: AbsoluteNameS[IVarNameS],
+    name: IVarNameS,
     variability: VariabilityP)
 
-case class VariableDeclarations(vars: Set[VariableDeclaration]) {
+case class VariableDeclarations(vars: List[VariableDeclaration]) {
+  vassert(vars.distinct == vars)
+
   def ++(that: VariableDeclarations): VariableDeclarations = {
     VariableDeclarations(vars ++ that.vars)
   }
-  def find(needle: String): Option[AbsoluteNameS[IVarNameS]] = {
-    vars.map(_.name).find(name => name.last match {
+  def find(needle: String): Option[IVarNameS] = {
+    vars.map(_.name).find({
       case CodeVarNameS(humanName) => humanName == needle
-      case MagicParamNameS(magicParamNumber) => false
+      case MagicParamNameS(_) => false
     })
   }
 }
 
-case class VariableUses(uses: Set[VariableUse]) {
-  def allUsedNames: Set[AbsoluteNameS[IVarNameS]] = uses.map(_.name)
-  def markBorrowed(name: AbsoluteNameS[IVarNameS]): VariableUses = {
+case class VariableUses(uses: List[VariableUse]) {
+  vassert(uses.distinct == uses)
+
+  def allUsedNames: List[IVarNameS] = uses.map(_.name)
+  def markBorrowed(name: IVarNameS): VariableUses = {
     merge(VariableUse(name, Some(Used), None, None), thenMerge)
   }
-  def markMoved(name: AbsoluteNameS[IVarNameS]): VariableUses = {
+  def markMoved(name: IVarNameS): VariableUses = {
     merge(VariableUse(name, None, Some(Used), None), thenMerge)
   }
-  def markMutated(name: AbsoluteNameS[IVarNameS]): VariableUses = {
+  def markMutated(name: IVarNameS): VariableUses = {
     merge(VariableUse(name, None, None, Some(Used)), thenMerge)
   }
   // Incorporate this new use into
@@ -44,19 +48,19 @@ case class VariableUses(uses: Set[VariableUse]) {
   def branchMerge(newUses: VariableUses): VariableUses = {
     combine(newUses, branchMerge)
   }
-  def isBorrowed(name: AbsoluteNameS[IVarNameS]): IVariableUseCertainty = {
+  def isBorrowed(name: IVarNameS): IVariableUseCertainty = {
     uses.find(_.name == name) match {
       case None => NotUsed
       case Some(use) => use.borrowed.getOrElse(NotUsed)
     }
   }
-  def isMoved(name: AbsoluteNameS[IVarNameS]): IVariableUseCertainty = {
+  def isMoved(name: IVarNameS): IVariableUseCertainty = {
     uses.find(_.name == name) match {
       case None => NotUsed
       case Some(use) => use.moved.getOrElse(NotUsed)
     }
   }
-  def isMutated(name: AbsoluteNameS[IVarNameS]): IVariableUseCertainty = {
+  def isMutated(name: IVarNameS): IVariableUseCertainty = {
     uses.find(_.name == name) match {
       case None => NotUsed
       case Some(use) => use.mutated.getOrElse(NotUsed)
@@ -100,7 +104,7 @@ case class VariableUses(uses: Set[VariableUse]) {
       certaintyMerger: (Option[IVariableUseCertainty], Option[IVariableUseCertainty]) => Option[IVariableUseCertainty]):
   VariableUses = {
     val mergedUses =
-      (uses.map(_.name) ++ that.uses.map(_.name)).map({ name =>
+      (uses.map(_.name) ++ that.uses.map(_.name)).distinct.map({ name =>
         (uses.find(_.name == name), that.uses.find(_.name == name)) match {
           case (None, Some(use)) => merge(VariableUse(name, None, None, None), use, certaintyMerger)
           case (Some(use), None) => merge(use, VariableUse(name, None, None, None), certaintyMerger)
@@ -114,9 +118,9 @@ case class VariableUses(uses: Set[VariableUse]) {
       certaintyMerger: (Option[IVariableUseCertainty], Option[IVariableUseCertainty]) => Option[IVariableUseCertainty]):
   VariableUses = {
     uses.find(_.name == newUse.name) match {
-      case None => VariableUses(uses + newUse)
+      case None => VariableUses((uses :+ newUse).distinct)
       case Some(existingUse) => {
-        VariableUses(uses - existingUse + merge(existingUse, newUse, certaintyMerger))
+        VariableUses(uses.filter(_ != existingUse) :+ merge(existingUse, newUse, certaintyMerger))
       }
     }
   }

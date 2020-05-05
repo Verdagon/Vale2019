@@ -292,7 +292,7 @@ object FunctionTemplarCore {
         FunctionHeader2(
           FullName2(
             List(
-              NamePart2(
+              INamePart2(
                 CallTemplar.INTERFACE_DESTRUCTOR_NAME,
                 Some(List(CoordTemplata(structType2), KindTemplata(interfaceRef2))),
                 Some(List(structType2)),

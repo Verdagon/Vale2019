@@ -14,7 +14,7 @@ import scala.collection.immutable.List
 class RunePredictorTests extends FunSuite with Matchers {
   test("Predict doesnt crash for simple templex") {
     val conclusions =
-      PredictorEvaluator.solve(List(TemplexSR(NameST(ImpreciseNameS(List(), CodeTypeNameS("Int"))))), List())
+      PredictorEvaluator.solve(List(TemplexSR(NameST(CodeTypeNameS("Int")))), List())
     conclusions shouldEqual Conclusions(Set(), Map())
   }
 
@@ -22,27 +22,27 @@ class RunePredictorTests extends FunSuite with Matchers {
     val conclusions =
       PredictorEvaluator.solve(
         List(
-          EqualsSR(TemplexSR(RuneST(AbsoluteNameS[IRuneS]("", List(), CodeRuneS("T")))), TemplexSR(NameST(ImpreciseNameS(List(), CodeTypeNameS("Int")))))),
+          EqualsSR(TemplexSR(RuneST(CodeRuneS("T"))), TemplexSR(NameST(CodeTypeNameS("Int"))))),
         List())
-    conclusions shouldEqual Conclusions(Set(AbsoluteNameS[IRuneS]("", List(), CodeRuneS("T"))), Map())
+    conclusions shouldEqual Conclusions(Set(CodeRuneS("T")), Map())
   }
 
   test("Predict for simple equals 2") {
     val conclusions =
       PredictorEvaluator.solve(
         List(
-          TypedSR(AbsoluteNameS[IRuneS]("", List(), ImplicitRuneS(0)),CoordTypeSR),
+          TypedSR(ImplicitRuneS(0),CoordTypeSR),
           EqualsSR(
-            TemplexSR(RuneST(AbsoluteNameS[IRuneS]("", List(), ImplicitRuneS(0)))),
-            TemplexSR(CallST(NameST(ImpreciseNameS(List(), CodeTypeNameS("MyOption"))),List(OwnershippedST(ShareP, NameST(ImpreciseNameS(List(), CodeTypeNameS("Int"))))))))),
+            TemplexSR(RuneST(ImplicitRuneS(0))),
+            TemplexSR(CallST(NameST(CodeTypeNameS("MyOption")),List(OwnershippedST(ShareP, NameST(CodeTypeNameS("Int")))))))),
         List())
-    conclusions shouldEqual Conclusions(Set(AbsoluteNameS[IRuneS]("", List(), ImplicitRuneS(0))), Map(AbsoluteNameS[IRuneS]("", List(), ImplicitRuneS(0)) -> CoordTypeSR))
+    conclusions shouldEqual Conclusions(Set(ImplicitRuneS(0)), Map(ImplicitRuneS(0) -> CoordTypeSR))
   }
 
   test("Predict doesn't know value from Or rule") {
-    val tRune = AbsoluteNameS[IRuneS]("", List(), CodeRuneS("T"))
-    val aRune = AbsoluteNameS[IRuneS]("", List(), ImplicitRuneS(0))
-    val bRune = AbsoluteNameS[IRuneS]("", List(), ImplicitRuneS(1))
+    val tRune = CodeRuneS("T")
+    val aRune = ImplicitRuneS(0)
+    val bRune = ImplicitRuneS(1)
     val conclusions =
       PredictorEvaluator.solve(
         List(
@@ -65,18 +65,18 @@ class RunePredictorTests extends FunSuite with Matchers {
     PredictorEvaluator.solve(
       List(
         ComponentsSR(
-          TypedSR(AbsoluteNameS[IRuneS]("", List(), CodeRuneS("T")),CoordTypeSR),
+          TypedSR(CodeRuneS("T"),CoordTypeSR),
           List(
             OrSR(List(TemplexSR(OwnershipST(OwnP)), TemplexSR(OwnershipST(ShareP)))),
-            CallSR("passThroughIfConcrete",List(TemplexSR(RuneST(AbsoluteNameS[IRuneS]("", List(), ImplicitRuneS(0)))))))),
-        EqualsSR(TypedSR(AbsoluteNameS[IRuneS]("", List(), CodeRuneS("V")),CoordTypeSR),CallSR("toRef",List(TemplexSR(NameST(ImpreciseNameS(List(), CodeTypeNameS("Void")))))))),
+            CallSR("passThroughIfConcrete",List(TemplexSR(RuneST(ImplicitRuneS(0))))))),
+        EqualsSR(TypedSR(CodeRuneS("V"),CoordTypeSR),CallSR("toRef",List(TemplexSR(NameST(CodeTypeNameS("Void"))))))),
       List())
     conclusions shouldEqual
       Conclusions(
-        Set(AbsoluteNameS[IRuneS]("", List(), CodeRuneS("V"))),
+        Set(CodeRuneS("V")),
         Map(
-          AbsoluteNameS("", List(), CodeRuneS("T")) -> CoordTypeSR,
-          AbsoluteNameS("", List(), CodeRuneS("V")) -> CoordTypeSR))
+          CodeRuneS("T") -> CoordTypeSR,
+          CodeRuneS("V") -> CoordTypeSR))
   }
 
   test("Predict returns true for array sequence") {
@@ -86,12 +86,12 @@ class RunePredictorTests extends FunSuite with Matchers {
     val conclusions =
     PredictorEvaluator.solve(
       List(
-        TypedSR(AbsoluteNameS[IRuneS]("", List(), ImplicitRuneS(0)),CoordTypeSR),
+        TypedSR(ImplicitRuneS(0),CoordTypeSR),
         EqualsSR(
-          TemplexSR(RuneST(AbsoluteNameS[IRuneS]("", List(), ImplicitRuneS(0)))),
-          TemplexSR(RepeaterSequenceST(MutabilityST(MutableP), IntST(5),OwnershippedST(ShareP,NameST(ImpreciseNameS(List(), CodeTypeNameS("Int")))))))),
+          TemplexSR(RuneST(ImplicitRuneS(0))),
+          TemplexSR(RepeaterSequenceST(MutabilityST(MutableP), IntST(5),OwnershippedST(ShareP,NameST(CodeTypeNameS("Int"))))))),
       List())
-    conclusions shouldEqual Conclusions(Set(AbsoluteNameS[IRuneS]("", List(), ImplicitRuneS(0))), Map(AbsoluteNameS[IRuneS]("", List(), ImplicitRuneS(0)) -> CoordTypeSR))
+    conclusions shouldEqual Conclusions(Set(ImplicitRuneS(0)), Map(ImplicitRuneS(0) -> CoordTypeSR))
   }
 
   test("Predict for idestructor for interface") {
@@ -102,18 +102,18 @@ class RunePredictorTests extends FunSuite with Matchers {
     PredictorEvaluator.solve(
       List(
         ComponentsSR(
-          TypedSR(AbsoluteNameS[IRuneS]("", List(), CodeRuneS("T")),CoordTypeSR),
+          TypedSR(CodeRuneS("T"),CoordTypeSR),
           List(
             OrSR(List(TemplexSR(OwnershipST(OwnP)), TemplexSR(OwnershipST(ShareP)))),
-            CallSR("passThroughIfInterface",List(TemplexSR(RuneST(AbsoluteNameS[IRuneS]("", List(), ImplicitRuneS(0)))))))),
-        EqualsSR(TypedSR(AbsoluteNameS[IRuneS]("", List(), CodeRuneS("V")),CoordTypeSR),CallSR("toRef",List(TemplexSR(NameST(ImpreciseNameS(List(), CodeTypeNameS("Void")))))))),
+            CallSR("passThroughIfInterface",List(TemplexSR(RuneST(ImplicitRuneS(0))))))),
+        EqualsSR(TypedSR(CodeRuneS("V"),CoordTypeSR),CallSR("toRef",List(TemplexSR(NameST(CodeTypeNameS("Void"))))))),
       List())
     conclusions shouldEqual
       Conclusions(
-        Set(AbsoluteNameS[IRuneS]("", List(), CodeRuneS("V"))),
+        Set(CodeRuneS("V")),
         Map(
-          AbsoluteNameS("", List(), CodeRuneS("T")) -> CoordTypeSR,
-          AbsoluteNameS("", List(), CodeRuneS("V")) -> CoordTypeSR))
+          CodeRuneS("T") -> CoordTypeSR,
+          CodeRuneS("V") -> CoordTypeSR))
 
   }
 
@@ -125,12 +125,12 @@ class RunePredictorTests extends FunSuite with Matchers {
     PredictorEvaluator.solve(
       List(
         ComponentsSR(
-          TypedSR(AbsoluteNameS[IRuneS]("", List(), CodeRuneS("T")),CoordTypeSR),
+          TypedSR(CodeRuneS("T"),CoordTypeSR),
           List(
             OrSR(List(TemplexSR(OwnershipST(OwnP)), TemplexSR(OwnershipST(ShareP)))),
-            CallSR("passThroughIfStruct",List(TemplexSR(RuneST(AbsoluteNameS[IRuneS]("", List(), ImplicitRuneS(0)))))))),
-        CallSR("passThroughIfInterface",List(TemplexSR(RuneST(AbsoluteNameS[IRuneS]("", List(), CodeRuneS("I"))))))),
+            CallSR("passThroughIfStruct",List(TemplexSR(RuneST(ImplicitRuneS(0))))))),
+        CallSR("passThroughIfInterface",List(TemplexSR(RuneST(CodeRuneS("I")))))),
       List())
-    conclusions shouldEqual Conclusions(Set(), Map(AbsoluteNameS[IRuneS]("", List(), CodeRuneS("T")) -> CoordTypeSR))
+    conclusions shouldEqual Conclusions(Set(), Map(CodeRuneS("T") -> CoordTypeSR))
   }
 }

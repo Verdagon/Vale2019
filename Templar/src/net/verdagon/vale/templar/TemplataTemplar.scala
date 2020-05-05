@@ -1,7 +1,7 @@
 package net.verdagon.vale.templar.templata
 
-import net.verdagon.vale.astronomer.{ITemplataType, ITemplexA, TemplateTemplataType}
-import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
+import net.verdagon.vale.astronomer._
+import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.citizen.{ImplTemplar, StructTemplar}
 import net.verdagon.vale.templar.env.{IEnvironment, IEnvironmentBox, TemplataLookupContext}
@@ -133,11 +133,18 @@ object TemplataTemplar {
   def makeInner(): TemplataTemplarInner[IEnvironment, TemputsBox] = {
     new TemplataTemplarInner[IEnvironment, TemputsBox](
       new ITemplataTemplarInnerDelegate[IEnvironment, TemputsBox] {
-        override def lookupTemplata(env: IEnvironment, name: String): ITemplata = {
+        override def lookupTemplata(env: IEnvironment, name: IImpreciseNameStepA): ITemplata = {
           // Changed this from AnythingLookupContext to TemplataLookupContext
           // because this is called from StructTemplar to figure out its members.
           // We could instead pipe a lookup context through, if this proves problematic.
           vassertSome(env.getNearestTemplataWithName(name, Set(TemplataLookupContext)))
+        }
+
+        override def lookupTemplata(env: IEnvironment, name: INameA): ITemplata = {
+          // Changed this from AnythingLookupContext to TemplataLookupContext
+          // because this is called from StructTemplar to figure out its members.
+          // We could instead pipe a lookup context through, if this proves problematic.
+          vassertSome(env.getNearestTemplataWithAbsoluteName(name, Set(TemplataLookupContext)))
         }
 
         override def getMutability(temputs: TemputsBox, kind: Kind): Mutability = {

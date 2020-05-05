@@ -10,7 +10,7 @@ import net.verdagon.vale.vassert
 // collide with other things
 case class LetAE(
     rules: List[IRulexAR],
-    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
+    typeByRune: Map[IRuneA, ITemplataType],
     pattern: AtomAP,
     expr: IExpressionAE) extends IExpressionAE
 
@@ -19,8 +19,8 @@ case class IfAE(condition: BlockAE, thenBody: BlockAE, elseBody: BlockAE) extend
 case class WhileAE(condition: BlockAE, body: BlockAE) extends IExpressionAE
 
 case class ExprMutateAE(mutatee: IExpressionAE, expr: IExpressionAE) extends IExpressionAE
-case class GlobalMutateAE(name: ImpreciseNameA[IImpreciseNameStepA], expr: IExpressionAE) extends IExpressionAE
-case class LocalMutateAE(name: AbsoluteNameA[IVarNameA], expr: IExpressionAE) extends IExpressionAE
+case class GlobalMutateAE(name: IImpreciseNameStepA, expr: IExpressionAE) extends IExpressionAE
+case class LocalMutateAE(name: IVarNameA, expr: IExpressionAE) extends IExpressionAE
 
 case class ExpressionLendAE(innerExpr1: IExpressionAE) extends IExpressionAE
 case class ReturnAE(innerExpr1: IExpressionAE) extends IExpressionAE
@@ -43,7 +43,7 @@ case class BodyAE(
     // These are all the variables we use from parent environments.
     // We have these so templar doesn't have to dive through all the functions
     // that it calls (impossible) to figure out what's needed in a closure struct.
-    closuredNames: Set[AbsoluteNameA[INameA]],
+    closuredNames: List[INameA],
 
     block: BlockAE
 ) extends IExpressionAE
@@ -51,7 +51,7 @@ case class BodyAE(
 case class BlockAE(
   // This shouldn't be ordered yet because we introduce new locals all the
   // time in templar, easier to just order them in hammer.
-  locals: Set[LocalVariableA],
+  locals: List[LocalVariableA],
 
   exprs: List[IExpressionAE],
 ) extends IExpressionAE {
@@ -103,7 +103,7 @@ case class StrLiteralAE(value: String) extends IExpressionAE
 
 case class FloatLiteralAE(value: Float) extends IExpressionAE
 
-case class FunctionAE(function: FunctionA) extends IExpressionAE
+case class FunctionAE(name: LambdaNameA, function: FunctionA) extends IExpressionAE
 
 case class DotAE(left: IExpressionAE, member: String, borrowContainer: Boolean) extends IExpressionAE
 
@@ -115,8 +115,8 @@ case class FunctionCallAE(callableExpr: IExpressionAE, argsPackExpr1: PackAE) ex
 
 case class TemplateSpecifiedLookupAE(name: String, templateArgs: List[ITemplexS]) extends IExpressionAE
 
-case class LocalLoadAE(name: AbsoluteNameA[IVarNameA], borrow: Boolean) extends IExpressionAE
-case class FunctionLoadAE(name: ImpreciseNameA[GlobalFunctionFamilyNameA]) extends IExpressionAE
+case class LocalLoadAE(name: IVarNameA, borrow: Boolean) extends IExpressionAE
+case class FunctionLoadAE(name: GlobalFunctionFamilyNameA) extends IExpressionAE
 
 case class UnletAE(name: String) extends IExpressionAE
 
@@ -124,7 +124,7 @@ case class ArrayLengthAE(arrayExpr: IExpressionAE) extends IExpressionAE
 
 
 case class LocalVariableA(
-  varName: AbsoluteNameA[INameA],
+  varName: INameA,
   variability: VariabilityP,
   selfBorrowed: IVariableUseCertainty,
   selfMoved: IVariableUseCertainty,

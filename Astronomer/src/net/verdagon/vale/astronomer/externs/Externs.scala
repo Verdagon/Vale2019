@@ -45,7 +45,7 @@ object Externs {
 
   def makeExtern(functionName: String, params: List[(String, String)], retType: String): FunctionA = {
     makeSimpleFunction(
-      AbsoluteNameA(functionName + ".forwarders.stl.vale", List(), FunctionNameA(functionName, CodeLocationS(0, 0))),
+      FunctionNameA(functionName, CodeLocationS(0, 0)),
       params,
       retType,
       ExternBodyA)

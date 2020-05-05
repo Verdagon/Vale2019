@@ -1,18 +1,15 @@
-package net.verdagon.vale.templar.infer.inferer
+package net.verdagon.vale.templar.infer
 
 import net.verdagon.vale._
-import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
-import net.verdagon.vale.scout.patterns.{AtomSP, OverrideSP}
-import net.verdagon.vale.scout.rules._
-import net.verdagon.vale.templar.infer._
-import net.verdagon.vale.templar.templata.{Conversions, ITemplata, _}
 import net.verdagon.vale.astronomer._
 import net.verdagon.vale.parser.{BorrowP, OwnP, ShareP}
+import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _}
+import net.verdagon.vale.templar.{IRune2, NameTranslator, SolverKindRune2}
+import net.verdagon.vale.templar.infer.infer._
+import net.verdagon.vale.templar.templata.{Conversions, ITemplata, _}
 import net.verdagon.vale.templar.types.{Kind, _}
 
 import scala.collection.immutable.List
-
-case class SolverKindRuneA(ints: List[Int]) extends IRuneA
 
 private[infer] trait IInfererEvaluatorDelegate[Env, State] {
   def lookupMemberTypes(
@@ -52,9 +49,9 @@ class InfererEvaluator[Env, State](
   private[infer] def solve(
     env: Env,
     state: State,
-    initialRules: List[IRulexAR],
-    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
-    directInputs: Map[AbsoluteNameA[IRuneA], ITemplata],
+    initialRules: List[IRulexTR],
+    typeByRune: Map[IRune2, ITemplataType],
+    directInputs: Map[IRune2, ITemplata],
     paramAtoms: List[AtomAP],
     maybeParamInputs: Option[List[ParamFilter]],
     checkAllRunesPresent: Boolean
@@ -155,34 +152,35 @@ class InfererEvaluator[Env, State](
       paramLocation: List[Int]):
   // TODO: Don't use IInferEvaluateResult for this, because it has a deeplySatisfied member
   // which is n/a for this kind of thing.
-  (IInferEvaluateResult[List[IRulexAR]]) = {
+  (IInferEvaluateResult[List[IRulexTR]]) = {
     val AtomAP(_, patternVirtuality, patternCoordRuneA, maybePatternDestructure) = paramAtom
+    val patternCoordRune2 = NameTranslator.translateRune(patternCoordRuneA)
 
     val rulesFromType =
       paramFilterInstance.tyype.referend match {
         case c: CitizenRef2 => {
           val ancestorInterfaces = delegate.getAncestorInterfaces(state, c)
           val selfAndAncestors = List(c) ++ ancestorInterfaces
-          val kindRune = patternCoordRuneA.addStep(SolverKindRuneA(paramLocation))
+          val kindRune = SolverKindRune2(patternCoordRune2)
           inferences.addPossibilities(kindRune, selfAndAncestors.map(KindTemplata))
           val rule =
-            EqualsAR(
-              TemplexAR(RuneAT(patternCoordRuneA, CoordTemplataType)),
-              ComponentsAR(
+            EqualsTR(
+              TemplexTR(RuneTT(patternCoordRune2, CoordTemplataType)),
+              ComponentsTR(
                 CoordTemplataType,
                 List(
-                  TemplexAR(OwnershipAT(Conversions.unevaluateOwnership(paramFilterInstance.tyype.ownership))),
-                  TemplexAR(RuneAT(kindRune, KindTemplataType)))))
+                  TemplexTR(OwnershipTT(Conversions.unevaluateOwnership(paramFilterInstance.tyype.ownership))),
+                  TemplexTR(RuneTT(kindRune, KindTemplataType)))))
           List(rule)
         }
         case _ => {
-          inferences.templatasByRune.get(patternCoordRuneA) match {
+          inferences.templatasByRune.get(patternCoordRune2) match {
             case Some(existingOne) if existingOne != CoordTemplata(paramFilterInstance.tyype) => {
               return (InferEvaluateConflict(inferences.inferences, "Incoming argument type doesnt match already known rune " + paramAtom.coordRune + " value. Had value " + existingOne + " but incoming arg was " + paramFilterInstance.tyype, Nil))
             }
             case _ =>
           }
-          inferences.addConclusion(patternCoordRuneA, CoordTemplata(paramFilterInstance.tyype))
+          inferences.addConclusion(patternCoordRune2, CoordTemplata(paramFilterInstance.tyype))
           List()
         }
       }
@@ -251,8 +249,8 @@ class InfererEvaluator[Env, State](
   private def solveUntilSettled(
     env: Env,
     state: State,
-    rules: List[IRulexAR],
-    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
+    rules: List[IRulexTR],
+    typeByRune: Map[IRune2, ITemplataType],
     inferences: InferencesBox
   ): (IInferEvaluateResult[Unit]) = {
     val initialInferences = inferences.inferences
@@ -342,15 +340,15 @@ class InfererEvaluator[Env, State](
     env: Env,
     state: State,
     inferences: InferencesBox,
-    rule: IRulexAR
+    rule: IRulexTR
   ): (IInferEvaluateResult[ITemplata]) = {
     rule match {
-      case r @ EqualsAR(_, _) => evaluateEqualsRule(env, state, inferences, r)
-      case r @ IsaAR(_, _) => evaluateIsaRule(env, state, inferences, r)
-      case r @ OrAR(_) => evaluateOrRule(env, state, inferences, r)
-      case r @ ComponentsAR(_, _) => evaluateComponentsRule(env, state, inferences, r)
-      case TemplexAR(templex) => evaluateTemplex(env, state, inferences, templex)
-      case r @ CallAR(_, _, _) => evaluateRuleCall(env, state, inferences, r)
+      case r @ EqualsTR(_, _) => evaluateEqualsRule(env, state, inferences, r)
+      case r @ IsaTR(_, _) => evaluateIsaRule(env, state, inferences, r)
+      case r @ OrTR(_) => evaluateOrRule(env, state, inferences, r)
+      case r @ ComponentsTR(_, _) => evaluateComponentsRule(env, state, inferences, r)
+      case TemplexTR(templex) => evaluateTemplex(env, state, inferences, templex)
+      case r @ CallTR(_, _, _) => evaluateRuleCall(env, state, inferences, r)
     }
   }
 
@@ -358,7 +356,7 @@ class InfererEvaluator[Env, State](
     env: Env,
     state: State,
     inferences: InferencesBox,
-    rules: List[IRulexAR],
+    rules: List[IRulexTR],
   ): (IInferEvaluateResult[List[ITemplata]]) = {
     val initialResult: IInferEvaluateResult[List[ITemplata]] =
       InferEvaluateSuccess(List(), true)
@@ -398,9 +396,9 @@ class InfererEvaluator[Env, State](
     env: Env,
     state: State,
     inferences: InferencesBox,
-    ruleCall: CallAR
+    ruleCall: CallTR
   ): (IInferEvaluateResult[ITemplata]) = {
-    val CallAR(name, argumentRules, resultType) = ruleCall
+    val CallTR(name, argumentRules, resultType) = ruleCall
 
     name match {
 //      case "ownership" => {
@@ -519,36 +517,36 @@ class InfererEvaluator[Env, State](
     env: Env,
     state: State,
     inferences: InferencesBox,
-    ruleTemplex: ITemplexA
+    ruleTemplex: ITemplexT
   ): (IInferEvaluateResult[ITemplata]) = {
     ruleTemplex match {
-      case IntAT(value) => {
+      case IntTT(value) => {
         (InferEvaluateSuccess(IntegerTemplata(value), true))
       }
-      case BoolAT(value) => {
+      case BoolTT(value) => {
         (InferEvaluateSuccess(BooleanTemplata(value), true))
       }
-      case MutabilityAT(mutability) => {
+      case MutabilityTT(mutability) => {
         (InferEvaluateSuccess(MutabilityTemplata(Conversions.evaluateMutability(mutability)), true))
       }
-      case PermissionAT(permission) => {
+      case PermissionTT(permission) => {
         (InferEvaluateSuccess(PermissionTemplata(Conversions.evaluatePermission(permission)), true))
       }
-      case LocationAT(location) => {
+      case LocationTT(location) => {
         (InferEvaluateSuccess(LocationTemplata(Conversions.evaluateLocation(location)), true))
       }
-      case OwnershipAT(ownership) => {
+      case OwnershipTT(ownership) => {
         (InferEvaluateSuccess(OwnershipTemplata(Conversions.evaluateOwnership(ownership)), true))
       }
-      case VariabilityAT(variability) => {
+      case VariabilityTT(variability) => {
         (InferEvaluateSuccess(VariabilityTemplata(Conversions.evaluateVariability(variability)), true))
       }
-      case NameAT(name, expectedType) => {
+      case NameTT(name, expectedType) => {
         val templata =
           templataTemplar.lookupTemplata(env, state, name, expectedType)
         (InferEvaluateSuccess(templata, true))
       }
-      case RuneAT(rune, expectedType) => {
+      case RuneTT(rune, expectedType) => {
         inferences.templatasByRune.get(rune) match {
           case Some(templata) => {
             if (templata.tyype != expectedType) {
@@ -562,7 +560,7 @@ class InfererEvaluator[Env, State](
           }
         }
       }
-      case OwnershippedAT(targetOwnership, innerKindRule) => {
+      case OwnershippedTT(targetOwnership, innerKindRule) => {
         evaluateTemplex(env, state, inferences, innerKindRule) match {
           case (iec @ InferEvaluateConflict(_, _, _)) => return (InferEvaluateConflict(inferences.inferences, "bogglewogget", List(iec)))
           case (InferEvaluateUnknown(innerCoordDeeplySatisfied)) => {
@@ -597,7 +595,7 @@ class InfererEvaluator[Env, State](
           }
         }
       }
-      case CallAT(templateRule, listOfMaybeArgRules, callResultType) => {
+      case CallTT(templateRule, listOfMaybeArgRules, callResultType) => {
 
         // it should be a template that results in a `tyype`
 
@@ -651,10 +649,10 @@ class InfererEvaluator[Env, State](
           }
         }
       }
-      case PrototypeAT(_, _, _) => {
+      case PrototypeTT(_, _, _) => {
         vfail("Unimplemented")
       }
-      case PackAT(memberTemplexes, resultType) => {
+      case PackTT(memberTemplexes, resultType) => {
         evaluateTemplexes(env, state, inferences, memberTemplexes) match {
           case (iec @ InferEvaluateConflict(_, _, _)) => {
             return (InferEvaluateConflict(inferences.inferences, "Failed to evaluate CallAT arguments", List(iec)))
@@ -673,7 +671,7 @@ class InfererEvaluator[Env, State](
           }
         }
       }
-      case RepeaterSequenceAT(mutabilityTemplex, sizeTemplex, elementTemplex, resultType) => {
+      case RepeaterSequenceTT(mutabilityTemplex, sizeTemplex, elementTemplex, resultType) => {
         val (maybeMutability, mutabilityDeeplySatisfied) =
           evaluateTemplex(env, state, inferences, mutabilityTemplex) match {
             case (iec @ InferEvaluateConflict(_, _, _)) => return (InferEvaluateConflict(inferences.inferences, "Failed to evaluate size", List(iec)))
@@ -710,7 +708,7 @@ class InfererEvaluator[Env, State](
           }
         }
       }
-      case ManualSequenceAT(_, _) => {
+      case ManualSequenceTT(_, _) => {
         vfail("Unimplemented")
       }
     }
@@ -720,7 +718,7 @@ class InfererEvaluator[Env, State](
     env: Env,
     state: State,
     inferences: InferencesBox,
-    templexes: List[ITemplexA]):
+    templexes: List[ITemplexT]):
   (IInferEvaluateResult[List[ITemplata]]) = {
     val initialFoldyThing: IInferEvaluateResult[List[ITemplata]] =
       InferEvaluateSuccess(List[ITemplata](), true)
@@ -760,9 +758,9 @@ class InfererEvaluator[Env, State](
     env: Env,
     state: State,
     inferences: InferencesBox,
-    rule: EqualsAR
+    rule: EqualsTR
   ): (IInferEvaluateResult[ITemplata]) = {
-    val EqualsAR(leftRule, rightRule) = rule
+    val EqualsTR(leftRule, rightRule) = rule
 
     evaluateRule(env, state, inferences, leftRule) match {
       case (iec @ InferEvaluateConflict(_, _, _)) => return (InferEvaluateConflict(inferences.inferences, "Failed evaluating left rule!", List(iec)))
@@ -845,9 +843,9 @@ class InfererEvaluator[Env, State](
     env: Env,
     state: State,
     inferences: InferencesBox,
-    rule: IsaAR
+    rule: IsaTR
   ): (IInferEvaluateResult[ITemplata]) = {
-    val IsaAR(subRule, superRule) = rule
+    val IsaTR(subRule, superRule) = rule
 
     val (maybeSub, subDeeplySatisfied) =
       evaluateRule(env, state, inferences, subRule) match {
@@ -888,7 +886,7 @@ class InfererEvaluator[Env, State](
     env: Env,
     state: State,
     inferences: InferencesBox,
-    rule: OrAR
+    rule: OrTR
   ): (IInferEvaluateResult[ITemplata]) = {
     // We don't actually evaluate Ors, we only match against them.
     // For this reason, it doesn't make sense to have an or at the top level.
@@ -905,9 +903,9 @@ class InfererEvaluator[Env, State](
     env: Env,
     state: State,
     inferences: InferencesBox,
-    rule: ComponentsAR
+    rule: ComponentsTR
   ): (IInferEvaluateResult[ITemplata]) = {
-    val ComponentsAR(_, components) = rule
+    val ComponentsTR(_, components) = rule
 
     // We don't have a value from the rune, we just have the type. Try to evaluate the components.
     rule.tyype match {
@@ -933,7 +931,7 @@ class InfererEvaluator[Env, State](
     env: Env,
     state: State,
     inferences: InferencesBox,
-    components: List[IRulexAR]):
+    components: List[IRulexTR]):
   (IInferEvaluateResult[ITemplata]) = {
     // Now we're going to try and evaluate all the components.
     // At the end, if we have values for every component, then we'll
@@ -984,7 +982,7 @@ class InfererEvaluator[Env, State](
       env: Env,
       state: State,
       inferences: InferencesBox,
-      components: List[IRulexAR],
+      components: List[IRulexTR],
       ):
   (IInferEvaluateResult[ITemplata]) = {
     val List(mutabilityRule) = components

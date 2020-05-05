@@ -22,10 +22,7 @@ class ScoutParametersTests extends FunSuite with Matchers {
   }
 
   val mainName =
-    AbsoluteNameS(
-      "in.vale",
-      List(),
-      FunctionNameS("main", CodeLocationS(0, 0)))
+      FunctionNameS("main", CodeLocationS(0, 0))
 
   test("Simple rune rule") {
     val program1 = compile("""fn main<T>(moo T) { }""")
@@ -33,7 +30,7 @@ class ScoutParametersTests extends FunSuite with Matchers {
 
     val runeInRules =
       main.templateRules match {
-        case List(TypedSR(rune @ AbsoluteNameS(_, List(FunctionNameS("main", _)), CodeRuneS("T")),CoordTypeSR)) => rune
+        case List(TypedSR(rune @ CodeRuneS("T"),CoordTypeSR)) => rune
       }
     RuleSUtils.getDistinctOrderedRunesForRulexes(mainName, main.templateRules) match {
       case List(runeFromFunc) => vassert(runeInRules == runeFromFunc)
@@ -49,34 +46,34 @@ class ScoutParametersTests extends FunSuite with Matchers {
       param match {
         case ParameterS(
           AtomSP(
-            CaptureS(AbsoluteNameS(_, _, CodeVarNameS("moo")),FinalP),
+            CaptureS(CodeVarNameS("moo"),FinalP),
             None,
-            tcr @ AbsoluteNameS(_, _, ImplicitRuneS(1)),
+            tcr @ ImplicitRuneS(1),
             None)) => tcr
       }
 
     main.templateRules match {
       case List(
-        TypedSR(AbsoluteNameS(_,_,ImplicitRuneS(0)),KindTypeSR),
-        TypedSR(AbsoluteNameS(_,_,CodeRuneS("T")),CoordTypeSR),
-        TypedSR(AbsoluteNameS(_,_,ImplicitRuneS(1)),CoordTypeSR),
+        TypedSR(ImplicitRuneS(0),KindTypeSR),
+        TypedSR(CodeRuneS("T"),CoordTypeSR),
+        TypedSR(ImplicitRuneS(1),CoordTypeSR),
         ComponentsSR(
-          TypedSR(AbsoluteNameS(_,_,CodeRuneS("T")),CoordTypeSR),
+          TypedSR(CodeRuneS("T"),CoordTypeSR),
           List(
             TemplexSR(OwnershipST(OwnP)),
-            TemplexSR(RuneST(AbsoluteNameS(_,_,ImplicitRuneS(0)))))),
+            TemplexSR(RuneST(ImplicitRuneS(0))))),
         ComponentsSR(
-          TypedSR(AbsoluteNameS(_,_,ImplicitRuneS(1)),CoordTypeSR),
+          TypedSR(ImplicitRuneS(1),CoordTypeSR),
           List(
             TemplexSR(OwnershipST(BorrowP)),
-            TemplexSR(RuneST(AbsoluteNameS(_,_,ImplicitRuneS(0))))))) =>
+            TemplexSR(RuneST(ImplicitRuneS(0)))))) =>
     }
 
     RuleSUtils.getDistinctOrderedRunesForRulexes(mainName, main.templateRules) match {
       case List(
-        AbsoluteNameS(_,_,ImplicitRuneS(0)),
-          AbsoluteNameS(_,_,CodeRuneS("T")),
-          AbsoluteNameS(_,_,ImplicitRuneS(1))) =>
+        ImplicitRuneS(0),
+          CodeRuneS("T"),
+          ImplicitRuneS(1)) =>
     }
   }
 
@@ -88,9 +85,9 @@ class ScoutParametersTests extends FunSuite with Matchers {
       param match {
         case ParameterS(
           AtomSP(
-            CaptureS(AbsoluteNameS(_, List(FunctionNameS("main",_)), UnnamedLocalNameS(_)),FinalP),
+            CaptureS(UnnamedLocalNameS(_),FinalP),
             None,
-            pr @ AbsoluteNameS(_, List(FunctionNameS("main",_)),ImplicitRuneS(0)),
+            pr @ ImplicitRuneS(0),
             None)) => pr
       }
 
@@ -98,7 +95,7 @@ class ScoutParametersTests extends FunSuite with Matchers {
       case List(
         EqualsSR(
           TypedSR(pr,CoordTypeSR),
-          TemplexSR(NameST(ImpreciseNameS(List(), CodeTypeNameS("Int")))))) => {
+          TemplexSR(NameST(CodeTypeNameS("Int"))))) => {
         vassert(pr == paramRune)
       }
     }
@@ -115,9 +112,9 @@ class ScoutParametersTests extends FunSuite with Matchers {
       param match {
         case ParameterS(
          AtomSP(
-          CaptureS(AbsoluteNameS(_, List(FunctionNameS("main",_)), UnnamedLocalNameS(_)),FinalP),
+          CaptureS(UnnamedLocalNameS(_),FinalP),
           None,
-          pr @ AbsoluteNameS(_, List(FunctionNameS("main",_)),ImplicitRuneS(0)),
+          pr @ ImplicitRuneS(0),
           None)) => pr
       }
 
@@ -142,15 +139,15 @@ class ScoutParametersTests extends FunSuite with Matchers {
       param match {
         case ParameterS(
             AtomSP(
-              CaptureS(AbsoluteNameS(_, List(FunctionNameS("main",_)), CodeVarNameS("moo")),FinalP),
+              CaptureS(CodeVarNameS("moo"),FinalP),
               None,
-              tr @ AbsoluteNameS(_, List(FunctionNameS("main",_)), CodeRuneS("T")),
+              tr @ CodeRuneS("T"),
               Some(
                 List(
                   AtomSP(
-                    CaptureS(AbsoluteNameS(_, List(FunctionNameS("main",_)), CodeVarNameS("a")),FinalP),
+                    CaptureS(CodeVarNameS("a"),FinalP),
                     None,
-                    ar @ AbsoluteNameS(_, List(FunctionNameS("main",_)), ImplicitRuneS(0)),
+                    ar @ ImplicitRuneS(0),
                     None))))) => (ar, tr)
       }
 
@@ -159,7 +156,7 @@ class ScoutParametersTests extends FunSuite with Matchers {
         TypedSR(tr,CoordTypeSR),
         EqualsSR(
           TypedSR(ar,CoordTypeSR),
-          TemplexSR(NameST(ImpreciseNameS(List(), CodeTypeNameS("Int")))))) => {
+          TemplexSR(NameST(CodeTypeNameS("Int"))))) => {
         vassert(tr == tRune)
         vassert(ar == aRune)
       }

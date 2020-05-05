@@ -1,5 +1,6 @@
 package net.verdagon.vale.templar
 
+import net.verdagon.vale.astronomer.{GlobalFunctionFamilyNameA}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.parser.MutableP
@@ -96,7 +97,7 @@ object CallTemplar {
   private def evaluateNamedCall(
     temputs: TemputsBox,
     fate: FunctionEnvironment,
-    functionName: String,
+    functionName: GlobalFunctionFamilyNameA,
     explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
     givenArgsExprs2: List[ReferenceExpression2]):
   (FunctionCall2) = {
@@ -172,7 +173,7 @@ object CallTemplar {
         argsTypes2.map(argType => ParamFilter(argType, None))
     val (maybePrototype, outscoredReasonByPotentialBanner, rejectedReasonByBanner, rejectedReasonByFunctionS) =
       OverloadTemplar.scoutMaybeFunctionForPrototype(
-        env, temputs, CallTemplar.CALL_FUNCTION_NAME, explicitlySpecifiedTemplateArgTemplexesS, paramFilters, false)
+        env, temputs, GlobalFunctionFamilyNameA(CallTemplar.CALL_FUNCTION_NAME), explicitlySpecifiedTemplateArgTemplexesS, paramFilters, false)
     val prototype2 =
       maybePrototype match {
         case None => {
@@ -294,7 +295,7 @@ object CallTemplar {
   def evaluateNamedPrefixCall(
     temputs: TemputsBox,
     fate: FunctionEnvironmentBox,
-    functionName: String,
+    functionName: GlobalFunctionFamilyNameA,
     explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
     argsExpr2: Expression2):
   (FunctionCall2) = {

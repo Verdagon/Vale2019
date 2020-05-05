@@ -1,6 +1,6 @@
 package net.verdagon.vale
 
-import net.verdagon.vale.templar.env.{AddressibleLocalVariable2, VariableId2}
+import net.verdagon.vale.templar.env.{AddressibleLocalVariable2, FullName2}
 import net.verdagon.vale.templar.types.Varying
 import net.verdagon.von.VonInt
 import org.scalatest.{FunSuite, Matchers}
@@ -175,7 +175,7 @@ class ArrayListTest extends FunSuite with Matchers {
 
     val temputs = compile.getTemputs()
     val main = temputs.lookupFunction("main");
-    main.variables.collect({ case AddressibleLocalVariable2(VariableId2(_, "m"), Varying, _) => })
+    main.variables.collect({ case AddressibleLocalVariable2(FullName2(_, "m"), Varying, _) => })
 
     compile.evalForReferend(Vector()) shouldEqual VonInt(9)
   }
@@ -198,7 +198,7 @@ class ArrayListTest extends FunSuite with Matchers {
 
     val temputs = compile.getTemputs()
     val main = temputs.lookupFunction("main");
-    main.variables.collect({ case AddressibleLocalVariable2(VariableId2(_, "m"), Varying, _) => })
+    main.variables.collect({ case AddressibleLocalVariable2(FullName2(_, "m"), Varying, _) => })
 
     compile.evalForReferend(Vector()) shouldEqual VonInt(6)
   }

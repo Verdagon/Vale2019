@@ -1,7 +1,7 @@
 package net.verdagon.vale.templar
 
-import net.verdagon.vale.astronomer.{AbsoluteNameA, IVarNameA}
-import net.verdagon.vale.templar.env.{ILocalVariable2, ReferenceLocalVariable2, VariableId2}
+import net.verdagon.vale.astronomer.IVarNameA
+import net.verdagon.vale.templar.env.{ILocalVariable2, ReferenceLocalVariable2}
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.{vassert, vfail, vwat}
@@ -379,7 +379,7 @@ case class ArrayLength2(arrayExpr: ReferenceExpression2) extends ReferenceExpres
 
 case class ReferenceMemberLookup2(
     structExpr: ReferenceExpression2,
-    name: String,
+    memberIndex: Int,
     reference: Coord) extends AddressExpression2 {
   override def resultRegister = AddressRegister2(reference)
 
@@ -391,8 +391,8 @@ case class ReferenceMemberLookup2(
 }
 case class AddressMemberLookup2(
     structExpr: ReferenceExpression2,
-    memberName: AbsoluteNameA[IVarNameA],
-    varId: VariableId2,
+    memberIndex: Int,
+    varId: FullName2[IVarName2],
     resultType2: Coord) extends AddressExpression2 {
   override def resultRegister = AddressRegister2(resultType2)
 
@@ -428,8 +428,7 @@ case class InterfaceFunctionCall2(
 case class ExternFunctionCall2(
     prototype2: Prototype2,
     args: List[ReferenceExpression2]) extends ReferenceExpression2 {
-  vassert(prototype2.fullName.steps.last.templateArgs.nonEmpty)
-  vassert(prototype2.fullName.steps.last.templateArgs.get.isEmpty)
+  vassert(prototype2.fullName.last.templateArgs.isEmpty)
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func) ++ args.flatMap(_.all(func))
@@ -513,7 +512,7 @@ case class ConstructArray2(
     sizeExpr: ReferenceExpression2,
     generator: ReferenceExpression2) extends ReferenceExpression2 {
   generator.referend match {
-    case InterfaceRef2(FullName2(List(NamePart2("IFunction1", Some(List(_, CoordTemplata(Coord(Share, Int2())), _)), _, _)))) =>
+    case InterfaceRef2(FullName2(List(), InterfaceName2("IFunction1", List(_, CoordTemplata(Coord(Share, Int2())), _)))) =>
     case _ => vfail("Generator has to be an IFunction1<_, Int, T>")
   }
 

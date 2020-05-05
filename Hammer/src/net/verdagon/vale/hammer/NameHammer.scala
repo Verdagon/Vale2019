@@ -16,8 +16,8 @@ object NameHammer {
     FullNameH(fullName2.steps.map(translateNamePart(hinputs, hamuts, _)))
   }
 
-  def translateNamePart(hinputs: Hinputs, hamuts: HamutsBox, namePart2: NamePart2): NamePartH = {
-    val NamePart2(humanName, maybeTemplateArgs, maybeParameters, maybeCodeLocation) = namePart2
+  def translateNamePart(hinputs: Hinputs, hamuts: HamutsBox, namePart2: INamePart2): NamePartH = {
+    val INamePart2(humanName, maybeTemplateArgs, maybeParameters, maybeCodeLocation) = namePart2
     NamePartH(
       humanName,
       maybeTemplateArgs.map(_.map(translateTemplata(hinputs, hamuts, _))),

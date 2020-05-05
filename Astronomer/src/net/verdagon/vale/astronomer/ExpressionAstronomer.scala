@@ -13,14 +13,14 @@ object ExpressionAstronomer {
 
   def translateLocalVariable(varS: LocalVariable1): LocalVariableA = {
     val LocalVariable1(varNameS, variability, selfBorrowed, selfMoved, selfMutated, childBorrowed, childMoved, childMutated) = varS
-    val varNameA = Astronomer.translateAbsoluteName(varNameS)
+    val varNameA = Astronomer.translateName(varNameS)
     LocalVariableA(varNameA, variability, selfBorrowed, selfMoved, selfMutated, childBorrowed, childMoved, childMutated)
   }
 
   def translateExpression(env: Environment, astrouts: AstroutsBox, iexprS: IExpressionSE): IExpressionAE = {
     iexprS match {
       case LetSE(rules, allRunesS, patternS, expr) => {
-        val allRunesA = allRunesS.map(Astronomer.translateRuneAbsoluteName)
+        val allRunesA = allRunesS.map(Astronomer.translateRune)
         val (conclusions, rulesA) =
           Astronomer.makeRuleTyper().solve(astrouts, env, rules, List(patternS), Some(allRunesA)) match {
             case (_, rtsf @ RuleTyperSolveFailure(_, _, _)) => vfail(rtsf.toString)
@@ -58,7 +58,7 @@ object ExpressionAstronomer {
       }
       case LocalMutateSE(nameS, exprS) => {
         val exprA = translateExpression(env, astrouts, exprS)
-        LocalMutateAE(Astronomer.translateVarAbsoluteName(nameS), exprA)
+        LocalMutateAE(Astronomer.translateVarNameStep(nameS), exprA)
       }
       case ExpressionLendSE(innerExprS) => {
         val innerExprA = translateExpression(env, astrouts, innerExprS)
@@ -103,7 +103,8 @@ object ExpressionAstronomer {
       case FloatLiteralSE(value) => FloatLiteralAE(value)
       case FunctionSE(functionS) => {
         val functionA = Astronomer.translateFunction(astrouts, env, functionS)
-        FunctionAE(functionA)
+        val lambdaName = functionA.name match { case n @ LambdaNameA(_, _) => n }
+        FunctionAE(lambdaName, functionA)
       }
       case DotSE(leftS, member, borrowContainer) => {
         val leftA = translateExpression(env, astrouts, leftS)
@@ -124,10 +125,10 @@ object ExpressionAstronomer {
         TemplateSpecifiedLookupAE(name, templateArgsS)
       }
       case LocalLoadSE(name, borrow) => {
-        LocalLoadAE(Astronomer.translateVarAbsoluteName(name), borrow)
+        LocalLoadAE(Astronomer.translateVarNameStep(name), borrow)
       }
       case FunctionLoadSE(name) => {
-        FunctionLoadAE(Astronomer.translateFunctionFamilyName(name))
+        FunctionLoadAE(Astronomer.translateGlobalFunctionFamilyName(name))
       }
       case UnletSE(name) => UnletAE(name)
     }

@@ -3,11 +3,12 @@ package net.verdagon.vale.templar
 import net.verdagon.vale.astronomer._
 import net.verdagon.vale.scout.ITemplexS
 import net.verdagon.vale.templar.citizen.{ImplTemplar, StructTemplar}
-import net.verdagon.vale.templar.env.{IEnvironment, TemplataLookupContext}
+import net.verdagon.vale.templar.env.{IEnvironment, ILookupContext, TemplataLookupContext}
 import net.verdagon.vale.templar.infer._
+import net.verdagon.vale.templar.infer.infer.{IInferSolveResult, InferSolveFailure, InferSolveSuccess}
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar.types._
-import net.verdagon.vale.{vassertSome, vfail}
+import net.verdagon.vale.{vassertSome, vfail, vimpl}
 
 import scala.collection.immutable.List
 
@@ -16,8 +17,8 @@ object InferTemplar {
     env: IEnvironment,
     state: TemputsBox,
     rules: List[IRulexAR],
-    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
-    directInputs: Map[AbsoluteNameA[IRuneA], ITemplata],
+    typeByRune: Map[IRuneA, ITemplataType],
+    directInputs: Map[IRuneA, ITemplata],
     paramAtoms: List[AtomAP],
     maybeParamInputs: Option[List[ParamFilter]],
     checkAllRunesPresent: Boolean,
@@ -26,9 +27,9 @@ object InferTemplar {
       makeEvaluateDelegate(),
       env,
       state,
-      rules,
-      typeByRune,
-      directInputs,
+      translateRules(rules),
+      typeByRune.map({ case (key, value) => NameTranslator.translateRune(key) -> value}),
+      directInputs.map({ case (key, value) => NameTranslator.translateRune(key) -> value}),
       paramAtoms,
       maybeParamInputs,
       checkAllRunesPresent)
@@ -61,14 +62,18 @@ object InferTemplar {
         Templar.getMutability(state, kind)
       }
 
-      override def lookupTemplata(env: IEnvironment, name: AbsoluteNameA[INameA]): ITemplata = {
+      override def lookupTemplata(env: IEnvironment, name: INameA): ITemplata = {
         // We can only ever lookup types by name in expression context,
         // otherwise we have no idea what List<Str> means; it could
         // mean a list of strings or a list of the Str(:Int)Str function.
-        env.getNearestTemplataWithName(name, Set(TemplataLookupContext)) match {
+        env.getNearestTemplataWithAbsoluteName(name, Set[ILookupContext](TemplataLookupContext)) match {
           case None => vfail("Couldn't find anything with name: " + name)
           case Some(x) => x
         }
+      }
+
+      override def lookupTemplata(env: IEnvironment, name: IImpreciseNameStepA): ITemplata = {
+        vimpl()
       }
 
       override def getPackKind(env: IEnvironment, state: TemputsBox, members: List[Coord]): (PackT2, Mutability) = {
@@ -148,8 +153,8 @@ object InferTemplar {
     env0: IEnvironment,
     temputs: TemputsBox,
     rules: List[IRulexAR],
-    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType]
-  ): (Map[AbsoluteNameA[IRuneA], ITemplata]) = {
+    typeByRune: Map[IRuneA, ITemplataType]
+  ): (Map[IRune2, ITemplata]) = {
     solve(env0, temputs, rules, typeByRune, Map(), List(), None, true) match {
       case (InferSolveSuccess(inferences)) => {
         (inferences.templatasByRune)
@@ -163,11 +168,11 @@ object InferTemplar {
   def inferFromExplicitTemplateArgs(
     env0: IEnvironment,
     temputs: TemputsBox,
-    identifyingRunes: List[AbsoluteNameA[IRuneA]],
+    identifyingRunes: List[IRuneA],
     rules: List[IRulexAR],
-    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
+    typeByRune: Map[IRuneA, ITemplataType],
     patterns1: List[AtomAP],
-    maybeRetRune: Option[AbsoluteNameA[IRuneA]],
+    maybeRetRune: Option[IRuneA],
     explicits: List[ITemplata],
   ): (IInferSolveResult) = {
     if (identifyingRunes.size != explicits.size) {
@@ -188,11 +193,11 @@ object InferTemplar {
   def inferFromArgCoords(
     env0: IEnvironment,
     temputs: TemputsBox,
-    identifyingRunes: List[AbsoluteNameA[IRuneA]],
+    identifyingRunes: List[IRuneA],
     rules: List[IRulexAR],
-    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
+    typeByRune: Map[IRuneA, ITemplataType],
     patterns1: List[AtomAP],
-    maybeRetRune: Option[AbsoluteNameA[IRuneA]],
+    maybeRetRune: Option[IRuneA],
     alreadySpecifiedTemplateArgs: List[ITemplata],
     patternInputCoords: List[ParamFilter]
   ): (IInferSolveResult) = {
@@ -207,5 +212,9 @@ object InferTemplar {
       patterns1,
       Some(patternInputCoords),
       true)
+  }
+
+  def translateRules(rs: List[IRulexAR]): List[IRulexTR] = {
+    vimpl()
   }
 }

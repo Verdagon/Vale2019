@@ -9,7 +9,7 @@ import net.verdagon.vale.vassert
 // collide with other things
 case class LetSE(
     rules: List[IRulexSR],
-    allRunes: Set[AbsoluteNameS[IRuneS]],
+    allRunes: Set[IRuneS],
     pattern: AtomSP,
     expr: IExpressionSE) extends IExpressionSE
 
@@ -18,8 +18,8 @@ case class IfSE(condition: BlockSE, thenBody: BlockSE, elseBody: BlockSE) extend
 case class WhileSE(condition: BlockSE, body: BlockSE) extends IExpressionSE
 
 case class ExprMutateSE(mutatee: IExpressionSE, expr: IExpressionSE) extends IExpressionSE
-case class GlobalMutateSE(name: ImpreciseNameS[ImpreciseCodeVarNameS], expr: IExpressionSE) extends IExpressionSE
-case class LocalMutateSE(name: AbsoluteNameS[IVarNameS], expr: IExpressionSE) extends IExpressionSE
+case class GlobalMutateSE(name: ImpreciseCodeVarNameS, expr: IExpressionSE) extends IExpressionSE
+case class LocalMutateSE(name: IVarNameS, expr: IExpressionSE) extends IExpressionSE
 
 case class ExpressionLendSE(innerExpr1: IExpressionSE) extends IExpressionSE
 
@@ -38,7 +38,7 @@ case object NotUsed extends IVariableUseCertainty
 case object MaybeUsed extends IVariableUseCertainty
 
 case class LocalVariable1(
-    varName: AbsoluteNameS[IVarNameS],
+    varName: IVarNameS,
     variability: VariabilityP,
     selfBorrowed: IVariableUseCertainty,
     selfMoved: IVariableUseCertainty,
@@ -51,15 +51,13 @@ case class BodySE(
     // These are all the variables we use from parent environments.
     // We have these so templar doesn't have to dive through all the functions
     // that it calls (impossible) to figure out what's needed in a closure struct.
-    closuredNames: Set[AbsoluteNameS[IVarNameS]],
+    closuredNames: List[IVarNameS],
 
     block: BlockSE
 )// extends IExpressionSE
 
 case class BlockSE(
-  // This shouldn't be ordered yet because we introduce new locals all the
-  // time in templar, easier to just order them in hammer.
-  locals: Set[LocalVariable1],
+  locals: List[LocalVariable1],
 
   exprs: List[IExpressionSE],
 ) extends IExpressionSE {
@@ -123,8 +121,8 @@ case class FunctionCallSE(callableExpr: IExpressionSE, argsPackExpr1: PackSE) ex
 
 case class TemplateSpecifiedLookupSE(name: String, templateArgs: List[ITemplexS]) extends IExpressionSE
 
-case class LocalLoadSE(name: AbsoluteNameS[IVarNameS], borrow: Boolean) extends IExpressionSE
-case class FunctionLoadSE(name: ImpreciseNameS[GlobalFunctionFamilyNameS]) extends IExpressionSE
+case class LocalLoadSE(name: IVarNameS, borrow: Boolean) extends IExpressionSE
+case class FunctionLoadSE(name: GlobalFunctionFamilyNameS) extends IExpressionSE
 
 case class UnletSE(name: String) extends IExpressionSE
 

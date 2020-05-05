@@ -1,10 +1,9 @@
-package net.verdagon.vale.templar
+package net.verdagon.vale.templar.infer
 
-import net.verdagon.vale.scout.ITemplexS
+import net.verdagon.vale.astronomer.ITemplataType
+import net.verdagon.vale.templar.IRune2
 import net.verdagon.vale.templar.templata.ITemplata
-import net.verdagon.vale.templar.types.{CitizenRef2, ParamFilter}
-import net.verdagon.vale.{vassert, vcurious, vwat}
-import net.verdagon.vale.astronomer._
+import net.verdagon.vale.templar.types.ParamFilter
 
 import scala.collection.immutable.List
 
@@ -18,8 +17,8 @@ package object infer {
 
   sealed trait IInferSolveResult
   case class InferSolveFailure(
-    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
-    directInputs: Map[AbsoluteNameA[IRuneA], ITemplata],
+    typeByRune: Map[IRune2, ITemplataType],
+    directInputs: Map[IRune2, ITemplata],
     maybeParamInputs: Option[List[ParamFilter]],
     inferences: Inferences,
     message: String,
@@ -28,7 +27,6 @@ package object infer {
   case class InferSolveSuccess(
     inferences: Inferences
   ) extends IInferSolveResult
-
 
   sealed trait IInferEvaluateResult[T]
   case class InferEvaluateConflict[T](

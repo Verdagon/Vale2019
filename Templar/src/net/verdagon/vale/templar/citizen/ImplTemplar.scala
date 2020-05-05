@@ -1,11 +1,11 @@
 package net.verdagon.vale.templar.citizen
 
-import net.verdagon.vale.astronomer.ImplA
+import net.verdagon.vale.astronomer.{ImplA, ImplImpreciseNameA, ImplNameA}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.env._
-import net.verdagon.vale.templar.infer.{InferSolveFailure, InferSolveSuccess}
+import net.verdagon.vale.templar.infer.infer.{InferSolveFailure, InferSolveSuccess}
 import net.verdagon.vale.{vassertSome, vfail, vwat}
 
 import scala.collection.immutable.List
@@ -40,7 +40,7 @@ object ImplTemplar {
         (None)
       }
       case InferSolveSuccess(inferences) => {
-        inferences.templatasByRune(interfaceKindRune) match {
+        inferences.templatasByRune(NameTranslator.translateRune(interfaceKindRune)) match {
           case KindTemplata(interfaceRef @ InterfaceRef2(_)) => {
             (Some(interfaceRef))
           }
@@ -63,7 +63,7 @@ object ImplTemplar {
         case sr @ StructRef2(_) => vassertSome(temputs.envByStructRef.get(sr))
         case ir @ InterfaceRef2(_) => vassertSome(temputs.envByInterfaceRef.get(ir))
       }
-    citizenEnv.getAllTemplatasWithName(Templar.IMPL_NAME, Set(TemplataLookupContext, ExpressionLookupContext))
+    citizenEnv.getAllTemplatasWithName(ImplImpreciseNameA(), Set(TemplataLookupContext, ExpressionLookupContext))
       .flatMap({
         case it @ ImplTemplata(_, _) => getMaybeImplementedInterface(temputs, childCitizenRef, it).toList
         case ExternImplTemplata(structRef, interfaceRef) => if (structRef == childCitizenRef) List(interfaceRef) else List()

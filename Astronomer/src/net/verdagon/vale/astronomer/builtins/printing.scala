@@ -6,7 +6,7 @@ import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Env
 import net.verdagon.vale.scout.patterns.AtomSP
 
 object Printing {
-  val printlnStrName = AbsoluteNameA("printlnStr.stl.vale", List(), FunctionNameA("println", CodeLocationS(0, 0)))
+  val printlnStrName = FunctionNameA("println", CodeLocationS(0, 0))
   val printlnStr =
     FunctionA(
       printlnStrName,
@@ -15,28 +15,28 @@ object Printing {
       List(),
       Map(),
       List(
-        ParameterA(AtomAP(CaptureA(printlnStrName.addStep(CodeVarNameA("line")), FinalP), None, printlnStrName.addStep(CodeRuneA("S")), None))),
-      Some(printlnStrName.addStep(CodeRuneA("R"))),
+        ParameterA(AtomAP(CaptureA(CodeVarNameA("line"), FinalP), None, CodeRuneA("S"), None))),
+      Some(CodeRuneA("R")),
       List(
-        EqualsAR(TemplexAR(RuneAT(printlnStrName.addStep(CodeRuneA("S")), CoordTemplataType)), TemplexAR(NameAT(ImpreciseNameA(List(), CodeTypeNameA("Str")), CoordTemplataType))),
-        EqualsAR(TemplexAR(RuneAT(printlnStrName.addStep(CodeRuneA("R")), CoordTemplataType)), TemplexAR(NameAT(ImpreciseNameA(List(), CodeTypeNameA("Void")), CoordTemplataType)))),
+        EqualsAR(TemplexAR(RuneAT(CodeRuneA("S"), CoordTemplataType)), TemplexAR(NameAT(CodeTypeNameA("Str"), CoordTemplataType))),
+        EqualsAR(TemplexAR(RuneAT(CodeRuneA("R"), CoordTemplataType)), TemplexAR(NameAT(CodeTypeNameA("Void"), CoordTemplataType)))),
       CodeBodyA(
         BodyAE(
-          Set(),
+          List(),
           BlockAE(
-            Set(LocalVariableA(printlnStrName.addStep(CodeVarNameA("line")), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
+            List(LocalVariableA(CodeVarNameA("line"), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
             List(FunctionCallAE(
-              FunctionLoadAE(ImpreciseNameA(List(), GlobalFunctionFamilyNameA("print"))),
+              FunctionLoadAE(GlobalFunctionFamilyNameA("print")),
               PackAE(
                 List(
                   FunctionCallAE(
-                    FunctionLoadAE(ImpreciseNameA(List(), GlobalFunctionFamilyNameA("+"))),
+                    FunctionLoadAE(GlobalFunctionFamilyNameA("+")),
                     PackAE(
                       List(
-                        LocalLoadAE(printlnStrName.addStep(CodeVarNameA("line")), false),
+                        LocalLoadAE(CodeVarNameA("line"), false),
                         StrLiteralAE("\n"))))))))))))
 
-  val printlnIntName = AbsoluteNameA("printlnInt.stl.vale", List(), FunctionNameA("println", CodeLocationS(0, 0)))
+  val printlnIntName = FunctionNameA("println", CodeLocationS(0, 0))
   val printlnInt =
     FunctionA(
       printlnIntName,
@@ -45,27 +45,27 @@ object Printing {
       List(),
       Map(),
       List(
-        ParameterA(AtomAP(CaptureA(printlnIntName.addStep(CodeVarNameA("line")), FinalP), None, printlnIntName.addStep(CodeRuneA("I")), None))),
-      Some(printlnIntName.addStep(CodeRuneA("R"))),
+        ParameterA(AtomAP(CaptureA(CodeVarNameA("line"), FinalP), None, CodeRuneA("I"), None))),
+      Some(CodeRuneA("R")),
       List(
-        EqualsAR(TemplexAR(RuneAT(printlnIntName.addStep(CodeRuneA("I")), CoordTemplataType)), TemplexAR(NameAT(ImpreciseNameA(List(), CodeTypeNameA("Int")), CoordTemplataType))),
-        EqualsAR(TemplexAR(RuneAT(printlnIntName.addStep(CodeRuneA("R")), CoordTemplataType)), TemplexAR(NameAT(ImpreciseNameA(List(), CodeTypeNameA("Void")), CoordTemplataType)))),
+        EqualsAR(TemplexAR(RuneAT(CodeRuneA("I"), CoordTemplataType)), TemplexAR(NameAT(CodeTypeNameA("Int"), CoordTemplataType))),
+        EqualsAR(TemplexAR(RuneAT(CodeRuneA("R"), CoordTemplataType)), TemplexAR(NameAT(CodeTypeNameA("Void"), CoordTemplataType)))),
       CodeBodyA(
         BodyAE(
-          Set(),
+          List(),
           BlockAE(
-            Set(LocalVariableA(printlnIntName.addStep(CodeVarNameA("line")), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
+            List(LocalVariableA(CodeVarNameA("line"), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
             List(FunctionCallAE(
-              FunctionLoadAE(ImpreciseNameA(List(), GlobalFunctionFamilyNameA("println"))),
+              FunctionLoadAE(GlobalFunctionFamilyNameA("println")),
               PackAE(
                 List(
                   FunctionCallAE(
-                    FunctionLoadAE(ImpreciseNameA(List(), GlobalFunctionFamilyNameA("Str"))),
+                    FunctionLoadAE(GlobalFunctionFamilyNameA("Str")),
                     PackAE(
                       List(
-                        LocalLoadAE(printlnIntName.addStep(CodeVarNameA("line")), false))))))))))))
+                        LocalLoadAE(CodeVarNameA("line"), false))))))))))))
 
-  val printIntName = AbsoluteNameA("printlnInt.stl.vale", List(), FunctionNameA("println", CodeLocationS(0, 0)))
+  val printIntName = FunctionNameA("println", CodeLocationS(0, 0))
   val printInt =
     FunctionA(
       printIntName,
@@ -74,23 +74,23 @@ object Printing {
       List(),
       Map(),
       List(
-        ParameterA(AtomAP(CaptureA(printIntName.addStep(CodeVarNameA("line")), FinalP), None, printIntName.addStep(CodeRuneA("I")), None))),
-      Some(printIntName.addStep(CodeRuneA("R"))),
+        ParameterA(AtomAP(CaptureA(CodeVarNameA("line"), FinalP), None, CodeRuneA("I"), None))),
+      Some(CodeRuneA("R")),
       List(
-        EqualsAR(TemplexAR(RuneAT(printIntName.addStep(CodeRuneA("I")), CoordTemplataType)), TemplexAR(NameAT(ImpreciseNameA(List(), CodeTypeNameA("Int")), CoordTemplataType))),
-        EqualsAR(TemplexAR(RuneAT(printIntName.addStep(CodeRuneA("R")), CoordTemplataType)), TemplexAR(NameAT(ImpreciseNameA(List(), CodeTypeNameA("Void")), CoordTemplataType)))),
+        EqualsAR(TemplexAR(RuneAT(CodeRuneA("I"), CoordTemplataType)), TemplexAR(NameAT(CodeTypeNameA("Int"), CoordTemplataType))),
+        EqualsAR(TemplexAR(RuneAT(CodeRuneA("R"), CoordTemplataType)), TemplexAR(NameAT(CodeTypeNameA("Void"), CoordTemplataType)))),
       CodeBodyA(
         BodyAE(
-          Set(),
+          List(),
           BlockAE(
-            Set(LocalVariableA(printIntName.addStep(CodeVarNameA("line")), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
+            List(LocalVariableA(CodeVarNameA("line"), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
             List(FunctionCallAE(
-              FunctionLoadAE(ImpreciseNameA(List(), GlobalFunctionFamilyNameA("print"))),
+              FunctionLoadAE(GlobalFunctionFamilyNameA("print")),
               PackAE(
                 List(
                   FunctionCallAE(
-                    FunctionLoadAE(ImpreciseNameA(List(), GlobalFunctionFamilyNameA("Str"))),
+                    FunctionLoadAE(GlobalFunctionFamilyNameA("Str")),
                     PackAE(
                       List(
-                        LocalLoadAE(printIntName.addStep(CodeVarNameA("line")), false))))))))))))
+                        LocalLoadAE(CodeVarNameA("line"), false))))))))))))
 }

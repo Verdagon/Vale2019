@@ -75,8 +75,14 @@ object EdgeTemplar {
             val matchesAndIndices =
               edgeBlueprint.superFamilyRootBanners.zipWithIndex
                 .filter({ case (possibleSuperFunction, index) =>
-                  possibleSuperFunction.fullName.steps.last.humanName == overrideFunction.header.fullName.steps.last.humanName &&
-                    possibleSuperFunction.paramTypes == needleSuperFunctionParamTypes
+                  val namesMatch =
+                    (possibleSuperFunction.fullName.last, overrideFunction.header.fullName.last) match {
+                      case (FunctionName2(possibleSuperFunctionHumanName, _, _), FunctionName2(overrideFunctionHumanName, _, _)) => {
+                        possibleSuperFunctionHumanName == overrideFunctionHumanName
+                      }
+                      case _ => false
+                    }
+                  namesMatch && possibleSuperFunction.paramTypes == needleSuperFunctionParamTypes
                 })
             matchesAndIndices match {
               case Nil => {
@@ -112,7 +118,10 @@ object EdgeTemplar {
                     }
                     case (tyype, _) => ParamFilter(tyype, None)
                   })
-                List(NeededOverride(superFunction.fullName.steps.last.humanName, overrideParamFilters))
+                superFunction.fullName.last match {
+                  case FunctionName2(humanName, _, _) => List(NeededOverride(humanName, overrideParamFilters))
+                  case _ => List()
+                }
               }
               case Some(List()) => vfail("wot")
               case Some(List(_)) => List()

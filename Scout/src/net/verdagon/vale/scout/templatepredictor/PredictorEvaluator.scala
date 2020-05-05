@@ -16,12 +16,12 @@ import scala.collection.immutable.List
 object PredictorEvaluator {
 
   private[scout] def getAllRunes(
-    envFullName: AbsoluteNameS[INameS],
-    identifyingRunes: List[AbsoluteNameS[IRuneS]],
+    envFullName: INameS,
+    identifyingRunes: List[IRuneS],
     rules: List[IRulexSR],
     patterns1: List[AtomSP],
-    maybeRetRune: Option[AbsoluteNameS[IRuneS]]
-  ): Set[AbsoluteNameS[IRuneS]] = {
+    maybeRetRune: Option[IRuneS]
+  ): Set[IRuneS] = {
     (
       identifyingRunes ++
         patterns1.flatMap(PatternSUtils.getDistinctOrderedRunesForPattern) ++

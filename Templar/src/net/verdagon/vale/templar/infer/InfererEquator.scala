@@ -1,12 +1,11 @@
-package net.verdagon.vale.templar.infer.inferer
+package net.verdagon.vale.templar.infer
 
-import net.verdagon.vale.scout.rules._
+import net.verdagon.vale.astronomer._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.vfail
 
 import scala.collection.immutable.List
-import net.verdagon.vale.astronomer._
 
 class InfererEquator[Env, State](
     templataTemplarInner: TemplataTemplarInner[Env, State]) {
@@ -17,7 +16,6 @@ class InfererEquator[Env, State](
     right: ITemplata,
     expectedType: ITemplataType):
   (Boolean) = {
-
     (left, right) match {
       case (IntegerTemplata(leftNum), IntegerTemplata(rightNum)) => {
         (leftNum == rightNum)

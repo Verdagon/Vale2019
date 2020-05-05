@@ -2,6 +2,7 @@ package net.verdagon.vale.templar;
 
 import net.verdagon.vale._
 import net.verdagon.vale.astronomer._
+import net.verdagon.vale.scout.CodeLocationS
 import net.verdagon.vale.templar.OverloadTemplar.{ScoutExpectedFunctionFailure, ScoutExpectedFunctionSuccess}
 import net.verdagon.vale.templar.citizen.StructTemplar
 import net.verdagon.vale.templar.env._
@@ -12,8 +13,6 @@ import net.verdagon.vale.templar.function.{BuiltInFunctions, FunctionTemplar, Fu
 import scala.collection.immutable.{List, ListMap, Map, Set}
 
 object Templar {
-  val IMPL_NAME = "__impl"
-
   def evaluate(program: ProgramA):
   CompleteProgram2 = {
 
@@ -82,7 +81,7 @@ object Templar {
     val emptyPackStructRef = StructTemplar.addBuiltInStructs(env11, temputs)
 
       structsA.foreach({
-        case (structS @ StructA(_, _, _, _, _, _, _, _, _, _)) => {
+        case (structS @ StructA(_, _, _, _, _, _, _, _)) => {
           if (structS.isTemplate) {
             // Do nothing, it's a template
           } else {
@@ -93,7 +92,7 @@ object Templar {
       })
 
       interfacesA.foreach({
-        case (interfaceS @ InterfaceA(_, _, _, _, _, _, _, _, _, _)) => {
+        case (interfaceS @ InterfaceA(_, _, _, _, _, _, _, _)) => {
           if (interfaceS.isTemplate) {
             // Do nothing, it's a template
           } else {
@@ -173,7 +172,7 @@ object Templar {
     env2
   }
 
-  def stampNeededOverridesUntilSettled(env: NamespaceEnvironment, temputs: TemputsBox): Unit = {
+  def stampNeededOverridesUntilSettled(env: NamespaceEnvironment[IName2], temputs: TemputsBox): Unit = {
     val neededOverrides = EdgeTemplar.assembleEdges(temputs.functions, temputs.getAllInterfaces(), temputs.impls)
 
     if (neededOverrides.isEmpty) {

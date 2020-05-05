@@ -11,9 +11,7 @@ import net.verdagon.vale.templar.function.DestructorTemplar
 import net.verdagon.vale.{vassert, vfail}
 
 object PackTemplar {
-  val PACK_NAME = "__Pack"
-
-  val emptyPackType: PackT2 = PackT2(List(), Program2.emptyPackStructRef)
+  val emptyPackType: PackT2 = PackT2(List(), Program2.emptyTupleStructRef)
   val emptyPackReference: Coord = Coord(Share, emptyPackType)
 
   val emptyPackExpression: PackE2 = PackE2(List(), Coord(Share, PackTemplar.emptyPackType), PackTemplar.emptyPackType)
@@ -44,10 +42,10 @@ object PackTemplar {
     (finalExpr2, returnsFromElements)
   }
 
-  def makePackType(env: NamespaceEnvironment, temputs: TemputsBox, types2: List[Coord]):
+  def makePackType(env: NamespaceEnvironment[IName2], temputs: TemputsBox, types2: List[Coord]):
   (PackT2, Mutability) = {
     val (structRef, mutability) =
-      StructTemplar.makeSeqOrPackUnderstruct(env, temputs, types2, PACK_NAME)
+      StructTemplar.makeSeqOrPackUnderstruct(env, temputs, types2, TupleName2(types2))
 
     if (types2.isEmpty)
       vassert(temputs.lookupStruct(structRef).mutability == Immutable)

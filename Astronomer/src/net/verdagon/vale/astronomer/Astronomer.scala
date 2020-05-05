@@ -14,65 +14,47 @@ import scala.collection.immutable.List
 // Environments dont have an AbsoluteName, because an environment can span multiple
 // files.
 case class Environment(
-    maybeName: Option[AbsoluteNameS[INameS]],
+    maybeName: Option[INameS],
     maybeParentEnv: Option[Environment],
     primitives: Map[String, ITypeSR],
     structs: List[StructS],
     interfaces: List[InterfaceS],
     impls: List[ImplS],
     functions: List[FunctionS],
-    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType]) {
-  def addRunes(newTypeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType]): Environment = {
+    typeByRune: Map[IRuneA, ITemplataType]) {
+  def addRunes(newTypeByRune: Map[IRuneA, ITemplataType]): Environment = {
     Environment(maybeName, maybeParentEnv, primitives, structs, interfaces, impls, functions, typeByRune ++ newTypeByRune)
-  }
-
-  // If the absolute name ends with the imprecise name, returns the start of
-  // the absolute name. Otherwise returns None.
-  // See MINAAN for what we're doing here.
-  def absoluteNameEndsWithImpreciseName(
-    absoluteName: AbsoluteNameS[INameS],
-    impreciseName: ImpreciseNameS[IImpreciseNameStepS]):
-  Option[AbsoluteNameS[INameS]] = {
-    impreciseName.steps.last match {
-      case CodeTypeNameS(impreciseNameStr) => {
-        absoluteName.steps.last match {
-          case TopLevelCitizenDeclarationNameS(citizenNameStr, _) => {
-            if (impreciseNameStr == citizenNameStr) Some(absoluteName.init) else None
-          }
-          case _ => vimpl()
-        }
-      }
-      case _ => vimpl()
-    }
   }
 
   // Returns whether the imprecise name could be referring to the absolute name.
   // See MINAAN for what we're doing here.
   def impreciseNameMatchesAbsoluteName(
-    absoluteName: AbsoluteNameS[INameS],
-    needleImpreciseNameS: ImpreciseNameS[IImpreciseNameStepS]):
+    absoluteName: INameS,
+    needleImpreciseNameS: IImpreciseNameStepS):
   Boolean = {
-    val envNameSteps = maybeName.map(_.steps).getOrElse(List())
+    vimpl()
 
-    // See MINAAN for what we're doing here.
-    absoluteNameEndsWithImpreciseName(absoluteName, needleImpreciseNameS) match {
-      case None => false
-      case Some(absoluteNameFirstHalf) => {
-        if (absoluteNameFirstHalf.steps.size > envNameSteps.size) {
-          false
-        } else {
-          (absoluteNameFirstHalf.steps.map(Some(_)) ++ envNameSteps.map(_ => None))
-            .zip(envNameSteps)
-            .forall({
-              case (None, _) => true
-              case (Some(firstHalfNameStep), envNameStep) => firstHalfNameStep == envNameStep
-            })
-        }
-      }
-    }
+//    val envNameSteps = maybeName.map(_.steps).getOrElse(List())
+//
+//    // See MINAAN for what we're doing here.
+//    absoluteNameEndsWithImpreciseName(absoluteName, needleImpreciseNameS) match {
+//      case None => false
+//      case Some(absoluteNameFirstHalf) => {
+//        if (absoluteNameFirstHalf.steps.size > envNameSteps.size) {
+//          false
+//        } else {
+//          (absoluteNameFirstHalf.steps.map(Some(_)) ++ envNameSteps.map(_ => None))
+//            .zip(envNameSteps)
+//            .forall({
+//              case (None, _) => true
+//              case (Some(firstHalfNameStep), envNameStep) => firstHalfNameStep == envNameStep
+//            })
+//        }
+//      }
+//    }
   }
 
-  def lookupType(needleImpreciseNameS: ImpreciseNameS[IImpreciseNameStepS]):
+  def lookupType(needleImpreciseNameS: IImpreciseNameStepS):
   (Option[ITypeSR], List[StructS], List[InterfaceS]) = {
     // See MINAAN for what we're doing here.
 
@@ -84,7 +66,7 @@ case class Environment(
     })
     val nearPrimitives =
       needleImpreciseNameS match {
-        case ImpreciseNameS(List(), CodeTypeNameS(nameStr)) => primitives.get(nameStr)
+        case CodeTypeNameS(nameStr) => primitives.get(nameStr)
         case _ => None
       }
 
@@ -97,7 +79,7 @@ case class Environment(
     }
   }
 
-  def lookupType(name: AbsoluteNameS[INameS]):
+  def lookupType(name: INameS):
   (List[StructS], List[InterfaceS]) = {
     val nearStructs = structs.filter(_.name == name)
     val nearInterfaces = interfaces.filter(_.name == name)
@@ -111,7 +93,7 @@ case class Environment(
     }
   }
 
-  def lookupRune(name: AbsoluteNameA[IRuneA]): ITemplataType = {
+  def lookupRune(name: IRuneA): ITemplataType = {
     typeByRune.get(name) match {
       case Some(tyype) => tyype
       case None => {
@@ -125,22 +107,22 @@ case class Environment(
 }
 
 case class AstroutsBox(var astrouts: Astrouts) {
-  def getImpl(name: AbsoluteNameA[INameA]) = {
+  def getImpl(name: INameA) = {
     astrouts.impls.get(name)
   }
-  def getStruct(name: AbsoluteNameA[INameA]) = {
+  def getStruct(name: INameA) = {
     astrouts.structs.get(name)
   }
-  def getInterface(name: AbsoluteNameA[INameA]) = {
+  def getInterface(name: INameA) = {
     astrouts.interfaces.get(name)
   }
 }
 
 case class Astrouts(
-  structs: Map[AbsoluteNameA[INameA], StructA],
-  interfaces: Map[AbsoluteNameA[INameA], InterfaceA],
-  impls: Map[AbsoluteNameA[INameA], ImplA],
-  functions: Map[AbsoluteNameA[INameA], FunctionA])
+  structs: Map[INameA, StructA],
+  interfaces: Map[INameA, InterfaceA],
+  impls: Map[INameA, ImplA],
+  functions: Map[INameA, FunctionA])
 
 object Astronomer {
   val primitives =
@@ -194,14 +176,14 @@ object Astronomer {
     }
   }
 
-  def lookupType(astrouts: AstroutsBox, env: Environment, name: AbsoluteNameS[INameS]): ITemplataType = {
+  def lookupType(astrouts: AstroutsBox, env: Environment, name: INameS): ITemplataType = {
     // When the scout comes across a lambda, it doesn't put the e.g. main:lam1:__Closure struct into
     // the environment or anything, it lets templar to do that (because templar knows the actual types).
     // However, this means that when the lambda function gets to the astronomer, the astronomer doesn't
     // know what to do with it.
 
-    name.last match {
-      case LambdaNameS(_) =>
+    name match {
+      case LambdaNameS(_, _) =>
       case FunctionNameS(_, _) =>
       case TopLevelCitizenDeclarationNameS(_, _) =>
       case LambdaStructNameS(_) => return KindTemplataType
@@ -239,7 +221,7 @@ object Astronomer {
     } else vfail()
   }
 
-  def lookupType(astrouts: AstroutsBox, env: Environment, name: ImpreciseNameS[CodeTypeNameS]): ITemplataType = {
+  def lookupType(astrouts: AstroutsBox, env: Environment, name: CodeTypeNameS): ITemplataType = {
     // When the scout comes across a lambda, it doesn't put the e.g. __Closure<main>:lam1 struct into
     // the environment or anything, it lets templar to do that (because templar knows the actual types).
     // However, this means that when the lambda function gets to the astronomer, the astronomer doesn't
@@ -277,11 +259,11 @@ object Astronomer {
   def makeRuleTyper(): RuleTyperEvaluator[Environment, AstroutsBox] = {
     new RuleTyperEvaluator[Environment, AstroutsBox](
       new IRuleTyperEvaluatorDelegate[Environment, AstroutsBox] {
-        override def lookupType(state: AstroutsBox, env: Environment, name: ImpreciseNameS[CodeTypeNameS]): (ITemplataType) = {
+        override def lookupType(state: AstroutsBox, env: Environment, name: CodeTypeNameS): (ITemplataType) = {
           Astronomer.lookupType(state, env, name)
         }
 
-        override def lookupType(state: AstroutsBox, env: Environment, name: AbsoluteNameS[INameS]): ITemplataType = {
+        override def lookupType(state: AstroutsBox, env: Environment, name: INameS): ITemplataType = {
           Astronomer.lookupType(state, env, name)
         }
       })
@@ -289,9 +271,9 @@ object Astronomer {
 
   def translateStruct(astrouts: AstroutsBox, env: Environment, structS: StructS): StructA = {
     val StructS(nameS, mutability, maybePredictedMutability, identifyingRunesS, allRunesS, predictedTypeByRune, isTemplate, rules, members) = structS
-    val nameA = Astronomer.translateAbsoluteName(nameS)
-    val allRunesA = allRunesS.map(Astronomer.translateRuneAbsoluteName)
-    val identifyingRunesA = identifyingRunesS.map(Astronomer.translateRuneAbsoluteName)
+    val nameA = Astronomer.translateTopLevelCitizenDeclarationName(nameS)
+    val allRunesA = allRunesS.map(Astronomer.translateRune)
+    val identifyingRunesA = identifyingRunesS.map(Astronomer.translateRune)
 
     // predictedTypeByRune is used by the rule typer delegate to short-circuit infinite recursion
     // in types like List, see RTMHTPS.
@@ -317,7 +299,7 @@ object Astronomer {
 
     val membersA =
       members.map({
-        case StructMemberS(name, variablility, typeRune) => StructMemberA(name, variablility, translateRuneAbsoluteName(typeRune))
+        case StructMemberS(name, variablility, typeRune) => StructMemberA(name, variablility, translateRune(typeRune))
       })
 
     StructA(
@@ -333,9 +315,9 @@ object Astronomer {
 
   def translateInterface(astrouts: AstroutsBox, env: Environment, interfaceS: InterfaceS): InterfaceA = {
     val InterfaceS(nameS, mutability, maybePredictedMutability, identifyingRunesS, allRunesS, predictedTypeByRune, isTemplate, rules, internalMethodsS) = interfaceS
-    val allRunesA = allRunesS.map(Astronomer.translateRuneAbsoluteName)
-    val identifyingRunesA = identifyingRunesS.map(Astronomer.translateRuneAbsoluteName)
-    val nameA = translateAbsoluteName(nameS)
+    val allRunesA = allRunesS.map(Astronomer.translateRune)
+    val identifyingRunesA = identifyingRunesS.map(Astronomer.translateRune)
+    val nameA = TopLevelCitizenDeclarationNameA(nameS.name, nameS.codeLocation)
 
     // predictedTypeByRune is used by the rule typer delegate to short-circuit infinite recursion
     // in types like List, see RTMHTPS.
@@ -376,8 +358,8 @@ object Astronomer {
 
   def translateImpl(astrouts: AstroutsBox, env: Environment, implS: ImplS): ImplA = {
     val ImplS(nameS, rules, allRunesS, isTemplate, structKindRuneS, interfaceKindRuneS) = implS
-    val nameA = translateAbsoluteName(nameS)
-    val allRunesA = allRunesS.map(Astronomer.translateRuneAbsoluteName)
+    val nameA = translateName(nameS)
+    val allRunesA = allRunesS.map(Astronomer.translateRune)
 
     astrouts.getImpl(nameA) match {
       case Some(existingImplA) => return existingImplA
@@ -394,8 +376,8 @@ object Astronomer {
       nameA,
       rulesA,
       conclusions.typeByRune,
-      translateRuneAbsoluteName(structKindRuneS),
-      translateRuneAbsoluteName(interfaceKindRuneS))
+      translateRune(structKindRuneS),
+      translateRune(interfaceKindRuneS))
   }
 
   def translateParameter(paramS: ParameterS): ParameterA = {
@@ -405,15 +387,15 @@ object Astronomer {
 
   def translateAtom(atomS: AtomSP): AtomAP = {
     val AtomSP(CaptureS(nameS, variability), virtualityS, coordRuneS, destructureS) = atomS
-    val nameA = translateAbsoluteName(nameS)
+    val nameA = translateVarNameStep(nameS)
 
     val virtualityA =
       virtualityS.map({
         case AbstractSP => AbstractAP
-        case OverrideSP(kindRune) => OverrideAP(translateRuneAbsoluteName(kindRune))
+        case OverrideSP(kindRune) => OverrideAP(translateRune(kindRune))
       })
 
-    val coordRuneA = translateRuneAbsoluteName(coordRuneS)
+    val coordRuneA = translateRune(coordRuneS)
 
     val destructureA = destructureS.map(_.map(translateAtom))
 
@@ -422,9 +404,9 @@ object Astronomer {
 
   def translateFunction(astrouts: AstroutsBox, env: Environment, functionS: FunctionS): FunctionA = {
     val FunctionS(nameS, isUserFunction, identifyingRunesS, allRunesS, maybePredictedType, paramsS, maybeRetCoordRune, isTemplate, templateRules, bodyS) = functionS
-    val nameA = translateAbsoluteName(nameS)
-    val allRunesA = allRunesS.map(Astronomer.translateRuneAbsoluteName)
-    val identifyingRunesA = identifyingRunesS.map(Astronomer.translateRuneAbsoluteName)
+    val nameA = translateName(nameS)
+    val allRunesA = allRunesS.map(Astronomer.translateRune)
+    val identifyingRunesA = identifyingRunesS.map(Astronomer.translateRune)
 
     val paramsA = paramsS.map(translateParameter)
 
@@ -452,7 +434,7 @@ object Astronomer {
       identifyingRunesA,
       conclusions.typeByRune,
       paramsA,
-      maybeRetCoordRune.map(translateRuneAbsoluteName),
+      maybeRetCoordRune.map(translateRune),
       rulesA,
       bodyA)
   }
@@ -464,83 +446,93 @@ object Astronomer {
       case GeneratedBody1(generatorId) => GeneratedBodyA(generatorId)
       case CodeBody1(BodySE(closuredNamesS, blockS)) => {
         val blockA = ExpressionAstronomer.translateBlock(env, astrouts, blockS)
-        CodeBodyA(BodyAE(closuredNamesS.map(translateAbsoluteName), blockA))
+        CodeBodyA(BodyAE(closuredNamesS.map(translateName), blockA))
       }
     }
   }
 
-  def translateImpreciseTypeName(fullNameS: ImpreciseNameS[CodeTypeNameS]): ImpreciseNameA[CodeTypeNameA] = {
-    val ImpreciseNameS(initS, lastS) = fullNameS
-    ImpreciseNameA(initS.map(translateImpreciseNameStep), translateCodeTypeName(lastS))
-  }
-
-  def translateImpreciseName(fullNameS: ImpreciseNameS[IImpreciseNameStepS]): ImpreciseNameA[IImpreciseNameStepA] = {
-    val ImpreciseNameS(initS, lastS) = fullNameS
-    ImpreciseNameA(initS.map(translateImpreciseNameStep), translateImpreciseNameStep(lastS))
-  }
+//  def translateImpreciseTypeName(fullNameS: ImpreciseNameS[CodeTypeNameS]): ImpreciseNameA[CodeTypeNameA] = {
+//    val ImpreciseNameS(initS, lastS) = fullNameS
+//    ImpreciseNameA(initS.map(translateImpreciseNameStep), translateCodeTypeName(lastS))
+//  }
+//
+//  def translateImpreciseName(fullNameS: ImpreciseNameS[IImpreciseNameStepS]): ImpreciseNameA[IImpreciseNameStepA] = {
+//    val ImpreciseNameS(initS, lastS) = fullNameS
+//    ImpreciseNameA(initS.map(translateImpreciseNameStep), translateImpreciseNameStep(lastS))
+//  }
 
   def translateCodeTypeName(codeTypeNameS: CodeTypeNameS): CodeTypeNameA = {
     val CodeTypeNameS(name) = codeTypeNameS
     CodeTypeNameA(name)
   }
 
-  def translateImpreciseNameStep(impreciseNameStepS: IImpreciseNameStepS): IImpreciseNameStepA = {
+  def translateImpreciseName(impreciseNameStepS: IImpreciseNameStepS): IImpreciseNameStepA = {
     impreciseNameStepS match {
       case ctn @ CodeTypeNameS(_) => translateCodeTypeName(ctn)
       case GlobalFunctionFamilyNameS(name) => GlobalFunctionFamilyNameA(name)
-      case icvn @ ImpreciseCodeVarNameS(_) => translateImpreciseCodeVarNameStep(icvn)
+      case icvn @ ImpreciseCodeVarNameS(_) => translateImpreciseCodeVarName(icvn)
     }
   }
 
-  def translateImpreciseCodeVarNameStep(impreciseNameStepS: ImpreciseCodeVarNameS): ImpreciseCodeVarNameA = {
+  def translateImpreciseCodeVarName(impreciseNameStepS: ImpreciseCodeVarNameS): ImpreciseCodeVarNameA = {
     var ImpreciseCodeVarNameS(name) = impreciseNameStepS
     ImpreciseCodeVarNameA(name)
   }
 
-  def translateRuneAbsoluteName(absoluteNameS: AbsoluteNameS[IRuneS]): AbsoluteNameA[IRuneA] = {
-    val AbsoluteNameS(file, initS, lastS) = absoluteNameS
-    AbsoluteNameA(file, initS.map(translateNameStep), translateRune(lastS))
-  }
+//  def translateRune(absoluteNameS: IRuneS): IRuneA = {
+//    val AbsoluteNameS(file, initS, lastS) = absoluteNameS
+//    AbsoluteNameA(file, initS.map(translateNameStep), translateRune(lastS))
+//  }
+//
+//  def translateVarAbsoluteName(absoluteNameS: IVarNameS): IVarNameA = {
+//    val AbsoluteNameS(file, initS, lastS) = absoluteNameS
+//    AbsoluteNameA(file, initS.map(translateNameStep), translateVarNameStep(lastS))
+//  }
 
-  def translateVarAbsoluteName(absoluteNameS: AbsoluteNameS[IVarNameS]): AbsoluteNameA[IVarNameA] = {
-    val AbsoluteNameS(file, initS, lastS) = absoluteNameS
-    AbsoluteNameA(file, initS.map(translateNameStep), translateVarNameStep(lastS))
-  }
+//  def translateVarImpreciseName(absoluteNameS: ImpreciseNameS[ImpreciseCodeVarNameS]):
+//  ImpreciseNameA[ImpreciseCodeVarNameA] = {
+//    val ImpreciseNameS(initS, lastS) = absoluteNameS
+//    ImpreciseNameA(initS.map(translateImpreciseNameStep), translateImpreciseCodeVarNameStep(lastS))
+//  }
 
-  def translateVarImpreciseName(absoluteNameS: ImpreciseNameS[ImpreciseCodeVarNameS]):
-  ImpreciseNameA[ImpreciseCodeVarNameA] = {
-    val ImpreciseNameS(initS, lastS) = absoluteNameS
-    ImpreciseNameA(initS.map(translateImpreciseNameStep), translateImpreciseCodeVarNameStep(lastS))
-  }
-
-  def translateFunctionFamilyName(name: ImpreciseNameS[GlobalFunctionFamilyNameS]):
-  ImpreciseNameA[GlobalFunctionFamilyNameA] = {
-    val ImpreciseNameS(init, last) = name
-    ImpreciseNameA(init.map(translateImpreciseNameStep), translateGlobalFunctionFamilyName(last))
-  }
+//  def translateFunctionFamilyName(name: ImpreciseNameS[GlobalFunctionFamilyNameS]):
+//  ImpreciseNameA[GlobalFunctionFamilyNameA] = {
+//    val ImpreciseNameS(init, last) = name
+//    ImpreciseNameA(init.map(translateImpreciseNameStep), translateGlobalFunctionFamilyName(last))
+//  }
 
   def translateGlobalFunctionFamilyName(s: GlobalFunctionFamilyNameS): GlobalFunctionFamilyNameA = {
     val GlobalFunctionFamilyNameS(name) = s
     GlobalFunctionFamilyNameA(name)
   }
 
-  def translateAbsoluteName(absoluteNameS: AbsoluteNameS[INameS]): AbsoluteNameA[INameA] = {
-    val AbsoluteNameS(file, initS, lastS) = absoluteNameS
-    AbsoluteNameA(file, initS.map(translateNameStep), translateNameStep(lastS))
-  }
+//  def translateName(absoluteNameS: INameS): INameA = {
+//    val AbsoluteNameS(file, initS, lastS) = absoluteNameS
+//    AbsoluteNameA(file, initS.map(translateNameStep), translateNameStep(lastS))
+//  }
 
-  def translateNameStep(name: INameS): INameA = {
+  def translateName(name: INameS): INameA = {
     name match {
-      case LambdaNameS(codeLocation) => LambdaNameA(codeLocation)
+      case LambdaNameS(parentName, codeLocation) => LambdaNameA(translateName(parentName), codeLocation)
       case FunctionNameS(name, codeLocation) => FunctionNameA(name, codeLocation)
-      case TopLevelCitizenDeclarationNameS(name, codeLocation) => TopLevelCitizenDeclarationNameA(name, codeLocation)
-      case LambdaStructNameS(codeLocation) => LambdaStructNameA(codeLocation)
+      case tlcd @ TopLevelCitizenDeclarationNameS(_, _) => translateTopLevelCitizenDeclarationName(tlcd)
+      case LambdaStructNameS(lambdaName) => LambdaStructNameA(translateLambdaNameStep(lambdaName))
       case ImplNameS(codeLocation) => ImplNameA(codeLocation)
       case LetNameS(codeLocation) => LetNameA(codeLocation)
       case UnnamedLocalNameS(codeLocation) => UnnamedLocalNameA(codeLocation)
       case ClosureParamNameS() => ClosureParamNameA()
-      case MagicParamNameS(magicParamNumber) => MagicParamNameA(magicParamNumber)
+      case MagicParamNameS(codeLocation) => MagicParamNameA(codeLocation)
       case CodeVarNameS(name) => CodeVarNameA(name)
+    }
+  }
+
+  def translateTopLevelCitizenDeclarationName(tlcd: TopLevelCitizenDeclarationNameS): TopLevelCitizenDeclarationNameA = {
+    val TopLevelCitizenDeclarationNameS(name, codeLocation) = tlcd
+    TopLevelCitizenDeclarationNameA(name, codeLocation)
+  }
+
+  def translateRune(rune: IRuneS): IRuneA = {
+    rune match {
       case CodeRuneS(name) => CodeRuneA(name)
       case ImplicitRuneS(name) => ImplicitRuneA(name)
       case MagicParamRuneS(magicParamIndex) => MagicImplicitRuneA(magicParamIndex)
@@ -558,14 +550,9 @@ object Astronomer {
     }
   }
 
-  def translateRune(rune: IRuneS): IRuneA = {
-    rune match {
-      case CodeRuneS(name) => CodeRuneA(name)
-      case ImplicitRuneS(name) => ImplicitRuneA(name)
-      case MagicParamRuneS(magicParamIndex) => MagicImplicitRuneA(magicParamIndex)
-      case MemberRuneS(memberIndex) => MemberRuneA(memberIndex)
-      case ReturnRuneS() => ReturnRuneA()
-    }
+  def translateLambdaNameStep(lambdaNameStep: LambdaNameS): LambdaNameA = {
+    val LambdaNameS(parentName, codeLocation) = lambdaNameStep
+    LambdaNameA(translateName(parentName), codeLocation)
   }
 
   def translateProgram(

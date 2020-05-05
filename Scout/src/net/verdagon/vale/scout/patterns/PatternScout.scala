@@ -9,15 +9,15 @@ import scala.collection.immutable.List
 
 // Sometimes referred to as a "rate"
 case class RuleState(
-  envFullName: AbsoluteNameS[INameS],
+  envFullName: INameS,
   nextImplicitRune: Int) {
-  def newImplicitRune(): (RuleState, AbsoluteNameS[IRuneS]) = {
-    (RuleState(envFullName, nextImplicitRune + 1), envFullName.addStep(ImplicitRuneS(nextImplicitRune)))
+  def newImplicitRune(): (RuleState, IRuneS) = {
+    (RuleState(envFullName, nextImplicitRune + 1), ImplicitRuneS(nextImplicitRune))
   }
 }
 
 case class RuleStateBox(var rate: RuleState) {
-  def newImplicitRune(): AbsoluteNameS[IRuneS] = {
+  def newImplicitRune(): IRuneS = {
     val (newRate, rune) = rate.newImplicitRune()
     rate = newRate
     rune
@@ -25,14 +25,14 @@ case class RuleStateBox(var rate: RuleState) {
 }
 
 object PatternScout {
-  def getParameterCaptures(pattern: AtomSP): Set[VariableDeclaration] = {
+  def getParameterCaptures(pattern: AtomSP): List[VariableDeclaration] = {
     val AtomSP(maybeCapture, _, _, maybeDestructure) = pattern
-    Set() ++
+    List() ++
         getCaptureCaptures(maybeCapture) ++
         maybeDestructure.toList.flatten.flatMap(getParameterCaptures)
   }
-  private def getCaptureCaptures(capture: CaptureS): Set[VariableDeclaration] = {
-    Set(VariableDeclaration(capture.name, capture.variability))
+  private def getCaptureCaptures(capture: CaptureS): List[VariableDeclaration] = {
+    List(VariableDeclaration(capture.name, capture.variability))
   }
 
   // Returns:
@@ -40,14 +40,13 @@ object PatternScout {
   // - Scouted patterns
   private[scout] def scoutPatterns(
       stackFrame: StackFrame,
-      fate: ScoutFateBox,
       rulesS: RuleStateBox,
       params: List[PatternPP]):
   (List[IRulexSR], List[AtomSP]) = {
     params.foldLeft((List[IRulexSR](), List[AtomSP]()))({
       case ((previousNewRulesS, previousPatternsS), patternP) => {
         val (newRulesS, patternS) =
-          PatternScout.translatePattern(stackFrame, fate, rulesS, patternP)
+          PatternScout.translatePattern(stackFrame, rulesS, patternP)
         (previousNewRulesS ++ newRulesS, previousPatternsS :+ patternS)
       }
     })
@@ -62,7 +61,6 @@ object PatternScout {
   // - The translated patterns
   private[scout] def translatePattern(
     stackFrame: StackFrame,
-    fate: ScoutFateBox,
     ruleState: RuleStateBox,
     patternPP: PatternPP):
   (List[IRulexSR], AtomSP) = {
@@ -95,7 +93,7 @@ object PatternScout {
             destructureP.foldLeft((List[IRulexSR](), List[AtomSP]()))({
               case ((previousNewRulesS, previousPatternsS), patternP) => {
                 val (newRulesFromDestructure, patternS) =
-                  translatePattern(stackFrame, fate, ruleState, patternP)
+                  translatePattern(stackFrame, ruleState, patternP)
                 (previousNewRulesS ++ newRulesFromDestructure, previousPatternsS :+ patternS)
               }
             })
@@ -107,10 +105,10 @@ object PatternScout {
       maybeCaptureP match {
         case None => {
           val codeLocation = CodeLocationS(patternPP.pos.line, patternPP.pos.column)
-          CaptureS(stackFrame.name.addStep(UnnamedLocalNameS(codeLocation)), FinalP)
+          CaptureS(UnnamedLocalNameS(codeLocation), FinalP)
         }
         case Some(CaptureP(name, variability)) => {
-          CaptureS(stackFrame.name.addStep(CodeVarNameS(name)), variability)
+          CaptureS(CodeVarNameS(name), variability)
         }
       }
 
@@ -119,19 +117,19 @@ object PatternScout {
   }
 
   def translateMaybeTypeIntoRune(
-      declaredRunes: Set[AbsoluteNameS[IRuneS]],
+      declaredRunes: Set[IRuneS],
       rulesS: RuleStateBox,
       maybeTypeP: Option[ITemplexPPT],
       runeType: ITypePR):
-  (List[IRulexSR], AbsoluteNameS[IRuneS]) = {
+  (List[IRulexSR], IRuneS) = {
     maybeTypeP match {
       case None => {
         val rune = rulesS.newImplicitRune()
         val newRule = TypedSR(rune, RuleScout.translateType(runeType))
         (List(newRule), rune)
       }
-      case Some(NameOrRunePPT(nameOrRune)) if declaredRunes.exists(_.last == CodeRuneS(nameOrRune)) => {
-        val rune = vassertSome(declaredRunes.find(_.last == CodeRuneS(nameOrRune)))
+      case Some(NameOrRunePPT(nameOrRune)) if declaredRunes.contains(CodeRuneS(nameOrRune)) => {
+        val rune = CodeRuneS(nameOrRune)
         val newRule = TypedSR(rune, RuleScout.translateType(runeType))
         (List(newRule), rune)
       }
@@ -150,11 +148,11 @@ object PatternScout {
     }
   }
   def translateMaybeTypeIntoMaybeRune(
-    declaredRunes: Set[AbsoluteNameS[IRuneS]],
+    declaredRunes: Set[IRuneS],
     rulesS: RuleStateBox,
     maybeTypeP: Option[ITemplexPPT],
     runeType: ITypePR):
-  (List[IRulexSR], Option[AbsoluteNameS[IRuneS]]) = {
+  (List[IRulexSR], Option[IRuneS]) = {
     if (maybeTypeP.isEmpty) {
       (List(), None)
     } else {
@@ -178,7 +176,7 @@ object PatternScout {
 //  }
 
   private def translatePatternTemplexes(
-    declaredRunes: Set[AbsoluteNameS[IRuneS]],
+    declaredRunes: Set[IRuneS],
     rulesS: RuleStateBox,
     templexesP: List[ITemplexPPT]):
   (List[IRulexSR], List[ITemplexS]) = {
@@ -197,22 +195,24 @@ object PatternScout {
   // - A templex that represents the result
   // - If any, the rune associated with this exact result.
   def translatePatternTemplex(
-      declaredRunes: Set[AbsoluteNameS[IRuneS]],
+      declaredRunes: Set[IRuneS],
       rulesS: RuleStateBox,
       templexP: ITemplexPPT):
-  (List[IRulexSR], ITemplexS, Option[AbsoluteNameS[IRuneS]]) = {
+  (List[IRulexSR], ITemplexS, Option[IRuneS]) = {
     templexP match {
       case IntPPT(value) => (List(), IntST(value), None)
       case BoolPPT(value) => (List(), BoolST(value), None)
       case NameOrRunePPT(nameOrRune) => {
-        declaredRunes.find(_.last == CodeRuneS(nameOrRune)) match {
-          case Some(foundRune) => (List(), RuneST(foundRune), Some(foundRune))
-          case None => (List(), NameST(ImpreciseNameS(List(), CodeTypeNameS(nameOrRune))), None)
+        if (declaredRunes.contains(CodeRuneS(nameOrRune))) {
+          (List(), RuneST(CodeRuneS(nameOrRune)), Some(CodeRuneS(nameOrRune)))
+        } else {
+          (List(), NameST(CodeTypeNameS(nameOrRune)), None)
         }
       }
       case MutabilityPPT(mutability) => (List(), MutabilityST(mutability), None)
-      case OwnershippedPPT(BorrowP, NameOrRunePPT(ownedCoordRuneName)) if declaredRunes.exists(_.last == CodeRuneS(ownedCoordRuneName)) => {
-        val ownedCoordRune = vassertSome(declaredRunes.find(_.last == CodeRuneS(ownedCoordRuneName)))
+      case OwnershippedPPT(BorrowP, NameOrRunePPT(ownedCoordRuneName)) if declaredRunes.contains(CodeRuneS(ownedCoordRuneName)) => {
+        vassert(declaredRunes.contains(CodeRuneS(ownedCoordRuneName)))
+        val ownedCoordRune = CodeRuneS(ownedCoordRuneName)
         val kindRune = rulesS.newImplicitRune()
         val borrowedCoordRune = rulesS.newImplicitRune()
         val newRules =

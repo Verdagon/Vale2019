@@ -13,19 +13,19 @@ case class ProgramA(
     interfaces: List[InterfaceA],
     impls: List[ImplA],
     functions: List[FunctionA]) {
-  def lookupFunction(name: AbsoluteNameA[INameA]) = {
+  def lookupFunction(name: INameA) = {
     val matches = functions.filter(_.name == name)
     vassert(matches.size == 1)
     matches.head
   }
-  def lookupInterface(name: AbsoluteNameA[INameA]) = {
+  def lookupInterface(name: INameA) = {
     val matches = interfaces.find(_.name == name)
     vassert(matches.size == 1)
     matches.head match {
       case i @ InterfaceA(_, _, _, _, _, _, _, _) => i
     }
   }
-  def lookupStruct(name: AbsoluteNameA[INameA]) = {
+  def lookupStruct(name: INameA) = {
     val matches = structs.find(_.name == name)
     vassert(matches.size == 1)
     matches.head match {
@@ -36,16 +36,16 @@ case class ProgramA(
 
 
 trait TypeDefinitionA {
-  def name: AbsoluteNameA[INameA];
+  def name: INameA;
 }
 
 case class StructA(
-    name: AbsoluteNameA[INameA],
+    name: TopLevelCitizenDeclarationNameA,
     mutability: MutabilityP,
     maybePredictedMutability: Option[MutabilityP],
     tyype: ITemplataType,
-    identifyingRunes: List[AbsoluteNameA[IRuneA]],
-    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
+    identifyingRunes: List[IRuneA],
+    typeByRune: Map[IRuneA, ITemplataType],
     rules: List[IRulexAR],
     members: List[StructMemberA]
 ) extends TypeDefinitionA {
@@ -59,14 +59,14 @@ case class StructA(
 case class StructMemberA(
     name: String,
     variability: VariabilityP,
-    typeRune: AbsoluteNameA[IRuneA])
+    typeRune: IRuneA)
 
 case class ImplA(
-    name: AbsoluteNameA[INameA],
+    name: INameA,
     rules: List[IRulexAR],
-    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
-    structKindRune: AbsoluteNameA[IRuneA],
-    interfaceKindRune: AbsoluteNameA[IRuneA])
+    typeByRune: Map[IRuneA, ITemplataType],
+    structKindRune: IRuneA,
+    interfaceKindRune: IRuneA)
 
 //case class AliasA(
 //  codeLocation: CodeLocation,
@@ -76,12 +76,12 @@ case class ImplA(
 //  aliaseeRune: String)
 
 case class InterfaceA(
-    name: AbsoluteNameA[INameA],
+    name: TopLevelCitizenDeclarationNameA,
     mutability: MutabilityP,
     maybePredictedMutability: Option[MutabilityP],
     tyype: ITemplataType,
-    identifyingRunes: List[AbsoluteNameA[IRuneA]],
-    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
+    identifyingRunes: List[IRuneA],
+    typeByRune: Map[IRuneA, ITemplataType],
     rules: List[IRulexAR],
     // See IMRFDI
     internalMethods: List[FunctionA]) {
@@ -94,14 +94,14 @@ case class InterfaceA(
 
 object interfaceName {
   // The extraction method (mandatory)
-  def unapply(interfaceA: InterfaceA): Option[AbsoluteNameA[INameA]] = {
+  def unapply(interfaceA: InterfaceA): Option[INameA] = {
     Some(interfaceA.name)
   }
 }
 
 object structName {
   // The extraction method (mandatory)
-  def unapply(structA: StructA): Option[AbsoluteNameA[INameA]] = {
+  def unapply(structA: StructA): Option[INameA] = {
     Some(structA.name)
   }
 }
@@ -123,19 +123,19 @@ object structName {
 
 // Underlying class for all XYZFunctionS types
 case class FunctionA(
-    name: AbsoluteNameA[INameA],
+    name: IFunctionDeclarationNameA,
     isUserFunction: Boolean,
 
     tyype: ITemplataType,
     // This is not necessarily only what the user specified, the compiler can add
     // things to the end here, see CCAUIR.
-    identifyingRunes: List[AbsoluteNameA[IRuneA]],
-    typeByRune: Map[AbsoluteNameA[IRuneA], ITemplataType],
+    identifyingRunes: List[IRuneA],
+    typeByRune: Map[IRuneA, ITemplataType],
 
     params: List[ParameterA],
 
     // We need to leave it an option to signal that the compiler can infer the return type.
-    maybeRetCoordRune: Option[AbsoluteNameA[IRuneA]],
+    maybeRetCoordRune: Option[IRuneA],
 
     templateRules: List[IRulexAR],
     body: IBodyA
@@ -165,7 +165,7 @@ case class ParameterA(
 }
 
 case class CaptureA(
-  name: AbsoluteNameA[INameA],
+  name: IVarNameA,
   variability: VariabilityP)
 
 sealed trait IBodyA
@@ -176,5 +176,4 @@ case class CodeBodyA(bodyA: BodyAE) extends IBodyA
 
 case class BFunctionA(
   origin: FunctionA,
-  name: String,
   body: BodyAE)

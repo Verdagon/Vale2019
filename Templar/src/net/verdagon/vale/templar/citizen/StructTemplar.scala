@@ -4,8 +4,8 @@ import net.verdagon.vale.astronomer._
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.parser._
-import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
-import net.verdagon.vale.scout.patterns.{AtomSP, PatternSUtils}
+import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
+import net.verdagon.vale.scout.patterns.{AtomSP, CaptureS, PatternSUtils}
 import net.verdagon.vale.scout.rules._
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.env._
@@ -15,16 +15,8 @@ import net.verdagon.vale._
 import scala.collection.immutable.List
 
 object StructTemplar {
-  val anonymousSubstructParentInterfaceRune = "__Interface"
-
-  def addBuiltInStructs(env: NamespaceEnvironment, temputs: TemputsBox): (StructRef2) = {
-    val structDef2 = StructDefinition2(FullName2(List(NamePart2("__Pack", Some(List()), None, None))), Immutable, List(), false)
-    temputs.declareStruct(structDef2.getRef)
-    temputs.declareStructMutability(structDef2.getRef, Immutable)
-    temputs.declareStructEnv(structDef2.getRef, env)
-    temputs.add(structDef2)
-    temputs.declarePack(List(), structDef2.getRef)
-    (structDef2.getRef)
+  def addBuiltInStructs(env: NamespaceEnvironment[IName2], temputs: TemputsBox): (StructRef2) = {
+    StructTemplarCore.addBuiltInStructs(env, temputs)
   }
 
   def getFunctionGenerators(): Map[String, IFunctionGenerator] = {
@@ -54,7 +46,7 @@ object StructTemplar {
           (FunctionHeader2) = {
             // The interface should be in the "__Interface" rune of the function environment.
             val interfaceRef2 =
-              env.getNearestTemplataWithName(StructTemplar.anonymousSubstructParentInterfaceRune, Set(TemplataLookupContext)) match {
+              env.getNearestTemplataWithAbsoluteName(AnonymousSubstructParentInterfaceRune2(), Set(TemplataLookupContext)) match {
                 case Some(KindTemplata(ir @ InterfaceRef2(_))) => ir
                 case _ => vwat()
               }
@@ -71,9 +63,15 @@ object StructTemplar {
     val params =
       struct1.members.zipWithIndex.map({
         case (member, index) => {
-          ParameterS(AtomSP(Some(CaptureP(member.name, FinalP)), None, MemberRune(struct1.codeLocation, index), None))
+          ParameterA(
+            AtomAP(
+              CaptureA(CodeVarNameA(member.name), FinalP),
+              None,
+              MemberRuneA(index),
+              None))
         }
       })
+    val retRune = ReturnRuneA()
     val rules =
       struct1.rules :+
       EqualsAR(
@@ -81,18 +79,15 @@ object StructTemplar {
         TemplexAR(
           if (struct1.isTemplate) {
             CallAT(
-              NameAT(struct1.name, struct1.tyype),
+              AbsoluteNameAT(struct1.name, struct1.tyype),
               struct1.identifyingRunes.map(rune => RuneAT(rune, struct1.typeByRune(rune))),
               CoordTemplataType)
           } else {
-            NameAT(struct1.name, CoordTemplataType)
+            AbsoluteNameAT(struct1.name, CoordTemplataType)
           }))
 
     FunctionA(
-      struct1.codeLocation,
-      struct1.name,
-      struct1.namespace,
-      0,
+      ConstructorNameA(struct1.name),
       true,
       struct1.tyype match {
         case KindTemplataType => FunctionTemplataType
@@ -197,19 +192,19 @@ object StructTemplar {
 
   // Makes a struct to back a closure
   def makeClosureUnderstruct(
-    env: IEnvironment,
+    containingFunctionEnv: IEnvironment,
     temputs: TemputsBox,
+    name: LambdaNameA,
     functionS: FunctionA,
-    functionFullName: FullName2,
     members: List[StructMember2]):
   (StructRef2, Mutability, FunctionTemplata) = {
-    StructTemplarTemplateArgsLayer.makeClosureUnderstruct(env, temputs, functionS, functionFullName, members)
+    StructTemplarTemplateArgsLayer.makeClosureUnderstruct(containingFunctionEnv, temputs, name, functionS, members)
   }
 
   // Makes a struct to back a pack or tuple
-  def makeSeqOrPackUnderstruct(env: NamespaceEnvironment, temputs: TemputsBox, memberTypes2: List[Coord], prefix: String):
+  def makeSeqOrPackUnderstruct(env: NamespaceEnvironment[IName2], temputs: TemputsBox, memberTypes2: List[Coord], name: IStructName2):
   (StructRef2, Mutability) = {
-    StructTemplarTemplateArgsLayer.makeSeqOrPackUnderstruct(env, temputs, memberTypes2, prefix)
+    StructTemplarTemplateArgsLayer.makeSeqOrPackUnderstruct(env, temputs, memberTypes2, name)
   }
 
   // Makes an anonymous substruct of the given interface, with the given lambdas as its members.
@@ -217,7 +212,7 @@ object StructTemplar {
     outerEnv: IEnvironment,
     temputs: TemputsBox,
     maybeConstructorOriginFunctionA: Option[FunctionA],
-    functionFullName: FullName2,
+    functionFullName: FullName2[IFunctionName2],
     interfaceRef: InterfaceRef2,
     lambdas: List[Coord]):
   (StructRef2, Mutability, FunctionHeader2) = {
@@ -267,7 +262,7 @@ object StructTemplar {
         if (interfaceA.namespace.nonEmpty) {
           vimpl()
         }
-        val lastStep = fullName.steps.last
+        val lastStep = fullName.last
         (lastStep.humanName == interfaceA.name)
       }
       case (StructRef2(fullName), StructTemplata(_, structA)) => {
@@ -277,7 +272,7 @@ object StructTemplar {
         if (structA.namespace.nonEmpty) {
           vimpl()
         }
-        val lastStep = fullName.steps.last
+        val lastStep = fullName.last
         (lastStep.humanName == structA.name)
       }
       case _ => (false)
