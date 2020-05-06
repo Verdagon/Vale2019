@@ -1,6 +1,6 @@
 package net.verdagon.vale.templar.function
 
-import net.verdagon.vale.astronomer.{BFunctionA, FunctionA, INameA, LambdaNameA}
+import net.verdagon.vale.astronomer.{BFunctionA, FunctionA, INameA, IVarNameA, LambdaNameA}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.parser._
@@ -28,7 +28,7 @@ object FunctionTemplar {
   private def determineClosureVariableMember(
       env: FunctionEnvironment,
       temputs: TemputsBox,
-      name: INameA) = {
+      name: IVarNameA) = {
     val (variability2, memberType) =
       env.getVariable(NameTranslator.translateVarNameStep(name)).get match {
         case ReferenceLocalVariable2(_, variability, reference) => {
@@ -56,7 +56,7 @@ object FunctionTemplar {
           (variability, AddressMemberType2(reference))
         }
       }
-    StructMember2(name, variability2, memberType)
+    StructMember2(NameTranslator.translateVarNameStep(name), variability2, memberType)
   }
 
   def evaluateClosureStruct(
@@ -102,7 +102,7 @@ object FunctionTemplar {
     } else {
       val Some(KindTemplata(closureStructRef @ StructRef2(_))) =
         env.getNearestTemplataWithName(
-          FunctionScout.CLOSURE_STRUCT_ENV_ENTRY_NAME,
+          vimpl(),//FunctionScout.CLOSURE_STRUCT_ENV_ENTRY_NAME,
           Set(TemplataLookupContext))
       val header =
         evaluateOrdinaryClosureFunctionFromNonCallForHeader(
@@ -125,7 +125,7 @@ object FunctionTemplar {
     } else {
       val Some(KindTemplata(closureStructRef @ StructRef2(_))) =
         env.getNearestTemplataWithName(
-          FunctionScout.CLOSURE_STRUCT_ENV_ENTRY_NAME,
+          vimpl(),//FunctionScout.CLOSURE_STRUCT_ENV_ENTRY_NAME,
           Set(TemplataLookupContext))
       val header =
         evaluateOrdinaryClosureFunctionFromNonCallForHeader(
@@ -145,7 +145,7 @@ object FunctionTemplar {
     } else {
       val Some(KindTemplata(closureStructRef @ StructRef2(_))) =
         env.getNearestTemplataWithName(
-          FunctionScout.CLOSURE_STRUCT_ENV_ENTRY_NAME,
+          vimpl(),//FunctionScout.CLOSURE_STRUCT_ENV_ENTRY_NAME,
           Set(TemplataLookupContext))
       evaluateOrdinaryClosureFunctionFromNonCallForBanner(
         env, temputs, closureStructRef, unevaluatedContainers, function)
@@ -175,7 +175,7 @@ object FunctionTemplar {
     } else {
       val Some(KindTemplata(closureStructRef @ StructRef2(_))) =
         env.getNearestTemplataWithName(
-          FunctionScout.CLOSURE_STRUCT_ENV_ENTRY_NAME,
+          vimpl(),//FunctionScout.CLOSURE_STRUCT_ENV_ENTRY_NAME,
           Set(TemplataLookupContext))
       val banner =
         evaluateTemplatedClosureFunctionFromCallForBanner(
@@ -302,7 +302,7 @@ object FunctionTemplar {
   IEvaluateFunctionResult[Prototype2] = {
     val Some(KindTemplata(closureStructRef @ StructRef2(_))) =
       env.getNearestTemplataWithName(
-        FunctionScout.CLOSURE_STRUCT_ENV_ENTRY_NAME,
+        vimpl(),//FunctionScout.CLOSURE_STRUCT_ENV_ENTRY_NAME,
         Set(TemplataLookupContext))
     FunctionTemplarEnvLayer.evaluateTemplatedClosureFunctionFromCallForPrototype(
       env, temputs, closureStructRef, unevaluatedContainers, function, explicitTemplateArgs, args)

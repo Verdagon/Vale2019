@@ -7,7 +7,7 @@ import net.verdagon.vale.scout.CodeBody1
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.function.FunctionTemplar.IEvaluateFunctionResult
-import net.verdagon.vale.vassert
+import net.verdagon.vale.{vassert, vimpl}
 
 import scala.collection.immutable.List
 
@@ -65,7 +65,7 @@ object FunctionTemplarClosureOrLightLayer {
     alreadySpecifiedTemplateArgs: List[ITemplata],
       argTypes2: List[ParamFilter]):
   (IEvaluateFunctionResult[FunctionBanner2]) = {
-    val containingFunctionLambdaNumber = function.lambdaNumber
+    val containingFunctionLambdaNumber = vimpl()//function.lambdaNumber
 
     val closureStructDef = temputs.lookupStruct(closureStructRef);
 
@@ -90,7 +90,7 @@ object FunctionTemplarClosureOrLightLayer {
               }
             }
           }))
-        .addEntry(closureStructRef.fullName.last.humanName, TemplataEnvEntry(KindTemplata(closureStructRef)))
+        .addEntry(closureStructRef.fullName.last, TemplataEnvEntry(KindTemplata(closureStructRef)))
     // Now that the variables are added, we've modified the outerEnv to be the nearEnv.
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateTemplatedFunctionFromCallForBanner(
@@ -106,7 +106,7 @@ object FunctionTemplarClosureOrLightLayer {
     alreadySpecifiedTemplateArgs: List[ITemplata],
     argTypes2: List[ParamFilter]):
   (IEvaluateFunctionResult[Prototype2]) = {
-    val containingFunctionLambdaNumber = function.lambdaNumber
+    val containingFunctionLambdaNumber = vimpl()//function.lambdaNumber
 
     val closureStructDef = temputs.lookupStruct(closureStructRef);
 
@@ -131,7 +131,7 @@ object FunctionTemplarClosureOrLightLayer {
               }
             }
           }))
-        .addEntry(closureStructRef.fullName.last.humanName, TemplataEnvEntry(KindTemplata(closureStructRef)))
+        .addEntry(closureStructRef.fullName.last, TemplataEnvEntry(KindTemplata(closureStructRef)))
     // Now that the variables are added, we've modified the outerEnv to be the nearEnv.
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateTemplatedFunctionFromCallForPrototype(
@@ -216,7 +216,7 @@ object FunctionTemplarClosureOrLightLayer {
       outerEnv
         .addVariables(
         closureStructDef.members.map(member => {
-          val containingFunctionLambdaNumber = outerEnv.function.lambdaNumber
+          val containingFunctionLambdaNumber = vimpl()//outerEnv.function.lambdaNumber
           val variableId = FullName2(containingFunctionLambdaNumber, member.name)
           member.tyype match {
             case AddressMemberType2(reference) => {
@@ -228,7 +228,7 @@ object FunctionTemplarClosureOrLightLayer {
           }
         }))
       .addEntry(
-        closureStructRef.fullName.last.humanName,
+        closureStructRef.fullName.last,
         TemplataEnvEntry(KindTemplata(closureStructRef)))
       // Now that the variables are added, we've modified the outerEnv to be the nearEnv.
 
@@ -252,7 +252,7 @@ object FunctionTemplarClosureOrLightLayer {
       outerEnv
         .addVariables(
           closureStructDef.members.map(member => {
-            val containingFunctionLambdaNumber = outerEnv.function.lambdaNumber
+            val containingFunctionLambdaNumber = vimpl()//outerEnv.function.lambdaNumber
             val variableId = FullName2(containingFunctionLambdaNumber, member.name)
             member.tyype match {
               case AddressMemberType2(reference) => {
@@ -264,7 +264,7 @@ object FunctionTemplarClosureOrLightLayer {
             }
           }))
         .addEntry(
-          closureStructRef.fullName.last.humanName,
+          closureStructRef.fullName.last,
           TemplataEnvEntry(KindTemplata(closureStructRef)))
     // Now that the variables are added, we've modified the outerEnv to be the nearEnv.
 

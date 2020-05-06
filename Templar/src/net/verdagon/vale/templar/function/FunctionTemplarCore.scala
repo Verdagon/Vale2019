@@ -3,12 +3,12 @@ package net.verdagon.vale.templar.function
 import net.verdagon.vale.astronomer._
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
-import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
+import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.citizen.{ImplTemplar, StructTemplar}
 import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.templata.TemplataTemplar
-import net.verdagon.vale.{vassert, vassertSome, vcurious, vfail}
+import net.verdagon.vale.{vassert, vassertSome, vcurious, vfail, vimpl}
 
 import scala.collection.immutable.{List, Set}
 
@@ -34,7 +34,7 @@ object FunctionTemplarCore {
       case CodeBodyA(body) => {
         val (header, body2) =
           BodyTemplar.declareAndEvaluateFunctionBody(
-            fullEnv, temputs, BFunctionA(function1, function1.name, body), params2, isDestructor)
+            fullEnv, temputs, BFunctionA(function1, body), params2, isDestructor)
 
         // Funny story... let's say we're current instantiating a constructor,
         // for example MySome<T>().
@@ -73,7 +73,7 @@ object FunctionTemplarCore {
         val maybeRetCoord =
           function1.maybeRetCoordRune match {
             case None => vfail("Need return type for abstract function!")
-            case Some(r) => fullEnv.getNearestTemplataWithName(r, Set(TemplataLookupContext))
+            case Some(r) => fullEnv.getNearestTemplataWithName(vimpl(r.toString), Set(TemplataLookupContext))
           }
         val retCoord =
           maybeRetCoord match {
@@ -86,7 +86,7 @@ object FunctionTemplarCore {
       }
       case ExternBodyA => {
         val maybeRetCoord =
-          fullEnv.getNearestTemplataWithName(function1.maybeRetCoordRune.get, Set(TemplataLookupContext))
+          fullEnv.getNearestTemplataWithName(vimpl(function1.maybeRetCoordRune.get.toString), Set(TemplataLookupContext))
         val retCoord =
           maybeRetCoord match {
             case None => vfail("wat")
@@ -107,7 +107,7 @@ object FunctionTemplarCore {
         val maybeRetTemplata =
           function1.maybeRetCoordRune match {
             case None => (None)
-            case Some(retCoordRune) => fullEnv.getNearestTemplataWithName(retCoordRune, Set(TemplataLookupContext))
+            case Some(retCoordRune) => fullEnv.getNearestTemplataWithName(vimpl(retCoordRune.toString), Set(TemplataLookupContext))
           }
         val maybeRetCoord =
           maybeRetTemplata match {
@@ -152,13 +152,13 @@ object FunctionTemplarCore {
 
   def makeExternFunction(
       temputs: TemputsBox,
-      fullName: FullName2,
+      fullName: FullName2[IFunctionName2],
       isUserFunction: Boolean,
       params2: List[Parameter2],
       returnType2: Coord,
       maybeOrigin: Option[FunctionA]):
   (FunctionHeader2) = {
-    val header = FunctionHeader2(fullName, 0, true, isUserFunction, params2, returnType2, maybeOrigin)
+    val header = FunctionHeader2(fullName, true, isUserFunction, params2, returnType2, maybeOrigin)
     val argLookups =
       header.params.zipWithIndex.map({ case (param2, index) => ArgLookup2(index, param2.tyype) })
     val function2 =
@@ -181,7 +181,6 @@ object FunctionTemplarCore {
     val header =
       FunctionHeader2(
         env.fullName,
-        0,
         isExtern = false,
         isUserFunction = false,
         params2,
@@ -291,13 +290,11 @@ object FunctionTemplarCore {
       Function2(
         FunctionHeader2(
           FullName2(
-            List(
-              INamePart2(
-                CallTemplar.INTERFACE_DESTRUCTOR_NAME,
-                Some(List(CoordTemplata(structType2), KindTemplata(interfaceRef2))),
-                Some(List(structType2)),
-                None))),
-          0,
+            List(),
+            FunctionName2(
+              CallTemplar.INTERFACE_DESTRUCTOR_NAME,
+              List(CoordTemplata(structType2), KindTemplata(interfaceRef2)),
+              List(structType2))),
           false, false,
           List(Parameter2("this", Some(Override2(interfaceRef2)), structType2)),
           Coord(Share, Void2()),

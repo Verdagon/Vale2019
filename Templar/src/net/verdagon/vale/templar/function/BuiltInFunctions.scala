@@ -5,8 +5,8 @@ import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.parser._
 import net.verdagon.vale.{scout => s}
-import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
-import net.verdagon.vale.scout.patterns.{AbstractSP, AtomSP, OverrideSP}
+import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
+import net.verdagon.vale.scout.patterns.{AbstractSP, AtomSP, CaptureS, OverrideSP}
 import net.verdagon.vale.scout.rules._
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.env.{FunctionEnvironment, _}
@@ -37,34 +37,31 @@ object BuiltInFunctions {
     (
     currentlyConstructingEnv
       .addEntry(
-        CallTemplar.DESTRUCTOR_NAME,
+        FunctionTemplateName2(CallTemplar.DESTRUCTOR_NAME),
         FunctionEnvEntry(
           FunctionA(
-            s.CodeLocationS(CallTemplar.DESTRUCTOR_NAME + ".builtin.vale", 0, 0),
-            CallTemplar.DESTRUCTOR_NAME,
-            List(),
-            0,
+            FunctionNameA(CallTemplar.DESTRUCTOR_NAME, s.CodeLocationS(0, 0)),
             true,
             TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
-            List("T"),
-            Map("T" -> CoordTemplataType),
+            List(CodeRuneA("T")),
+            Map(CodeRuneA("T") -> CoordTemplataType),
             List(
-              ParameterS(AtomSP(Some(CaptureP("this", FinalP)), None, "T", None))),
-            Some("V"),
+              ParameterA(AtomAP(CaptureA(CodeVarNameA("this"), FinalP), None, CodeRuneA("T"), None))),
+            Some(CodeRuneA("V")),
             List(
               EqualsAR(
-                TemplexAR(RuneAT("T", CoordTemplataType)),
+                TemplexAR(RuneAT(CodeRuneA("T"), CoordTemplataType)),
                 ComponentsAR(
                   CoordTemplataType,
                   List(
                     OrAR(List(TemplexAR(OwnershipAT(OwnP)), TemplexAR(OwnershipAT(ShareP)))),
                     CallAR(
                       "passThroughIfConcrete",
-                      List(TemplexAR(RuneAT(ImplicitRuneS(0), KindTemplataType))),
+                      List(TemplexAR(RuneAT(ImplicitRuneA(0), KindTemplataType))),
                       KindTemplataType)))),
               EqualsAR(
-                TemplexAR(RuneAT("V", CoordTemplataType)),
-                TemplexAR(NameAT("Void", CoordTemplataType)))),
+                TemplexAR(RuneAT(CodeRuneA("V"), CoordTemplataType)),
+                TemplexAR(NameAT(CodeTypeNameA("Void"), CoordTemplataType)))),
             GeneratedBodyA("concreteDestructorGenerator")))),
       functionGeneratorByName +
         (
@@ -121,31 +118,28 @@ object BuiltInFunctions {
     currentlyConstructingEnv
       .addFunction(
         FunctionA(
-          s.CodeLocationS(CallTemplar.INTERFACE_DESTRUCTOR_NAME + ".builtin.vale", 0, 0),
-          CallTemplar.INTERFACE_DESTRUCTOR_NAME,
-          List(),
-          0,
+          FunctionNameA(CallTemplar.INTERFACE_DESTRUCTOR_NAME, CodeLocationS(0, 0)),
           true,
           TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
-          List("T"),
-          Map("T" -> CoordTemplataType),
+          List(CodeRuneA("T")),
+          Map(CodeRuneA("T") -> CoordTemplataType),
           List(
-            ParameterS(AtomSP(Some(CaptureP("this", FinalP)), Some(AbstractSP), "T", None))),
-          Some("V"),
+            ParameterA(AtomAP(CaptureA(CodeVarNameA("this"), FinalP), Some(AbstractAP), CodeRuneA("T"), None))),
+          Some(CodeRuneA("V")),
           List(
             EqualsAR(
-              TemplexAR(RuneAT("T", CoordTemplataType)),
+              TemplexAR(RuneAT(CodeRuneA("T"), CoordTemplataType)),
               ComponentsAR(
                 CoordTemplataType,
                 List(
                   OrAR(List(TemplexAR(OwnershipAT(OwnP)), TemplexAR(OwnershipAT(ShareP)))),
                   CallAR(
                     "passThroughIfInterface",
-                    List(TemplexAR(RuneAT(ImplicitRuneS(0), KindTemplataType))),
+                    List(TemplexAR(RuneAT(ImplicitRuneA(0), KindTemplataType))),
                     KindTemplataType)))),
             EqualsAR(
-              TemplexAR(RuneAT("V", CoordTemplataType)),
-              TemplexAR(NameAT("Void", CoordTemplataType)))),
+              TemplexAR(RuneAT(CodeRuneA("V"), CoordTemplataType)),
+              TemplexAR(NameAT(CodeTypeNameA("Void"), CoordTemplataType)))),
           GeneratedBodyA("interfaceDestructorGenerator"))),
       functionGeneratorByName +
         ("interfaceDestructorGenerator" ->
@@ -185,32 +179,29 @@ object BuiltInFunctions {
     currentlyConstructingEnv
       .addFunction(
         FunctionA(
-          s.CodeLocationS(CallTemplar.INTERFACE_DESTRUCTOR_NAME + ".builtin.vale", 0, 1),
-          CallTemplar.INTERFACE_DESTRUCTOR_NAME,
-          List(),
-          0,
+          FunctionNameA(CallTemplar.INTERFACE_DESTRUCTOR_NAME, CodeLocationS(0, 0)),
           true,
           TemplateTemplataType(List(CoordTemplataType, KindTemplataType), FunctionTemplataType),
-          List("T", "I"),
-          Map("T" -> CoordTemplataType, "I" -> KindTemplataType),
+          List(CodeRuneA("T"), CodeRuneA("I")),
+          Map(CodeRuneA("T") -> CoordTemplataType, CodeRuneA("I") -> KindTemplataType),
           List(
-            ParameterS(AtomSP(Some(CaptureP("this", FinalP)), Some(OverrideSP("I")), "T", None))),
-          Some("V"),
+            ParameterA(AtomAP(CaptureA(CodeVarNameA("this"), FinalP), Some(OverrideAP(CodeRuneA("I"))), CodeRuneA("T"), None))),
+          Some(CodeRuneA("V")),
           List(
             EqualsAR(
-              TemplexAR(RuneAT("T", CoordTemplataType)),
+              TemplexAR(RuneAT(CodeRuneA("T"), CoordTemplataType)),
               ComponentsAR(
                 CoordTemplataType,
                 List(
                   OrAR(List(TemplexAR(OwnershipAT(OwnP)), TemplexAR(OwnershipAT(ShareP)))),
                   CallAR(
                     "passThroughIfStruct",
-                    List(TemplexAR(RuneAT(ImplicitRuneS(0), KindTemplataType))),
+                    List(TemplexAR(RuneAT(ImplicitRuneA(0), KindTemplataType))),
                     KindTemplataType)))),
-            CallAR("passThroughIfInterface", List(TemplexAR(RuneAT("I", KindTemplataType))), KindTemplataType),
+            CallAR("passThroughIfInterface", List(TemplexAR(RuneAT(CodeRuneA("I"), KindTemplataType))), KindTemplataType),
             EqualsAR(
-              TemplexAR(RuneAT("V", CoordTemplataType)),
-              TemplexAR(NameAT("Void", CoordTemplataType)))),
+              TemplexAR(RuneAT(CodeRuneA("V"), CoordTemplataType)),
+              TemplexAR(NameAT(CodeTypeNameA("Void"), CoordTemplataType)))),
           GeneratedBodyA("implDestructorGenerator"))),
       functionGeneratorByName + (
         "implDestructorGenerator" ->
@@ -231,7 +222,7 @@ object BuiltInFunctions {
               val List(
                 CoordTemplata(Coord(_, overridingStructRef2FromTemplateArg @ StructRef2(_))),
                 KindTemplata(implementedInterfaceRef2 @ InterfaceRef2(_))) =
-                  namedEnv.fullName.last.templateArgs.get
+                  namedEnv.fullName.last.templateArgs
 
               params.map(_.tyype) match {
                 case List(Coord(_, structRef2 @ StructRef2(_))) => {
@@ -261,22 +252,19 @@ object BuiltInFunctions {
       currentlyConstructingEnv
         .addFunction(
           FunctionA(
-            s.CodeLocationS(CallTemplar.DROP_FUNCTION_NAME + ".builtin.vale", 0, 0),
-            CallTemplar.DROP_FUNCTION_NAME,
-            List(),
-            0,
+            FunctionNameA(CallTemplar.DROP_FUNCTION_NAME, CodeLocationS(0, 0)),
             true,
             TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
-            List("T"),
-            Map("T" -> CoordTemplataType),
+            List(CodeRuneA("T")),
+            Map(CodeRuneA("T") -> CoordTemplataType),
             List(
-              ParameterS(AtomSP(Some(CaptureP("x", FinalP)), None, "T", None))),
-            Some("V"),
+              ParameterA(AtomAP(CaptureA(CodeVarNameA("x"), FinalP), None, CodeRuneA("T"), None))),
+            Some(CodeRuneA("V")),
             List(
-              TemplexAR(RuneAT("T", CoordTemplataType)),
+              TemplexAR(RuneAT(CodeRuneA("T"), CoordTemplataType)),
               EqualsAR(
-                TemplexAR(RuneAT("V", CoordTemplataType)),
-                TemplexAR(NameAT("Void", CoordTemplataType)))),
+                TemplexAR(RuneAT(CodeRuneA("V"), CoordTemplataType)),
+                TemplexAR(NameAT(CodeTypeNameA("Void"), CoordTemplataType)))),
             GeneratedBodyA("dropGenerator"))),
       functionGeneratorByName + (
         "dropGenerator" ->
@@ -289,7 +277,7 @@ object BuiltInFunctions {
               maybeReturnType2: Option[Coord]):
             (FunctionHeader2) = {
               vassert(maybeReturnType2 == Some(Coord(Share, Void2())))
-              val List(CoordTemplata(ref2)) = namedEnv.fullName.last.templateArgs.get
+              val List(CoordTemplata(ref2)) = namedEnv.fullName.last.templateArgs
               val List(Parameter2("x", None, paramType2)) = params
               vassert(paramType2 == ref2)
               DestructorTemplar.generateDropFunction(
@@ -302,102 +290,92 @@ object BuiltInFunctions {
     currentlyConstructingEnv
       .addFunction(
         FunctionA(
-          s.CodeLocationS(0, 0),
-          "len",
-          List(),
-          0,
+          FunctionNameA("len", s.CodeLocationS(0, 0)),
           true,
           TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
-          List("T"),
-          Map("T" -> CoordTemplataType),
+          List(CodeRuneA("T")),
+          Map(CodeRuneA("T") -> CoordTemplataType),
           List(
-            ParameterS(AtomSP(Some(CaptureP("arr", FinalP)), None, "T", None))),
-          Some("I"),
+            ParameterA(AtomAP(CaptureA(CodeVarNameA("arr"), FinalP), None, CodeRuneA("T"), None))),
+          Some(CodeRuneA("I")),
           List(
             EqualsAR(
-              TemplexAR(RuneAT("T", CoordTemplataType)),
+              TemplexAR(RuneAT(CodeRuneA("T"), CoordTemplataType)),
               ComponentsAR(
                 CoordTemplataType,
                 List(
                   OrAR(List(TemplexAR(OwnershipAT(BorrowP)), TemplexAR(OwnershipAT(ShareP)))),
                   TemplexAR(
                     CallAT(
-                      NameAT("Array", TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), KindTemplataType)),
+                      NameAT(CodeTypeNameA("Array"), TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), KindTemplataType)),
                       List(
-                        RuneAT(ImplicitRuneS(0), MutabilityTemplataType),
-                        RuneAT("__1", CoordTemplataType)),
+                        RuneAT(ImplicitRuneA(0), MutabilityTemplataType),
+                        RuneAT(CodeRuneA("__1"), CoordTemplataType)),
                       KindTemplataType))))),
             EqualsAR(
-              TemplexAR(RuneAT("I", CoordTemplataType)),
-              TemplexAR(NameAT("Int", CoordTemplataType)))),
+              TemplexAR(RuneAT(CodeRuneA("I"), CoordTemplataType)),
+              TemplexAR(NameAT(CodeTypeNameA("Int"), CoordTemplataType)))),
           CodeBodyA(
             BodyAE(
-              Set(),
+              List(),
               BlockAE(
-                Set(LocalVariable1("arr", FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
+                List(LocalVariableA(CodeVarNameA("arr"), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
                 List(
                   ArrayLengthAE(
-                    LocalLoadAE("arr", false))))))))
+                    LocalLoadAE(CodeVarNameA("arr"), false))))))))
       .addFunction(
         FunctionA(
-          s.CodeLocationS(0, 1),
-          "len",
-          List(),
-          0,
+          FunctionNameA("len", s.CodeLocationS(0, 1)),
           true,
           TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
-          List("N", "T"),
+          List(CodeRuneA("N"), CodeRuneA("T")),
           Map(
-            "A" -> CoordTemplataType,
-            "N" -> IntegerTemplataType,
-            "T" -> CoordTemplataType),
+            CodeRuneA("A") -> CoordTemplataType,
+            CodeRuneA("N") -> IntegerTemplataType,
+            CodeRuneA("T") -> CoordTemplataType),
           List(
-            ParameterS(AtomSP(Some(CaptureP("arr", FinalP)), None, "A", None))),
-          Some("I"),
+            ParameterA(AtomAP(CaptureA(CodeVarNameA("arr"), FinalP), None, CodeRuneA("A"), None))),
+          Some(CodeRuneA("I")),
           List(
             EqualsAR(
-              TemplexAR(RuneAT("A", CoordTemplataType)),
+              TemplexAR(RuneAT(CodeRuneA("A"), CoordTemplataType)),
               ComponentsAR(
                 CoordTemplataType,
                 List(
                   TemplexAR(OwnershipAT(BorrowP)),
                   TemplexAR(
                     RepeaterSequenceAT(
-                      RuneAT("M", MutabilityTemplataType),
-                      RuneAT("N", IntegerTemplataType),
-                      RuneAT("T", CoordTemplataType),
+                      RuneAT(CodeRuneA("M"), MutabilityTemplataType),
+                      RuneAT(CodeRuneA("N"), IntegerTemplataType),
+                      RuneAT(CodeRuneA("T"), CoordTemplataType),
                       KindTemplataType))))),
             EqualsAR(
-              TemplexAR(RuneAT("I", CoordTemplataType)),
-              TemplexAR(NameAT("Int", CoordTemplataType)))),
+              TemplexAR(RuneAT(CodeRuneA("I"), CoordTemplataType)),
+              TemplexAR(NameAT(CodeTypeNameA("Int"), CoordTemplataType)))),
           CodeBodyA(
             BodyAE(
-              Set(),
+              List(),
               BlockAE(
-                Set(LocalVariable1("arr", FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
+                List(LocalVariableA(CodeVarNameA("arr"), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
                 List(
-                  LocalLoadAE("N", false)))))))
+                  LocalLoadAE(CodeVarNameA("N"), false)))))))
   }
-
 
   private def addPanic(currentlyConstructingEnv: NamespaceEnvironment[IName2]): NamespaceEnvironment[IName2] = {
     currentlyConstructingEnv
       .addFunction(
         FunctionA(
-          s.CodeLocationS(0, 0),
-          "panic",
-          List(),
-          0,
+          FunctionNameA("panic", s.CodeLocationS(0, 0)),
           true,
           FunctionTemplataType,
           List(),
           Map(),
           List(),
-          Some("N"),
+          Some(CodeRuneA("N")),
           List(
             EqualsAR(
-              TemplexAR(RuneAT("N", CoordTemplataType)),
-              TemplexAR(NameAT("__Never", CoordTemplataType)))),
+              TemplexAR(RuneAT(CodeRuneA("N"), CoordTemplataType)),
+              TemplexAR(NameAT(CodeTypeNameA("__Never"), CoordTemplataType)))),
           ExternBodyA))
   }
 }

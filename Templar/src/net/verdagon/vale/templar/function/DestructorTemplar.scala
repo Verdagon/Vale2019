@@ -1,6 +1,6 @@
 package net.verdagon.vale.templar.function
 
-import net.verdagon.vale.astronomer.FunctionA
+import net.verdagon.vale.astronomer.{FunctionA, GlobalFunctionFamilyNameA}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar.OverloadTemplar.{ScoutExpectedFunctionFailure, ScoutExpectedFunctionSuccess}
@@ -21,7 +21,7 @@ object DestructorTemplar {
         OverloadTemplar.scoutExpectedFunctionForPrototype(
             env,
             temputs,
-            CallTemplar.DESTRUCTOR_NAME,
+            GlobalFunctionFamilyNameA(CallTemplar.DESTRUCTOR_NAME),
             List(),
             List(ParamFilter(type2, None)),
             true)  match {
@@ -35,7 +35,7 @@ object DestructorTemplar {
         OverloadTemplar.scoutExpectedFunctionForPrototype(
           env,
           temputs,
-          CallTemplar.INTERFACE_DESTRUCTOR_NAME,
+          GlobalFunctionFamilyNameA(CallTemplar.INTERFACE_DESTRUCTOR_NAME),
           List(),
           List(ParamFilter(type2, None)),
           true) match {
@@ -57,7 +57,7 @@ object DestructorTemplar {
     OverloadTemplar.scoutExpectedFunctionForPrototype(
       env,
       temputs,
-      CallTemplar.DESTRUCTOR_NAME,
+      GlobalFunctionFamilyNameA(CallTemplar.DESTRUCTOR_NAME),
       List(),
       List(ParamFilter(type2, None)),
       true) match {
@@ -77,7 +77,7 @@ object DestructorTemplar {
     OverloadTemplar.scoutExpectedFunctionForPrototype(
       env,
       temputs,
-      CallTemplar.DROP_FUNCTION_NAME,
+      GlobalFunctionFamilyNameA(CallTemplar.DROP_FUNCTION_NAME),
       List(),
       List(ParamFilter(type2, None)),
       true) match {
@@ -99,7 +99,6 @@ object DestructorTemplar {
     val header =
       FunctionHeader2(
         bodyEnv.fullName,
-        0,
         isExtern = false,
         isUserFunction = false,
         List(Parameter2("x", None, type2)),
@@ -210,7 +209,6 @@ object DestructorTemplar {
     val header =
       FunctionHeader2(
         destructorFullName,
-        0,
         false, false,
         params2,
         Coord(Share, Void2()),
@@ -223,7 +221,7 @@ object DestructorTemplar {
     val memberLocalVariables =
       structDef.members.flatMap({
         case StructMember2(name, variability, ReferenceMemberType2(reference)) => {
-          List(ReferenceLocalVariable2(FullName2(0, name), Final, reference))
+          List(ReferenceLocalVariable2(FullName2(vimpl(/*0*/), name), Final, reference))
         }
         case StructMember2(name, variability, AddressMemberType2(reference)) => {
           // See Destructure2 and its handling of addressible members for why
@@ -282,7 +280,6 @@ object DestructorTemplar {
       Function2(
         FunctionHeader2(
           env.fullName,
-          0,
           false, false,
           List(Parameter2("this", None, arrayRefType)),
           Coord(Share, Void2()),
@@ -327,7 +324,6 @@ object DestructorTemplar {
       Function2(
         FunctionHeader2(
           env.fullName,
-          0,
           false, false,
           List(Parameter2("this", None, arrayRefType2)),
           Coord(Share, Void2()),

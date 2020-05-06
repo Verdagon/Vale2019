@@ -153,7 +153,7 @@ object StructTemplarTemplateArgsLayer {
   }
 
   // Makes a struct to back a pack or tuple
-  def makeSeqOrPackUnderstruct(env: NamespaceEnvironment[IName2], temputs: TemputsBox, memberTypes2: List[Coord], name: IStructName2):
+  def makeSeqOrPackUnerstruct(env: NamespaceEnvironment[IName2], temputs: TemputsBox, memberTypes2: List[Coord], name: IStructName2):
   (StructRef2, Mutability) = {
     StructTemplarMiddle.makeSeqOrPackUnderstruct(env, temputs, memberTypes2, name)
   }

@@ -73,7 +73,7 @@ object EdgeCarpenter {
             val matchesAndIndices =
               edgeBlueprint.superFamilyRootBanners.zipWithIndex
                 .filter({ case (possibleSuperFunction, index) =>
-                  possibleSuperFunction.fullName.last.humanName == overrideFunction.header.fullName.last.humanName &&
+                  possibleSuperFunction.fullName.last == overrideFunction.header.fullName.last &&
                     possibleSuperFunction.paramTypes == needleSuperFunctionParamTypes
                 })
             matchesAndIndices match {

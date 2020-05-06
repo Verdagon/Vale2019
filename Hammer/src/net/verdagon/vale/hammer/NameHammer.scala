@@ -3,7 +3,7 @@ package net.verdagon.vale.hammer
 import net.verdagon.vale.hinputs.Hinputs
 import net.verdagon.vale.metal._
 import net.verdagon.vale.scout.CodeLocationS
-import net.verdagon.vale.templar.Templar
+import net.verdagon.vale.templar.{FullName2, IName2, Templar}
 import net.verdagon.vale.templar.env.{IEnvironment, NamespaceEnvironment}
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar.types._
@@ -12,11 +12,11 @@ import net.verdagon.vale.{vassert, vfail, vimpl}
 import scala.collection.immutable.List
 
 object NameHammer {
-  def translateName(hinputs: Hinputs, hamuts: HamutsBox, fullName2: FullName2): FullNameH = {
+  def translateName(hinputs: Hinputs, hamuts: HamutsBox, fullName2: FullName2[IName2]): FullNameH = {
     FullNameH(fullName2.steps.map(translateNamePart(hinputs, hamuts, _)))
   }
 
-  def translateNamePart(hinputs: Hinputs, hamuts: HamutsBox, namePart2: INamePart2): NamePartH = {
+  def translateNamePart(hinputs: Hinputs, hamuts: HamutsBox, namePart2: IName2): NamePartH = {
     val INamePart2(humanName, maybeTemplateArgs, maybeParameters, maybeCodeLocation) = namePart2
     NamePartH(
       humanName,

@@ -1,13 +1,15 @@
 package net.verdagon.vale.templar.function
 
-import net.verdagon.vale.astronomer.{CodeBodyA, FunctionA, IRulexAR, ITemplataType}
+import net.verdagon.vale.astronomer.{CodeBodyA, FunctionA, IRulexAR, IRuneA, ITemplataType}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.function.FunctionTemplar.{EvaluateFunctionFailure, EvaluateFunctionSuccess, IEvaluateFunctionResult}
-import net.verdagon.vale.templar.infer.{InferSolveFailure, InferSolveSuccess}
+import net.verdagon.vale.templar.infer.infer.{InferSolveFailure, InferSolveSuccess}
+import net.verdagon.vale.vimpl
+//import net.verdagon.vale.templar.infer.{InferSolveFailure, InferSolveSuccess}
 import net.verdagon.vale.templar.templata.TemplataTemplar
 import net.verdagon.vale.{vassert, vfail, vwat}
 
@@ -371,7 +373,7 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
         runedEnv, temputs, function.params)
 
     val Some(CoordTemplata(retCoord)) =
-      runedEnv.getNearestTemplataWithName(function.maybeRetCoordRune.get, Set(TemplataLookupContext))
+      runedEnv.getNearestTemplataWithName(vimpl(function.maybeRetCoordRune.get.toString), Set(TemplataLookupContext))
 
 
     temputs.declareFunctionSignature(
@@ -391,7 +393,7 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
     function.body match {
       case CodeBodyA(body1) => {
         body1.closuredNames.foreach(name => {
-          vassert(nearEnv.variables.exists(_.id.variableName == name))
+          vimpl()//vassert(nearEnv.variables.exists(_.id.variableName == name))
         })
       }
       case _ =>
@@ -401,23 +403,25 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
   // IOW, add the necessary data to turn the near env into the runed env.
   def addRunedDataToNearEnv(
     nearEnv: FunctionEnvironment,
-    identifyingRunes: List[String],
-    templatasByRune: Map[String, ITemplata],
-    maybeRetCoordRune: Option[String]):
+    identifyingRunes: List[IRuneA],
+    templatasByRune: Map[IRune2, ITemplata],
+    maybeRetCoordRune: Option[IRuneA]):
   FunctionEnvironment = {
 
-    val identifyingTemplatas = identifyingRunes.map(templatasByRune)
-    val fullName = FullName2(nearEnv.fullName.steps.init :+ nearEnv.fullName.last.copy(templateArgs = Some(identifyingTemplatas)))
+    val identifyingTemplatas = vimpl()//identifyingRunes.map(templatasByRune)
+    val fullName = vimpl()//FullName2(nearEnv.fullName.steps.init :+ nearEnv.fullName.last.copy(templateArgs = Some(identifyingTemplatas)))
     val maybeReturnType = maybeRetCoordRune.map(retCoordRune => {
-      templatasByRune.get(retCoordRune) match {
-        case Some(CoordTemplata(coord)) => coord
-        case _ => vwat()
-      }
+      vimpl()
+//      templatasByRune.get(retCoordRune) match {
+//        case Some(CoordTemplata(coord)) => coord
+//        case _ => vwat()
+//      }
     })
     // Change the fullName's templateArgs from None to Some(List()) to be consistent with
     // the rest of the layer.
-    nearEnv
-        .copy(fullName = fullName, maybeReturnType = maybeReturnType)
-        .addEntries(templatasByRune.mapValues(x => List(TemplataEnvEntry(x))))
+    vimpl()
+//    nearEnv
+//        .copy(fullName = fullName, maybeReturnType = maybeReturnType)
+//        .addEntries(templatasByRune.mapValues(x => List(TemplataEnvEntry(x))))
   }
 }

@@ -6,8 +6,8 @@ import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.parser.CaptureP
 import net.verdagon.vale._
-import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
-import net.verdagon.vale.scout.patterns.AtomSP
+import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
+import net.verdagon.vale.scout.patterns.{AtomSP, CaptureS}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.templata.TemplataTemplar
@@ -23,14 +23,14 @@ object BodyTemplar {
       params2: List[Parameter2],
       isDestructor: Boolean):
   (FunctionHeader2, Block2) = {
-    val BFunctionA(function1, name, _) = bfunction1;
+    val BFunctionA(function1, _) = bfunction1;
     val functionFullName = funcOuterEnv.fullName
 
     function1.maybeRetCoordRune match {
       case None => {
         val banner = FunctionBanner2(Some(function1), functionFullName, params2)
         val (body2, returnsFromRets) =
-          evaluateFunctionBody(funcOuterEnv, temputs, bfunction1.origin.params, params2, bfunction1.body, isDestructor);
+          evaluateFunctionBody(funcOuterEnv, temputs, vimpl(bfunction1.origin.params.toString()), params2, bfunction1.body, isDestructor);
 
         val returns = returnsFromRets + body2.resultRegister.reference
 
@@ -47,21 +47,21 @@ object BodyTemplar {
         val returnType2 = returnsWithoutNever.head
 
         temputs.declareFunctionReturnType(banner.toSignature, returnType2)
-        val header = FunctionHeader2(functionFullName, function1.lambdaNumber, false, function1.isUserFunction, params2, returnType2, Some(function1));
+        val header = FunctionHeader2(functionFullName, false, function1.isUserFunction, params2, returnType2, Some(function1));
         (header, body2)
       }
       case Some(expectedRetCoordRune) => {
         val CoordTemplata(expectedRetCoord) =
           vassertSome(
             funcOuterEnv.getNearestTemplataWithName(
-              expectedRetCoordRune, Set(TemplataLookupContext)))
-        val header = FunctionHeader2(functionFullName, function1.lambdaNumber, false, function1.isUserFunction, params2, expectedRetCoord, Some(function1));
+              vimpl(expectedRetCoordRune.toString), Set(TemplataLookupContext)))
+        val header = FunctionHeader2(functionFullName, false, function1.isUserFunction, params2, expectedRetCoord, Some(function1));
         temputs.declareFunctionReturnType(header.toSignature, expectedRetCoord)
 
         funcOuterEnv.setReturnType(Some(expectedRetCoord))
 
         val (unconvertedBody2, returnsFromRets) =
-          evaluateFunctionBody(funcOuterEnv, temputs, bfunction1.origin.params, params2, bfunction1.body, isDestructor);
+          evaluateFunctionBody(funcOuterEnv, temputs, vimpl(bfunction1.origin.params.toString()), params2, bfunction1.body, isDestructor);
 
         val convertedBody2 =
           TemplataTemplar.isTypeTriviallyConvertible(temputs, unconvertedBody2.resultRegister.reference, expectedRetCoord) match {
@@ -133,9 +133,10 @@ object BodyTemplar {
       // We don't want the user to accidentally just move it somewhere, they need to
       // promise it gets destroyed.
       val destructeeName = params2.head.name
-      if (!funcOuterEnv.moveds.exists(_.variableName == destructeeName)) {
-        vfail("Destructee wasn't moved/destroyed!");
-      }
+      vimpl()
+//      if (!funcOuterEnv.moveds.exists(_.last match { case f @ FunctionName2(_, _, _) => f.humanName == destructeeName })) {
+//        vfail("Destructee wasn't moved/destroyed!");
+//      }
     }
 
     val block2 = Block2(expressionsWithResult)
@@ -154,14 +155,14 @@ object BodyTemplar {
       params2.zipWithIndex.map({ case (p, index) => ArgLookup2(index, p.tyype) })
     val letExprs2 =
       PatternTemplar.nonCheckingTranslateList(
-        temputs, fate, params1.map(_.pattern), paramLookups2);
+        temputs, fate, vimpl(params1.map(_.pattern).toString()), paramLookups2);
 
     // todo: at this point, to allow for recursive calls, add a callable type to the environment
     // for everything inside the body to use
 
     params1.foreach({
-      case ParameterS(AtomSP(Some(CaptureP(name, _)), _, _, _)) => {
-        if (!fate.variables.exists(_.id.variableName == name)) {
+      case ParameterS(AtomSP(CaptureS(name, _), _, _, _)) => {
+        if (!fate.variables.exists(_.id.last == vimpl(name.toString))) {
           vfail("wot couldnt find " + name)
         }
       }

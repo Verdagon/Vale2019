@@ -404,7 +404,7 @@ object Astronomer {
 
   def translateFunction(astrouts: AstroutsBox, env: Environment, functionS: FunctionS): FunctionA = {
     val FunctionS(nameS, isUserFunction, identifyingRunesS, allRunesS, maybePredictedType, paramsS, maybeRetCoordRune, isTemplate, templateRules, bodyS) = functionS
-    val nameA = translateName(nameS)
+    val nameA = translateFunctionDeclarationName(nameS)
     val allRunesA = allRunesS.map(Astronomer.translateRune)
     val identifyingRunesA = identifyingRunesS.map(Astronomer.translateRune)
 
@@ -446,7 +446,7 @@ object Astronomer {
       case GeneratedBody1(generatorId) => GeneratedBodyA(generatorId)
       case CodeBody1(BodySE(closuredNamesS, blockS)) => {
         val blockA = ExpressionAstronomer.translateBlock(env, astrouts, blockS)
-        CodeBodyA(BodyAE(closuredNamesS.map(translateName), blockA))
+        CodeBodyA(BodyAE(closuredNamesS.map(translateVarNameStep), blockA))
       }
     }
   }
@@ -510,6 +510,13 @@ object Astronomer {
 //    val AbsoluteNameS(file, initS, lastS) = absoluteNameS
 //    AbsoluteNameA(file, initS.map(translateNameStep), translateNameStep(lastS))
 //  }
+
+  def translateFunctionDeclarationName(name: IFunctionDeclarationNameS): IFunctionDeclarationNameA = {
+    name match {
+      case LambdaNameS(parentName, codeLocation) => LambdaNameA(translateName(parentName), codeLocation)
+      case FunctionNameS(name, codeLocation) => FunctionNameA(name, codeLocation)
+    }
+  }
 
   def translateName(name: INameS): INameA = {
     name match {

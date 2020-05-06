@@ -43,7 +43,7 @@ case class BodyAE(
     // These are all the variables we use from parent environments.
     // We have these so templar doesn't have to dive through all the functions
     // that it calls (impossible) to figure out what's needed in a closure struct.
-    closuredNames: List[INameA],
+    closuredNames: List[IVarNameA],
 
     block: BlockAE
 ) extends IExpressionAE

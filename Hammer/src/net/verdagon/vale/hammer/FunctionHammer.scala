@@ -4,7 +4,6 @@ import net.verdagon.vale.hinputs.Hinputs
 import net.verdagon.vale.metal._
 import net.verdagon.vale.{metal => m}
 import net.verdagon.vale.templar._
-import net.verdagon.vale.templar.env.FullName2
 import net.verdagon.vale.templar.templata.{FunctionHeader2, Prototype2}
 import net.verdagon.vale.{vassert, vassertSome, vfail}
 
@@ -35,7 +34,12 @@ object FunctionHammer {
         val temporaryFunctionRefH = FunctionRefH(prototypeH);
         hamuts.forwardDeclareFunction(header.toPrototype, temporaryFunctionRefH)
 
-        val locals = LocalsBox(Locals(Map[FullName2, VariableIdH](), Set[VariableIdH](), Map[VariableIdH, Local]()));
+        val locals =
+          LocalsBox(
+            Locals(
+              Map[FullName2[IVarName2], VariableIdH](),
+              Set[VariableIdH](),
+              Map[VariableIdH,Local]()));
         val stackHeight = StackHeightBox(StackHeight(0, 0, 0))
         val (bodyH, maybeResultAccess) =
           BlockHammer.translateBlock(hinputs, hamuts, locals.snapshot, stackHeight, body)

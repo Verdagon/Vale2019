@@ -268,7 +268,7 @@ object StructTemplarCore {
 
   // Makes a struct to back a pack or tuple
   def makeSeqOrPackUnderstruct(
-    env: NamespaceEnvironment[IStructName2],
+    env: NamespaceEnvironment[IName2],
     temputs: TemputsBox,
     memberCoords: List[Coord],
     name: IStructName2):
@@ -323,7 +323,7 @@ object StructTemplarCore {
 
     val forwarderFunctionHeaders =
       interfaceDef.internalMethods.zipWithIndex.map({
-        case (FunctionHeader2(superFunctionName, _, _, _, superParams, superReturnType, _), index) => {
+        case (FunctionHeader2(superFunctionName, _, _, superParams, superReturnType, _), index) => {
           val params =
             superParams.map({
               case Parameter2(name, Some(Abstract2), Coord(ownership, ir)) => {
@@ -336,7 +336,6 @@ object StructTemplarCore {
           val forwarderHeader =
             FunctionHeader2(
               anonymousSubstructName.addStep(superFunctionName.last),
-              0,
               false,
               false,
               params,
@@ -446,7 +445,7 @@ object StructTemplarCore {
     val structRef = StructRef2(structFullName)
 
     vassert(interfaceDef.internalMethods.size == 1)
-    val List(FunctionHeader2(superFullName, _, _, _, superParams, superReturnType, _)) = interfaceDef.internalMethods
+    val List(FunctionHeader2(superFullName, _, _, superParams, superReturnType, _)) = interfaceDef.internalMethods
 
     val params =
       superParams.map({
@@ -460,7 +459,6 @@ object StructTemplarCore {
     val forwarderHeader =
       FunctionHeader2(
         structFullName.addStep(ConstructorName2(params.map(_.tyype))),
-        0,
         false,
         false,
         params,
@@ -525,7 +523,7 @@ object StructTemplarCore {
     val constructorParams =
       structDef.members.map({
         case StructMember2(name, _, ReferenceMemberType2(reference)) => {
-          Parameter2(name, None, reference)
+          Parameter2(vimpl(/*name*/), None, reference)
         }
       })
     val constructorReturnOwnership = if (structDef.mutability == Mutable) Own else Share
@@ -535,7 +533,6 @@ object StructTemplarCore {
       Function2(
         FunctionHeader2(
           constructorFullName,
-          0,
           false, false,
           constructorParams,
           constructorReturnType,

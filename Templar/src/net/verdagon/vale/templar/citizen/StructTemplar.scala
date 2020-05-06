@@ -104,13 +104,18 @@ object StructTemplar {
   def getInterfaceConstructor(interfaceA: InterfaceA): FunctionA = {
     println("todo: put all the members' rules up in the top of the struct")
     val identifyingRunes =
-      interfaceA.identifyingRunes ++ interfaceA.internalMethods.indices.map("Functor" + _)
+      interfaceA.identifyingRunes ++ interfaceA.internalMethods.indices.map(x => CodeRuneA("Functor" + x))
     val typeByRune =
       interfaceA.typeByRune ++
-      interfaceA.internalMethods.indices.map(i => (("Functor" + i) -> CoordTemplataType)).toMap
+      interfaceA.internalMethods.indices.map(i => (CodeRuneA("Functor" + i) -> CoordTemplataType)).toMap
     val params =
       interfaceA.internalMethods.indices.toList.map(index => {
-        ParameterS(AtomSP(Some(CaptureP("functor" + index, FinalP)), None, "Functor" + index, None))
+        ParameterA(
+          AtomAP(
+            CaptureA(CodeVarNameA("functor" + index), FinalP),
+            None,
+            CodeRuneA("Functor" + index),
+            None))
       })
     val rules =
       interfaceA.rules :+
@@ -128,22 +133,20 @@ object StructTemplar {
     // We stash the interface type in the env, so that when the interface constructor generator runs,
     // it can read this to know what interface it's making a subclass of.
       EqualsAR(
-        TemplexAR(RuneAT(StructTemplar.anonymousSubstructParentInterfaceRune, KindTemplataType)),
+        TemplexAR(RuneAT(AnonymousSubstructParentInterfaceRune2(), KindTemplataType)),
         TemplexAR(
           if (interfaceA.isTemplate) {
             CallAT(
-              NameAT(interfaceA.name, interfaceA.tyype),
+              AbsoluteNameAT(interfaceA.name, interfaceA.tyype),
               interfaceA.identifyingRunes.map(rune => RuneAT(rune, interfaceA.typeByRune(rune))),
               KindTemplataType)
           } else {
-            NameAT(interfaceA.name, KindTemplataType)
+            AbsoluteNameAT(interfaceA.name, KindTemplataType)
           }))
 
+    val TopLevelCitizenDeclarationNameA(name, codeLocation) = interfaceA.name
     FunctionA(
-      interfaceA.codeLocation,
-      interfaceA.name,
-      interfaceA.namespace,
-      0,
+      FunctionNameA(name, codeLocation),
       true,
       interfaceA.tyype match {
         case KindTemplataType => FunctionTemplataType
@@ -256,24 +259,26 @@ object StructTemplar {
     println("someday this is going to bite us")
     (citizen, template) match {
       case (InterfaceRef2(fullName), InterfaceTemplata(_, interfaceA)) => {
-        if (interfaceA.namespace.nonEmpty || fullName.steps.size > 1) {
-          return (false)
-        }
-        if (interfaceA.namespace.nonEmpty) {
-          vimpl()
-        }
+        vimpl()
+//        if (interfaceA.namespace.nonEmpty || fullName.steps.size > 1) {
+//          return (false)
+//        }
+//        if (interfaceA.namespace.nonEmpty) {
+//          vimpl()
+//        }
         val lastStep = fullName.last
         (lastStep.humanName == interfaceA.name)
       }
       case (StructRef2(fullName), StructTemplata(_, structA)) => {
-        if (structA.namespace.size != fullName.steps.size - 1) {
-          return (false)
-        }
-        if (structA.namespace.nonEmpty) {
-          vimpl()
-        }
-        val lastStep = fullName.last
-        (lastStep.humanName == structA.name)
+        vimpl()
+//        if (structA.namespace.size != fullName.steps.size - 1) {
+//          return (false)
+//        }
+//        if (structA.namespace.nonEmpty) {
+//          vimpl()
+//        }
+//        val lastStep = fullName.last
+//        (lastStep.humanName == structA.name)
       }
       case _ => (false)
     }
@@ -315,7 +320,7 @@ object StructTemplar {
     val Prototype2(_, List(paramType), returnType) = prototype
 
     val Some(ifunction1Templata@InterfaceTemplata(_, _)) =
-      env.getNearestTemplataWithName("IFunction1", Set(TemplataLookupContext))
+      env.getNearestTemplataWithName(vimpl()/*"IFunction1"*/, Set(TemplataLookupContext))
     val ifunction1InterfaceRef =
       StructTemplar.getInterfaceRef(
         temputs,

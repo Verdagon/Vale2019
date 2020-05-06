@@ -1,7 +1,6 @@
 package net.verdagon.vale.parser.rules
 
 import net.verdagon.vale.parser._
-import org.scalatest.Ignore
 
 import scala.util.parsing.combinator.RegexParsers
 

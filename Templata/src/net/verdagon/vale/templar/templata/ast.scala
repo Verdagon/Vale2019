@@ -163,7 +163,6 @@ case class FunctionBanner2(
 
 case class FunctionHeader2(
     fullName: FullName2[IFunctionName2],
-    lambdaNumber: Int,
     isExtern: Boolean, // For optimization later
     isUserFunction: Boolean, // Whether it was written by a human. Mostly for tests right now.
     params: List[Parameter2],

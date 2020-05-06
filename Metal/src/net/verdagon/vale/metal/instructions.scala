@@ -1,5 +1,6 @@
 package net.verdagon.vale.metal
 
+import net.verdagon.vale.templar.IVarName2
 import net.verdagon.vale.{vassert, vcurious, vfail}
 
 // Common trait for all instructions.
@@ -616,7 +617,7 @@ case class VariableIdH(
   // the same number.
   number: Int,
   // Just for debugging purposes
-  name: Option[String])
+  name: Option[IVarName2])
 
 case class StackHeightBox(var inner: StackHeight) {
   def blockHeight: Int = inner.blockHeight

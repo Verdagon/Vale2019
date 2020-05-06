@@ -7,7 +7,7 @@ import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnv
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.env.{IEnvironment, InterfaceEnvEntry, NamespaceEnvironment, TemplataEnvEntry}
 import net.verdagon.vale.templar.function.{FunctionTemplar, FunctionTemplarCore, VirtualTemplar}
-import net.verdagon.vale.vfail
+import net.verdagon.vale.{vfail, vimpl}
 
 import scala.collection.immutable.List
 
@@ -69,7 +69,7 @@ object StructTemplarMiddle {
 
   // Makes a struct to back a pack or tuple
   def makeSeqOrPackUnderstruct(
-    env: NamespaceEnvironment[IStructName2],
+    env: NamespaceEnvironment[IName2],
     temputs: TemputsBox,
     memberTypes2: List[Coord],
     name: IStructName2):
@@ -86,7 +86,23 @@ object StructTemplarMiddle {
     interfaceRef: InterfaceRef2,
     lambdas: List[Coord]):
   (StructRef2, Mutability, FunctionHeader2) = {
-    StructTemplarCore.makeAnonymousSubstruct(outerEnv, temputs, maybeConstructorOriginFunctionA, functionFullName, interfaceRef, lambdas)
+
+    vimpl()
+//    maybe this?:
+//    val anonymousSubstructName: FullName2[AnonymousSubstructName2] =
+//      functionFullName.addStep(AnonymousSubstructName2())
+    // but we do need some sort of codelocation in there, right?
+    // otherwise i can say IMyInterface(sum, mul) + IMyInterface(sum, mul)
+    // actually thats probably fine. we would just reuse the existing one.
+    // ...we best write a doc section on this.
+
+    StructTemplarCore.makeAnonymousSubstruct(
+      outerEnv,
+      temputs,
+      maybeConstructorOriginFunctionA,
+      functionFullName,
+      interfaceRef,
+      lambdas)
   }
 
   // Makes an anonymous substruct of the given interface, which just forwards its method to the given prototype.
