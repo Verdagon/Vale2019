@@ -13,10 +13,10 @@ trait IEnvironment {
     "#Environment"
   }
   def globalEnv: NamespaceEnvironment[IName2]
-  def getAllTemplatasWithAbsoluteName(name: IName2, lookupFilter: Set[ILookupContext]): List[ITemplata]
-  def getNearestTemplataWithAbsoluteName(name: IName2, lookupFilter: Set[ILookupContext]): Option[ITemplata]
-  def getAllTemplatasWithAbsoluteName(name: INameA, lookupFilter: Set[ILookupContext]): List[ITemplata]
-  def getNearestTemplataWithAbsoluteName(name: INameA, lookupFilter: Set[ILookupContext]): Option[ITemplata]
+  def getAllTemplatasWithAbsoluteName2(name: IName2, lookupFilter: Set[ILookupContext]): List[ITemplata]
+  def getNearestTemplataWithAbsoluteName2(name: IName2, lookupFilter: Set[ILookupContext]): Option[ITemplata]
+  def getAllTemplatasWithAbsoluteNameA(name: INameA, lookupFilter: Set[ILookupContext]): List[ITemplata]
+  def getNearestTemplataWithAbsoluteNameA(name: INameA, lookupFilter: Set[ILookupContext]): Option[ITemplata]
   def getAllTemplatasWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): List[ITemplata]
   def getNearestTemplataWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): Option[ITemplata]
   def fullName: FullName2[IName2]
@@ -28,8 +28,8 @@ trait IEnvironmentBox {
     "#Environment"
   }
   def globalEnv: NamespaceEnvironment[IName2]
-  def getAllTemplatasWithAbsoluteName(name: INameA, lookupFilter: Set[ILookupContext]): List[ITemplata]
-  def getNearestTemplataWithAbsoluteName(name: INameA, lookupFilter: Set[ILookupContext]): Option[ITemplata]
+  def getAllTemplatasWithAbsoluteNameA(name: INameA, lookupFilter: Set[ILookupContext]): List[ITemplata]
+  def getNearestTemplataWithAbsoluteNameA(name: INameA, lookupFilter: Set[ILookupContext]): Option[ITemplata]
   def getAllTemplatasWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): List[ITemplata]
   def getNearestTemplataWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): Option[ITemplata]
   def fullName: FullName2[IName2]
@@ -56,7 +56,7 @@ case class NamespaceEnvironment[+T <: IName2](
     }
   }
 
-  override def getAllTemplatasWithAbsoluteName(
+  override def getAllTemplatasWithAbsoluteNameA(
     name: INameA,
     lookupFilter: Set[ILookupContext]):
   List[ITemplata] = {
@@ -67,10 +67,10 @@ case class NamespaceEnvironment[+T <: IName2](
       .filter(EnvironmentUtils.entryMatchesFilter(_, lookupFilter))
       .toList
       .map(EnvironmentUtils.entryToTemplata(this, _)) ++
-      maybeParentEnv.toList.flatMap(_.getAllTemplatasWithAbsoluteName(name, lookupFilter))
+      maybeParentEnv.toList.flatMap(_.getAllTemplatasWithAbsoluteNameA(name, lookupFilter))
   }
 
-  override def getNearestTemplataWithAbsoluteName(name: INameA, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
+  override def getNearestTemplataWithAbsoluteNameA(name: INameA, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
     entries
       .filter({ case (key, _) => EnvironmentUtils.namesMatch(name, key) })
       .values
@@ -80,14 +80,14 @@ case class NamespaceEnvironment[+T <: IName2](
       case List() => {
         maybeParentEnv match {
           case None => None
-          case Some(parentEnv) => parentEnv.getNearestTemplataWithAbsoluteName(name, lookupFilter)
+          case Some(parentEnv) => parentEnv.getNearestTemplataWithAbsoluteNameA(name, lookupFilter)
         }
       }
       case multiple => vfail("Too many things named " + name + ":\n" + multiple.mkString("\n"));
     }
   }
 
-  override def getAllTemplatasWithAbsoluteName(name: IName2, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
+  override def getAllTemplatasWithAbsoluteName2(name: IName2, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
     vimpl()
   }
 
@@ -95,7 +95,7 @@ case class NamespaceEnvironment[+T <: IName2](
     vimpl()
   }
 
-  override def getNearestTemplataWithAbsoluteName(name: IName2, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
+  override def getNearestTemplataWithAbsoluteName2(name: IName2, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
     vimpl()
   }
 

@@ -9,8 +9,8 @@ import net.verdagon.vale.{vimpl, scout => s}
 
 object Conversions {
   def evaluateCodeLocation(loc: s.CodeLocationS): m.CodeLocation = {
-    val s.CodeLocationS(file, line, col) = loc
-    m.CodeLocation(file, line, col)
+    val s.CodeLocationS(line, col) = loc
+    m.CodeLocation(line, col)
   }
 
   def evaluateMutability(mutability: t.Mutability): Mutability = {

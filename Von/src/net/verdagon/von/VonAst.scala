@@ -1,5 +1,6 @@
 package net.verdagon.von
 
+import net.verdagon.vale.metal.FullNameH
 import net.verdagon.vale.vassert
 
 sealed trait IVonData

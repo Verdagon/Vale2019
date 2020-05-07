@@ -26,7 +26,7 @@ object FunctionHammer {
       case Some(functionRefH) => functionRefH
       case None => {
         val Function2(
-            header @ FunctionHeader2(humanName, lambdaNumber, isExtern, isUserFunction, params2, returnType2, _),
+            header @ FunctionHeader2(humanName, isExtern, isUserFunction, params2, returnType2, _),
             locals2,
             body) = function2;
 

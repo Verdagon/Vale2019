@@ -21,15 +21,15 @@ object Templar {
     val env0 =
       NamespaceEnvironment(
         None,
-        FullName2(List()),
+        FullName2(List(), GlobalNamespaceName2()),
         Map(
-          "Int" -> List(TemplataEnvEntry(KindTemplata(Int2()))),
-          "Array" -> List(TemplataEnvEntry(ArrayTemplateTemplata())),
-          "Bool" -> List(TemplataEnvEntry(KindTemplata(Bool2()))),
-          "Float" -> List(TemplataEnvEntry(KindTemplata(Float2()))),
-          "__Never" -> List(TemplataEnvEntry(KindTemplata(Never2()))),
-          "Str" -> List(TemplataEnvEntry(KindTemplata(Str2()))),
-          "Void" -> List(TemplataEnvEntry(KindTemplata(Void2())))))
+          PrimitiveName2("Int") -> List(TemplataEnvEntry(KindTemplata(Int2()))),
+          PrimitiveName2("Array") -> List(TemplataEnvEntry(ArrayTemplateTemplata())),
+          PrimitiveName2("Bool") -> List(TemplataEnvEntry(KindTemplata(Bool2()))),
+          PrimitiveName2("Float") -> List(TemplataEnvEntry(KindTemplata(Float2()))),
+          PrimitiveName2("__Never") -> List(TemplataEnvEntry(KindTemplata(Never2()))),
+          PrimitiveName2("Str") -> List(TemplataEnvEntry(KindTemplata(Str2()))),
+          PrimitiveName2("Void") -> List(TemplataEnvEntry(KindTemplata(Void2())))))
     val functionGeneratorByName0 = Map[String, IFunctionGenerator]()
     val (env1, functionGeneratorByName1) = BuiltInFunctions.addBuiltInFunctions(env0, functionGeneratorByName0)
     val functionGeneratorByName2 = functionGeneratorByName1 ++ StructTemplar.getFunctionGenerators()
@@ -40,7 +40,7 @@ object Templar {
     // struct or interface is figuring out what it extends.
     val env5 =
       impls1.foldLeft(env3)({
-        case (env4, impl1) => env4.addEntry(IMPL_NAME, ImplEnvEntry(impl1))
+        case (env4, impl1) => env4.addEntry(NameTranslator.translateImplName(impl1.name), ImplEnvEntry(impl1))
       })
     val env7 =
       structsA.foldLeft(env5)({
@@ -132,11 +132,11 @@ object Templar {
   // (Once we add namespaces, this will probably change)
   def makeInterfaceEnvironmentEntries(
     interfaceA: InterfaceA
-  ): Map[String, List[IEnvEntry]] = {
+  ): Map[IName2, List[IEnvEntry]] = {
     val interfaceEnvEntry = InterfaceEnvEntry(interfaceA)
 
-    val env0 = Map[String, List[IEnvEntry]]()
-    val env1 = EnvironmentUtils.addEntry(env0, interfaceA.name, interfaceEnvEntry)
+    val env0 = Map[IName2, List[IEnvEntry]]()
+    val env1 = EnvironmentUtils.addEntry(env0, NameTranslator.translateNameStep(interfaceA.name), interfaceEnvEntry)
     val env2 = EnvironmentUtils.addFunction(env1, StructTemplar.getInterfaceConstructor(interfaceA))
 
     val env4 =
@@ -153,11 +153,11 @@ object Templar {
   // (Once we add namespaces, this will probably change)
   def makeStructEnvironmentEntries(
     structA: StructA
-  ): Map[String, List[IEnvEntry]] = {
+  ): Map[IName2, List[IEnvEntry]] = {
     val interfaceEnvEntry = StructEnvEntry(structA)
 
-    val env0 = Map[String, List[IEnvEntry]]()
-    val env1 = EnvironmentUtils.addEntry(env0, structA.name, interfaceEnvEntry)
+    val env0 = Map[IName2, List[IEnvEntry]]()
+    val env1 = EnvironmentUtils.addEntry(env0, NameTranslator.translateNameStep(structA.name), interfaceEnvEntry)
     val env2 = EnvironmentUtils.addFunction(env1, StructTemplar.getConstructor(structA))
 
     // To add once we have methods inside structs:

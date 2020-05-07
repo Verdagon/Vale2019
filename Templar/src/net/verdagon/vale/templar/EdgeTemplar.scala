@@ -1,11 +1,12 @@
 package net.verdagon.vale.templar
 
+import net.verdagon.vale.astronomer.{GlobalFunctionFamilyNameA, IImpreciseNameStepA, INameA}
 import net.verdagon.vale.templar.templata.{FunctionBanner2, Override2}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.{vassert, vfail}
 
 object EdgeTemplar {
-  case class NeededOverride(name: String, paramFilters: List[ParamFilter])
+  case class NeededOverride(name: GlobalFunctionFamilyNameA, paramFilters: List[ParamFilter])
 
   def assembleEdges(
     functions: List[net.verdagon.vale.templar.Function2],
@@ -119,7 +120,7 @@ object EdgeTemplar {
                     case (tyype, _) => ParamFilter(tyype, None)
                   })
                 superFunction.fullName.last match {
-                  case FunctionName2(humanName, _, _) => List(NeededOverride(humanName, overrideParamFilters))
+                  case FunctionName2(humanName, _, _) => List(NeededOverride(GlobalFunctionFamilyNameA(humanName), overrideParamFilters))
                   case _ => List()
                 }
               }

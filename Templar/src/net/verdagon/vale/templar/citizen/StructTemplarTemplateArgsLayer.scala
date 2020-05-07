@@ -167,7 +167,13 @@ object StructTemplarTemplateArgsLayer {
     interfaceRef: InterfaceRef2,
     lambdas: List[Coord]):
   (StructRef2, Mutability, FunctionHeader2) = {
-    StructTemplarMiddle.makeAnonymousSubstruct(outerEnv, temputs, maybeConstructorOriginFunctionA, functionFullName, interfaceRef, lambdas)
+    StructTemplarMiddle.makeAnonymousSubstruct(
+      outerEnv,
+      temputs,
+      maybeConstructorOriginFunctionA,
+      functionFullName,
+      interfaceRef,
+      lambdas)
   }
 
   // Makes an anonymous substruct of the given interface, which just forwards its method to the given prototype.

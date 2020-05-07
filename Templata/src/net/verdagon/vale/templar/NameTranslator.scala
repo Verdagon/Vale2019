@@ -110,4 +110,9 @@ object NameTranslator {
       case ReturnRuneA() => ReturnRune2()
     }
   }
+
+  def translateImplName(n: ImplNameA): ImplDeclareName2 = {
+    val ImplNameA(l) = n
+    ImplDeclareName2(translateCodeLocation(l))
+  }
 }

@@ -8,19 +8,19 @@ import net.verdagon.vale.templar.types._
 import net.verdagon.vale.vfail
 
 object TypeHammer {
-  def translateMembers(hinputs: Hinputs, hamuts: HamutsBox, members: List[StructMember2]):
+  def translateMembers(hinputs: Hinputs, hamuts: HamutsBox, structName: FullName2[IName2], members: List[StructMember2]):
   (List[StructMemberH]) = {
     members match {
       case Nil => Nil
       case headMember2 :: tailMembers2 => {
-        val (headMemberH) = translateMember(hinputs, hamuts, headMember2)
-        val (tailMembersH) = translateMembers(hinputs, hamuts, tailMembers2)
+        val (headMemberH) = translateMember(hinputs, hamuts, structName, headMember2)
+        val (tailMembersH) = translateMembers(hinputs, hamuts, structName, tailMembers2)
         (headMemberH :: tailMembersH)
       }
     }
   }
 
-  def translateMember(hinputs: Hinputs, hamuts: HamutsBox, member2: StructMember2):
+  def translateMember(hinputs: Hinputs, hamuts: HamutsBox, structName: FullName2[IName2], member2: StructMember2):
   (StructMemberH) = {
     val (memberH) =
       member2.tyype match {
@@ -36,7 +36,10 @@ object TypeHammer {
           (ReferenceH(m.Borrow, boxStructRefH))
         }
       }
-    (StructMemberH(member2.name, Conversions.evaluateVariability(member2.variability), memberH))
+    StructMemberH(
+      NameHammer.stringify(structName.addStep(member2.name)),
+      Conversions.evaluateVariability(member2.variability),
+      memberH)
   }
 
 //

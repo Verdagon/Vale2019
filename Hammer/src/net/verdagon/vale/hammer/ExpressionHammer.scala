@@ -249,7 +249,7 @@ object ExpressionHammer {
         (Some(loadBoxAccess), List())
       }
 
-      case lookup2 @ AddressMemberLookup2(_, _, _, _) => {
+      case lookup2 @ AddressMemberLookup2(_, _, _) => {
         val (loadBoxAccess, deferreds) =
           LoadHammer.translateMemberAddress(hinputs, hamuts, locals, stackHeight, nodesByLine, lookup2)
         (Some(loadBoxAccess), deferreds)

@@ -358,7 +358,7 @@ object Astronomer {
 
   def translateImpl(astrouts: AstroutsBox, env: Environment, implS: ImplS): ImplA = {
     val ImplS(nameS, rules, allRunesS, isTemplate, structKindRuneS, interfaceKindRuneS) = implS
-    val nameA = translateName(nameS)
+    val nameA = translateImplName(nameS)
     val allRunesA = allRunesS.map(Astronomer.translateRune)
 
     astrouts.getImpl(nameA) match {
@@ -524,13 +524,18 @@ object Astronomer {
       case FunctionNameS(name, codeLocation) => FunctionNameA(name, codeLocation)
       case tlcd @ TopLevelCitizenDeclarationNameS(_, _) => translateTopLevelCitizenDeclarationName(tlcd)
       case LambdaStructNameS(lambdaName) => LambdaStructNameA(translateLambdaNameStep(lambdaName))
-      case ImplNameS(codeLocation) => ImplNameA(codeLocation)
+      case i @ ImplNameS(_) => translateImplName(i)
       case LetNameS(codeLocation) => LetNameA(codeLocation)
       case UnnamedLocalNameS(codeLocation) => UnnamedLocalNameA(codeLocation)
       case ClosureParamNameS() => ClosureParamNameA()
       case MagicParamNameS(codeLocation) => MagicParamNameA(codeLocation)
       case CodeVarNameS(name) => CodeVarNameA(name)
     }
+  }
+
+  def translateImplName(s: ImplNameS): ImplNameA = {
+    val ImplNameS(codeLocationS) = s;
+    ImplNameA(codeLocationS)
   }
 
   def translateTopLevelCitizenDeclarationName(tlcd: TopLevelCitizenDeclarationNameS): TopLevelCitizenDeclarationNameA = {

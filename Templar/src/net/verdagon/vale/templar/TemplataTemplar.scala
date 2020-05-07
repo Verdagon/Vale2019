@@ -144,7 +144,7 @@ object TemplataTemplar {
           // Changed this from AnythingLookupContext to TemplataLookupContext
           // because this is called from StructTemplar to figure out its members.
           // We could instead pipe a lookup context through, if this proves problematic.
-          vassertSome(env.getNearestTemplataWithAbsoluteName(name, Set(TemplataLookupContext)))
+          vassertSome(env.getNearestTemplataWithAbsoluteNameA(name, Set(TemplataLookupContext)))
         }
 
         override def getMutability(temputs: TemputsBox, kind: Kind): Mutability = {

@@ -53,6 +53,9 @@ case class MagicParamName2(codeLocation2: CodeLocation2) extends IVarName2 { def
 case class CodeVarName2(name: String) extends IVarName2 { def order = 6; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
 // We dont use CodeVarName2(0), CodeVarName2(1) etc because we dont want the user to address these members directly.
 case class AnonymousSubstructMemberName2(index: Int) extends IVarName2 { def order = 24; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
+case class PrimitiveName2(humanName: String) extends IName2 { def order = 26; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
+// Only made in templar
+case class GlobalNamespaceName2() extends IName2 { def order = 25; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
 
 // We use this one to look for impls, which are disambiguated by the above ImplDeclareName2
 //case class ImplImpreciseName2() extends IName2 { def order = 22; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
@@ -128,7 +131,7 @@ case class InterfaceName2(
     List(this).collect(func) ++ templateArgs.toList.flatMap(_.all(func))
   }
 }
-case class AnonymousSubstructName2() extends IStructName2 {
+case class AnonymousSubstructName2(methodNames: List[FullName2[IFunctionName2]]) extends IStructName2 {
   def order = 27;
   def templateArgs: List[ITemplata] = List()
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {

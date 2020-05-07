@@ -465,7 +465,7 @@ object ExpressionVivem {
 
           val generatorPrototypeH =
             PrototypeH(
-              FullNameH(List(NamePartH("__call", None, None, None))),
+              vimpl(),//FullNameH(List(NamePartH("__call", None, None, None))),
               List(generatorInterfaceRegister.expectedType, ReferenceH(Share, IntH())),
               arrayRefType.kind.rawArray.elementType)
 
@@ -537,7 +537,7 @@ object ExpressionVivem {
 
           val consumerPrototypeH =
             PrototypeH(
-              FullNameH(List(NamePartH("__call", None, None, None))),
+              vimpl(),//FullNameH(List(NamePartH("__call", None, None, None))),
               List(consumerInterfaceRegister.expectedType, ReferenceH(Share, IntH())),
               arrayRegister.expectedType.kind.rawArray.elementType)
 
@@ -593,7 +593,7 @@ object ExpressionVivem {
 
           val consumerPrototypeH =
             PrototypeH(
-              FullNameH(List(NamePartH("__call", None, None, None))),
+              vimpl(),//FullNameH(List(NamePartH("__call", None, None, None))),
               List(consumerInterfaceRegister.expectedType, ReferenceH(Share, IntH())),
               arrayRegister.expectedType.kind.rawArray.elementType)
 

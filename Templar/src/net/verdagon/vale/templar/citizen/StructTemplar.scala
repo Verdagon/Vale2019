@@ -46,7 +46,7 @@ object StructTemplar {
           (FunctionHeader2) = {
             // The interface should be in the "__Interface" rune of the function environment.
             val interfaceRef2 =
-              env.getNearestTemplataWithAbsoluteName(AnonymousSubstructParentInterfaceRune2(), Set(TemplataLookupContext)) match {
+              env.getNearestTemplataWithAbsoluteName2(AnonymousSubstructParentInterfaceRune2(), Set(TemplataLookupContext)) match {
                 case Some(KindTemplata(ir @ InterfaceRef2(_))) => ir
                 case _ => vwat()
               }
@@ -133,7 +133,7 @@ object StructTemplar {
     // We stash the interface type in the env, so that when the interface constructor generator runs,
     // it can read this to know what interface it's making a subclass of.
       EqualsAR(
-        TemplexAR(RuneAT(AnonymousSubstructParentInterfaceRune2(), KindTemplataType)),
+        TemplexAR(RuneAT(AnonymousSubstructParentInterfaceRuneA(), KindTemplataType)),
         TemplexAR(
           if (interfaceA.isTemplate) {
             CallAT(
@@ -207,7 +207,7 @@ object StructTemplar {
   // Makes a struct to back a pack or tuple
   def makeSeqOrPackUnderstruct(env: NamespaceEnvironment[IName2], temputs: TemputsBox, memberTypes2: List[Coord], name: IStructName2):
   (StructRef2, Mutability) = {
-    StructTemplarTemplateArgsLayer.makeSeqOrPackUnderstruct(env, temputs, memberTypes2, name)
+    StructTemplarTemplateArgsLayer.makeSeqOrPackUnerstruct(env, temputs, memberTypes2, name)
   }
 
   // Makes an anonymous substruct of the given interface, with the given lambdas as its members.

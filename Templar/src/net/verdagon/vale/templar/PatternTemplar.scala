@@ -145,7 +145,7 @@ object PatternTemplar {
       // function's parameters. Ignore them.
     }
 
-    val expectedTemplata = fate.getNearestTemplataWithAbsoluteName(coordRuneA, Set(TemplataLookupContext))
+    val expectedTemplata = fate.getNearestTemplataWithAbsoluteNameA(coordRuneA, Set(TemplataLookupContext))
     val expectedCoord =
       expectedTemplata match {
         case Some(CoordTemplata(coord)) => coord
@@ -398,7 +398,8 @@ object PatternTemplar {
                   SoftLoad2(
                     ReferenceMemberLookup2(
                       SoftLoad2(LocalLookup2(packLocalVariable, structType2), Share),
-                      index, memberType),
+                      structDef2.fullName.addStep(structDef2.members(index).name),
+                      memberType),
                     Share)
                 innerNonCheckingTranslate(temputs, fate, innerPattern, loadExpr)
               }

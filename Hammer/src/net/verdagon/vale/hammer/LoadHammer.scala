@@ -6,7 +6,7 @@ import net.verdagon.vale.metal.{Borrow => _, Ownership => _, Share => _, Variabi
 import net.verdagon.vale.{metal => m}
 import net.verdagon.vale.templar.{types => t}
 import net.verdagon.vale.templar._
-import net.verdagon.vale.templar.env.{AddressibleLocalVariable2, ReferenceLocalVariable2, FullName2}
+import net.verdagon.vale.templar.env.{AddressibleLocalVariable2, ReferenceLocalVariable2}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.{vassert, vfail}
 
@@ -35,7 +35,7 @@ object LoadHammer {
         case ReferenceMemberLookup2(structExpr2, memberName, memberType2) => {
           translateMundaneMemberLoad(hinputs, hamuts, locals, stackHeight, nodesByLine, structExpr2, memberType2, memberName, targetOwnership)
         }
-        case AddressMemberLookup2(structExpr2, memberName, varName, memberType2) => {
+        case AddressMemberLookup2(structExpr2, memberName, memberType2) => {
           translateAddressibleMemberLoad(hinputs, hamuts, locals, stackHeight, nodesByLine, structExpr2, memberName, memberType2, targetOwnership)
         }
         case UnknownSizeArrayLookup2(arrayExpr2, arrayType, indexExpr2) => {
@@ -138,7 +138,7 @@ object LoadHammer {
       stackHeight: StackHeightBox,
       nodesByLine: NodesBox,
       structExpr2: ReferenceExpression2,
-      memberName: String,
+      memberName: FullName2[IVarName2],
       expectedType2: Coord,
       targetOwnershipT: t.Ownership
   ): (RegisterAccessH[ReferendH], List[Expression2]) = {
@@ -183,7 +183,7 @@ object LoadHammer {
           m.Borrow,
           expectedStructBoxMemberType,
           expectedBorrowBoxResultType,
-          memberName))
+          NameHammer.stringify(memberName)))
     val loadBoxAccess =
       RegisterAccessH(loadBoxNode.registerId, expectedBorrowBoxResultType)
     val loadedNodeH =
@@ -210,7 +210,7 @@ object LoadHammer {
       nodesByLine: NodesBox,
       structExpr2: ReferenceExpression2,
       expectedMemberType2: Coord,
-      memberName: String,
+      memberName: FullName2[IVarName2],
       targetOwnershipT: t.Ownership
   ): (RegisterAccessH[ReferendH], List[Expression2]) = {
     val targetOwnership = Conversions.evaluateOwnership(targetOwnershipT)
@@ -244,7 +244,7 @@ object LoadHammer {
           targetOwnership,
           expectedMemberTypeH,
           resultTypeH,
-          memberName))
+          NameHammer.stringify(memberName)))
     val loadedAccess =
       RegisterAccessH(loadedNode.registerId, resultTypeH)
     (loadedAccess, structDeferreds)
@@ -256,7 +256,7 @@ object LoadHammer {
       locals: LocalsBox,
       stackHeight: StackHeightBox,
       nodesByLine: NodesBox,
-      varId: FullName2,
+      varId: FullName2[IVarName2],
       variability: Variability,
       localReference2: Coord,
       targetOwnershipT: t.Ownership
@@ -284,7 +284,7 @@ object LoadHammer {
           m.Borrow,
           expectedStructBoxMemberType,
           expectedBorrowBoxResultType,
-          varId.variableName))
+          NameHammer.stringify(varId)))
     val loadBoxAccess =
       RegisterAccessH(loadBoxNode.registerId, expectedBorrowBoxResultType)
 
@@ -310,7 +310,7 @@ object LoadHammer {
       locals: LocalsBox,
       stackHeight: StackHeightBox,
       nodesByLine: NodesBox,
-      varId: FullName2,
+      varId: FullName2[IVarName2],
       expectedType2: Coord,
       targetOwnershipT: t.Ownership
   ): (RegisterAccessH[ReferendH], List[Expression2]) = {
@@ -338,7 +338,7 @@ object LoadHammer {
           targetOwnership,
           local.typeH,
           resultTypeH,
-          varId.variableName))
+          NameHammer.stringify(varId)))
     val loadedAccess =
       RegisterAccessH(loadedNode.registerId, resultTypeH)
     (loadedAccess, List())
@@ -372,7 +372,7 @@ object LoadHammer {
         m.Borrow,
         expectedStructBoxMemberType,
         expectedBorrowBoxResultType,
-        localVar.id.variableName))
+        NameHammer.stringify(localVar.id)))
     val loadBoxAccess =
       RegisterAccessH(loadBoxNode.registerId, expectedBorrowBoxResultType)
     (loadBoxAccess)
@@ -386,7 +386,7 @@ object LoadHammer {
       nodesByLine: NodesBox,
       lookup2: AddressMemberLookup2):
   (RegisterAccessH[ReferendH], List[Expression2]) = {
-    val AddressMemberLookup2(structExpr2, memberName, varId, resultType2) = lookup2;
+    val AddressMemberLookup2(structExpr2, memberName, resultType2) = lookup2;
 
     val (Some(structResultLine), structDeferreds) =
       translate(hinputs, hamuts, locals, stackHeight, nodesByLine, structExpr2);
@@ -428,7 +428,7 @@ object LoadHammer {
         m.Borrow,
         expectedStructBoxMemberType,
         expectedBorrowBoxResultType,
-        memberName))
+        NameHammer.stringify(memberName)))
     val loadBoxAccess =
       RegisterAccessH(loadBoxNode.registerId, expectedBorrowBoxResultType)
 

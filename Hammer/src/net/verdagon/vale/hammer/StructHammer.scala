@@ -89,7 +89,7 @@ object StructHammer {
         hamuts.forwardDeclareStruct(structRef2, temporaryStructRefH)
         val structDef2 = hinputs.program2.lookupStruct(structRef2);
         val (membersH) =
-          TypeHammer.translateMembers(hinputs, hamuts, structDef2.members)
+          TypeHammer.translateMembers(hinputs, hamuts, structDef2.fullName, structDef2.members)
 
         val (edgesH) = translateEdgesForStruct(hinputs, hamuts, temporaryStructRefH, structRef2)
 
@@ -108,7 +108,7 @@ object StructHammer {
 
   def makeBox(hinputs: Hinputs, hamuts: HamutsBox, conceptualVariability: Variability, type2: Coord, typeH: ReferenceH[ReferendH]):
   (StructRefH) = {
-    val boxFullName2 = FullName2(List(INamePart2(BOX_HUMAN_NAME, Some(List(CoordTemplata(type2))), None, None)))
+    val boxFullName2 = FullName2(List(), StructName2(BOX_HUMAN_NAME, List(CoordTemplata(type2))))
     val boxFullNameH = NameHammer.translateName(hinputs, hamuts, boxFullName2)
     hamuts.structDefsByRef2.find(_._2.fullName == boxFullNameH) match {
       case Some((_, structDefH)) => (structDefH.getRef)

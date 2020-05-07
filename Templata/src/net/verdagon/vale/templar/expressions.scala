@@ -379,7 +379,7 @@ case class ArrayLength2(arrayExpr: ReferenceExpression2) extends ReferenceExpres
 
 case class ReferenceMemberLookup2(
     structExpr: ReferenceExpression2,
-    memberIndex: Int,
+    memberName: FullName2[IVarName2],
     reference: Coord) extends AddressExpression2 {
   override def resultRegister = AddressRegister2(reference)
 
@@ -391,8 +391,7 @@ case class ReferenceMemberLookup2(
 }
 case class AddressMemberLookup2(
     structExpr: ReferenceExpression2,
-    memberIndex: Int,
-    varId: FullName2[IVarName2],
+    memberName: FullName2[IVarName2],
     resultType2: Coord) extends AddressExpression2 {
   override def resultRegister = AddressRegister2(resultType2)
 

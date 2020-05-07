@@ -190,12 +190,12 @@ class InfererEvaluator[Env, State](
         case (Some(Abstract2), Some(AbstractAP)) => List()
         case (Some(Override2(superInterface)), Some(OverrideAP(superInterfaceRune))) => {
           // We might already have this superInterface figured out.
-          inferences.templatasByRune.get(superInterfaceRune) match {
+          inferences.templatasByRune.get(NameTranslator.translateRune(superInterfaceRune)) match {
             case None => {
               val ancestorInterfaces = delegate.getAncestorInterfaces(state, superInterface)
               val selfAndAncestors = List(superInterface) ++ ancestorInterfaces
               inferences.addPossibilities(
-                superInterfaceRune,
+                NameTranslator.translateRune(superInterfaceRune),
                 selfAndAncestors.map(KindTemplata))
               List()
             }

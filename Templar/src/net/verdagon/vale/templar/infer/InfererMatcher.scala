@@ -5,7 +5,7 @@ import net.verdagon.vale.astronomer._
 import net.verdagon.vale.parser.{BorrowP, OwnP, ShareP}
 import net.verdagon.vale.scout.patterns.{AbstractSP, AtomSP, OverrideSP}
 import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _}
-import net.verdagon.vale.templar.IRune2
+import net.verdagon.vale.templar.{IRune2, NameTranslator}
 import net.verdagon.vale.templar.infer.infer._
 import net.verdagon.vale.templar.templata.{Conversions, _}
 import net.verdagon.vale.templar.types._
@@ -154,7 +154,7 @@ class InfererMatcher[Env, State](
     val runeCoordRuneA = Astronomer.translateRune(ruleCoordRuneS)
 
     val coordDeeplySatisfied =
-      matchReference2AgainstRuneSP(env, state, inferences, instance.tyype, runeCoordRuneA) match {
+      matchReference2AgainstRuneSP(env, state, inferences, instance.tyype, NameTranslator.translateRune(runeCoordRuneA)) match {
         case (imc @ InferMatchConflict(_, _, _)) => return (imc)
         case (InferMatchSuccess(ds)) => (ds)
       }
@@ -177,7 +177,7 @@ class InfererMatcher[Env, State](
         case (Some(Abstract2), _) => return (InferMatchConflict(inferences.inferences, s"ParamFilter virtuality didn't match rule:\n${instance.virtuality}\n${rule.virtuality}", List()))
         case (Some(Override2(instanceSuperInterfaceRef2)), Some(OverrideSP(kindRuneS))) => {
           val kindRuneA = Astronomer.translateRune(kindRuneS)
-          matchReferend2AgainstRuneSP(env, state, inferences, instanceSuperInterfaceRef2, kindRuneA) match {
+          matchReferend2AgainstRuneSP(env, state, inferences, instanceSuperInterfaceRef2, NameTranslator.translateRune(kindRuneA)) match {
             case (imc @ InferMatchConflict(_, _, _)) => return (imc)
             case (InferMatchSuccess(ds)) => (ds)
           }

@@ -175,7 +175,7 @@ object StructTemplarCore {
     temputs: TemputsBox,
     member: StructMemberA):
   (StructMember2) = {
-    val CoordTemplata(coord) = vassertSome(env.getNearestTemplataWithAbsoluteName(member.typeRune, Set(TemplataLookupContext)))
+    val CoordTemplata(coord) = vassertSome(env.getNearestTemplataWithAbsoluteNameA(member.typeRune, Set(TemplataLookupContext)))
     (StructMember2(CodeVarName2(member.name), Conversions.evaluateVariability(member.variability), ReferenceMemberType2(coord)))
   }
 
@@ -268,7 +268,7 @@ object StructTemplarCore {
 
   // Makes a struct to back a pack or tuple
   def makeSeqOrPackUnderstruct(
-    env: NamespaceEnvironment[IName2],
+    outerEnv: NamespaceEnvironment[IName2],
     temputs: TemputsBox,
     memberCoords: List[Coord],
     name: IStructName2):
@@ -282,15 +282,20 @@ object StructTemplarCore {
             case (pointerType, index) => StructMember2(CodeVarName2(index.toString), Final, ReferenceMemberType2(pointerType))
           })
 
-        val fullName = env.fullName.addStep(name)
+        val fullName = outerEnv.fullName.addStep(TupleName2(memberCoords))
+        val structInnerEnv =
+          NamespaceEnvironment(
+            Some(outerEnv),
+            fullName,
+            Map())
 
-        val newStructDef = StructDefinition2(fullName, packMutability, members, false);
+        val newStructDef = StructDefinition2(structInnerEnv.fullName, packMutability, members, false);
         if (memberCoords.isEmpty && packMutability != Immutable)
           vfail("curiosity")
 
         temputs.declareStruct(newStructDef.getRef);
         temputs.declareStructMutability(newStructDef.getRef, packMutability)
-        temputs.declareStructEnv(newStructDef.getRef, env);
+        temputs.declareStructEnv(newStructDef.getRef, structInnerEnv);
         temputs.add(newStructDef)
         temputs.declarePack(memberCoords, newStructDef.getRef);
 
@@ -386,7 +391,7 @@ object StructTemplarCore {
     forwarderFunctionHeaders.zip(lambdas).foreach({ case (forwarderHeader, lambda) =>
       val localVariables =
         forwarderHeader.params.map(param => {
-          ReferenceLocalVariable2(FullName2(0, param.name), Final, param.tyype)
+          ReferenceLocalVariable2(forwarderHeader.fullName.addStep(CodeVarName2(param.name)), Final, param.tyype)
         })
 
       // The args for the call inside the forwarding function.
@@ -420,7 +425,7 @@ object StructTemplarCore {
       temputs.addFunction(forwarderFunction)
     })
 
-    val constructor = makeStructConstructor(temputs, maybeConstructorOriginFunctionA, structDef, AnonymousSubstructConstructorName2())
+    val constructor = makeStructConstructor(temputs, maybeConstructorOriginFunctionA, structDef, anonymousSubstructName.addStep(AnonymousSubstructConstructorName2()))
 
     (structRef, mutability, constructor)
   }
@@ -440,7 +445,7 @@ object StructTemplarCore {
     // We could do it the other way, but theres no good way to put a Prototype2 into a
     // templata which can be in the name. We could change it someday if we have a Prototype2
     // as a templata...
-    val structFullName = interfaceRef.fullName.addStep(AnonymousSubstructName2(prototype.fullName))
+    val structFullName = interfaceRef.fullName.addStep(AnonymousSubstructName2(List(prototype.fullName)))
 
     val structRef = StructRef2(structFullName)
 
@@ -470,10 +475,10 @@ object StructTemplarCore {
 
     val structInnerEnvEntries =
       Map(
-        forwarderHeader.fullName -> List(TemplataEnvEntry(ExternFunctionTemplata(forwarderHeader))),
+        forwarderHeader.fullName.last -> List(TemplataEnvEntry(ExternFunctionTemplata(forwarderHeader))),
         // This is used later by the interface constructor generator to know what interface to impl.
-        structFullName.addStep(AnonymousSubstructParentInterfaceRune2()) -> List(TemplataEnvEntry(KindTemplata(interfaceRef))),
-        structFullName.addStep(AnonymousSubstructImplName2()) -> List(TemplataEnvEntry(ExternImplTemplata(structRef, interfaceRef))))
+        AnonymousSubstructParentInterfaceRune2() -> List(TemplataEnvEntry(KindTemplata(interfaceRef))),
+        AnonymousSubstructImplName2() -> List(TemplataEnvEntry(ExternImplTemplata(structRef, interfaceRef))))
     val structInnerEnv =
       NamespaceEnvironment(
         Some(outerEnv),

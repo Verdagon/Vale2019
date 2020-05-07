@@ -5,7 +5,7 @@ import net.verdagon.vale.hinputs.Hinputs
 import net.verdagon.vale.metal.{Borrow => _, Variability => _, _}
 import net.verdagon.vale.{metal => m}
 import net.verdagon.vale.templar._
-import net.verdagon.vale.templar.env.{AddressibleLocalVariable2, ReferenceLocalVariable2, FullName2}
+import net.verdagon.vale.templar.env.{AddressibleLocalVariable2, ReferenceLocalVariable2}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.vassert
 
@@ -37,7 +37,7 @@ object MutateHammer {
         case ReferenceMemberLookup2(structExpr2, memberName, memberType2) => {
           translateMundaneMemberMutate(hinputs, hamuts, locals, stackHeight, nodesByLine, sourceExprResultLine, structExpr2, memberName)
         }
-        case AddressMemberLookup2(structExpr2, memberName, varName, memberType2) => {
+        case AddressMemberLookup2(structExpr2, memberName, memberType2) => {
           translateAddressibleMemberMutate(hinputs, hamuts, locals, stackHeight, nodesByLine, sourceExprResultLine, structExpr2, memberName)
         }
         case ArraySequenceLookup2(arrayExpr2, arrayType, indexExpr2) => {
@@ -118,7 +118,7 @@ object MutateHammer {
       nodesByLine: NodesBox,
       sourceExprResultLine: RegisterAccessH[ReferendH],
       structExpr2: ReferenceExpression2,
-      memberName: String
+      memberName: FullName2[IVarName2]
   ): (RegisterAccessH[ReferendH], List[Expression2]) = {
     val (Some(destinationResultLine), destinationDeferreds) =
       translate(hinputs, hamuts, locals, stackHeight, nodesByLine, structExpr2);
@@ -159,7 +159,7 @@ object MutateHammer {
         m.Borrow,
         expectedStructBoxMemberType,
         expectedBorrowBoxResultType,
-        memberName))
+        NameHammer.stringify(memberName)))
     val loadBoxAccess =
       RegisterAccessH(loadBoxNode.registerId, expectedBorrowBoxResultType)
     val storeNode =
@@ -182,7 +182,7 @@ object MutateHammer {
       nodesByLine: NodesBox,
       sourceExprResultLine: RegisterAccessH[ReferendH],
       structExpr2: ReferenceExpression2,
-      memberName: String
+      memberName: FullName2[IVarName2]
   ): (RegisterAccessH[ReferendH], List[Expression2]) = {
     val (Some(destinationResultLine), destinationDeferreds) =
       translate(hinputs, hamuts, locals, stackHeight, nodesByLine, structExpr2);
@@ -203,7 +203,7 @@ object MutateHammer {
           destinationResultLine.expectStructAccess(),
           memberIndex,
           sourceExprResultLine,
-          memberName))
+          NameHammer.stringify(memberName)))
     val oldValueAccess = RegisterAccessH(storeNode.registerId, sourceExprResultLine.expectedType)
     (oldValueAccess, destinationDeferreds)
   }
@@ -216,7 +216,7 @@ object MutateHammer {
       nodesByLine: NodesBox,
       sourceExprResultLine: RegisterAccessH[ReferendH],
       sourceResultPointerTypeH: ReferenceH[ReferendH],
-      varId: FullName2,
+      varId: FullName2[IVarName2],
       variability: Variability,
       reference: Coord
   ): (RegisterAccessH[ReferendH], List[Expression2]) = {
@@ -236,7 +236,7 @@ object MutateHammer {
         m.Borrow,
         expectedLocalBoxType,
         expectedBorrowBoxResultType,
-        varId.variableName))
+        NameHammer.stringify(varId)))
     val loadBoxAccess =
       RegisterAccessH(loadBoxNode.registerId, expectedBorrowBoxResultType)
     val storeNode =
@@ -257,7 +257,7 @@ object MutateHammer {
       stackHeight: StackHeightBox,
       nodesByLine: NodesBox,
       sourceExprResultLine: RegisterAccessH[ReferendH],
-      varId: FullName2
+      varId: FullName2[IVarName2]
   ): (RegisterAccessH[ReferendH], List[Expression2]) = {
     val local = locals.get(varId).get
     val newStoreNode =
@@ -266,7 +266,7 @@ object MutateHammer {
           nodesByLine.nextId(),
           local,
           sourceExprResultLine,
-          varId.variableName))
+          NameHammer.stringify(varId)))
     val oldValueAccess = RegisterAccessH(newStoreNode.registerId, sourceExprResultLine.expectedType)
     (oldValueAccess, List())
   }

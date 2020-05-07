@@ -96,11 +96,12 @@ object StructTemplarMiddle {
     // actually thats probably fine. we would just reuse the existing one.
     // ...we best write a doc section on this.
 
+    val anonymousSubstructName = interfaceRef.fullName.addStep(AnonymousSubstructName2(List(functionFullName)))
     StructTemplarCore.makeAnonymousSubstruct(
       outerEnv,
       temputs,
       maybeConstructorOriginFunctionA,
-      functionFullName,
+      anonymousSubstructName,
       interfaceRef,
       lambdas)
   }

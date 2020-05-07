@@ -2,6 +2,7 @@ package net.verdagon.vale.vivem
 
 import java.io.PrintStream
 
+import net.verdagon.vale.hammer.NameHammer
 import net.verdagon.vale.metal._
 
 //import net.verdagon.vale.hammer._
@@ -706,7 +707,7 @@ class Heap(in_vivemDout: PrintStream) {
       case StructInstanceV(structH, members) => {
         vassert(members.size == structH.members.size)
         VonObject(
-          structH.fullName.parts.last.humanName,
+          structH.fullName.toString,
           None,
           structH.members.zip(members).zipWithIndex.map({ case ((memberH, memberV), index) =>
             VonMember(None, Some(memberH.name), toVon(memberV))

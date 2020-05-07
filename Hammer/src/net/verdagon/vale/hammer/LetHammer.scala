@@ -5,7 +5,7 @@ import net.verdagon.vale.hinputs.Hinputs
 import net.verdagon.vale.{metal => m}
 import net.verdagon.vale.metal.{Variability => _, _}
 import net.verdagon.vale.templar._
-import net.verdagon.vale.templar.env.{AddressibleLocalVariable2, ReferenceLocalVariable2, FullName2}
+import net.verdagon.vale.templar.env.{AddressibleLocalVariable2, ReferenceLocalVariable2}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.vfail
 
@@ -83,7 +83,7 @@ object LetHammer {
       nodesByLine: NodesBox,
       sourceExprResultLine: RegisterAccessH[ReferendH],
       sourceResultPointerTypeH: ReferenceH[ReferendH],
-      varId: FullName2,
+      varId: FullName2[IVarName2],
       variability: Variability,
       reference: Coord):
   Unit = {
@@ -106,7 +106,7 @@ object LetHammer {
           nodesByLine.nextId(),
           RegisterAccessH(boxNode.registerId, expectedLocalBoxType),
           local,
-          varId.variableName))
+          NameHammer.stringify(varId)))
     val _ = stackNode // Don't need it
   }
 
@@ -120,7 +120,7 @@ object LetHammer {
       sourceExprResultLine: RegisterAccessH[ReferendH],
       sourceResultPointerTypeH: ReferenceH[ReferendH],
       let2: LetAndLend2,
-      varId: FullName2,
+      varId: FullName2[IVarName2],
       variability: Variability,
       reference: Coord):
   (RegisterAccessH[ReferendH]) = {
@@ -149,7 +149,7 @@ object LetHammer {
       nodesByLine: NodesBox,
       sourceExprResultLine: RegisterAccessH[ReferendH],
       sourceResultPointerTypeH: ReferenceH[ReferendH],
-      varId: FullName2):
+      varId: FullName2[IVarName2]):
   Unit = {
     val localIndex =
       locals.addTemplarLocal(varId, stackHeight.snapshot, sourceResultPointerTypeH)
@@ -160,7 +160,7 @@ object LetHammer {
           nodesByLine.nextId(),
           sourceExprResultLine,
           localIndex,
-          varId.variableName))
+          NameHammer.stringify(varId)))
     val _ = stackNode // Don't need it
   }
 
@@ -174,7 +174,7 @@ object LetHammer {
         sourceExprResultLine: RegisterAccessH[ReferendH],
         sourceResultPointerTypeH: ReferenceH[ReferendH],
         let2: LetAndLend2,
-        varId: FullName2):
+        varId: FullName2[IVarName2]):
     RegisterAccessH[ReferendH] = {
 
         translateMundaneLet(

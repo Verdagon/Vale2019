@@ -221,7 +221,7 @@ case class ElementAddressV(arrayId: AllocationId, elementIndex: Int) {
 
 // Used in tracking reference counts/maps.
 case class CallId(blockDepth: Int, function: FunctionH) {
-  override def toString: String = "ƒ" + blockDepth + "/" + function.prototype.fullName.parts.head.humanName
+  override def toString: String = "ƒ" + blockDepth + "/" + function.prototype.fullName.toString
 }
 case class RegisterId(blockId: BlockId, line: String)
 case class ArgumentId(callId: CallId, index: Int)

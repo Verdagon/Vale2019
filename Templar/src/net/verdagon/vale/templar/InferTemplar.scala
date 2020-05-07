@@ -66,7 +66,7 @@ object InferTemplar {
         // We can only ever lookup types by name in expression context,
         // otherwise we have no idea what List<Str> means; it could
         // mean a list of strings or a list of the Str(:Int)Str function.
-        env.getNearestTemplataWithAbsoluteName(name, Set[ILookupContext](TemplataLookupContext)) match {
+        env.getNearestTemplataWithAbsoluteNameA(name, Set[ILookupContext](TemplataLookupContext)) match {
           case None => vfail("Couldn't find anything with name: " + name)
           case Some(x) => x
         }

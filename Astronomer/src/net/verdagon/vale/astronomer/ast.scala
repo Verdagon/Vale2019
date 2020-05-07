@@ -62,7 +62,7 @@ case class StructMemberA(
     typeRune: IRuneA)
 
 case class ImplA(
-    name: INameA,
+    name: ImplNameA,
     rules: List[IRulexAR],
     typeByRune: Map[IRuneA, ITemplataType],
     structKindRune: IRuneA,
