@@ -166,7 +166,7 @@ object EnvironmentUtils {
     oldEntries: Map[IName2, List[IEnvEntry]],
     functionA: FunctionA
   ): Map[IName2, List[IEnvEntry]] = {
-    val name = vimpl()//functionA.name
+    val name = start here is this a template? vimpl()//functionA.name
     addEntry(oldEntries, name, FunctionEnvEntry(functionA))
   }
 

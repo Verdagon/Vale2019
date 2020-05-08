@@ -347,19 +347,19 @@ class RuleTyperMatcher[Env, State](
     // else, then once youve considered them, add them to the above matches.
     (tyype, expectedType) match {
       case (IntegerTemplataType, IntegerTemplataType) => {
-        (RuleTyperMatchSuccess(Unit))
+        (RuleTyperMatchSuccess(()))
       }
       case (nonIntType, IntegerTemplataType) => {
         (RuleTyperMatchConflict(conclusions.conclusions, "Expected an int, but was " + nonIntType, List()))
       }
       case (MutabilityTemplataType, MutabilityTemplataType) => {
-        (RuleTyperMatchSuccess(Unit))
+        (RuleTyperMatchSuccess(()))
       }
       case (CoordTemplataType, CoordTemplataType) => {
-        (RuleTyperMatchSuccess(Unit))
+        (RuleTyperMatchSuccess(()))
       }
       case (KindTemplataType, KindTemplataType | CoordTemplataType) => {
-        (RuleTyperMatchSuccess(Unit))
+        (RuleTyperMatchSuccess(()))
       }
       case (TemplateTemplataType(paramTypes, returnType), TemplateTemplataType(expectedParamTypes, expectedReturnType)) => {
         if (paramTypes.size != expectedParamTypes.size) {
@@ -371,7 +371,7 @@ class RuleTyperMatcher[Env, State](
         if (returnType != expectedReturnType) {
           return (RuleTyperMatchConflict(conclusions.conclusions, "Received " + returnType + " return type but expected " + expectedReturnType, List()))
         }
-        (RuleTyperMatchSuccess(Unit))
+        (RuleTyperMatchSuccess(()))
       }
       //          // Is this right? Can't we look it up as a coord, like we did with KindTemplata/CoordTemplataType?
       //          case (InterfaceTemplata(_, interfaceS), KindTemplataType | CoordTemplataType) => {

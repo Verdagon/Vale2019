@@ -9,10 +9,9 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="Parser" />
-    <orderEntry type="library" name="sbt: org.scala-lang.modules:scala-parser-combinators_2.12:1.1.1:jar" level="project" />
-    <orderEntry type="library" name="scala-sdk-2.12.8" level="application" />
     <orderEntry type="module" module-name="Utils" />
-    <orderEntry type="library" name="sbt: org.scalactic:scalactic_2.12:3.0.8:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.scalatest:scalatest_2.12:3.0.8:jar" level="project" />
+    <orderEntry type="library" name="scala-sdk-2.12.6" level="application" />
+    <orderEntry type="library" name="org.scalatest:scalatest_2.12:3.0.8" level="project" />
+    <orderEntry type="library" name="org.scala-lang.modules:scala-parser-combinators_2.12:1.1.1" level="project" />
   </component>
 </module>

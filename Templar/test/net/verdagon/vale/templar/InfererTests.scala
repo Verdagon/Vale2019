@@ -1,17 +1,18 @@
-package net.verdagon.vale.templar
+package net.verdagon.vale.templar.infer
 
 import net.verdagon.vale.astronomer.{FakeState => _, SimpleEnvironment => _, _}
 import net.verdagon.vale.astronomer.ruletyper.IRuleTyperEvaluatorDelegate
 import net.verdagon.vale.parser._
 import net.verdagon.vale.scout.{IEnvironment => _, _}
-import net.verdagon.vale.templar.{FullName2, IName2, InterfaceName2, StructName2}
+import net.verdagon.vale.templar.{CodeRune2, FullName2, IName2, ImplicitRune2, InterfaceName2, StructName2}
 import net.verdagon.vale.{vassert, vassertSome, vfail, vimpl, scout => s}
 import net.verdagon.vale.templar.env._
+import net.verdagon.vale.templar.infer.{InfererEquator, InfererEvaluator}
+import net.verdagon.vale.templar.infer.infer.{IInferSolveResult, InferSolveFailure, InferSolveSuccess}
 import net.verdagon.vale.templar.templata._
-import org.scalamock.scalatest.MockFactory
+//import org.scalamock.scalatest.MockFactory
 import net.verdagon.vale.templar.types._
 import org.scalatest.{FunSuite, Matchers}
-import net.verdagon.vale.templar.infer.inferer._
 
 import scala.collection.immutable.List
 
@@ -37,16 +38,24 @@ case class SimpleEnvironment(entries: Map[INameA, IEnvEntry]) extends IEnvironme
   def globalEnv: NamespaceEnvironment[IName2] = {
     vfail()
   }
-  override def getAllTemplatasWithAbsoluteName(name: INameA, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
+  override def getAllTemplatasWithAbsoluteNameA(name: INameA, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
     entries.get(name).toList.map(EnvironmentUtils.entryToTemplata(this, _))
   }
-  override def getNearestTemplataWithAbsoluteName(name: INameA, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
+  override def getNearestTemplataWithAbsoluteNameA(name: INameA, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
     entries.get(name).map(EnvironmentUtils.entryToTemplata(this, _))
   }
   override def getAllTemplatasWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
     vimpl()
   }
   override def getNearestTemplataWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
+    vimpl()
+  }
+
+  override def getAllTemplatasWithAbsoluteName2(name: IName2, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
+    vimpl()
+  }
+
+  override def getNearestTemplataWithAbsoluteName2(name: IName2, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
     vimpl()
   }
 }
@@ -102,7 +111,7 @@ class FakeTemplataTemplarInnerDelegate extends ITemplataTemplarInnerDelegate[Sim
     vfail()
   }
   override def lookupTemplata(env: SimpleEnvironment, name: INameA): ITemplata = {
-    vassertSome(env.getNearestTemplataWithAbsoluteName(name, Set(TemplataLookupContext)))
+    vassertSome(env.getNearestTemplataWithAbsoluteNameA(name, Set(TemplataLookupContext)))
   }
 
   override def getArraySequenceKind(env: SimpleEnvironment, state: FakeState, mutability: Mutability, size: Int, element: Coord): (ArraySequenceT2) = {
@@ -122,7 +131,7 @@ class FakeTemplataTemplarInnerDelegate extends ITemplataTemplarInnerDelegate[Sim
   }
 }
 
-class InfererTests extends FunSuite with Matchers with MockFactory {
+class InfererTests extends FunSuite with Matchers {
   def makeCannedEnvironment(): SimpleEnvironment = {
     var entries = Map[INameA, IEnvEntry]()
     val immInterfaceName = TopLevelCitizenDeclarationNameA("ImmInterface", CodeLocationS(0, 0))
@@ -290,18 +299,18 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
           makeCannedEnvironment(),
           FakeState(),
           List(
-            TemplexAR(RuneAT(CodeRuneA("__C"), CoordTemplataType)),
-            EqualsAR(
-              TemplexAR(RuneAT(CodeRuneA("__C"), CoordTemplataType)),
-              TemplexAR(OwnershippedAT(BorrowP,NameAT(CodeTypeNameA("ImmInterface"), CoordTemplataType))))),
-          Map(CodeRuneA("__C") -> CoordTemplataType),
+            TemplexTR(RuneTT(CodeRune2("__C"), CoordTemplataType)),
+            EqualsTR(
+              TemplexTR(RuneTT(CodeRune2("__C"), CoordTemplataType)),
+              TemplexTR(OwnershippedTT(BorrowP,NameTT(CodeTypeNameA("ImmInterface"), CoordTemplataType))))),
+          Map(CodeRune2("__C") -> CoordTemplataType),
           Map(),
           List(),
           None,
           true)
 
     vassert(
-      inferences.templatasByRune(CodeRuneA("__C")) ==
+      inferences.templatasByRune(CodeRune2("__C")) ==
         CoordTemplata(Coord(Share, InterfaceRef2(FullName2(List(), InterfaceName2("ImmInterface", List()))))))
   }
 
@@ -311,9 +320,9 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
         .solve(
           makeCannedEnvironment(),
           FakeState(),
-          List(TemplexAR(RuneAT(CodeRuneA("C"), CoordTemplataType))),
-          Map(CodeRuneA("C") -> CoordTemplataType),
-          Map(CodeRuneA("C") -> KindTemplata(InterfaceRef2(FullName2(List(), InterfaceName2("ImmInterface",List(KindTemplata(Int2()))))))),
+          List(TemplexTR(RuneTT(CodeRune2("C"), CoordTemplataType))),
+          Map(CodeRune2("C") -> CoordTemplataType),
+          Map(CodeRune2("C") -> KindTemplata(InterfaceRef2(FullName2(List(), InterfaceName2("ImmInterface",List(KindTemplata(Int2()))))))),
           List(),
           None,
           true)
@@ -327,9 +336,9 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
         .solve(
           makeCannedEnvironment(),
           FakeState(),
-          List(EqualsAR(TemplexAR(RuneAT(CodeRuneA("C"), CoordTemplataType)), TemplexAR(RuneAT(CodeRuneA("A"), KindTemplataType)))),
-          Map(CodeRuneA("A") -> KindTemplataType),
-          Map(CodeRuneA("A") -> KindTemplata(Int2())),
+          List(EqualsTR(TemplexTR(RuneTT(CodeRune2("C"), CoordTemplataType)), TemplexTR(RuneTT(CodeRune2("A"), KindTemplataType)))),
+          Map(CodeRune2("A") -> KindTemplataType),
+          Map(CodeRune2("A") -> KindTemplata(Int2())),
           List(),
           None,
           true)
@@ -344,16 +353,16 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
           makeCannedEnvironment(),
           FakeState(),
           List(
-            EqualsAR(
-              TemplexAR(RuneAT(CodeRuneA("C"), CoordTemplataType)),
-              CallAR("toRef", List(TemplexAR(RuneAT(CodeRuneA("A"), KindTemplataType))), CoordTemplataType))),
-          Map(CodeRuneA("C") -> CoordTemplataType, CodeRuneA("A") -> KindTemplataType),
-          Map(CodeRuneA("A") -> KindTemplata(Int2())),
+            EqualsTR(
+              TemplexTR(RuneTT(CodeRune2("C"), CoordTemplataType)),
+              CallTR("toRef", List(TemplexTR(RuneTT(CodeRune2("A"), KindTemplataType))), CoordTemplataType))),
+          Map(CodeRune2("C") -> CoordTemplataType, CodeRune2("A") -> KindTemplataType),
+          Map(CodeRune2("A") -> KindTemplata(Int2())),
           List(),
           None,
           true)
 
-    conclusions.templatasByRune(CodeRuneA("C")) shouldEqual CoordTemplata(Coord(Share, Int2()))
+    conclusions.templatasByRune(CodeRune2("C")) shouldEqual CoordTemplata(Coord(Share, Int2()))
   }
 
   test("Can explicitly coerce from kind to coord 2") {
@@ -363,15 +372,15 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
           makeCannedEnvironment(),
           FakeState(),
           List(
-            TemplexAR(RuneAT(ImplicitRuneA(0), CoordTemplataType)),
-            EqualsAR(TemplexAR(RuneAT(ImplicitRuneA(0), CoordTemplataType)),TemplexAR(NameAT(CodeTypeNameA("Int"), CoordTemplataType)))),
-          Map(ImplicitRuneA(0) -> CoordTemplataType),
+            TemplexTR(RuneTT(ImplicitRune2(0), CoordTemplataType)),
+            EqualsTR(TemplexTR(RuneTT(ImplicitRune2(0), CoordTemplataType)),TemplexTR(NameTT(CodeTypeNameA("Int"), CoordTemplataType)))),
+          Map(ImplicitRune2(0) -> CoordTemplataType),
           Map(),
           List(),
           None,
           true)
 
-    conclusions.templatasByRune(ImplicitRuneA(0)) shouldEqual CoordTemplata(Coord(Share, Int2()))
+    conclusions.templatasByRune(ImplicitRune2(0)) shouldEqual CoordTemplata(Coord(Share, Int2()))
   }
 
   test("Can match KindTemplataType against StructEnvEntry / StructTemplata") {
@@ -381,16 +390,16 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
           makeCannedEnvironment(),
           FakeState(),
           List(
-            EqualsAR(
-              TemplexAR(RuneAT(CodeRuneA("__RetRune"), CoordTemplataType)),
-              CallAR("toRef",List(TemplexAR(NameAT(CodeTypeNameA("MutStruct"), KindTemplataType))), TemplateTemplataType(List(KindTemplataType), CoordTemplataType)))),
-          Map(CodeRuneA("__RetRune") -> CoordTemplataType),
+            EqualsTR(
+              TemplexTR(RuneTT(CodeRune2("__RetRune"), CoordTemplataType)),
+              CallTR("toRef",List(TemplexTR(NameTT(CodeTypeNameA("MutStruct"), KindTemplataType))), TemplateTemplataType(List(KindTemplataType), CoordTemplataType)))),
+          Map(CodeRune2("__RetRune") -> CoordTemplataType),
           Map(),
           List(),
           None,
           true)
 
-    conclusions.templatasByRune(CodeRuneA("__RetRune")) shouldEqual
+    conclusions.templatasByRune(CodeRune2("__RetRune")) shouldEqual
       CoordTemplata(Coord(Own, StructRef2(FullName2(List(), StructName2("MutStruct", List())))))
   }
 
@@ -401,15 +410,15 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
           makeCannedEnvironment(),
           FakeState(),
           List(
-            TemplexAR(RuneAT(ImplicitRuneA(0), CoordTemplataType)),
-            EqualsAR(TemplexAR(RuneAT(ImplicitRuneA(0), CoordTemplataType)),CallAR("toRef", List(TemplexAR(NameAT(CodeTypeNameA("Int"), KindTemplataType))), CoordTemplataType))),
-          Map(ImplicitRuneA(0) -> CoordTemplataType),
+            TemplexTR(RuneTT(ImplicitRune2(0), CoordTemplataType)),
+            EqualsTR(TemplexTR(RuneTT(ImplicitRune2(0), CoordTemplataType)),CallTR("toRef", List(TemplexTR(NameTT(CodeTypeNameA("Int"), KindTemplataType))), CoordTemplataType))),
+          Map(ImplicitRune2(0) -> CoordTemplataType),
           Map(),
           List(),
           None,
           true)
 
-    vassert(inferences.templatasByRune(ImplicitRuneA(0)) == CoordTemplata(Coord(Share, Int2())))
+    vassert(inferences.templatasByRune(ImplicitRune2(0)) == CoordTemplata(Coord(Share, Int2())))
   }
 
   test("Can infer templata from CallAT") {
@@ -419,16 +428,16 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
           makeCannedEnvironment(),
           FakeState(),
           List(
-            EqualsAR(
-              TemplexAR(RuneAT(CodeRuneA("X"), KindTemplataType)),
-              TemplexAR(CallAT(NameAT(CodeTypeNameA("MutTInterface"), TemplateTemplataType(List(CoordTemplataType), KindTemplataType)),List(RuneAT(CodeRuneA("T"), CoordTemplataType)), KindTemplataType)))),
-          Map(CodeRuneA("X") -> KindTemplataType, CodeRuneA("T") -> CoordTemplataType),
-          Map(CodeRuneA("X") -> KindTemplata(InterfaceRef2(FullName2(List(), InterfaceName2("MutTInterface",List(CoordTemplata(Coord(Share, Int2())))))))),
+            EqualsTR(
+              TemplexTR(RuneTT(CodeRune2("X"), KindTemplataType)),
+              TemplexTR(CallTT(NameTT(CodeTypeNameA("MutTInterface"), TemplateTemplataType(List(CoordTemplataType), KindTemplataType)),List(RuneTT(CodeRune2("T"), CoordTemplataType)), KindTemplataType)))),
+          Map(CodeRune2("X") -> KindTemplataType, CodeRune2("T") -> CoordTemplataType),
+          Map(CodeRune2("X") -> KindTemplata(InterfaceRef2(FullName2(List(), InterfaceName2("MutTInterface",List(CoordTemplata(Coord(Share, Int2())))))))),
           List(),
           None,
           true)
 
-    vassert(inferences.templatasByRune(CodeRuneA("T")) == CoordTemplata(Coord(Share, Int2())))
+    vassert(inferences.templatasByRune(CodeRune2("T")) == CoordTemplata(Coord(Share, Int2())))
   }
 
   test("Can conjure an owning coord from a borrow coord") {
@@ -438,28 +447,28 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
           makeCannedEnvironment(),
           FakeState(),
           List(
-            TemplexAR(RuneAT(CodeRuneA("T"), CoordTemplataType)),
-            TemplexAR(RuneAT(ImplicitRuneA(1337), KindTemplataType)),
-            EqualsAR(
-              TemplexAR(RuneAT(CodeRuneA("T"), CoordTemplataType)),
-              ComponentsAR(
+            TemplexTR(RuneTT(CodeRune2("T"), CoordTemplataType)),
+            TemplexTR(RuneTT(ImplicitRune2(1337), KindTemplataType)),
+            EqualsTR(
+              TemplexTR(RuneTT(CodeRune2("T"), CoordTemplataType)),
+              ComponentsTR(
                 CoordTemplataType,
-                List(TemplexAR(OwnershipAT(OwnP)), TemplexAR(RuneAT(ImplicitRuneA(1337), KindTemplataType))))),
-            TemplexAR(RuneAT(ImplicitRuneA(0), CoordTemplataType)),
-            EqualsAR(
-              TemplexAR(RuneAT(ImplicitRuneA(0), CoordTemplataType)),
-              ComponentsAR(
+                List(TemplexTR(OwnershipTT(OwnP)), TemplexTR(RuneTT(ImplicitRune2(1337), KindTemplataType))))),
+            TemplexTR(RuneTT(ImplicitRune2(0), CoordTemplataType)),
+            EqualsTR(
+              TemplexTR(RuneTT(ImplicitRune2(0), CoordTemplataType)),
+              ComponentsTR(
                 CoordTemplataType,
-                List(TemplexAR(OwnershipAT(BorrowP)), TemplexAR(RuneAT(ImplicitRuneA(1337), KindTemplataType)))))),
+                List(TemplexTR(OwnershipTT(BorrowP)), TemplexTR(RuneTT(ImplicitRune2(1337), KindTemplataType)))))),
           Map(
-            ImplicitRuneA(1337) -> KindTemplataType,
-            ImplicitRuneA(0) -> CoordTemplataType),
+            ImplicitRune2(1337) -> KindTemplataType,
+            ImplicitRune2(0) -> CoordTemplataType),
           Map(),
           List(AtomAP(CaptureA(CodeVarNameA("m"),FinalP),None,ImplicitRuneA(0),None)),
           Some(List(ParamFilter(Coord(Borrow,InterfaceRef2(FullName2(List(), InterfaceName2("MutInterface", List())))),None))),
           true)
 
-    vassert(inferences.templatasByRune(CodeRuneA("T")) == CoordTemplata(Coord(Own,InterfaceRef2(FullName2(List(), InterfaceName2("MutInterface", List()))))))
+    vassert(inferences.templatasByRune(CodeRune2("T")) == CoordTemplata(Coord(Own,InterfaceRef2(FullName2(List(), InterfaceName2("MutInterface", List()))))))
   }
 
   test("Rune 0 upcasts to right type, simple") {
@@ -469,17 +478,17 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
           makeCannedEnvironment(),
           FakeState(),
           List(
-            TemplexAR(RuneAT(CodeRuneA("__Let0_"), CoordTemplataType)),
-            EqualsAR(
-              TemplexAR(RuneAT(CodeRuneA("__Let0_"), CoordTemplataType)),
-              CallAR("toRef", List(TemplexAR(NameAT(CodeTypeNameA("MutInterface"), KindTemplataType))), CoordTemplataType))),
-          Map(CodeRuneA("__Let0_") -> KindTemplataType),
+            TemplexTR(RuneTT(CodeRune2("__Let0_"), CoordTemplataType)),
+            EqualsTR(
+              TemplexTR(RuneTT(CodeRune2("__Let0_"), CoordTemplataType)),
+              CallTR("toRef", List(TemplexTR(NameTT(CodeTypeNameA("MutInterface"), KindTemplataType))), CoordTemplataType))),
+          Map(CodeRune2("__Let0_") -> KindTemplataType),
           Map(),
           List(AtomAP(CaptureA(CodeVarNameA("x"),FinalP),None,CodeRuneA("__Let0_"),None)),
           Some(List(ParamFilter(Coord(Own,StructRef2(FullName2(List(), StructName2("MutStruct",List())))),None))),
           true)
 
-    vassert(inferences.templatasByRune(CodeRuneA("__Let0_")) == CoordTemplata(Coord(Own, InterfaceRef2(FullName2(List(), InterfaceName2("MutInterface", List()))))))
+    vassert(inferences.templatasByRune(CodeRune2("__Let0_")) == CoordTemplata(Coord(Own, InterfaceRef2(FullName2(List(), InterfaceName2("MutInterface", List()))))))
   }
 
   test("Rune 0 upcasts to right type templated") {
@@ -489,29 +498,29 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
           makeCannedEnvironment(),
           FakeState(),
           List(
-            TemplexAR(RuneAT(CodeRuneA("__Let0_"), CoordTemplataType)),
-            EqualsAR(
-              TemplexAR(RuneAT(CodeRuneA("__Let0_"), CoordTemplataType)),
-              CallAR(
+            TemplexTR(RuneTT(CodeRune2("__Let0_"), CoordTemplataType)),
+            EqualsTR(
+              TemplexTR(RuneTT(CodeRune2("__Let0_"), CoordTemplataType)),
+              CallTR(
                 "toRef",
                 List(
-                  TemplexAR(
-                    CallAT(
-                      NameAT(CodeTypeNameA("MutTInterface"), TemplateTemplataType(List(CoordTemplataType), KindTemplataType)),
-                      List(RuneAT(CodeRuneA("T"), CoordTemplataType)),
+                  TemplexTR(
+                    CallTT(
+                      NameTT(CodeTypeNameA("MutTInterface"), TemplateTemplataType(List(CoordTemplataType), KindTemplataType)),
+                      List(RuneTT(CodeRune2("T"), CoordTemplataType)),
                       KindTemplataType))),
                 CoordTemplataType))),
-          Map(CodeRuneA("__Let0_") -> KindTemplataType, CodeRuneA("T") -> CoordTemplataType),
+          Map(CodeRune2("__Let0_") -> KindTemplataType, CodeRune2("T") -> CoordTemplataType),
           Map(),
           List(AtomAP(CaptureA(CodeVarNameA("x"),FinalP),None,CodeRuneA("__Let0_"),None)),
           Some(List(ParamFilter(Coord(Own,StructRef2(FullName2(List(), StructName2("MutTStruct",List(CoordTemplata(Coord(Share, Int2()))))))),None))),
           true)
 
     vassert(
-      inferences.templatasByRune(CodeRuneA("__Let0_")) ==
+      inferences.templatasByRune(CodeRune2("__Let0_")) ==
         CoordTemplata(Coord(Own, InterfaceRef2(FullName2(List(), InterfaceName2("MutTInterface", List(CoordTemplata(Coord(Share, Int2())))))))))
     vassert(
-      inferences.templatasByRune(CodeRuneA("T")) ==
+      inferences.templatasByRune(CodeRune2("T")) ==
         CoordTemplata(Coord(Share, Int2())))
   }
 
@@ -522,14 +531,14 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
 
     val rules =
       List(
-        EqualsAR(
-          TemplexAR(RuneAT(CodeRuneA("T"), CoordTemplataType)),
-          ComponentsAR(
+        EqualsTR(
+          TemplexTR(RuneTT(CodeRune2("T"), CoordTemplataType)),
+          ComponentsTR(
             CoordTemplataType,
             List(
-              OrAR(List(TemplexAR(OwnershipAT(OwnP)), TemplexAR(OwnershipAT(ShareP)))),
-              CallAR("passThroughIfConcrete",List(TemplexAR(RuneAT(ImplicitRuneA(0), KindTemplataType))), KindTemplataType)))),
-        EqualsAR(TemplexAR(RuneAT(CodeRuneA("V"), CoordTemplataType)),CallAR("toRef",List(TemplexAR(NameAT(CodeTypeNameA("Void"),KindTemplataType))), CoordTemplataType)))
+              OrTR(List(TemplexTR(OwnershipTT(OwnP)), TemplexTR(OwnershipTT(ShareP)))),
+              CallTR("passThroughIfConcrete",List(TemplexTR(RuneTT(ImplicitRune2(0), KindTemplataType))), KindTemplataType)))),
+        EqualsTR(TemplexTR(RuneTT(CodeRune2("V"), CoordTemplataType)),CallTR("toRef",List(TemplexTR(NameTT(CodeTypeNameA("Void"),KindTemplataType))), CoordTemplataType)))
     val atoms =
       List(AtomAP(CaptureA(CodeVarNameA("this"),FinalP),None,CodeRuneA("T"),None))
 
@@ -539,7 +548,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
           makeCannedEnvironment(),
           FakeState(),
           rules,
-          Map(CodeRuneA("V") -> CoordTemplataType, CodeRuneA("T") -> CoordTemplataType),
+          Map(CodeRune2("V") -> CoordTemplataType, CodeRune2("T") -> CoordTemplataType),
           Map(),
           atoms,
           Some(List(paramFilter)),
@@ -549,12 +558,12 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
     // Test that it does match a pack
     val packCoord = Coord(Share,PackT2(List(),StructRef2(FullName2(List(), StructName2("__Pack",List())))))
     val (InferSolveSuccess(inferencesA)) = solve(ParamFilter(packCoord,None))
-    vassert(inferencesA.templatasByRune(CodeRuneA("T")) == CoordTemplata(packCoord))
+    vassert(inferencesA.templatasByRune(CodeRune2("T")) == CoordTemplata(packCoord))
 
     // Test that it does match a struct
     val structCoord = Coord(Own,StructRef2(FullName2(List(), StructName2("MutStruct",List()))))
     val (InferSolveSuccess(inferencesD)) = solve(ParamFilter(structCoord,None))
-    vassert(inferencesD.templatasByRune(CodeRuneA("T")) == CoordTemplata(structCoord))
+    vassert(inferencesD.templatasByRune(CodeRune2("T")) == CoordTemplata(structCoord))
 
     // Test that it doesn't match an int
     val intCoord = Coord(Share,Int2())
@@ -574,16 +583,16 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
 
     val rules =
       List(
-        EqualsAR(
-          TemplexAR(RuneAT(CodeRuneA("T"), CoordTemplataType)),
-          ComponentsAR(
+        EqualsTR(
+          TemplexTR(RuneTT(CodeRune2("T"), CoordTemplataType)),
+          ComponentsTR(
             CoordTemplataType,
             List(
-              OrAR(List(TemplexAR(OwnershipAT(OwnP)), TemplexAR(OwnershipAT(ShareP)))),
-              CallAR("passThroughIfInterface",List(TemplexAR(RuneAT(ImplicitRuneA(0), KindTemplataType))), KindTemplataType)))),
-        EqualsAR(
-          TemplexAR(RuneAT(CodeRuneA("V"), CoordTemplataType)),
-          CallAR("toRef",List(TemplexAR(NameAT(CodeTypeNameA("Void"), KindTemplataType))), CoordTemplataType)))
+              OrTR(List(TemplexTR(OwnershipTT(OwnP)), TemplexTR(OwnershipTT(ShareP)))),
+              CallTR("passThroughIfInterface",List(TemplexTR(RuneTT(ImplicitRune2(0), KindTemplataType))), KindTemplataType)))),
+        EqualsTR(
+          TemplexTR(RuneTT(CodeRune2("V"), CoordTemplataType)),
+          CallTR("toRef",List(TemplexTR(NameTT(CodeTypeNameA("Void"), KindTemplataType))), CoordTemplataType)))
     val atoms =
       List(AtomAP(CaptureA(CodeVarNameA("this"),FinalP),None,CodeRuneA("T"),None))
 
@@ -593,7 +602,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
           makeCannedEnvironment(),
           FakeState(),
           rules,
-          Map(CodeRuneA("T") -> CoordTemplataType, CodeRuneA("V") -> CoordTemplataType),
+          Map(CodeRune2("T") -> CoordTemplataType, CodeRune2("V") -> CoordTemplataType),
           Map(),
           atoms,
           Some(List(paramFilter)),
@@ -603,7 +612,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
     // Test that it does match an interface
     val interfaceCoord = Coord(Own,InterfaceRef2(FullName2(List(), InterfaceName2("MutInterface",List()))))
     val (InferSolveSuccess(inferencesD)) = solve(ParamFilter(interfaceCoord,None))
-    vassert(inferencesD.templatasByRune(CodeRuneA("T")) == CoordTemplata(interfaceCoord))
+    vassert(inferencesD.templatasByRune(CodeRune2("T")) == CoordTemplata(interfaceCoord))
 
     // Test that it doesn't match an int
     val intCoord = Coord(Share,Int2())
@@ -622,13 +631,13 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
 
     val rules =
       List(
-        EqualsAR(
-          TemplexAR(RuneAT(CodeRuneA("T"), CoordTemplataType)),
-          ComponentsAR(
+        EqualsTR(
+          TemplexTR(RuneTT(CodeRune2("T"), CoordTemplataType)),
+          ComponentsTR(
             CoordTemplataType,
             List(
-              OrAR(List(TemplexAR(OwnershipAT(OwnP)), TemplexAR(OwnershipAT(ShareP)))),
-              CallAR("passThroughIfStruct",List(TemplexAR(RuneAT(ImplicitRuneA(0), KindTemplataType))), KindTemplataType)))))
+              OrTR(List(TemplexTR(OwnershipTT(OwnP)), TemplexTR(OwnershipTT(ShareP)))),
+              CallTR("passThroughIfStruct",List(TemplexTR(RuneTT(ImplicitRune2(0), KindTemplataType))), KindTemplataType)))))
     val atoms =
       List(AtomAP(CaptureA(CodeVarNameA("this"), FinalP),None,CodeRuneA("T"),None))
 
@@ -638,7 +647,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
           makeCannedEnvironment(),
           FakeState(),
           rules,
-          Map(CodeRuneA("T") -> CoordTemplataType),
+          Map(CodeRune2("T") -> CoordTemplataType),
           Map(),
           atoms,
           Some(List(paramFilter)),
@@ -648,7 +657,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
     // Test that it does match a struct
     val structCoord = Coord(Own,StructRef2(FullName2(List(), StructName2("MutStruct",List()))))
     val (InferSolveSuccess(inferencesD)) = solve(ParamFilter(structCoord,None))
-    vassert(inferencesD.templatasByRune(CodeRuneA("T")) == CoordTemplata(structCoord))
+    vassert(inferencesD.templatasByRune(CodeRune2("T")) == CoordTemplata(structCoord))
 
     // Test that it doesn't match an int
     val intCoord = Coord(Share,Int2())
@@ -673,13 +682,13 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
 
     val rules =
       List(
-        TemplexAR(RuneAT(ImplicitRuneA(0), CoordTemplataType)),
-        EqualsAR(
-          TemplexAR(RuneAT(ImplicitRuneA(0), CoordTemplataType)),
-          TemplexAR(
-            CallAT(
-              NameAT(CodeTypeNameA("MutTStruct"), TemplateTemplataType(List(CoordTemplataType), KindTemplataType)),
-              List(NameAT(CodeTypeNameA("Int"), CoordTemplataType)),
+        TemplexTR(RuneTT(ImplicitRune2(0), CoordTemplataType)),
+        EqualsTR(
+          TemplexTR(RuneTT(ImplicitRune2(0), CoordTemplataType)),
+          TemplexTR(
+            CallTT(
+              NameTT(CodeTypeNameA("MutTStruct"), TemplateTemplataType(List(CoordTemplataType), KindTemplataType)),
+              List(NameTT(CodeTypeNameA("Int"), CoordTemplataType)),
               CoordTemplataType))))
     val atoms =
       List(AtomAP(CaptureA(CodeVarNameA("this"),FinalP),None,CodeRuneA("T"),None))
@@ -689,13 +698,13 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
         makeCannedEnvironment(),
         FakeState(),
         rules,
-        Map(ImplicitRuneA(0) -> CoordTemplataType),
+        Map(ImplicitRune2(0) -> CoordTemplataType),
         Map(),
         atoms,
         None,
         true)
 
-    inferencesD.templatasByRune(ImplicitRuneA(0)) shouldEqual
+    inferencesD.templatasByRune(ImplicitRune2(0)) shouldEqual
       CoordTemplata(Coord(Own,StructRef2(FullName2(List(), StructName2("MutTStruct",List(CoordTemplata(Coord(Share,Int2()))))))))
   }
 
@@ -703,8 +712,8 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
   test("Test result of a CallAT can coerce to coord") {
     val rules =
       List(
-        TemplexAR(RuneAT(CodeRuneA("__Par0"), CoordTemplataType)),
-        EqualsAR(TemplexAR(RuneAT(CodeRuneA("__Par0"), CoordTemplataType)),TemplexAR(NameAT(CodeTypeNameA("MutStruct"), CoordTemplataType))))
+        TemplexTR(RuneTT(CodeRune2("__Par0"), CoordTemplataType)),
+        EqualsTR(TemplexTR(RuneTT(CodeRune2("__Par0"), CoordTemplataType)),TemplexTR(NameTT(CodeTypeNameA("MutStruct"), CoordTemplataType))))
     val atoms =
       List(AtomAP(CaptureA(CodeVarNameA("this"),FinalP),None,CodeRuneA("T"),None))
 
@@ -713,25 +722,25 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
         makeCannedEnvironment(),
         FakeState(),
         rules,
-        Map(CodeRuneA("__Par0") -> CoordTemplataType),
+        Map(CodeRune2("__Par0") -> CoordTemplataType),
         Map(),
         atoms,
         None,
         true)
-    inferencesD.templatasByRune(CodeRuneA("__Par0")) shouldEqual
+    inferencesD.templatasByRune(CodeRune2("__Par0")) shouldEqual
       CoordTemplata(Coord(Own,StructRef2(FullName2(List(), StructName2("MutStruct",List())))))
   }
 
   test("Matching a CoordTemplataType onto a CallAT") {
     val rules =
       List(
-        TemplexAR(RuneAT(ImplicitRuneA(0), CoordTemplataType)),
-        EqualsAR(
-          TemplexAR(RuneAT(ImplicitRuneA(0), CoordTemplataType)),
-          TemplexAR(
-            CallAT(
-              NameAT(CodeTypeNameA("MutTStruct"), TemplateTemplataType(List(CoordTemplataType), KindTemplataType)),
-              List(RuneAT(CodeRuneA("T"), CoordTemplataType)),
+        TemplexTR(RuneTT(ImplicitRune2(0), CoordTemplataType)),
+        EqualsTR(
+          TemplexTR(RuneTT(ImplicitRune2(0), CoordTemplataType)),
+          TemplexTR(
+            CallTT(
+              NameTT(CodeTypeNameA("MutTStruct"), TemplateTemplataType(List(CoordTemplataType), KindTemplataType)),
+              List(RuneTT(CodeRune2("T"), CoordTemplataType)),
               CoordTemplataType))))
 
     val (InferSolveSuccess(inferencesD)) =
@@ -739,12 +748,12 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
         makeCannedEnvironment(),
         FakeState(),
         rules,
-        Map(ImplicitRuneA(0) -> KindTemplataType),
+        Map(ImplicitRune2(0) -> KindTemplataType),
         Map(),
         List(AtomAP(CaptureA(CodeVarNameA("x"),FinalP),Some(AbstractAP),ImplicitRuneA(0),None)),
         Some(List(ParamFilter(Coord(Own,StructRef2(FullName2(List(), StructName2("MutTStruct",List(CoordTemplata(Coord(Share,Int2()))))))),None))),
         true)
-    inferencesD.templatasByRune(ImplicitRuneA(0)) shouldEqual
+    inferencesD.templatasByRune(ImplicitRune2(0)) shouldEqual
       CoordTemplata(Coord(Own,StructRef2(FullName2(List(), StructName2("MutTStruct",List(CoordTemplata(Coord(Share,Int2()))))))))
   }
 
@@ -754,10 +763,10 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
         makeCannedEnvironment(),
         FakeState(),
         List(
-          TemplexAR(RuneAT(CodeRuneA("__Let0_"), CoordTemplataType)),
-          TemplexAR(RuneAT(CodeRuneA("__Let0__Mem_0"), CoordTemplataType)),
-          TemplexAR(RuneAT(CodeRuneA("__Let0__Mem_1"), CoordTemplataType))),
-        Map(CodeRuneA("__Let0_") -> CoordTemplataType, CodeRuneA("__Let0__Mem_0") -> CoordTemplataType, CodeRuneA("__Let0__Mem_1") -> CoordTemplataType),
+          TemplexTR(RuneTT(CodeRune2("__Let0_"), CoordTemplataType)),
+          TemplexTR(RuneTT(CodeRune2("__Let0__Mem_0"), CoordTemplataType)),
+          TemplexTR(RuneTT(CodeRune2("__Let0__Mem_1"), CoordTemplataType))),
+        Map(CodeRune2("__Let0_") -> CoordTemplataType, CodeRune2("__Let0__Mem_0") -> CoordTemplataType, CodeRune2("__Let0__Mem_1") -> CoordTemplataType),
         Map(),
         List(
           AtomAP(
@@ -770,16 +779,16 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
                 AtomAP(CaptureA(CodeVarNameA("y"), FinalP),None,CodeRuneA("__Let0__Mem_1"),None))))),
         Some(List(ParamFilter(Coord(Share,PackT2(List(Coord(Share,Int2()), Coord(Share,Int2())),StructRef2(FullName2(List(), StructName2("__Pack",List(CoordTemplata(Coord(Share,Int2())), CoordTemplata(Coord(Share,Int2())))))))),None))),
         true)
-    inferencesD.templatasByRune(CodeRuneA("__Let0_")) shouldEqual
+    inferencesD.templatasByRune(CodeRune2("__Let0_")) shouldEqual
       CoordTemplata(
         Coord(
           Share,
           PackT2(
             List(Coord(Share,Int2()), Coord(Share,Int2())),
             StructRef2(FullName2(List(), StructName2("__Pack",List(CoordTemplata(Coord(Share,Int2())), CoordTemplata(Coord(Share,Int2())))))))))
-    inferencesD.templatasByRune(CodeRuneA("__Let0__Mem_0")) shouldEqual
+    inferencesD.templatasByRune(CodeRune2("__Let0__Mem_0")) shouldEqual
       CoordTemplata(Coord(Share,Int2()))
-    inferencesD.templatasByRune(CodeRuneA("__Let0__Mem_1")) shouldEqual
+    inferencesD.templatasByRune(CodeRune2("__Let0__Mem_1")) shouldEqual
       CoordTemplata(Coord(Share,Int2()))
   }
 
@@ -789,16 +798,16 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
         makeCannedEnvironment(),
         FakeState(),
         List(
-          TemplexAR(RuneAT(ImplicitRuneA(0), CoordTemplataType)),
-          EqualsAR(
-            TemplexAR(RuneAT(ImplicitRuneA(0), CoordTemplataType)),
-            TemplexAR(RepeaterSequenceAT(MutabilityAT(ImmutableP), IntAT(5),OwnershippedAT(ShareP,NameAT(CodeTypeNameA("Int"), CoordTemplataType)), CoordTemplataType)))),
-        Map(ImplicitRuneA(0) -> CoordTemplataType),
+          TemplexTR(RuneTT(ImplicitRune2(0), CoordTemplataType)),
+          EqualsTR(
+            TemplexTR(RuneTT(ImplicitRune2(0), CoordTemplataType)),
+            TemplexTR(RepeaterSequenceTT(MutabilityTT(ImmutableP), IntTT(5),OwnershippedTT(ShareP,NameTT(CodeTypeNameA("Int"), CoordTemplataType)), CoordTemplataType)))),
+        Map(ImplicitRune2(0) -> CoordTemplataType),
         Map(),
         List(),
         None,
         true)
-    inferencesD.templatasByRune(ImplicitRuneA(0)) shouldEqual
+    inferencesD.templatasByRune(ImplicitRune2(0)) shouldEqual
       CoordTemplata(Coord(Share,ArraySequenceT2(5,RawArrayT2(Coord(Share,Int2()),Immutable))))
   }
 
@@ -808,22 +817,22 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
         makeCannedEnvironment(),
         FakeState(),
         List(
-          EqualsAR(
-            TemplexAR(NameAT(CodeTypeNameA("MutArraySequenceOf4Int"), CoordTemplataType)),
-            TemplexAR(
-              RepeaterSequenceAT(
-                RuneAT(CodeRuneA("M"), MutabilityTemplataType),
-                RuneAT(CodeRuneA("N"), IntegerTemplataType),
-                RuneAT(CodeRuneA("E"), CoordTemplataType),
+          EqualsTR(
+            TemplexTR(NameTT(CodeTypeNameA("MutArraySequenceOf4Int"), CoordTemplataType)),
+            TemplexTR(
+              RepeaterSequenceTT(
+                RuneTT(CodeRune2("M"), MutabilityTemplataType),
+                RuneTT(CodeRune2("N"), IntegerTemplataType),
+                RuneTT(CodeRune2("E"), CoordTemplataType),
                 CoordTemplataType)))),
-        Map(CodeRuneA("E") -> CoordTemplataType),
+        Map(CodeRune2("E") -> CoordTemplataType),
         Map(),
         List(),
         None,
         true)
-    inferencesD.templatasByRune(CodeRuneA("M")) shouldEqual MutabilityTemplata(Mutable)
-    inferencesD.templatasByRune(CodeRuneA("N")) shouldEqual IntegerTemplata(4)
-    inferencesD.templatasByRune(CodeRuneA("E")) shouldEqual CoordTemplata(Coord(Share,Int2()))
+    inferencesD.templatasByRune(CodeRune2("M")) shouldEqual MutabilityTemplata(Mutable)
+    inferencesD.templatasByRune(CodeRune2("N")) shouldEqual IntegerTemplata(4)
+    inferencesD.templatasByRune(CodeRune2("E")) shouldEqual CoordTemplata(Coord(Share,Int2()))
   }
 
   test("Test matching array sequence as kind") {
@@ -832,22 +841,22 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
         makeCannedEnvironment(),
         FakeState(),
         List(
-          EqualsAR(
-            TemplexAR(NameAT(CodeTypeNameA("MutArraySequenceOf4Int"), KindTemplataType)),
-            TemplexAR(
-              RepeaterSequenceAT(
-                RuneAT(CodeRuneA("M"), MutabilityTemplataType),
-                RuneAT(CodeRuneA("N"), IntegerTemplataType),
-                RuneAT(CodeRuneA("E"), CoordTemplataType),
+          EqualsTR(
+            TemplexTR(NameTT(CodeTypeNameA("MutArraySequenceOf4Int"), KindTemplataType)),
+            TemplexTR(
+              RepeaterSequenceTT(
+                RuneTT(CodeRune2("M"), MutabilityTemplataType),
+                RuneTT(CodeRune2("N"), IntegerTemplataType),
+                RuneTT(CodeRune2("E"), CoordTemplataType),
                 KindTemplataType)))),
-        Map(CodeRuneA("E") -> CoordTemplataType),
+        Map(CodeRune2("E") -> CoordTemplataType),
         Map(),
         List(),
         None,
         true)
-    inferencesD.templatasByRune(CodeRuneA("M")) shouldEqual MutabilityTemplata(Mutable)
-    inferencesD.templatasByRune(CodeRuneA("N")) shouldEqual IntegerTemplata(4)
-    inferencesD.templatasByRune(CodeRuneA("E")) shouldEqual CoordTemplata(Coord(Share,Int2()))
+    inferencesD.templatasByRune(CodeRune2("M")) shouldEqual MutabilityTemplata(Mutable)
+    inferencesD.templatasByRune(CodeRune2("N")) shouldEqual IntegerTemplata(4)
+    inferencesD.templatasByRune(CodeRune2("E")) shouldEqual CoordTemplata(Coord(Share,Int2()))
   }
 
   test("Test array") {
@@ -856,27 +865,27 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
         makeCannedEnvironment(),
         FakeState(),
         List(
-          EqualsAR(
-            TemplexAR(RuneAT(CodeRuneA("K"), KindTemplataType)),
-            TemplexAR(
-              CallAT(
-                NameAT(CodeTypeNameA("Array"), TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), KindTemplataType)),
-                List(MutabilityAT(MutableP), NameAT(CodeTypeNameA("Int"), CoordTemplataType)),
+          EqualsTR(
+            TemplexTR(RuneTT(CodeRune2("K"), KindTemplataType)),
+            TemplexTR(
+              CallTT(
+                NameTT(CodeTypeNameA("Array"), TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), KindTemplataType)),
+                List(MutabilityTT(MutableP), NameTT(CodeTypeNameA("Int"), CoordTemplataType)),
                 KindTemplataType))),
-          EqualsAR(
-            TemplexAR(RuneAT(CodeRuneA("K"), KindTemplataType)),
-            TemplexAR(
-              CallAT(
-                NameAT(CodeTypeNameA("Array"), TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), KindTemplataType)),
-                List(RuneAT(CodeRuneA("M"), MutabilityTemplataType), RuneAT(CodeRuneA("T"), CoordTemplataType)),
+          EqualsTR(
+            TemplexTR(RuneTT(CodeRune2("K"), KindTemplataType)),
+            TemplexTR(
+              CallTT(
+                NameTT(CodeTypeNameA("Array"), TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), KindTemplataType)),
+                List(RuneTT(CodeRune2("M"), MutabilityTemplataType), RuneTT(CodeRune2("T"), CoordTemplataType)),
                 KindTemplataType)))),
-        Map(CodeRuneA("T") -> CoordTemplataType, CodeRuneA("M") -> MutabilityTemplataType, CodeRuneA("K") -> KindTemplataType),
+        Map(CodeRune2("T") -> CoordTemplataType, CodeRune2("M") -> MutabilityTemplataType, CodeRune2("K") -> KindTemplataType),
         Map(),
         List(),
         None,
         true)
-    inferencesD.templatasByRune(CodeRuneA("M")) shouldEqual MutabilityTemplata(Mutable)
-    inferencesD.templatasByRune(CodeRuneA("T")) shouldEqual CoordTemplata(Coord(Share,Int2()))
+    inferencesD.templatasByRune(CodeRune2("M")) shouldEqual MutabilityTemplata(Mutable)
+    inferencesD.templatasByRune(CodeRune2("T")) shouldEqual CoordTemplata(Coord(Share,Int2()))
   }
 
   test("Test evaluating isa") {
@@ -886,11 +895,11 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
           makeCannedEnvironment(),
           FakeState(),
           List(
-            IsaAR(
-              TemplexAR(RuneAT(CodeRuneA("K"), KindTemplataType)),
-              TemplexAR(NameAT(CodeTypeNameA("MutInterface"), KindTemplataType)))),
-          Map(CodeRuneA("K") -> KindTemplataType),
-          Map(CodeRuneA("K") -> KindTemplata(StructRef2(FullName2(List(), StructName2("MutStruct", List()))))),
+            IsaTR(
+              TemplexTR(RuneTT(CodeRune2("K"), KindTemplataType)),
+              TemplexTR(NameTT(CodeTypeNameA("MutInterface"), KindTemplataType)))),
+          Map(CodeRune2("K") -> KindTemplataType),
+          Map(CodeRune2("K") -> KindTemplata(StructRef2(FullName2(List(), StructName2("MutStruct", List()))))),
           List(),
           None,
           true)
@@ -901,11 +910,11 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
           makeCannedEnvironment(),
           FakeState(),
           List(
-            IsaAR(
-              TemplexAR(RuneAT(CodeRuneA("K"), KindTemplataType)),
-              TemplexAR(NameAT(CodeTypeNameA("MutInterface"), KindTemplataType)))),
-          Map(CodeRuneA("K") -> KindTemplataType),
-          Map(CodeRuneA("K") -> KindTemplata(StructRef2(FullName2(List(), StructName2("MutSoloStruct", List()))))),
+            IsaTR(
+              TemplexTR(RuneTT(CodeRune2("K"), KindTemplataType)),
+              TemplexTR(NameTT(CodeTypeNameA("MutInterface"), KindTemplataType)))),
+          Map(CodeRune2("K") -> KindTemplataType),
+          Map(CodeRune2("K") -> KindTemplata(StructRef2(FullName2(List(), StructName2("MutSoloStruct", List()))))),
           List(),
           None,
           true)
@@ -919,13 +928,13 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
           makeCannedEnvironment(),
           FakeState(),
           List(
-            EqualsAR(
-              TemplexAR(RuneAT(CodeRuneA("K"), KindTemplataType)),
-              IsaAR(
-                TemplexAR(RuneAT(ImplicitRuneA(0), KindTemplataType)),
-                TemplexAR(NameAT(CodeTypeNameA("MutInterface"), KindTemplataType))))),
-          Map(CodeRuneA("K") -> KindTemplataType),
-          Map(CodeRuneA("K") -> KindTemplata(StructRef2(FullName2(List(), StructName2("MutStruct", List()))))),
+            EqualsTR(
+              TemplexTR(RuneTT(CodeRune2("K"), KindTemplataType)),
+              IsaTR(
+                TemplexTR(RuneTT(ImplicitRune2(0), KindTemplataType)),
+                TemplexTR(NameTT(CodeTypeNameA("MutInterface"), KindTemplataType))))),
+          Map(CodeRune2("K") -> KindTemplataType),
+          Map(CodeRune2("K") -> KindTemplata(StructRef2(FullName2(List(), StructName2("MutStruct", List()))))),
           List(),
           None,
           true)
@@ -936,11 +945,11 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
           makeCannedEnvironment(),
           FakeState(),
           List(
-            IsaAR(
-              TemplexAR(RuneAT(CodeRuneA("K"), KindTemplataType)),
-              TemplexAR(NameAT(CodeTypeNameA("MutInterface"), KindTemplataType)))),
-          Map(CodeRuneA("K") -> KindTemplataType),
-          Map(CodeRuneA("K") -> KindTemplata(StructRef2(FullName2(List(), StructName2("MutSoloStruct", List()))))),
+            IsaTR(
+              TemplexTR(RuneTT(CodeRune2("K"), KindTemplataType)),
+              TemplexTR(NameTT(CodeTypeNameA("MutInterface"), KindTemplataType)))),
+          Map(CodeRune2("K") -> KindTemplataType),
+          Map(CodeRune2("K") -> KindTemplata(StructRef2(FullName2(List(), StructName2("MutSoloStruct", List()))))),
           List(),
           None,
           true)
@@ -954,10 +963,10 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
           makeCannedEnvironment(),
           FakeState(),
           List(
-            EqualsAR(
-              TemplexAR(RuneAT(CodeRuneA("T"), CoordTemplataType)),
-              TemplexAR(OwnershippedAT(targetOwnership, NameAT(CodeTypeNameA(sourceName), CoordTemplataType))))),
-          Map(CodeRuneA("T") -> CoordTemplataType),
+            EqualsTR(
+              TemplexTR(RuneTT(CodeRune2("T"), CoordTemplataType)),
+              TemplexTR(OwnershippedTT(targetOwnership, NameTT(CodeTypeNameA(sourceName), CoordTemplataType))))),
+          Map(CodeRune2("T") -> CoordTemplataType),
           Map(),
           List(AtomAP(CaptureA(CodeVarNameA("this"),FinalP),None,CodeRuneA("T"),None)),
           None,
@@ -967,7 +976,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
 
     def expectSuccess(inferSolveResult: IInferSolveResult): Coord = {
       val InferSolveSuccess(inferencesD) = inferSolveResult
-      val CoordTemplata(coord) = inferencesD.templatasByRune(CodeRuneA("T"))
+      val CoordTemplata(coord) = inferencesD.templatasByRune(CodeRune2("T"))
       coord
     }
 
@@ -1000,10 +1009,10 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
           makeCannedEnvironment(),
           FakeState(),
           List(
-            EqualsAR(
-              TemplexAR(NameAT(CodeTypeNameA(sourceName), CoordTemplataType)),
-              TemplexAR(OwnershippedAT(targetOwnership, RuneAT(CodeRuneA("T"), CoordTemplataType))))),
-          Map(CodeRuneA("T") -> CoordTemplataType),
+            EqualsTR(
+              TemplexTR(NameTT(CodeTypeNameA(sourceName), CoordTemplataType)),
+              TemplexTR(OwnershippedTT(targetOwnership, RuneTT(CodeRune2("T"), CoordTemplataType))))),
+          Map(CodeRune2("T") -> CoordTemplataType),
           Map(),
           List(),
           None,
@@ -1013,7 +1022,7 @@ class InfererTests extends FunSuite with Matchers with MockFactory {
 
     def expectSuccess(inferSolveResult: IInferSolveResult): Coord = {
       val InferSolveSuccess(inferencesD) = inferSolveResult
-      val CoordTemplata(coord) = inferencesD.templatasByRune(CodeRuneA("T"))
+      val CoordTemplata(coord) = inferencesD.templatasByRune(CodeRune2("T"))
       coord
     }
 

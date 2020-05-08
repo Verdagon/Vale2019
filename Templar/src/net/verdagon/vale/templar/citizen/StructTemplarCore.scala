@@ -358,7 +358,8 @@ object StructTemplarCore {
           (header.fullName.last -> TemplataEnvEntry(ExternFunctionTemplata(header)))
         })
         .groupBy(_._1)
-        .mapValues(_.map(_._2)) ++
+        .mapValues(_.map(_._2))
+        .toMap ++
       Map(
         // This is used later by the interface constructor generator to know what interface to impl.
         AnonymousSubstructParentInterfaceRune2() -> List(TemplataEnvEntry(KindTemplata(interfaceRef))),
@@ -367,7 +368,7 @@ object StructTemplarCore {
       NamespaceEnvironment(
         Some(outerEnv),
         anonymousSubstructName,
-        structInnerEnvEntries)
+        structInnerEnvEntries.toMap)
 
 
     temputs.addImpl(structRef, interfaceRef)

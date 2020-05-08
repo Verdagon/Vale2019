@@ -329,7 +329,7 @@ class InfererEvaluator[Env, State](
         }
         case None => {
           // No possibilities, we have nothing left to explore, bail!
-          (InferEvaluateSuccess(Unit, deeplySatisfied))
+          (InferEvaluateSuccess((), deeplySatisfied))
         }
       }
 

@@ -141,14 +141,14 @@ case class NameAT(
   name: IImpreciseNameStepA,
   resultType: ITemplataType
 ) extends ITemplexA {
-  println("hi")
+//  println("hi")
 }
 
 case class AbsoluteNameAT(
   name: INameA,
   resultType: ITemplataType
 ) extends ITemplexA {
-  println("hi")
+//  println("hi")
 }
 
 // We have both NameAT and RuneAT even though theyre syntactically identical

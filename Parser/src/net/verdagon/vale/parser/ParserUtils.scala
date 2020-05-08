@@ -4,8 +4,8 @@ import scala.util.parsing.combinator.RegexParsers
 
 trait ParserUtils extends RegexParsers {
 
-  private[parser] def white: Parser[Unit] = { "\\s+".r ^^^ Unit }
-  private[parser] def optWhite: Parser[Unit] = { opt(white) ^^^ Unit }
+  private[parser] def white: Parser[Unit] = { "\\s+".r ^^^ () }
+  private[parser] def optWhite: Parser[Unit] = { opt(white) ^^^ () }
 
   // soon, give special treatment to ^
   // we want marine^.item to explode marine and extract its item

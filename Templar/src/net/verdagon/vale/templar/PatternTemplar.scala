@@ -51,7 +51,7 @@ object PatternTemplar {
         case (InferSolveSuccess(tbr)) => (tbr.templatasByRune.mapValues(v => List(TemplataEnvEntry(v))))
       }
 
-    fate.addEntries(templatasByRune.map({ case (key, value) => (key, value) }))
+    fate.addEntries(templatasByRune.map({ case (key, value) => (key, value) }).toMap)
 
     nonCheckingTranslateList(temputs, fate, patterns1, patternInputExprs2)
   }
@@ -107,7 +107,7 @@ object PatternTemplar {
         case (InferSolveSuccess(tbr)) => (tbr.templatasByRune.mapValues(v => List(TemplataEnvEntry(v))))
       }
 
-    fate.addEntries(templatasByRune.map({ case (key, value) => (key, value) }))
+    fate.addEntries(templatasByRune.map({ case (key, value) => (key, value) }).toMap)
 
     innerNonCheckingTranslate(
       temputs, fate, pattern, inputExpr)

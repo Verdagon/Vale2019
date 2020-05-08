@@ -8,12 +8,11 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="scala-sdk-2.12.8" level="application" />
-    <orderEntry type="module" module-name="Von" />
-    <orderEntry type="module" module-name="Utils" />
-    <orderEntry type="library" name="sbt: org.scala-lang.modules:scala-xml_2.12:1.2.0:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.scalatest:scalatest_2.12:3.0.8:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.scalactic:scalactic_2.12:3.0.8:jar" level="project" />
     <orderEntry type="module" module-name="Metal" />
+    <orderEntry type="module" module-name="Utils" />
+    <orderEntry type="module" module-name="Von" />
+    <orderEntry type="module" module-name="Hammer" />
+    <orderEntry type="library" name="scala-sdk-2.12.6" level="application" />
+    <orderEntry type="library" name="org.scalatest:scalatest_2.12:3.0.8" level="project" />
   </component>
 </module>
