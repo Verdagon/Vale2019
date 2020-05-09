@@ -413,7 +413,7 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
     val newNamePart =
       nearEnv.fullName.last match {
         case FunctionName2(humanName, List(), List()) => FunctionName2(humanName, identifyingTemplatas, List())
-        case LambdaName2(codeLocation, List(), List()) => LambdaName2(codeLocation, identifyingTemplatas, List())
+//        case LambdaName2(codeLocation, List(), List()) => LambdaName2(codeLocation, identifyingTemplatas, List())
       }
 
     val fullName = FullName2(nearEnv.fullName.steps.init, newNamePart)

@@ -20,7 +20,7 @@ object simpleName {
 //      case MagicImplicitRune2(_) => None
 //      case ReturnRune2() => None
       case FunctionName2(humanName, _, _) => Some(humanName)
-      case LambdaName2(_, _, _) => None
+//      case LambdaName2(_, _, _) => None
       case StructName2(humanName, _) => Some(humanName)
       case TupleName2(_) => None
       case LambdaStructName2(_) => None

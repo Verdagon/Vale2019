@@ -103,16 +103,19 @@ case class ConstructorName2(
     List(this).collect(func)
   }
 }
-case class LambdaName2(
-  codeLocation: CodeLocation2,
-  templateArgs: List[ITemplata],
-  parameters: List[Coord]
-) extends IFunctionName2 {
-  def order = 14;
-  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
-    List(this).collect(func) ++ templateArgs.flatMap(_.all(func)) ++ parameters.flatMap(_.all(func))
-  }
-}
+//// We have this and LambdaStructName2 both because sometimes lambdas dont come with
+//// a struct, like if they capture nothing. When they do come with structs, theyll both
+//// be in the name, this one after the LambdaStructName2 name.
+//case class LambdaName2(
+//  codeLocation: CodeLocation2,
+//  templateArgs: List[ITemplata],
+//  parameters: List[Coord]
+//) extends IFunctionName2 {
+//  def order = 14;
+//  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
+//    List(this).collect(func) ++ templateArgs.flatMap(_.all(func)) ++ parameters.flatMap(_.all(func))
+//  }
+//}
 case class StructName2(
   humanName: String,
   templateArgs: List[ITemplata]

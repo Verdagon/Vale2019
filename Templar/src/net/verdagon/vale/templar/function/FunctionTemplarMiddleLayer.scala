@@ -285,7 +285,7 @@ object FunctionTemplarMiddleLayer {
     val newLastPart =
       runedEnvFullName.last match {
         case FunctionName2(humanName, templateArgs, List()) => FunctionName2(humanName, templateArgs, paramTypes)
-        case LambdaName2(humanName, templateArgs, List()) => LambdaName2(humanName, templateArgs, paramTypes)
+//        case LambdaName2(humanName, templateArgs, List()) => LambdaName2(humanName, templateArgs, paramTypes)
       }
 
     FullName2(runedEnvFullName.steps.init, newLastPart)

@@ -471,15 +471,15 @@ object FullNameComparator extends Ordering[FullName2[IName2]] {
                 return templateArgsDiff
               TemplataTypeListComparator.compare(parametersA.map(CoordTemplata), parametersB.map(CoordTemplata))
             }
-            case (LambdaName2(codeLocationA, templateArgsA, parametersA), LambdaName2(codeLocationB, templateArgsB, parametersB)) => {
-              val locDiff = compare(codeLocationA, codeLocationB)
-              if (locDiff != 0)
-                return locDiff
-              val templateArgsDiff = TemplataTypeListComparator.compare(templateArgsA, templateArgsB)
-              if (templateArgsDiff != 0)
-                return templateArgsDiff
-              TemplataTypeListComparator.compare(parametersA.map(CoordTemplata), parametersB.map(CoordTemplata))
-            }
+//            case (LambdaName2(codeLocationA, templateArgsA, parametersA), LambdaName2(codeLocationB, templateArgsB, parametersB)) => {
+//              val locDiff = compare(codeLocationA, codeLocationB)
+//              if (locDiff != 0)
+//                return locDiff
+//              val templateArgsDiff = TemplataTypeListComparator.compare(templateArgsA, templateArgsB)
+//              if (templateArgsDiff != 0)
+//                return templateArgsDiff
+//              TemplataTypeListComparator.compare(parametersA.map(CoordTemplata), parametersB.map(CoordTemplata))
+//            }
             case (StructName2(humanNameA, templateArgsA), StructName2(humanNameB, templateArgsB)) => {
               val nameDiff = humanNameA.compareTo(humanNameB)
               if (nameDiff != 0)

@@ -45,7 +45,7 @@ object TemplataNamer {
 //      case MagicImplicitRune2(magicParamIndex) => "ᛥ" + magicParamIndex
 //      case ReturnRune2() => "ᚱ"
       case FunctionName2(humanName, templateArgs, parameters) => "ᚫ" + humanName + stringifyTemplateArgs(templateArgs) + stringifyParametersArgs(parameters)
-      case LambdaName2(codeLocation, templateArgs, parameters) => "ᛈ" + codeLocation + stringifyTemplateArgs(templateArgs) + stringifyParametersArgs(parameters)
+//      case LambdaName2(codeLocation, templateArgs, parameters) => "ᛈ" + codeLocation + stringifyTemplateArgs(templateArgs) + stringifyParametersArgs(parameters)
       case StructName2(humanName, templateArgs) => "ᛟ" + humanName + stringifyTemplateArgs(templateArgs)
       case InterfaceName2(humanName, templateArgs) => "ᛘ" + humanName + stringifyTemplateArgs(templateArgs)
       case LambdaStructName2(codeLocation) => "ᛊ" + codeLocation

@@ -242,7 +242,7 @@ object StructTemplarCore {
         Some(containingFunctionEnv),
         fullName,
         Map(
-          FunctionTemplateName2("__call", CodeLocation2(0, 0)) -> List(FunctionEnvEntry(List(), functionA)),
+          FunctionTemplateName2(CallTemplar.CALL_FUNCTION_NAME, CodeLocation2(0, 0)) -> List(FunctionEnvEntry(List(), functionA)),
           nearName -> List(TemplataEnvEntry(KindTemplata(structRef))),
           ClosureParamName2() -> List(TemplataEnvEntry(KindTemplata(structRef)))))
     // We return this from the function in case we want to eagerly compile it (which we do
