@@ -329,8 +329,6 @@ trait CitizenRef2 extends Kind {
 case class StructRef2(fullName: FullName2[IStructName2]) extends CitizenRef2 {
   override def order: Int = 14;
 
-  vassert(fullName.last.templateArgs.nonEmpty)
-
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func) ++ fullName.all(func)
   }

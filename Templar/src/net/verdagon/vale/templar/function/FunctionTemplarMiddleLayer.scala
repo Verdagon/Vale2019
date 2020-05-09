@@ -75,7 +75,7 @@ object FunctionTemplarMiddleLayer {
 
     // Check preconditions
     function1.typeByRune.keySet.foreach(templateParam => {
-      vassert(runedEnv.getNearestTemplataWithName(vimpl(templateParam.toString), Set(TemplataLookupContext, ExpressionLookupContext)).nonEmpty);
+      vassert(runedEnv.getNearestTemplataWithAbsoluteNameA(templateParam, Set(TemplataLookupContext, ExpressionLookupContext)).nonEmpty);
     })
 
     val params2 = assembleFunctionParams(runedEnv, temputs, function1.params)
@@ -158,7 +158,10 @@ object FunctionTemplarMiddleLayer {
 
     // Check preconditions
     function1.typeByRune.keySet.foreach(templateParam => {
-      vassert(runedEnv.getNearestTemplataWithName(vimpl(templateParam.toString), Set(TemplataLookupContext, ExpressionLookupContext)).nonEmpty);
+      vassert(
+        runedEnv.getNearestTemplataWithAbsoluteNameA(
+          templateParam,
+          Set(TemplataLookupContext, ExpressionLookupContext)).nonEmpty);
     })
 
     val paramTypes2 = evaluateFunctionParamTypes(runedEnv, function1.params)
@@ -193,7 +196,12 @@ object FunctionTemplarMiddleLayer {
     params1: List[ParameterA]):
   List[Coord] = {
     params1.map(param1 => {
-      val CoordTemplata(coord) = env.getNearestTemplataWithName(vimpl(param1.pattern.coordRune.toString), Set(TemplataLookupContext)).get
+      val CoordTemplata(coord) =
+        env
+          .getNearestTemplataWithAbsoluteNameA(
+            param1.pattern.coordRune,
+            Set(TemplataLookupContext))
+          .get
       coord
     })
   }
@@ -205,10 +213,20 @@ object FunctionTemplarMiddleLayer {
   (List[Parameter2]) = {
     params1.foldLeft((List[Parameter2]()))({
       case ((previousParams2), param1) => {
-        val CoordTemplata(coord) = env.getNearestTemplataWithName(vimpl(param1.pattern.coordRune.toString), Set(TemplataLookupContext)).get
+        val CoordTemplata(coord) =
+          env
+            .getNearestTemplataWithAbsoluteNameA(
+              param1.pattern.coordRune,
+              Set(TemplataLookupContext))
+            .get
         val maybeVirtuality =
           evaluateMaybeVirtuality(env, temputs, param1.pattern.virtuality)
-        (previousParams2 :+ Parameter2(vimpl(param1.name.name.toString), maybeVirtuality, coord))
+        val newParam2 =
+          Parameter2(
+            NameTranslator.translateVarNameStep(param1.name.name),
+            maybeVirtuality,
+            coord)
+        (previousParams2 :+ newParam2)
       }
     })
   }
@@ -259,13 +277,16 @@ object FunctionTemplarMiddleLayer {
   }
 
   def makeFunctionFullName(runedEnvFullName: FullName2[IFunctionName2], paramTypes: List[Coord]): FullName2[IFunctionName2] = {
-    vimpl()//vassert(runedEnvFullName.last.parameters.isEmpty)
+
+    vcurious(runedEnvFullName.last.isInstanceOf[FunctionName2])
+    vassert(runedEnvFullName.last.isInstanceOf[FunctionName2])
+    val functionName = runedEnvFullName.last.asInstanceOf[FunctionName2]
+    vassert(functionName.parameters.isEmpty)
+
     // We fill out the params here to get the function's full name.
-    vimpl()
-//    val functionFullName =
-//      FullName2(
-//        runedEnvFullName.steps.init :+
-//          runedEnvFullName.last.copy(parameters = Some(paramTypes)))
-//    functionFullName
+    val functionFullName =
+      FullName2(
+        runedEnvFullName.steps.init, functionName.copy(parameters = paramTypes))
+    functionFullName
   }
 }

@@ -8,7 +8,7 @@ import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.function.FunctionTemplar.{EvaluateFunctionFailure, EvaluateFunctionSuccess, IEvaluateFunctionResult}
 import net.verdagon.vale.templar.infer.infer.{InferSolveFailure, InferSolveSuccess}
-import net.verdagon.vale.vimpl
+import net.verdagon.vale.{vcurious, vimpl}
 //import net.verdagon.vale.templar.infer.{InferSolveFailure, InferSolveSuccess}
 import net.verdagon.vale.templar.templata.TemplataTemplar
 import net.verdagon.vale.{vassert, vfail, vwat}
@@ -408,20 +408,25 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
     maybeRetCoordRune: Option[IRuneA]):
   FunctionEnvironment = {
 
-    val identifyingTemplatas = vimpl()//identifyingRunes.map(templatasByRune)
-    val fullName = vimpl()//FullName2(nearEnv.fullName.steps.init :+ nearEnv.fullName.last.copy(templateArgs = Some(identifyingTemplatas)))
+    val identifyingTemplatas = identifyingRunes.map(NameTranslator.translateRune).map(templatasByRune)
+
+    vcurious(nearEnv.fullName.last.isInstanceOf[FunctionName2])
+    val nearEnvFunctionName = nearEnv.fullName.last.asInstanceOf[FunctionName2];
+
+    val fullName =
+      FullName2(
+        nearEnv.fullName.steps.init, nearEnvFunctionName.copy(templateArgs = identifyingTemplatas))
     val maybeReturnType = maybeRetCoordRune.map(retCoordRune => {
-      vimpl()
-//      templatasByRune.get(retCoordRune) match {
-//        case Some(CoordTemplata(coord)) => coord
-//        case _ => vwat()
-//      }
+      templatasByRune.get(NameTranslator.translateRune(retCoordRune)) match {
+        case Some(CoordTemplata(coord)) => coord
+        case other => vwat(other.toString)
+      }
     })
-    // Change the fullName's templateArgs from None to Some(List()) to be consistent with
-    // the rest of the layer.
-    vimpl()
-//    nearEnv
-//        .copy(fullName = fullName, maybeReturnType = maybeReturnType)
-//        .addEntries(templatasByRune.mapValues(x => List(TemplataEnvEntry(x))))
+    nearEnv
+        .copy(fullName = fullName, maybeReturnType = maybeReturnType)
+        .addEntries(templatasByRune.map({
+          case (k, v) => (k, List(TemplataEnvEntry(v)))
+        })
+        .toMap[IName2, List[IEnvEntry]])
   }
 }

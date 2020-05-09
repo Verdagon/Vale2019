@@ -101,7 +101,7 @@ object DestructorTemplar {
         bodyEnv.fullName,
         isExtern = false,
         isUserFunction = false,
-        List(Parameter2("x", None, type2)),
+        List(Parameter2(CodeVarName2("x"), None, type2)),
         Coord(Share, Void2()),
         Some(originFunction1))
     val function2 = Function2(header, List(), Block2(List(dropExpr2)))
@@ -221,7 +221,7 @@ object DestructorTemplar {
     val memberLocalVariables =
       structDef.members.flatMap({
         case StructMember2(name, variability, ReferenceMemberType2(reference)) => {
-          List(ReferenceLocalVariable2(FullName2(vimpl(/*0*/), name), Final, reference))
+          List(ReferenceLocalVariable2(destructorFullName.addStep(name), Final, reference))
         }
         case StructMember2(name, variability, AddressMemberType2(reference)) => {
           // See Destructure2 and its handling of addressible members for why
@@ -281,7 +281,7 @@ object DestructorTemplar {
         FunctionHeader2(
           env.fullName,
           false, false,
-          List(Parameter2("this", None, arrayRefType)),
+          List(Parameter2(CodeVarName2("this"), None, arrayRefType)),
           Coord(Share, Void2()),
           maybeOriginFunction1),
         List(),
@@ -325,7 +325,7 @@ object DestructorTemplar {
         FunctionHeader2(
           env.fullName,
           false, false,
-          List(Parameter2("this", None, arrayRefType2)),
+          List(Parameter2(CodeVarName2("this"), None, arrayRefType2)),
           Coord(Share, Void2()),
           maybeOriginFunction1),
         List(),

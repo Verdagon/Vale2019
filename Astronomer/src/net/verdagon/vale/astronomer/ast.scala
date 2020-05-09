@@ -142,8 +142,8 @@ case class FunctionA(
 ) {
   def isLight(): Boolean = {
     body match {
-      case ExternBodyA | AbstractBodyA | GeneratedBodyA(_) => false
-      case CodeBodyA(bodyA) => bodyA.closuredNames.nonEmpty
+      case ExternBodyA | AbstractBodyA | GeneratedBodyA(_) => true
+      case CodeBodyA(bodyA) => bodyA.closuredNames.isEmpty
     }
   }
 

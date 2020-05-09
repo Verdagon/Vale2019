@@ -140,7 +140,7 @@ class TemplarTests extends FunSuite with Matchers {
     val lambda = temputs.lookupFunction("main:lam1");
 
     // Check that the param type is right
-    lambda.only({ case Parameter2("a", None, Coord(Share, Int2())) => {} })
+    lambda.only({ case Parameter2(CodeVarName2("a"), None, Coord(Share, Int2())) => {} })
     // Check the name is right
     lambda.header match { case functionName("main:lam1") => }
 
@@ -230,7 +230,7 @@ class TemplarTests extends FunSuite with Matchers {
       simpleName("MyStruct"),
       _,
       false,
-      List(Parameter2("a", None, Coord(Share, Int2()))),
+      List(Parameter2(CodeVarName2("a"), None, Coord(Share, Int2()))),
       Coord(Own, StructRef2(simpleName("MyStruct"))),
       _) =>
     })

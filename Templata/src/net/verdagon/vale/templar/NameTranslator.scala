@@ -3,9 +3,21 @@ package net.verdagon.vale.templar
 import net.verdagon.vale.astronomer._
 import net.verdagon.vale.scout.CodeLocationS
 import net.verdagon.vale.templar.templata.CodeLocation2
-import net.verdagon.vale.vimpl
+import net.verdagon.vale.{vimpl, vwat}
 
 object NameTranslator {
+  def translateFunctionNameToTemplateName(functionName: IFunctionDeclarationNameA): IName2 = {
+      functionName match {
+        case LambdaNameA(parent, codeLocation) => {
+          println("Maybe remove the parent?")
+          LambdaTemplateName2(NameTranslator.translateCodeLocation(codeLocation))
+        }
+        case FunctionNameA(name, codeLocation) => {
+          FunctionTemplateName2(name, NameTranslator.translateCodeLocation(codeLocation))
+        }
+      }
+  }
+
 //  def translateImpreciseTypeName(fullNameA: ImpreciseNameA[CodeTypeNameA]): ImpreciseName2[CodeTypeName2] = {
 //    val ImpreciseNameA(initS, lastS) = fullNameA
 //    ImpreciseName2(initS.map(translateImpreciseNameStep), translateCodeTypeName(lastS))
@@ -78,12 +90,14 @@ object NameTranslator {
       case ClosureParamNameA() => ClosureParamName2()
       case MagicParamNameA(codeLocation) => MagicParamName2(translateCodeLocation(codeLocation))
       case CodeVarNameA(name) => CodeVarName2(name)
-//      case CodeRuneA(name) => CodeRune2(name)
+      case ImplicitRuneA(name) => ImplicitRune2(name)
+      case TopLevelCitizenDeclarationNameA(name, codeLocation) => vwat()
+      case CodeRuneA(name) => CodeRune2(name)
 //      case ImplicitRuneA(name) => ImplicitRune2(name)
 //      case MagicImplicitRuneA(magicParamIndex) => MagicImplicitRune2(magicParamIndex)
 //      case MemberRuneA(memberIndex) => MemberRune2(memberIndex)
-//      case ReturnRuneA() => ReturnRune2()
-      case _ => vimpl()
+      case ReturnRuneA() => ReturnRune2()
+      case _ => vimpl(name.toString)
     }
   }
 

@@ -1,6 +1,6 @@
 package net.verdagon.vale.templar.function
 
-import net.verdagon.vale.astronomer.{CodeBodyA, FunctionA}
+import net.verdagon.vale.astronomer.{CodeBodyA, ConstructorNameA, FunctionA, FunctionNameA, IFunctionDeclarationNameA, LambdaNameA}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.scout.CodeBody1
@@ -18,7 +18,8 @@ object FunctionTemplarEnvLayer {
     unevaluatedContainers: List[IContainer],
     function: FunctionA):
   (FunctionBanner2) = {
-    val functionFullName = FullName2(containingEnv.fullName.steps, vimpl(function.name.toString))
+    val functionNamePart = translateFunctionDeclarationName(function.name)
+    val functionFullName = FullName2(containingEnv.fullName.steps, functionNamePart)
     val funcOuterEnv =
       FunctionEnvironment(containingEnv, functionFullName, function, Map(), None, List(), 0, List(), Set())
     FunctionTemplarClosureOrLightLayer.evaluateOrdinaryLightFunctionFromNonCallForBanner(
@@ -36,7 +37,7 @@ object FunctionTemplarEnvLayer {
       alreadySpecifiedTemplateArgs: List[ITemplata],
       paramFilters: List[ParamFilter]):
   (IEvaluateFunctionResult[FunctionBanner2]) = {
-    val functionFullName = FullName2(containingEnv.fullName.steps, vimpl(function.name.toString))
+    val functionFullName = FullName2(containingEnv.fullName.steps, translateFunctionDeclarationName(function.name))
 
     val funcOuterEnv =
       FunctionEnvironment(containingEnv, functionFullName, function, Map(), None, List(), 0, List(), Set())
@@ -144,8 +145,10 @@ object FunctionTemplarEnvLayer {
     unevaluatedContainers: List[IContainer],
     function: FunctionA):
   (Prototype2) = {
+
+    val functionNamePart = translateFunctionDeclarationName(function.name)
     val functionFullName =
-      FullName2(containingEnv.fullName.steps, vimpl(function.name.toString))
+      FullName2(containingEnv.fullName.steps, functionNamePart)
     val funcOuterEnv =
       FunctionEnvironment(
         containingEnv, functionFullName, function, Map(), None, List(), 0, List(), Set())
@@ -183,7 +186,7 @@ object FunctionTemplarEnvLayer {
       explicitTemplateArgs: List[ITemplata],
       args: List[ParamFilter]):
   (IEvaluateFunctionResult[Prototype2]) = {
-    val functionFullName = FullName2(containingEnv.fullName.steps, vimpl(function.name.toString))
+    val functionFullName = FullName2(containingEnv.fullName.steps, translateFunctionDeclarationName(function.name))
     val funcOuterEnv =
       FunctionEnvironment(containingEnv, functionFullName, function, Map(), None, List(), 0, List(), Set())
     FunctionTemplarClosureOrLightLayer.evaluateTemplatedLightFunctionFromCallForPrototype2(
@@ -219,5 +222,12 @@ object FunctionTemplarEnvLayer {
       function,
       alreadySpecifiedTemplateArgs,
       argTypes2)
+  }
+
+  def translateFunctionDeclarationName(functionNameA: IFunctionDeclarationNameA): FunctionName2 = {
+      functionNameA match {
+        case FunctionNameA(humanName, codeLocationS) => FunctionName2(humanName, List(), List())
+        case _ => vimpl()
+      }
   }
 }

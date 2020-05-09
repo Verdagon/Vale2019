@@ -124,7 +124,7 @@ case class ArrayLengthAE(arrayExpr: IExpressionAE) extends IExpressionAE
 
 
 case class LocalVariableA(
-  varName: INameA,
+  varName: IVarNameA,
   variability: VariabilityP,
   selfBorrowed: IVariableUseCertainty,
   selfMoved: IVariableUseCertainty,

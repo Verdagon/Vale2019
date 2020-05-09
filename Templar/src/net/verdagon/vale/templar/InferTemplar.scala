@@ -73,7 +73,10 @@ object InferTemplar {
       }
 
       override def lookupTemplata(env: IEnvironment, name: IImpreciseNameStepA): ITemplata = {
-        vimpl()
+        env.getNearestTemplataWithName(name, Set[ILookupContext](TemplataLookupContext)) match {
+          case None => vfail("Couldn't find anything with name: " + name)
+          case Some(x) => x
+        }
       }
 
       override def getPackKind(env: IEnvironment, state: TemputsBox, members: List[Coord]): (PackT2, Mutability) = {
@@ -215,6 +218,26 @@ object InferTemplar {
   }
 
   def translateRules(rs: List[IRulexAR]): List[IRulexTR] = {
-    vimpl()
+    rs.map(translateRule)
+  }
+
+  def translateRule(rulexA: IRulexAR): IRulexTR = {
+    rulexA match {
+      case EqualsAR(left, right) => EqualsTR(translateRule(left), translateRule(right))
+      case TemplexAR(templex) => TemplexTR(translateTemplex(templex))
+      case ComponentsAR(tyype, componentsA) => ComponentsTR(tyype, componentsA.map(translateRule))
+      case OrAR(possibilities) => OrTR(possibilities.map(translateRule))
+      case CallAR(name, args, resultType) => CallTR(name, args.map(translateRule), resultType)
+      case _ => vimpl()
+    }
+  }
+
+  def translateTemplex(templexA: ITemplexA): ITemplexT = {
+    templexA match {
+      case RuneAT(rune, resultType) => RuneTT(NameTranslator.translateRune(rune), resultType)
+      case NameAT(name, resultType) => NameTT(name, resultType)
+      case OwnershipAT(ownership) => OwnershipTT(ownership)
+      case _ => vimpl()
+    }
   }
 }

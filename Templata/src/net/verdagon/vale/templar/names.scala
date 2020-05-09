@@ -10,7 +10,12 @@ import net.verdagon.vale.templar.types.Coord
 
 case class FullName2[+T <: IName2](initSteps: List[IName2], last: T) extends Queriable2 {
   def addStep[Y <: IName2](newLast: Y): FullName2[Y] = FullName2[Y](initSteps :+ last, newLast)
-  def steps: List[IName2] = initSteps :+ last
+  def steps: List[IName2] = {
+    last match {
+      case GlobalNamespaceName2() => initSteps
+      case _ => initSteps :+ last
+    }
+  }
   def init: FullName2[IName2] = FullName2[IName2](initSteps.init, initSteps.last)
 
   def all[X](func: PartialFunction[Queriable2, X]): List[X] = {
@@ -41,6 +46,7 @@ sealed trait ICitizenName2 extends IName2 {
 sealed trait IStructName2 extends ICitizenName2
 case class ImplDeclareName2(codeLocation: CodeLocation2) extends IName2 { def order = 1; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) ++ codeLocation.all(func) } }
 case class LetName2(codeLocation: CodeLocation2) extends IName2 { def order = 2; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) ++ codeLocation.all(func) } }
+
 sealed trait IVarName2 extends IName2
 case class TemplarBlockResultVarName2(num: Int) extends IVarName2 { def order = 18; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
 case class TemplarFunctionResultVarName2() extends IVarName2 { def order = 19; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
@@ -70,10 +76,21 @@ case class FunctionName2(
     List(this).collect(func) ++ templateArgs.flatMap(_.all(func)) ++ parameters.flatMap(_.all(func))
   }
 }
-case class FunctionTemplateName2(humanName: String) extends IName2 {
+case class FunctionTemplateName2(
+    humanName: String,
+    codeLocation: CodeLocation2
+) extends IName2 {
   def order = 31;
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
-    List(this).collect(func)
+    List(this).collect(func) ++ codeLocation.all(func)
+  }
+}
+case class LambdaTemplateName2(
+  codeLocation: CodeLocation2
+) extends IName2 {
+  def order = 31;
+  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
+    List(this).collect(func) ++ codeLocation.all(func)
   }
 }
 case class ConstructorName2(
@@ -122,11 +139,29 @@ case class LambdaStructName2(
     List(this).collect(func) ++ templateArgs.toList.flatMap(_.all(func))
   }
 }
+case class InterfaceTemplateName2(
+  humanName: String,
+  codeLocation: CodeLocation2
+) extends IName2 {
+  def order = 30;
+  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
+    List(this).collect(func) ++ codeLocation.all(func)
+  }
+}
+case class StructTemplateName2(
+  humanName: String,
+  codeLocation: CodeLocation2
+) extends IName2 {
+  def order = 30;
+  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
+    List(this).collect(func) ++ codeLocation.all(func)
+  }
+}
 case class InterfaceName2(
   humanName: String,
   templateArgs: List[ITemplata]
 ) extends ICitizenName2 {
-  def order = 30;
+  def order = 33;
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func) ++ templateArgs.toList.flatMap(_.all(func))
   }
@@ -147,6 +182,14 @@ case class AnonymousSubstructConstructorName2() extends IFunctionName2 {
 }
 case class AnonymousSubstructImplName2() extends IName2 {
   def order = 29;
+  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
+    List(this).collect(func)
+  }
+}
+// This one is probably only used by the templar, so we can have a way to
+// figure out the closure struct for a certain environment.
+case class EnvClosureName2() extends IName2 {
+  def order = 32;
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func)
   }

@@ -1,7 +1,7 @@
 package net.verdagon.vale.templar.function
 
 
-import net.verdagon.vale.astronomer.{BFunctionA, BodyAE}
+import net.verdagon.vale.astronomer.{AtomAP, BFunctionA, BodyAE, CaptureA, ParameterA}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.parser.CaptureP
@@ -30,7 +30,8 @@ object BodyTemplar {
       case None => {
         val banner = FunctionBanner2(Some(function1), functionFullName, params2)
         val (body2, returnsFromRets) =
-          evaluateFunctionBody(funcOuterEnv, temputs, vimpl(bfunction1.origin.params.toString()), params2, bfunction1.body, isDestructor);
+          evaluateFunctionBody(
+            funcOuterEnv, temputs, bfunction1.origin.params, params2, bfunction1.body, isDestructor);
 
         val returns = returnsFromRets + body2.resultRegister.reference
 
@@ -53,15 +54,21 @@ object BodyTemplar {
       case Some(expectedRetCoordRune) => {
         val CoordTemplata(expectedRetCoord) =
           vassertSome(
-            funcOuterEnv.getNearestTemplataWithName(
-              vimpl(expectedRetCoordRune.toString), Set(TemplataLookupContext)))
+            funcOuterEnv.getNearestTemplataWithAbsoluteNameA(
+              expectedRetCoordRune, Set(TemplataLookupContext)))
         val header = FunctionHeader2(functionFullName, false, function1.isUserFunction, params2, expectedRetCoord, Some(function1));
         temputs.declareFunctionReturnType(header.toSignature, expectedRetCoord)
 
         funcOuterEnv.setReturnType(Some(expectedRetCoord))
 
         val (unconvertedBody2, returnsFromRets) =
-          evaluateFunctionBody(funcOuterEnv, temputs, vimpl(bfunction1.origin.params.toString()), params2, bfunction1.body, isDestructor);
+          evaluateFunctionBody(
+            funcOuterEnv,
+            temputs,
+            bfunction1.origin.params,
+            params2,
+            bfunction1.body,
+            isDestructor);
 
         val convertedBody2 =
           TemplataTemplar.isTypeTriviallyConvertible(temputs, unconvertedBody2.resultRegister.reference, expectedRetCoord) match {
@@ -100,7 +107,7 @@ object BodyTemplar {
   private def evaluateFunctionBody(
       funcOuterEnv: FunctionEnvironmentBox,
       temputs: TemputsBox,
-      params1: List[ParameterS],
+      params1: List[ParameterA],
       params2: List[Parameter2],
       body1: BodyAE,
       isDestructor: Boolean):
@@ -148,21 +155,21 @@ object BodyTemplar {
   private def evaluateLets(
       fate: FunctionEnvironmentBox,
       temputs: TemputsBox,
-      params1: List[ParameterS],
+      params1: List[ParameterA],
       params2: List[Parameter2]):
   (List[ReferenceExpression2]) = {
     val paramLookups2 =
       params2.zipWithIndex.map({ case (p, index) => ArgLookup2(index, p.tyype) })
     val letExprs2 =
       PatternTemplar.nonCheckingTranslateList(
-        temputs, fate, vimpl(params1.map(_.pattern).toString()), paramLookups2);
+        temputs, fate, params1.map(_.pattern), paramLookups2);
 
     // todo: at this point, to allow for recursive calls, add a callable type to the environment
     // for everything inside the body to use
 
     params1.foreach({
-      case ParameterS(AtomSP(CaptureS(name, _), _, _, _)) => {
-        if (!fate.variables.exists(_.id.last == vimpl(name.toString))) {
+      case ParameterA(AtomAP(CaptureA(name, _), _, _, _)) => {
+        if (!fate.variables.exists(_.id.last == NameTranslator.translateVarNameStep(name))) {
           vfail("wot couldnt find " + name)
         }
       }

@@ -4,7 +4,7 @@ import net.verdagon.vale.astronomer.{BFunctionA, FunctionA, INameA, IVarNameA, L
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.parser._
-import net.verdagon.vale.{scout, vassert, vimpl}
+import net.verdagon.vale.{scout, vassert, vassertSome, vimpl}
 import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
 import net.verdagon.vale.scout.patterns.{AbstractSP, AtomSP, OverrideSP}
 import net.verdagon.vale.scout.rules._
@@ -123,10 +123,11 @@ object FunctionTemplar {
       evaluateOrdinaryLightFunctionFromNonCallForPrototype(
         env, temputs, unevaluatedContainers, function)
     } else {
-      val Some(KindTemplata(closureStructRef @ StructRef2(_))) =
-        env.getNearestTemplataWithName(
-          vimpl(),//FunctionScout.CLOSURE_STRUCT_ENV_ENTRY_NAME,
-          Set(TemplataLookupContext))
+      val KindTemplata(closureStructRef @ StructRef2(_)) =
+        vassertSome(
+          env.getNearestTemplataWithAbsoluteName2(
+            EnvClosureName2(),
+            Set(TemplataLookupContext)))
       val header =
         evaluateOrdinaryClosureFunctionFromNonCallForHeader(
           env, temputs, closureStructRef, unevaluatedContainers, function)
@@ -143,10 +144,11 @@ object FunctionTemplar {
       evaluateOrdinaryLightFunctionFromNonCallForBanner(
         env, temputs, unevaluatedContainers, function)
     } else {
-      val Some(KindTemplata(closureStructRef @ StructRef2(_))) =
-        env.getNearestTemplataWithName(
-          vimpl(),//FunctionScout.CLOSURE_STRUCT_ENV_ENTRY_NAME,
-          Set(TemplataLookupContext))
+      val KindTemplata(closureStructRef @ StructRef2(_)) =
+        vassertSome(
+          env.getNearestTemplataWithAbsoluteName2(
+            EnvClosureName2(),
+            Set(TemplataLookupContext)))
       evaluateOrdinaryClosureFunctionFromNonCallForBanner(
         env, temputs, closureStructRef, unevaluatedContainers, function)
     }

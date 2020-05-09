@@ -13,7 +13,7 @@ object ExpressionAstronomer {
 
   def translateLocalVariable(varS: LocalVariable1): LocalVariableA = {
     val LocalVariable1(varNameS, variability, selfBorrowed, selfMoved, selfMutated, childBorrowed, childMoved, childMutated) = varS
-    val varNameA = Astronomer.translateName(varNameS)
+    val varNameA = Astronomer.translateVarNameStep(varNameS)
     LocalVariableA(varNameA, variability, selfBorrowed, selfMoved, selfMutated, childBorrowed, childMoved, childMutated)
   }
 

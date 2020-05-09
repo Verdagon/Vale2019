@@ -242,7 +242,7 @@ object StructTemplarCore {
         Some(containingFunctionEnv),
         fullName,
         Map(
-          FunctionTemplateName2("__call") -> List(FunctionEnvEntry(functionA)),
+          FunctionTemplateName2("__call", CodeLocation2(0, 0)) -> List(FunctionEnvEntry(functionA)),
           nearName -> List(TemplataEnvEntry(KindTemplata(structRef))),
           ClosureParamName2() -> List(TemplataEnvEntry(KindTemplata(structRef)))))
     // We return this from the function in case we want to eagerly compile it (which we do
@@ -392,7 +392,7 @@ object StructTemplarCore {
     forwarderFunctionHeaders.zip(lambdas).foreach({ case (forwarderHeader, lambda) =>
       val localVariables =
         forwarderHeader.params.map(param => {
-          ReferenceLocalVariable2(forwarderHeader.fullName.addStep(CodeVarName2(param.name)), Final, param.tyype)
+          ReferenceLocalVariable2(forwarderHeader.fullName.addStep(param.name), Final, param.tyype)
         })
 
       // The args for the call inside the forwarding function.

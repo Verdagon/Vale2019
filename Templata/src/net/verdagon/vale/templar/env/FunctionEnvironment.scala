@@ -100,8 +100,8 @@ case class FunctionEnvironment(
 
   override def getAllTemplatasWithAbsoluteNameA(name: INameA, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
     entries
-      .filter({ case (key, _) => EnvironmentUtils.namesMatch(name, key) })
-      .values
+      .get(NameTranslator.translateNameStep(name))
+      .toList
       .flatten
       .filter(EnvironmentUtils.entryMatchesFilter(_, lookupFilter))
       .map(EnvironmentUtils.entryToTemplata(this, _))
@@ -111,8 +111,8 @@ case class FunctionEnvironment(
 
   override def getNearestTemplataWithAbsoluteNameA(name: INameA, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
     entries
-      .filter({ case (key, _) => EnvironmentUtils.namesMatch(name, key) })
-      .values
+      .get(NameTranslator.translateNameStep(name))
+      .toList
       .flatten
       .filter(EnvironmentUtils.entryMatchesFilter(_, lookupFilter)) match {
       case List(entry) => Some(EnvironmentUtils.entryToTemplata(this, entry))
@@ -130,11 +130,27 @@ case class FunctionEnvironment(
   }
 
   override def getAllTemplatasWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
-    vimpl()
+    entries
+      .filter({ case (key, _) => EnvironmentUtils.impreciseNamesMatch(name, key) })
+      .values
+      .toList
+      .flatten
+      .filter(EnvironmentUtils.entryMatchesFilter(_, lookupFilter))
+      .map(x => EnvironmentUtils.entryToTemplata(this, x))
+      .toList ++
+    parentEnv.getAllTemplatasWithName(name, lookupFilter)
   }
 
   override def getNearestTemplataWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
-    vimpl()
+    entries
+      .filter({ case (key, _) => EnvironmentUtils.impreciseNamesMatch(name, key) })
+      .values
+      .flatten
+      .filter(EnvironmentUtils.entryMatchesFilter(_, lookupFilter)) match {
+      case List(entry) => Some(EnvironmentUtils.entryToTemplata(this, entry))
+      case List() => parentEnv.getNearestTemplataWithName(name, lookupFilter)
+      case multiple => vfail("Too many things named " + name + ":" + multiple);
+    }
   }
 
   def getVariable(name: IVarName2): Option[IVariable2] = {

@@ -37,7 +37,7 @@ object BuiltInFunctions {
     (
     currentlyConstructingEnv
       .addEntry(
-        FunctionTemplateName2(CallTemplar.DESTRUCTOR_NAME),
+        FunctionTemplateName2(CallTemplar.DESTRUCTOR_NAME, CodeLocation2(0, 0)),
         FunctionEnvEntry(
           FunctionA(
             FunctionNameA(CallTemplar.DESTRUCTOR_NAME, s.CodeLocationS(0, 0)),
@@ -116,7 +116,7 @@ object BuiltInFunctions {
 
     (
     currentlyConstructingEnv
-      .addFunction(
+      .addUnevaluatedFunction(
         FunctionA(
           FunctionNameA(CallTemplar.INTERFACE_DESTRUCTOR_NAME, CodeLocationS(0, 0)),
           true,
@@ -177,7 +177,7 @@ object BuiltInFunctions {
   ): (NamespaceEnvironment[IName2], Map[String, IFunctionGenerator]) = {
     (
     currentlyConstructingEnv
-      .addFunction(
+      .addUnevaluatedFunction(
         FunctionA(
           FunctionNameA(CallTemplar.INTERFACE_DESTRUCTOR_NAME, CodeLocationS(0, 0)),
           true,
@@ -250,7 +250,7 @@ object BuiltInFunctions {
     // Conceptually it's "drop the reference", as opposed to destructor which is "drop the object"
     (
       currentlyConstructingEnv
-        .addFunction(
+        .addUnevaluatedFunction(
           FunctionA(
             FunctionNameA(CallTemplar.DROP_FUNCTION_NAME, CodeLocationS(0, 0)),
             true,
@@ -278,7 +278,7 @@ object BuiltInFunctions {
             (FunctionHeader2) = {
               vassert(maybeReturnType2 == Some(Coord(Share, Void2())))
               val List(CoordTemplata(ref2)) = namedEnv.fullName.last.templateArgs
-              val List(Parameter2("x", None, paramType2)) = params
+              val List(Parameter2(CodeVarName2("x"), None, paramType2)) = params
               vassert(paramType2 == ref2)
               DestructorTemplar.generateDropFunction(
                 namedEnv, temputs, maybeOriginFunction1.get, ref2)
@@ -288,7 +288,7 @@ object BuiltInFunctions {
 
   private def addArrayLen(currentlyConstructingEnv: NamespaceEnvironment[IName2]): NamespaceEnvironment[IName2] = {
     currentlyConstructingEnv
-      .addFunction(
+      .addUnevaluatedFunction(
         FunctionA(
           FunctionNameA("len", s.CodeLocationS(0, 0)),
           true,
@@ -323,7 +323,7 @@ object BuiltInFunctions {
                 List(
                   ArrayLengthAE(
                     LocalLoadAE(CodeVarNameA("arr"), false))))))))
-      .addFunction(
+      .addUnevaluatedFunction(
         FunctionA(
           FunctionNameA("len", s.CodeLocationS(0, 1)),
           true,
@@ -363,7 +363,7 @@ object BuiltInFunctions {
 
   private def addPanic(currentlyConstructingEnv: NamespaceEnvironment[IName2]): NamespaceEnvironment[IName2] = {
     currentlyConstructingEnv
-      .addFunction(
+      .addUnevaluatedFunction(
         FunctionA(
           FunctionNameA("panic", s.CodeLocationS(0, 0)),
           true,

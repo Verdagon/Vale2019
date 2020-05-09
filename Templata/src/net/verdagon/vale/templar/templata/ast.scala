@@ -2,7 +2,7 @@ package net.verdagon.vale.templar.templata
 
 
 import net.verdagon.vale.astronomer._
-import net.verdagon.vale.templar.{FullName2, FunctionName2, IFunctionName2}
+import net.verdagon.vale.templar.{FullName2, FunctionName2, IFunctionName2, IVarName2}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.{vassert, vassertSome, vfail, vimpl}
 
@@ -59,7 +59,7 @@ case class Override2(interface: InterfaceRef2) extends Virtuality2 {
 }
 
 case class Parameter2(
-    name: String,
+    name: IVarName2,
     virtuality: Option[Virtuality2],
     tyype: Coord) extends Queriable2 {
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
@@ -110,7 +110,6 @@ case class FunctionBanner2(
 
   fullName.last match {
     case FunctionName2(_, _, parameters) => {
-      vassert(parameters.nonEmpty)
       vassert(parameters == params.map(_.tyype))
     }
     case _ => vimpl()
@@ -168,8 +167,6 @@ case class FunctionHeader2(
     params: List[Parameter2],
     returnType: Coord,
     maybeOriginFunction: Option[FunctionA]) extends Queriable2 {
-
-  vassert(fullName.last.templateArgs.nonEmpty)
 
   // Make sure there's no duplicate names
   vassert(params.map(_.name).toSet.size == params.size);

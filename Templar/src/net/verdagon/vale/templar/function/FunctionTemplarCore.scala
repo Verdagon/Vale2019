@@ -86,7 +86,7 @@ object FunctionTemplarCore {
       }
       case ExternBodyA => {
         val maybeRetCoord =
-          fullEnv.getNearestTemplataWithName(vimpl(function1.maybeRetCoordRune.get.toString), Set(TemplataLookupContext))
+          fullEnv.getNearestTemplataWithAbsoluteNameA(function1.maybeRetCoordRune.get, Set(TemplataLookupContext))
         val retCoord =
           maybeRetCoord match {
             case None => vfail("wat")
@@ -107,7 +107,9 @@ object FunctionTemplarCore {
         val maybeRetTemplata =
           function1.maybeRetCoordRune match {
             case None => (None)
-            case Some(retCoordRune) => fullEnv.getNearestTemplataWithName(vimpl(retCoordRune.toString), Set(TemplataLookupContext))
+            case Some(retCoordRune) => {
+              fullEnv.getNearestTemplataWithAbsoluteNameA(retCoordRune, Set(TemplataLookupContext))
+            }
           }
         val maybeRetCoord =
           maybeRetTemplata match {
@@ -296,7 +298,7 @@ object FunctionTemplarCore {
               List(CoordTemplata(structType2), KindTemplata(interfaceRef2)),
               List(structType2))),
           false, false,
-          List(Parameter2("this", Some(Override2(interfaceRef2)), structType2)),
+          List(Parameter2(CodeVarName2("this"), Some(Override2(interfaceRef2)), structType2)),
           Coord(Share, Void2()),
           maybeOriginFunction1),
         List(),

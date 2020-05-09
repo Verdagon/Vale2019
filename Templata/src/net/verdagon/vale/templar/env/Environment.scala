@@ -61,19 +61,18 @@ case class NamespaceEnvironment[+T <: IName2](
     lookupFilter: Set[ILookupContext]):
   List[ITemplata] = {
     entries
-      .filter({ case (key, _) => EnvironmentUtils.namesMatch(name, key) })
-      .values
+      .get(NameTranslator.translateNameStep(name))
+      .toList
       .flatten
       .filter(EnvironmentUtils.entryMatchesFilter(_, lookupFilter))
-      .toList
       .map(EnvironmentUtils.entryToTemplata(this, _)) ++
       maybeParentEnv.toList.flatMap(_.getAllTemplatasWithAbsoluteNameA(name, lookupFilter))
   }
 
   override def getNearestTemplataWithAbsoluteNameA(name: INameA, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
     entries
-      .filter({ case (key, _) => EnvironmentUtils.namesMatch(name, key) })
-      .values
+      .get(NameTranslator.translateNameStep(name))
+      .toList
       .flatten
       .filter(EnvironmentUtils.entryMatchesFilter(_, lookupFilter)) match {
       case List(entry) => Some(EnvironmentUtils.entryToTemplata(this, entry))
@@ -92,22 +91,55 @@ case class NamespaceEnvironment[+T <: IName2](
   }
 
   override def getAllTemplatasWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
-    vimpl()
+    entries
+      .filter({ case (key, _) => EnvironmentUtils.impreciseNamesMatch(name, key) })
+      .values
+      .toList
+      .flatten
+      .filter(EnvironmentUtils.entryMatchesFilter(_, lookupFilter))
+      .map(EnvironmentUtils.entryToTemplata(this, _)) ++
+    maybeParentEnv.toList.flatMap(parentEnv => parentEnv.getAllTemplatasWithName(name, lookupFilter))
   }
 
   override def getNearestTemplataWithAbsoluteName2(name: IName2, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
-    vimpl()
+    entries
+      .get(name)
+      .toList
+      .flatten
+      .filter(EnvironmentUtils.entryMatchesFilter(_, lookupFilter)) match {
+      case List(entry) => Some(EnvironmentUtils.entryToTemplata(this, entry))
+      case List() => {
+        maybeParentEnv match {
+          case None => None
+          case Some(parentEnv) => parentEnv.getNearestTemplataWithAbsoluteName2(name, lookupFilter)
+        }
+      }
+      case multiple => vfail("Too many things named " + name + ":\n" + multiple.mkString("\n"));
+    }
   }
 
   override def getNearestTemplataWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
-    vimpl()
+    entries
+      .filter({ case (key, _) => EnvironmentUtils.impreciseNamesMatch(name, key) })
+      .values
+      .flatten
+      .filter(EnvironmentUtils.entryMatchesFilter(_, lookupFilter)) match {
+      case List(entry) => Some(EnvironmentUtils.entryToTemplata(this, entry))
+      case List() => {
+        maybeParentEnv match {
+          case None => None
+          case Some(parentEnv) => parentEnv.getNearestTemplataWithName(name, lookupFilter)
+        }
+      }
+      case multiple => vfail("Too many things named " + name + ":\n" + multiple.mkString("\n"));
+    }
   }
 
-  def addFunction(function: FunctionA): NamespaceEnvironment[T] = {
+  def addUnevaluatedFunction(function: FunctionA): NamespaceEnvironment[T] = {
     NamespaceEnvironment(
       maybeParentEnv,
       fullName,
-      EnvironmentUtils.addFunction(entries, function))
+      EnvironmentUtils.addUnevaluatedFunction(entries, function))
   }
 
   def addEntry(name: IName2, entry: IEnvEntry): NamespaceEnvironment[T] = {
@@ -162,12 +194,13 @@ object EnvironmentUtils {
     addEntries(oldEntries, Map(name -> List(entry)))
   }
 
-  def addFunction(
+  def addUnevaluatedFunction(
     oldEntries: Map[IName2, List[IEnvEntry]],
     functionA: FunctionA
   ): Map[IName2, List[IEnvEntry]] = {
-    val name = start here is this a template? vimpl()//functionA.name
-    addEntry(oldEntries, name, FunctionEnvEntry(functionA))
+    val functionName = NameTranslator.translateFunctionNameToTemplateName(functionA.name)
+
+    addEntry(oldEntries, functionName, FunctionEnvEntry(functionA))
   }
 
 
@@ -228,19 +261,32 @@ object EnvironmentUtils {
     })
   }
 
-  def namesMatch(nameA: INameA, name2: IName2): Boolean = {
+  def impreciseNamesMatch(nameA: IImpreciseNameStepA, name2: IName2): Boolean = {
+    // If something's in these two switch statements, then we've factored them into the main one below.
+    // When you add something to the main list, make sure you handle all its cases and add it to one of
+    // these too.
+    nameA match {
+      case CodeTypeNameA(_) =>
+      case GlobalFunctionFamilyNameA(_) =>
+      case _ => vimpl()
+    }
+    name2 match {
+      case StructTemplateName2(_, _) =>
+      case InterfaceTemplateName2(_, _) =>
+      case FunctionTemplateName2(_, _) =>
+      case PrimitiveName2(_) =>
+      case ReturnRune2() =>
+      case ImplicitRune2(_) =>
+      case CodeRune2(_) =>
+      case _ => vimpl()
+    }
     (nameA, name2) match {
-      case (LambdaNameA(parent, codeLocationA), LambdaName2(codeLocation2, templateArgs2, parameters2)) => vimpl()//codeLocationsMatch(codeLocationA, codeLocation2)
-      case (FunctionNameA(nameA, codeLocationA), FunctionName2(name2, templateArgs2, codeLocation2)) => vimpl()//nameA == name2 && codeLocationsMatch(codeLocationA, codeLocation2)
-      case (TopLevelCitizenDeclarationNameA(nameA, codeLocationA), StructName2(name2, templateArgs)) => vimpl()//nameA == name2 && codeLocationsMatch(codeLocationA, codeLocation2)
-      case (TopLevelCitizenDeclarationNameA(nameA, codeLocationA), InterfaceName2(name2, templateArgs)) => vimpl()//nameA == name2 && codeLocationsMatch(codeLocationA, codeLocation2)
-      case (LambdaStructNameA(_), LambdaStructName2(codeLocation2)) => vimpl()//codeLocationsMatch(codeLocationA, codeLocation2)
-      case (ImplNameA(codeLocationA), ImplDeclareName2(codeLocation2)) => codeLocationsMatch(codeLocationA, codeLocation2)
-      case (LetNameA(codeLocationA), LetName2(codeLocation2)) => codeLocationsMatch(codeLocationA, codeLocation2)
-      case (UnnamedLocalNameA(codeLocationA), UnnamedLocalName2(codeLocation2)) => codeLocationsMatch(codeLocationA, codeLocation2)
-      case (ClosureParamNameA(), ClosureParamName2()) => true
-      case (MagicParamNameA(magicParamNumberA), MagicParamName2(magicParamNumber2)) => magicParamNumberA == magicParamNumber2
-      case (CodeVarNameA(nameA), CodeVarName2(name2)) => nameA == name2
+      case (CodeTypeNameA(humanNameA), StructTemplateName2(humanNameT, _)) => humanNameA == humanNameT
+      case (CodeTypeNameA(humanNameA), InterfaceTemplateName2(humanNameT, _)) => humanNameA == humanNameT
+      case (CodeTypeNameA(humanNameA), FunctionTemplateName2(humanNameT, _)) => humanNameA == humanNameT
+      case (CodeTypeNameA(humanNameA), PrimitiveName2(humanNameT)) => humanNameA == humanNameT
+      case (GlobalFunctionFamilyNameA(humanNameA), FunctionTemplateName2(humanNameT, _)) => humanNameA == humanNameT
+      case _ => false
     }
   }
 

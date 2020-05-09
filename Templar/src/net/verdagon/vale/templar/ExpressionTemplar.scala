@@ -279,7 +279,7 @@ object ExpressionTemplar {
     }
 
     val variable1 =
-      fate.scoutedLocals.find(_.varName == varId) match {
+      fate.scoutedLocals.find(localA => NameTranslator.translateVarNameStep(localA.varName) == varId) match {
         case None => vfail("Missing local variable information from FunctionA for " + fate.function.name + " for variable " + varId)
         case Some(v) => v
       }
