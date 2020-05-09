@@ -705,7 +705,12 @@ case class CompleteProgram2(
   }
 
   def lookupFunction(humanName: String): Function2 = {
-    val matches = functions.filter(function => simpleName.unapply(function.header.fullName).contains(humanName))
+    val matches = functions.filter(f => {
+      f.header.fullName.last match {
+        case FunctionName2(n, _, _) if n == humanName => true
+        case _ => false
+      }
+    })
     if (matches.size == 0) {
       vfail("Function \"" + humanName + "\" not found!")
     } else if (matches.size > 1) {

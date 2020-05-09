@@ -115,7 +115,7 @@ class TemplarTests extends FunSuite with Matchers {
     val temputs = compile.getTemputs()
 
     // Make sure it inferred the param type and return type correctly
-    temputs.lookupFunction("main:lam1").header.returnType shouldEqual Coord(Share, Int2())
+    temputs.lookupFunction("__call").header.returnType shouldEqual Coord(Share, Int2())
     temputs.lookupFunction("main").header.returnType shouldEqual Coord(Share, Int2())
   }
 
