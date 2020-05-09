@@ -155,7 +155,7 @@ object FunctionScout {
     val userSpecifiedIdentifyingRunes: List[IRuneS] =
       userSpecifiedIdentifyingRuneNames.map(identifyingRuneName => CodeRuneS(identifyingRuneName))
 
-    val lambdaName = LambdaNameS(parentStackFrame.name, codeLocation)
+    val lambdaName = LambdaNameS(/*parentStackFrame.name,*/ codeLocation)
     // Every lambda has a closure as its first arg, even if its empty
     val closureStructName = LambdaStructNameS(lambdaName)
 

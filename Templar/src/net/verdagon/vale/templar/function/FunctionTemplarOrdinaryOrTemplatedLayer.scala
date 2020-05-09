@@ -410,12 +410,13 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
 
     val identifyingTemplatas = identifyingRunes.map(NameTranslator.translateRune).map(templatasByRune)
 
-    vcurious(nearEnv.fullName.last.isInstanceOf[FunctionName2])
-    val nearEnvFunctionName = nearEnv.fullName.last.asInstanceOf[FunctionName2];
+    val newNamePart =
+      nearEnv.fullName.last match {
+        case FunctionName2(humanName, List(), List()) => FunctionName2(humanName, identifyingTemplatas, List())
+        case LambdaName2(codeLocation, List(), List()) => LambdaName2(codeLocation, identifyingTemplatas, List())
+      }
 
-    val fullName =
-      FullName2(
-        nearEnv.fullName.steps.init, nearEnvFunctionName.copy(templateArgs = identifyingTemplatas))
+    val fullName = FullName2(nearEnv.fullName.steps.init, newNamePart)
     val maybeReturnType = maybeRetCoordRune.map(retCoordRune => {
       templatasByRune.get(NameTranslator.translateRune(retCoordRune)) match {
         case Some(CoordTemplata(coord)) => coord

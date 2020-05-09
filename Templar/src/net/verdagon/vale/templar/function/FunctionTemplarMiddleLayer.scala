@@ -117,7 +117,12 @@ object FunctionTemplarMiddleLayer {
 
     // Check preconditions
     function1.typeByRune.keySet.foreach(templateParam => {
-      vassert(runedEnv.getNearestTemplataWithName(vimpl(templateParam.toString), Set(TemplataLookupContext, ExpressionLookupContext)).nonEmpty);
+      vassert(
+        runedEnv
+          .getNearestTemplataWithAbsoluteNameA(
+            templateParam,
+            Set(TemplataLookupContext, ExpressionLookupContext))
+          .nonEmpty);
     })
 
     val paramTypes2 = evaluateFunctionParamTypes(runedEnv, function1.params);
@@ -265,10 +270,7 @@ object FunctionTemplarMiddleLayer {
   FunctionEnvironment = {
     // The last step is the name, but it doesn't have the params filled out.
     // (these asserts are just to make sure that's still the case)
-    runedEnv.fullName.last match {
-      case FunctionName2(_, _, parameters) => vassert(parameters.isEmpty)
-      case _ => vimpl()
-    }
+    vassert(runedEnv.fullName.last.parameters.isEmpty)
 
     // We fill out the params here to get the function's full name.
     val functionFullName = makeFunctionFullName(runedEnv.fullName, paramTypes)
@@ -277,16 +279,15 @@ object FunctionTemplarMiddleLayer {
   }
 
   def makeFunctionFullName(runedEnvFullName: FullName2[IFunctionName2], paramTypes: List[Coord]): FullName2[IFunctionName2] = {
-
-    vcurious(runedEnvFullName.last.isInstanceOf[FunctionName2])
-    vassert(runedEnvFullName.last.isInstanceOf[FunctionName2])
-    val functionName = runedEnvFullName.last.asInstanceOf[FunctionName2]
-    vassert(functionName.parameters.isEmpty)
-
     // We fill out the params here to get the function's full name.
-    val functionFullName =
-      FullName2(
-        runedEnvFullName.steps.init, functionName.copy(parameters = paramTypes))
-    functionFullName
+
+    // Make sure the parameters werent there, and then put the new ones in
+    val newLastPart =
+      runedEnvFullName.last match {
+        case FunctionName2(humanName, templateArgs, List()) => FunctionName2(humanName, templateArgs, paramTypes)
+        case LambdaName2(humanName, templateArgs, List()) => LambdaName2(humanName, templateArgs, paramTypes)
+      }
+
+    FullName2(runedEnvFullName.steps.init, newLastPart)
   }
 }

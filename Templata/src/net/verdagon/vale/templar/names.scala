@@ -39,6 +39,7 @@ sealed trait IName2 extends Queriable2 {
 }
 sealed trait IFunctionName2 extends IName2 {
   def templateArgs: List[ITemplata]
+  def parameters: List[Coord]
 }
 sealed trait ICitizenName2 extends IName2 {
   def templateArgs: List[ITemplata]
@@ -176,6 +177,7 @@ case class AnonymousSubstructName2(methodNames: List[FullName2[IFunctionName2]])
 case class AnonymousSubstructConstructorName2() extends IFunctionName2 {
   def order = 27;
   def templateArgs: List[ITemplata] = List()
+  def parameters: List[Coord] = List()
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func) ++ templateArgs.toList.flatMap(_.all(func))
   }

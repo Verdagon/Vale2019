@@ -33,7 +33,10 @@ import scala.collection.immutable.List
 sealed trait INameS
 sealed trait IVarNameS extends INameS
 sealed trait IFunctionDeclarationNameS extends INameS
-case class LambdaNameS(parentName: INameS, codeLocation: CodeLocationS) extends IFunctionDeclarationNameS
+case class LambdaNameS(
+//  parentName: INameS,
+  codeLocation: CodeLocationS
+) extends IFunctionDeclarationNameS
 case class FunctionNameS(name: String, codeLocation: CodeLocationS) extends IFunctionDeclarationNameS
 case class TopLevelCitizenDeclarationNameS(name: String, codeLocation: CodeLocationS) extends INameS
 case class LambdaStructNameS(lambdaName: LambdaNameS) extends INameS

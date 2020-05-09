@@ -278,6 +278,8 @@ object EnvironmentUtils {
       case ReturnRune2() =>
       case ImplicitRune2(_) =>
       case CodeRune2(_) =>
+      case LambdaStructName2(_) =>
+      case ClosureParamName2() =>
       case _ => vimpl()
     }
     (nameA, name2) match {

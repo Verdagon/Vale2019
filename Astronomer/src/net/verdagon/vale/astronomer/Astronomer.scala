@@ -183,7 +183,7 @@ object Astronomer {
     // know what to do with it.
 
     name match {
-      case LambdaNameS(_, _) =>
+      case LambdaNameS(_) =>
       case FunctionNameS(_, _) =>
       case TopLevelCitizenDeclarationNameS(_, _) =>
       case LambdaStructNameS(_) => return KindTemplataType
@@ -513,14 +513,14 @@ object Astronomer {
 
   def translateFunctionDeclarationName(name: IFunctionDeclarationNameS): IFunctionDeclarationNameA = {
     name match {
-      case LambdaNameS(parentName, codeLocation) => LambdaNameA(translateName(parentName), codeLocation)
+      case LambdaNameS(/*parentName,*/ codeLocation) => LambdaNameA(/*translateName(parentName),*/ codeLocation)
       case FunctionNameS(name, codeLocation) => FunctionNameA(name, codeLocation)
     }
   }
 
   def translateName(name: INameS): INameA = {
     name match {
-      case LambdaNameS(parentName, codeLocation) => LambdaNameA(translateName(parentName), codeLocation)
+      case LambdaNameS(/*parentName, */codeLocation) => LambdaNameA(/*translateName(parentName), */codeLocation)
       case FunctionNameS(name, codeLocation) => FunctionNameA(name, codeLocation)
       case tlcd @ TopLevelCitizenDeclarationNameS(_, _) => translateTopLevelCitizenDeclarationName(tlcd)
       case LambdaStructNameS(lambdaName) => LambdaStructNameA(translateLambdaNameStep(lambdaName))
@@ -563,8 +563,8 @@ object Astronomer {
   }
 
   def translateLambdaNameStep(lambdaNameStep: LambdaNameS): LambdaNameA = {
-    val LambdaNameS(parentName, codeLocation) = lambdaNameStep
-    LambdaNameA(translateName(parentName), codeLocation)
+    val LambdaNameS(/*parentName,*/ codeLocation) = lambdaNameStep
+    LambdaNameA(/*translateName(parentName),*/ codeLocation)
   }
 
   def translateProgram(

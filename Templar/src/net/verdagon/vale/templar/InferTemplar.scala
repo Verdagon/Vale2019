@@ -237,6 +237,9 @@ object InferTemplar {
       case RuneAT(rune, resultType) => RuneTT(NameTranslator.translateRune(rune), resultType)
       case NameAT(name, resultType) => NameTT(name, resultType)
       case OwnershipAT(ownership) => OwnershipTT(ownership)
+      case OwnershippedAT(ownership, inner) => OwnershippedTT(ownership, translateTemplex(inner))
+      case AbsoluteNameAT(name, resultType) => AbsoluteNameTT(name, resultType)
+      case CallAT(template, args, resultType) => CallTT(translateTemplex(template), args.map(translateTemplex), resultType)
       case _ => vimpl()
     }
   }

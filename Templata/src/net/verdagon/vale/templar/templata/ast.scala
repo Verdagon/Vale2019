@@ -97,10 +97,7 @@ case class PotentialBannerFromExternFunction(
 case class Signature2(
     fullName: FullName2[IFunctionName2],
     paramTypes: List[Coord]) {
-  fullName.last match {
-    case FunctionName2(_, _, parameters) => vassert(parameters == paramTypes)
-    case _ => vimpl()
-  }
+  vassert(fullName.last.parameters == paramTypes)
 }
 
 case class FunctionBanner2(
@@ -108,12 +105,7 @@ case class FunctionBanner2(
     fullName: FullName2[IFunctionName2],
     params: List[Parameter2]) extends Queriable2  {
 
-  fullName.last match {
-    case FunctionName2(_, _, parameters) => {
-      vassert(parameters == params.map(_.tyype))
-    }
-    case _ => vimpl()
-  }
+  vassert(fullName.last.parameters == params.map(_.tyype))
 
   def toSignature: Signature2 = Signature2(fullName, paramTypes)
   def paramTypes: List[Coord] = params.map(_.tyype)
@@ -171,12 +163,7 @@ case class FunctionHeader2(
   // Make sure there's no duplicate names
   vassert(params.map(_.name).toSet.size == params.size);
 
-  fullName.last match {
-    case FunctionName2(_, _, parameters) => {
-      vassert(parameters == paramTypes)
-    }
-    case _ => vimpl()
-  }
+  vassert(fullName.last.parameters == paramTypes)
 
   def getAbstractInterface: Option[InterfaceRef2] = toBanner.getAbstractInterface
   def getOverride: Option[(StructRef2, InterfaceRef2)] = toBanner.getOverride

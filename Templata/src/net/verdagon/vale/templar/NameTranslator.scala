@@ -8,8 +8,7 @@ import net.verdagon.vale.{vimpl, vwat}
 object NameTranslator {
   def translateFunctionNameToTemplateName(functionName: IFunctionDeclarationNameA): IName2 = {
       functionName match {
-        case LambdaNameA(parent, codeLocation) => {
-          println("Maybe remove the parent?")
+        case LambdaNameA(/*parent, */codeLocation) => {
           LambdaTemplateName2(NameTranslator.translateCodeLocation(codeLocation))
         }
         case FunctionNameA(name, codeLocation) => {
@@ -83,7 +82,7 @@ object NameTranslator {
 //      case LambdaNameA(codeLocation) => LambdaName2(codeLocation)
 //      case FunctionNameA(name, codeLocation) => FunctionName2(name, codeLocation)
 //      case TopLevelCitizenDeclarationNameA(name, codeLocation) => TopLevelCitizenDeclarationName2(name, codeLocation)
-//      case LambdaStructNameA(codeLocation) => LambdaStructName2(codeLocation)
+      case LambdaStructNameA(LambdaNameA(codeLocation)) => LambdaStructName2(NameTranslator.translateCodeLocation(codeLocation))
       case ImplNameA(codeLocation) => ImplDeclareName2(translateCodeLocation(codeLocation))
       case LetNameA(codeLocation) => LetName2(translateCodeLocation(codeLocation))
       case UnnamedLocalNameA(codeLocation) => UnnamedLocalName2(translateCodeLocation(codeLocation))

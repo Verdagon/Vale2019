@@ -84,7 +84,7 @@ class TemplarTests extends FunSuite with Matchers {
     val temputs = compile.getTemputs()
     temputs.lookupFunction("main").onlyOf(classOf[Parameter2]).tyype == Coord(Share, Int2())
     val lookup = temputs.lookupFunction("main").allOf(classOf[LocalLookup2]).head;
-    lookup.localVariable.id shouldEqual "a"
+    lookup.localVariable.id.last shouldEqual CodeVarName2("a")
     lookup.reference shouldEqual Coord(Share, Int2())
   }
 

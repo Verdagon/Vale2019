@@ -80,12 +80,11 @@ object FunctionTemplar {
 
     // Eagerly evaluate the function if it's not a template.
     if (function1.origin.isTemplate) {
-    // Do nothing
+      // Do nothing
     } else {
-      val unevaluatedContainers = vimpl()
       val _ =
         FunctionTemplar.evaluateOrdinaryClosureFunctionFromNonCallForHeader(
-          functionTemplata.outerEnv, temputs, structRef, unevaluatedContainers, function1.origin)
+          functionTemplata.outerEnv, temputs, structRef, functionTemplata.unevaluatedContainers, function1.origin)
     }
 
     (structRef)

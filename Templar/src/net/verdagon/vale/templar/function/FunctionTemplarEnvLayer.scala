@@ -107,7 +107,7 @@ object FunctionTemplarEnvLayer {
       unevaluatedContainers: List[IContainer],
       function: FunctionA):
   (FunctionHeader2) = {
-    val functionFullName = FullName2(containingEnv.fullName.steps, vimpl(function.name.toString))
+    val functionFullName = FullName2(containingEnv.fullName.steps, translateFunctionDeclarationName(function.name))
     val funcOuterEnv =
       FunctionEnvironment(containingEnv, functionFullName, function, Map(), None, List(), 0, List(), Set())
 
@@ -224,9 +224,10 @@ object FunctionTemplarEnvLayer {
       argTypes2)
   }
 
-  def translateFunctionDeclarationName(functionNameA: IFunctionDeclarationNameA): FunctionName2 = {
+  def translateFunctionDeclarationName(functionNameA: IFunctionDeclarationNameA): IFunctionName2 = {
       functionNameA match {
         case FunctionNameA(humanName, codeLocationS) => FunctionName2(humanName, List(), List())
+        case LambdaNameA(codeLocation) => LambdaName2(NameTranslator.translateCodeLocation(codeLocation), List(), List())
         case _ => vimpl()
       }
   }

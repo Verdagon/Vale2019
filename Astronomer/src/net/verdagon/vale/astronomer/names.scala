@@ -24,7 +24,10 @@ import net.verdagon.vale.vassert
 sealed trait INameA
 sealed trait IVarNameA extends INameA
 sealed trait IFunctionDeclarationNameA extends INameA
-case class LambdaNameA(parent: INameA, codeLocation: CodeLocationS) extends IFunctionDeclarationNameA
+case class LambdaNameA(
+//  parent: INameA,
+  codeLocation: CodeLocationS
+) extends IFunctionDeclarationNameA
 case class FunctionNameA(name: String, codeLocation: CodeLocationS) extends IFunctionDeclarationNameA
 case class TopLevelCitizenDeclarationNameA(name: String, codeLocation: CodeLocationS) extends INameA
 case class LambdaStructNameA(lambdaName: LambdaNameA) extends INameA

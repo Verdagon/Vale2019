@@ -2,7 +2,7 @@ package net.verdagon.vale.templar.infer
 
 import net.verdagon.vale.astronomer._
 import net.verdagon.vale.parser._
-import net.verdagon.vale.templar.IRune2
+import net.verdagon.vale.templar.{IName2, IRune2}
 import net.verdagon.vale.{vassert, vimpl, vwat}
 
 import scala.collection.immutable.List

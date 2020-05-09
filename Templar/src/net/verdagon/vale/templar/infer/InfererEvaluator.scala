@@ -422,7 +422,7 @@ class InfererEvaluator[Env, State](
               // Doesn't matter if the arg is deeply satisfied because this rule itself is not satisfied.
               val _ = argDeeplySatisfied
               val deeplySatisfied = false
-              println("toRef unsatisfied")
+//              println("toRef unsatisfied")
               return (InferEvaluateUnknown(deeplySatisfied))
             }
             case (InferEvaluateSuccess(arguments, ds)) => {
@@ -444,7 +444,7 @@ class InfererEvaluator[Env, State](
               // Doesn't matter if the arg is deeply satisfied because this rule itself is not satisfied.
               val _ = argDeeplySatisfied
               val deeplySatisfied = false
-              println("passThroughIfConcrete unsatisfied")
+//              println("passThroughIfConcrete unsatisfied")
               return (InferEvaluateUnknown(deeplySatisfied))
             }
             case (InferEvaluateSuccess(arguments, ds)) => {
@@ -469,7 +469,7 @@ class InfererEvaluator[Env, State](
               // Doesn't matter if the arg is deeply satisfied because this rule itself is not satisfied.
               val _ = argDeeplySatisfied
               val deeplySatisfied = false
-              println("passThroughIfInterface unsatisfied")
+//              println("passThroughIfInterface unsatisfied")
               return (InferEvaluateUnknown(deeplySatisfied))
             }
             case (InferEvaluateSuccess(arguments, ds)) => {
@@ -494,7 +494,7 @@ class InfererEvaluator[Env, State](
               // Doesn't matter if the arg is deeply satisfied because this rule itself is not satisfied.
               val _ = argDeeplySatisfied
               val deeplySatisfied = false
-              println("passThroughIfStruct unsatisfied")
+//              println("passThroughIfStruct unsatisfied")
               return (InferEvaluateUnknown(deeplySatisfied))
             }
             case (InferEvaluateSuccess(arguments, ds)) => {
@@ -546,6 +546,11 @@ class InfererEvaluator[Env, State](
           templataTemplar.lookupTemplata(env, state, name, expectedType)
         (InferEvaluateSuccess(templata, true))
       }
+      case AbsoluteNameTT(name, expectedType) => {
+        val templata =
+          templataTemplar.lookupTemplata(env, state, name, expectedType)
+        (InferEvaluateSuccess(templata, true))
+      }
       case RuneTT(rune, expectedType) => {
         inferences.templatasByRune.get(rune) match {
           case Some(templata) => {
@@ -555,7 +560,7 @@ class InfererEvaluator[Env, State](
             (InferEvaluateSuccess(templata, true))
           }
           case None => {
-            println("RuneAT unsatisfied")
+//            println("RuneAT unsatisfied")
             (InferEvaluateUnknown(false))
           }
         }
@@ -568,7 +573,7 @@ class InfererEvaluator[Env, State](
             // For example, we can't do a borrow of something that's already a borrow or a weak.
             val _ = innerCoordDeeplySatisfied
             val deeplySatisfied = false
-            println("OwnershippedAT unsatisfied")
+//            println("OwnershippedAT unsatisfied")
 
             (InferEvaluateUnknown(deeplySatisfied))
           }
@@ -621,11 +626,11 @@ class InfererEvaluator[Env, State](
 
         (maybeTemplateTemplata, maybeArgTemplatas) match {
           case (None, _) => {
-            println("CallAT 1 unsatisfied")
+//            println("CallAT 1 unsatisfied")
             (InferEvaluateUnknown(false))
           }
           case (_, None) => {
-            println("CallAT 2 unsatisfied")
+//            println("CallAT 2 unsatisfied")
             (InferEvaluateUnknown(false))
           }
           case (Some(it @ InterfaceTemplata(_, _)), Some(listOfArgTemplatas)) => {
@@ -703,7 +708,7 @@ class InfererEvaluator[Env, State](
           case _ => {
             // Not satisfied because there's an implicit constraint that these things together make up a valid repeater sequence.
             val deeplySatisfied = false
-            println("Repeater unsatisfied")
+//            println("Repeater unsatisfied")
             (InferEvaluateUnknown(deeplySatisfied))
           }
         }
@@ -774,7 +779,7 @@ class InfererEvaluator[Env, State](
             val _ = leftEvalDeeplySatisfied
             val __ = rightDeeplySatisfied
             val deeplySatisfied = false
-            println("Equals 1 unsatisfied")
+//            println("Equals 1 unsatisfied")
 
             (InferEvaluateUnknown(deeplySatisfied))
           }
@@ -875,7 +880,7 @@ class InfererEvaluator[Env, State](
       }
       case (Some(_), Some(_)) => vfail()
       case _ => {
-        println("conforms unsatisfied")
+//        println("conforms unsatisfied")
         (InferEvaluateUnknown(false))
       }
     }
@@ -894,7 +899,7 @@ class InfererEvaluator[Env, State](
 
     // We can't satisfy Or rules with evaluating, only with matching.
     val deeplySatisfied = false
-    println("or unsatisfied")
+//    println("or unsatisfied")
 
     (InferEvaluateUnknown(deeplySatisfied))
   }
