@@ -54,7 +54,7 @@ object Templar {
     val env11 =
       functions1.foldLeft(env9)({
         case (env10, functionS) => {
-          env10.addUnevaluatedFunction(functionS)
+          env10.addUnevaluatedFunction(List(), functionS)
         }
       })
 
@@ -140,11 +140,20 @@ object Templar {
 
     val env0 = Map[IName2, List[IEnvEntry]]()
     val env1 = EnvironmentUtils.addEntry(env0, name, interfaceEnvEntry)
-    val env2 = EnvironmentUtils.addUnevaluatedFunction(env1, StructTemplar.getInterfaceConstructor(interfaceA))
+    val env2 =
+      EnvironmentUtils.addUnevaluatedFunction(
+        env1,
+        List(ContainerInterface(interfaceA)),
+        StructTemplar.getInterfaceConstructor(interfaceA))
 
     val env4 =
       interfaceA.internalMethods.foldLeft(env2)({
-        case (env3, internalMethodA) => EnvironmentUtils.addUnevaluatedFunction(env3, internalMethodA)
+        case (env3, internalMethodA) => {
+          EnvironmentUtils.addUnevaluatedFunction(
+            env3,
+            List(ContainerInterface(interfaceA)),
+            internalMethodA)
+        }
       })
 
     // Once we have sub-interfaces and sub-structs, we could recursively call this function.
@@ -161,7 +170,11 @@ object Templar {
 
     val env0 = Map[IName2, List[IEnvEntry]]()
     val env1 = EnvironmentUtils.addEntry(env0, NameTranslator.translateNameStep(structA.name), interfaceEnvEntry)
-    val env2 = EnvironmentUtils.addUnevaluatedFunction(env1, StructTemplar.getConstructor(structA))
+    val env2 =
+      EnvironmentUtils.addUnevaluatedFunction(
+        env1,
+        List(ContainerStruct(structA)),
+        StructTemplar.getConstructor(structA))
 
     // To add once we have methods inside structs:
 //    val env4 =

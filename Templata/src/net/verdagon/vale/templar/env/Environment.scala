@@ -135,11 +135,14 @@ case class NamespaceEnvironment[+T <: IName2](
     }
   }
 
-  def addUnevaluatedFunction(function: FunctionA): NamespaceEnvironment[T] = {
+  def addUnevaluatedFunction(
+    unevaluatedContainers: List[IContainer],
+    function: FunctionA
+  ): NamespaceEnvironment[T] = {
     NamespaceEnvironment(
       maybeParentEnv,
       fullName,
-      EnvironmentUtils.addUnevaluatedFunction(entries, function))
+      EnvironmentUtils.addUnevaluatedFunction(entries, unevaluatedContainers, function))
   }
 
   def addEntry(name: IName2, entry: IEnvEntry): NamespaceEnvironment[T] = {
@@ -160,9 +163,8 @@ case class NamespaceEnvironment[+T <: IName2](
 object EnvironmentUtils {
   def entryToTemplata(env: IEnvironment, entry: IEnvEntry): ITemplata = {
     entry match {
-      case FunctionEnvEntry(func) => {
-        println("Fill in the containers!")
-        FunctionTemplata(env, List(), func)
+      case FunctionEnvEntry(unevaluatedContainers, func) => {
+        FunctionTemplata(env, unevaluatedContainers, func)
       }
       case StructEnvEntry(struct) => {
         StructTemplata(NamespaceEnvironment(Some(env), env.fullName, Map()), struct)
@@ -196,17 +198,18 @@ object EnvironmentUtils {
 
   def addUnevaluatedFunction(
     oldEntries: Map[IName2, List[IEnvEntry]],
+    unevaluatedContainers: List[IContainer],
     functionA: FunctionA
   ): Map[IName2, List[IEnvEntry]] = {
     val functionName = NameTranslator.translateFunctionNameToTemplateName(functionA.name)
 
-    addEntry(oldEntries, functionName, FunctionEnvEntry(functionA))
+    addEntry(oldEntries, functionName, FunctionEnvEntry(unevaluatedContainers, functionA))
   }
 
 
   def entryMatchesFilter(entry: IEnvEntry, contexts: Set[ILookupContext]): Boolean = {
     entry match {
-      case FunctionEnvEntry(_) => contexts.contains(ExpressionLookupContext)
+      case FunctionEnvEntry(_, _) => contexts.contains(ExpressionLookupContext)
       case ImplEnvEntry(_) => contexts.contains(ExpressionLookupContext)
       case StructEnvEntry(_) => contexts.contains(TemplataLookupContext)
       case InterfaceEnvEntry(_) => contexts.contains(TemplataLookupContext)
@@ -252,8 +255,8 @@ object EnvironmentUtils {
 
   // See OFCBT.
   def functionIsTemplateInContext(unevaluatedContainers: List[IContainer], function: FunctionA): Boolean = {
-    function.isTemplate &&
-    unevaluatedContainers.forall({
+    function.isTemplate ||
+    unevaluatedContainers.exists({
       case ContainerInterface(interface) => interface.isTemplate
       case ContainerStruct(struct) => struct.isTemplate
       case ContainerFunction(function) => function.isTemplate
@@ -268,6 +271,7 @@ object EnvironmentUtils {
     nameA match {
       case CodeTypeNameA(_) =>
       case GlobalFunctionFamilyNameA(_) =>
+      case ImplImpreciseNameA() =>
       case _ => vimpl()
     }
     name2 match {

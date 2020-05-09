@@ -39,6 +39,7 @@ object BuiltInFunctions {
       .addEntry(
         FunctionTemplateName2(CallTemplar.DESTRUCTOR_NAME, CodeLocation2(0, 0)),
         FunctionEnvEntry(
+          List(), // No parent struct, this should apply to any struct
           FunctionA(
             FunctionNameA(CallTemplar.DESTRUCTOR_NAME, s.CodeLocationS(0, 0)),
             true,
@@ -117,6 +118,7 @@ object BuiltInFunctions {
     (
     currentlyConstructingEnv
       .addUnevaluatedFunction(
+        List(), // No parent interface, this should apply to all interfaces
         FunctionA(
           FunctionNameA(CallTemplar.INTERFACE_DESTRUCTOR_NAME, CodeLocationS(0, 0)),
           true,
@@ -178,6 +180,7 @@ object BuiltInFunctions {
     (
     currentlyConstructingEnv
       .addUnevaluatedFunction(
+        List(), // No parent interface or struct or impl, this should apply to any struct
         FunctionA(
           FunctionNameA(CallTemplar.INTERFACE_DESTRUCTOR_NAME, CodeLocationS(0, 0)),
           true,
@@ -251,6 +254,7 @@ object BuiltInFunctions {
     (
       currentlyConstructingEnv
         .addUnevaluatedFunction(
+          List(), // No parent struct, this should apply to any struct
           FunctionA(
             FunctionNameA(CallTemplar.DROP_FUNCTION_NAME, CodeLocationS(0, 0)),
             true,
@@ -289,6 +293,7 @@ object BuiltInFunctions {
   private def addArrayLen(currentlyConstructingEnv: NamespaceEnvironment[IName2]): NamespaceEnvironment[IName2] = {
     currentlyConstructingEnv
       .addUnevaluatedFunction(
+        List(),
         FunctionA(
           FunctionNameA("len", s.CodeLocationS(0, 0)),
           true,
@@ -324,6 +329,7 @@ object BuiltInFunctions {
                   ArrayLengthAE(
                     LocalLoadAE(CodeVarNameA("arr"), false))))))))
       .addUnevaluatedFunction(
+        List(),
         FunctionA(
           FunctionNameA("len", s.CodeLocationS(0, 1)),
           true,
@@ -364,6 +370,7 @@ object BuiltInFunctions {
   private def addPanic(currentlyConstructingEnv: NamespaceEnvironment[IName2]): NamespaceEnvironment[IName2] = {
     currentlyConstructingEnv
       .addUnevaluatedFunction(
+        List(),
         FunctionA(
           FunctionNameA("panic", s.CodeLocationS(0, 0)),
           true,
