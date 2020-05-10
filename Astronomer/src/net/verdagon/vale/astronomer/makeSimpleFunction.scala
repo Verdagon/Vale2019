@@ -32,7 +32,10 @@ object makeSimpleFunction {
       false,
       FunctionTemplataType,
       List(),
-      runeByType.map({ case (_, rune) => (rune, CoordTemplataType) }).toMap,
+      runeByType
+        .map({ case (_, rune) => (rune, CoordTemplataType) })
+        .toMap[IRuneA, ITemplataType] +
+        (returnRune -> CoordTemplataType),
       paramsA,
       Some(returnRune),
       allRules,

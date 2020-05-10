@@ -3,18 +3,24 @@ package net.verdagon.vale.templar
 import net.verdagon.vale.scout.CodeLocationS
 import net.verdagon.vale.templar.templata.{CodeLocation2, CoordTemplata, ITemplata, Queriable2}
 import net.verdagon.vale.templar.types.Coord
+import net.verdagon.vale.vassert
 
 // Scout's/Astronomer's name parts correspond to where they are in the source code,
 // but Templar's correspond more to what namespaces and stamped functions / structs
 // they're in. See TNAD.
 
 case class FullName2[+T <: IName2](initSteps: List[IName2], last: T) extends Queriable2 {
-  def addStep[Y <: IName2](newLast: Y): FullName2[Y] = FullName2[Y](initSteps :+ last, newLast)
+  // GlobalNamespaceName2 is just here because names have to have a last step.
+  vassert(!initSteps.contains(GlobalNamespaceName2()))
+
   def steps: List[IName2] = {
     last match {
       case GlobalNamespaceName2() => initSteps
       case _ => initSteps :+ last
     }
+  }
+  def addStep[Y <: IName2](newLast: Y): FullName2[Y] = {
+    FullName2[Y](steps, newLast)
   }
   def init: FullName2[IName2] = FullName2[IName2](initSteps.init, initSteps.last)
 
@@ -44,7 +50,6 @@ sealed trait IFunctionName2 extends IName2 {
 sealed trait ICitizenName2 extends IName2 {
   def templateArgs: List[ITemplata]
 }
-sealed trait IStructName2 extends ICitizenName2
 case class ImplDeclareName2(codeLocation: CodeLocation2) extends IName2 { def order = 1; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) ++ codeLocation.all(func) } }
 case class LetName2(codeLocation: CodeLocation2) extends IName2 { def order = 2; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) ++ codeLocation.all(func) } }
 
@@ -103,9 +108,9 @@ case class ConstructorName2(
     List(this).collect(func)
   }
 }
-//// We have this and LambdaStructName2 both because sometimes lambdas dont come with
+//// We have this and LambdaCitizenName2 both because sometimes lambdas dont come with
 //// a struct, like if they capture nothing. When they do come with structs, theyll both
-//// be in the name, this one after the LambdaStructName2 name.
+//// be in the name, this one after the LambdaCitizenName2 name.
 //case class LambdaName2(
 //  codeLocation: CodeLocation2,
 //  templateArgs: List[ITemplata],
@@ -116,10 +121,19 @@ case class ConstructorName2(
 //    List(this).collect(func) ++ templateArgs.flatMap(_.all(func)) ++ parameters.flatMap(_.all(func))
 //  }
 //}
-case class StructName2(
+//case class CitizenName2(
+//  humanName: String,
+//  templateArgs: List[ITemplata]
+//) extends ICitizenName2 {
+//  def order = 15;
+//  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
+//    List(this).collect(func) ++ templateArgs.flatMap(_.all(func))
+//  }
+//}
+case class CitizenName2(
   humanName: String,
   templateArgs: List[ITemplata]
-) extends IStructName2 {
+) extends ICitizenName2 {
   def order = 15;
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func) ++ templateArgs.flatMap(_.all(func))
@@ -127,23 +141,23 @@ case class StructName2(
 }
 case class TupleName2(
   members: List[Coord]
-) extends IStructName2 {
+) extends ICitizenName2 {
   override def templateArgs: List[ITemplata] = members.map(CoordTemplata)
   def order = 16;
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func) ++ members.flatMap(_.all(func))
   }
 }
-case class LambdaStructName2(
+case class LambdaCitizenName2(
   codeLocation: CodeLocation2,
-) extends IStructName2 {
+) extends ICitizenName2 {
   def templateArgs: List[ITemplata] = List()
   def order = 17;
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func) ++ templateArgs.toList.flatMap(_.all(func))
   }
 }
-case class InterfaceTemplateName2(
+case class CitizenTemplateName2(
   humanName: String,
   codeLocation: CodeLocation2
 ) extends IName2 {
@@ -151,36 +165,14 @@ case class InterfaceTemplateName2(
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func) ++ codeLocation.all(func)
   }
-}
-case class StructTemplateName2(
-  humanName: String,
-  codeLocation: CodeLocation2
-) extends IName2 {
-  def order = 30;
-  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
-    List(this).collect(func) ++ codeLocation.all(func)
+
+  def makeCitizenName(templateArgs: List[ITemplata]): CitizenName2 = {
+    CitizenName2(humanName, templateArgs)
   }
 }
-case class InterfaceName2(
-  humanName: String,
-  templateArgs: List[ITemplata]
-) extends ICitizenName2 {
-  def order = 33;
-  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
-    List(this).collect(func) ++ templateArgs.toList.flatMap(_.all(func))
-  }
-}
-case class AnonymousSubstructName2(methodNames: List[FullName2[IFunctionName2]]) extends IStructName2 {
+case class AnonymousSubstructName2(callables: List[Coord]) extends ICitizenName2 {
   def order = 27;
-  def templateArgs: List[ITemplata] = List()
-  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
-    List(this).collect(func) ++ templateArgs.toList.flatMap(_.all(func))
-  }
-}
-case class AnonymousSubstructConstructorName2() extends IFunctionName2 {
-  def order = 27;
-  def templateArgs: List[ITemplata] = List()
-  def parameters: List[Coord] = List()
+  def templateArgs: List[ITemplata] = callables.map(CoordTemplata)
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func) ++ templateArgs.toList.flatMap(_.all(func))
   }

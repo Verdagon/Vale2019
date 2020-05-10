@@ -13,7 +13,9 @@ object Printing {
       false,
       FunctionTemplataType,
       List(),
-      Map(),
+      Map(
+        CodeRuneA("R") -> CoordTemplataType,
+        CodeRuneA("S") -> CoordTemplataType),
       List(
         ParameterA(AtomAP(CaptureA(CodeVarNameA("line"), FinalP), None, CodeRuneA("S"), None))),
       Some(CodeRuneA("R")),
@@ -43,7 +45,9 @@ object Printing {
       false,
       FunctionTemplataType,
       List(),
-      Map(),
+      Map(
+        CodeRuneA("R") -> CoordTemplataType,
+        CodeRuneA("I") -> CoordTemplataType),
       List(
         ParameterA(AtomAP(CaptureA(CodeVarNameA("line"), FinalP), None, CodeRuneA("I"), None))),
       Some(CodeRuneA("R")),
@@ -72,7 +76,10 @@ object Printing {
       false,
       FunctionTemplataType,
       List(),
-      Map(),
+      Map(
+        CodeRuneA("I") -> CoordTemplataType,
+        CodeRuneA("R") -> CoordTemplataType,
+      ),
       List(
         ParameterA(AtomAP(CaptureA(CodeVarNameA("line"), FinalP), None, CodeRuneA("I"), None))),
       Some(CodeRuneA("R")),

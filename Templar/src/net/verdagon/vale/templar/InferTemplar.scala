@@ -62,17 +62,17 @@ object InferTemplar {
         Templar.getMutability(state, kind)
       }
 
-      override def lookupTemplata(env: IEnvironment, name: INameA): ITemplata = {
+      override def lookupTemplata(env: IEnvironment, name: IName2): ITemplata = {
         // We can only ever lookup types by name in expression context,
         // otherwise we have no idea what List<Str> means; it could
         // mean a list of strings or a list of the Str(:Int)Str function.
-        env.getNearestTemplataWithAbsoluteNameA(name, Set[ILookupContext](TemplataLookupContext)) match {
+        env.getNearestTemplataWithAbsoluteName2(name, Set[ILookupContext](TemplataLookupContext)) match {
           case None => vfail("Couldn't find anything with name: " + name)
           case Some(x) => x
         }
       }
 
-      override def lookupTemplata(env: IEnvironment, name: IImpreciseNameStepA): ITemplata = {
+      override def lookupTemplataImprecise(env: IEnvironment, name: IImpreciseNameStepA): ITemplata = {
         env.getNearestTemplataWithName(name, Set[ILookupContext](TemplataLookupContext)) match {
           case None => vfail("Couldn't find anything with name: " + name)
           case Some(x) => x
@@ -240,6 +240,8 @@ object InferTemplar {
       case OwnershippedAT(ownership, inner) => OwnershippedTT(ownership, translateTemplex(inner))
       case AbsoluteNameAT(name, resultType) => AbsoluteNameTT(name, resultType)
       case CallAT(template, args, resultType) => CallTT(translateTemplex(template), args.map(translateTemplex), resultType)
+      case MutabilityAT(m) => MutabilityTT(m)
+      case RepeaterSequenceAT(mutability, size, element, resultType) => RepeaterSequenceTT(translateTemplex(mutability), translateTemplex(size), translateTemplex(element), resultType)
       case _ => vimpl()
     }
   }

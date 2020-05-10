@@ -8,7 +8,7 @@ import net.verdagon.vale.scout.patterns.AtomSP
 object Arrays {
   def makeArrayFunction(mutability: MutabilityP): FunctionA = {
     val location = if (mutability == MutableP) { CodeLocationS(0, 0) } else { CodeLocationS(1, 0) }
-    val name = FunctionNameA("!=", location)
+    val name = FunctionNameA("Array", location)
 //    List(
       FunctionA(
         name,
@@ -17,8 +17,12 @@ object Arrays {
         List(CodeRuneA("ArrayMutability"), CodeRuneA("T"), CodeRuneA("Generator")),
         Map(
           CodeRuneA("ArrayMutability") -> MutabilityTemplataType,
+          CodeRuneA("I") -> CoordTemplataType,
           CodeRuneA("T") -> CoordTemplataType,
-          CodeRuneA("Generator") -> CoordTemplataType),
+          CodeRuneA("Generator") -> CoordTemplataType,
+          CodeRuneA("M") -> MutabilityTemplataType,
+          CodeRuneA("R") -> MutabilityTemplataType,
+          ImplicitRuneA(0) -> OwnershipTemplataType),
         List(
           ParameterA(AtomAP(CaptureA(CodeVarNameA("size"), FinalP), None, CodeRuneA("I"), None)),
           ParameterA(AtomAP(CaptureA(CodeVarNameA("generator"), FinalP), None, CodeRuneA("Generator"), None))),
@@ -35,7 +39,7 @@ object Arrays {
                 TemplexAR(RuneAT(ImplicitRuneA(0), OwnershipTemplataType)),
                 TemplexAR(
                   CallAT(
-                    NameAT(GlobalFunctionFamilyNameA("IFunction1"), TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType, CoordTemplataType), KindTemplataType)),
+                    NameAT(CodeTypeNameA("IFunction1"), TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType, CoordTemplataType), KindTemplataType)),
                     List(
                       RuneAT(CodeRuneA("M"), MutabilityTemplataType),
                       NameAT(CodeTypeNameA("Int"), CoordTemplataType),

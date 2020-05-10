@@ -34,7 +34,7 @@ object StructTemplarCore {
     coercedFinalTemplateArgs: List[ITemplata]):
   (StructDefinition2) = {
     val TopLevelCitizenDeclarationNameA(humanName, codeLocation) = struct1.name
-    val fullName = structRunesEnv.fullName.addStep(StructName2(humanName, coercedFinalTemplateArgs))
+    val fullName = structRunesEnv.fullName.addStep(CitizenName2(humanName, coercedFinalTemplateArgs))
     val temporaryStructRef = StructRef2(fullName)
 
     val structInnerEnv =
@@ -106,7 +106,7 @@ object StructTemplarCore {
     coercedFinalTemplateArgs2: List[ITemplata]):
   (InterfaceDefinition2) = {
     val TopLevelCitizenDeclarationNameA(humanName, codeLocation) = interfaceA.name
-    val fullName = interfaceRunesEnv.fullName.addStep(InterfaceName2(humanName, coercedFinalTemplateArgs2))
+    val fullName = interfaceRunesEnv.fullName.addStep(CitizenName2(humanName, coercedFinalTemplateArgs2))
     val temporaryInferfaceRef = InterfaceRef2(fullName)
 
     val interfaceInnerEnv =
@@ -128,8 +128,6 @@ object StructTemplarCore {
           temputs,
           FunctionTemplata(
             interfaceInnerEnv,
-            // There are no unevaluated containers, all containers are in the environment.
-            List(),
             internalMethod))
       })
 
@@ -228,7 +226,7 @@ object StructTemplarCore {
     val mutability =
       getCompoundTypeMutability(temputs, members.map(_.tyype.reference))
 
-    val nearName = LambdaStructName2(NameTranslator.translateCodeLocation(name.codeLocation))
+    val nearName = LambdaCitizenName2(NameTranslator.translateCodeLocation(name.codeLocation))
     val fullName = containingFunctionEnv.fullName.addStep(nearName)
 
     val structRef = StructRef2(fullName)
@@ -242,7 +240,7 @@ object StructTemplarCore {
         Some(containingFunctionEnv),
         fullName,
         Map(
-          FunctionTemplateName2(CallTemplar.CALL_FUNCTION_NAME, CodeLocation2(0, 0)) -> List(FunctionEnvEntry(List(), functionA)),
+          FunctionTemplateName2(CallTemplar.CALL_FUNCTION_NAME, CodeLocation2(0, 0)) -> List(FunctionEnvEntry(functionA)),
           nearName -> List(TemplataEnvEntry(KindTemplata(structRef))),
           ClosureParamName2() -> List(TemplataEnvEntry(KindTemplata(structRef)))))
     // We return this from the function in case we want to eagerly compile it (which we do
@@ -250,8 +248,6 @@ object StructTemplarCore {
     val functionTemplata =
         FunctionTemplata(
           structEnv,
-          // There are no unevaluated containers, all containers are in the environment.
-          List(),
           functionA)
 
     temputs.declareStruct(structRef);
@@ -271,7 +267,7 @@ object StructTemplarCore {
     outerEnv: NamespaceEnvironment[IName2],
     temputs: TemputsBox,
     memberCoords: List[Coord],
-    name: IStructName2):
+    name: ICitizenName2):
   (StructRef2, Mutability) = {
     temputs.packTypes.get(memberCoords) match {
       case Some(structRef2) => (structRef2, temputs.lookupStruct(structRef2).mutability)
@@ -312,17 +308,17 @@ object StructTemplarCore {
   }
 
   // Makes an anonymous substruct of the given interface, with the given lambdas as its members.
+  // This doesnt make a constructor. We could add that if we wanted to.
   def makeAnonymousSubstruct(
-    outerEnv: IEnvironment,
-    temputs: TemputsBox,
-    maybeConstructorOriginFunctionA: Option[FunctionA],
-    anonymousSubstructName: FullName2[AnonymousSubstructName2],
-    interfaceRef: InterfaceRef2,
-    lambdas: List[Coord]):
-  (StructRef2, Mutability, FunctionHeader2) = {
+      interfaceEnv: IEnvironment,
+      temputs: TemputsBox,
+      anonymousSubstructName: FullName2[AnonymousSubstructName2],
+      interfaceRef: InterfaceRef2,
+      callables: List[Coord]):
+  (StructRef2, Mutability) = {
     val interfaceDef = temputs.lookupInterface(interfaceRef)
 
-    val mutability = getCompoundTypeMutability(temputs, lambdas)
+    val mutability = getCompoundTypeMutability(temputs, callables)
 
     val structRef = StructRef2(anonymousSubstructName)
 
@@ -338,9 +334,12 @@ object StructTemplarCore {
               case otherParam => otherParam
             })
 
+          val FunctionName2(humanName, _, _) = superFunctionName.last
+          val fowarderName =
+            anonymousSubstructName.addStep(FunctionName2(humanName, List(), params.map(_.tyype)))
           val forwarderHeader =
             FunctionHeader2(
-              anonymousSubstructName.addStep(superFunctionName.last),
+              fowarderName,
               false,
               false,
               params,
@@ -361,12 +360,13 @@ object StructTemplarCore {
         .mapValues(_.map(_._2))
         .toMap ++
       Map(
+        ImplDeclareName2(CodeLocation2(0, 0)) -> List(TemplataEnvEntry(ExternImplTemplata(structRef, interfaceRef))),
         // This is used later by the interface constructor generator to know what interface to impl.
         AnonymousSubstructParentInterfaceRune2() -> List(TemplataEnvEntry(KindTemplata(interfaceRef))),
         AnonymousSubstructImplName2() -> List(TemplataEnvEntry(ExternImplTemplata(structRef, interfaceRef))))
     val structInnerEnv =
       NamespaceEnvironment(
-        Some(outerEnv),
+        Some(interfaceEnv),
         anonymousSubstructName,
         structInnerEnvEntries.toMap)
 
@@ -377,19 +377,19 @@ object StructTemplarCore {
     temputs.declareStructMutability(structRef, mutability)
     temputs.declareStructEnv(structRef, structInnerEnv)
 
-    vassert(interfaceDef.internalMethods.size == lambdas.size)
+    vassert(interfaceDef.internalMethods.size == callables.size)
 
     val structDef =
       StructDefinition2(
         anonymousSubstructName,
         mutability,
-        lambdas.zipWithIndex.map({ case (lambda, index) =>
+        callables.zipWithIndex.map({ case (lambda, index) =>
           StructMember2(AnonymousSubstructMemberName2(index), Final, ReferenceMemberType2(lambda))
         }),
         false)
     temputs.add(structDef)
 
-    forwarderFunctionHeaders.zip(lambdas).foreach({ case (forwarderHeader, lambda) =>
+    forwarderFunctionHeaders.zip(callables).foreach({ case (forwarderHeader, lambda) =>
       val localVariables =
         forwarderHeader.params.map(param => {
           ReferenceLocalVariable2(forwarderHeader.fullName.addStep(param.name), Final, param.tyype)
@@ -401,7 +401,7 @@ object StructTemplarCore {
 
       val lambdaFunctionPrototype =
         OverloadTemplar.scoutExpectedFunctionForPrototype(
-          outerEnv,
+          interfaceEnv, // Shouldnt matter here, because the callables themselves should have a __call
           temputs,
           GlobalFunctionFamilyNameA(CallTemplar.CALL_FUNCTION_NAME),
           List(),
@@ -426,70 +426,42 @@ object StructTemplarCore {
       temputs.addFunction(forwarderFunction)
     })
 
-    val constructor = makeStructConstructor(temputs, maybeConstructorOriginFunctionA, structDef, anonymousSubstructName.addStep(AnonymousSubstructConstructorName2()))
-
-    (structRef, mutability, constructor)
+    (structRef, mutability)
   }
 
   // Makes an anonymous substruct of the given interface, which just forwards its method to the given prototype.
-  def prototypeToAnonymousSubstruct(
+  def prototypeToAnonymousStruct(
     outerEnv: IEnvironment,
     temputs: TemputsBox,
-    interfaceRef: InterfaceRef2,
-    prototype: Prototype2):
+    prototype: Prototype2,
+    structFullName: FullName2[ICitizenName2]):
   StructRef2 = {
-    val interfaceDef = temputs.lookupInterface(interfaceRef)
-
     val mutability = Immutable
 
-    // This is saying the function's full name, and then as a next step, the interface ref.
-    // We could do it the other way, but theres no good way to put a Prototype2 into a
-    // templata which can be in the name. We could change it someday if we have a Prototype2
-    // as a templata...
-    val structFullName = interfaceRef.fullName.addStep(AnonymousSubstructName2(List(prototype.fullName)))
-
     val structRef = StructRef2(structFullName)
+    temputs.declareStruct(structRef)
+    temputs.declareStructMutability(structRef, mutability)
 
-    vassert(interfaceDef.internalMethods.size == 1)
-    val List(FunctionHeader2(superFullName, _, _, superParams, superReturnType, _)) = interfaceDef.internalMethods
-
-    val params =
-      superParams.map({
-        case Parameter2(name, Some(Abstract2), Coord(ownership, ir)) => {
-          vassert(ir == interfaceRef)
-          Parameter2(name, Some(Override2(interfaceRef)), Coord(ownership, structRef))
-        }
-        case otherParam => otherParam
+    val forwarderParams =
+      Parameter2(TemplarTemporaryVarName2(-1), None, Coord(Borrow, structRef)) ::
+      prototype.paramTypes.zipWithIndex.map({ case (paramType, index) =>
+        Parameter2(TemplarTemporaryVarName2(index), None, paramType)
       })
-
     val forwarderHeader =
       FunctionHeader2(
-        structFullName.addStep(ConstructorName2(params.map(_.tyype))),
+        structFullName.addStep(FunctionName2(CallTemplar.CALL_FUNCTION_NAME, List(), forwarderParams.map(_.tyype))),
         false,
         false,
-        params,
-        superReturnType,
+        forwarderParams,
+        prototype.returnType,
         None)
-
     temputs.declareFunctionSignature(forwarderHeader.toSignature, None)
 
-
-    val structInnerEnvEntries =
-      Map(
-        forwarderHeader.fullName.last -> List(TemplataEnvEntry(ExternFunctionTemplata(forwarderHeader))),
-        // This is used later by the interface constructor generator to know what interface to impl.
-        AnonymousSubstructParentInterfaceRune2() -> List(TemplataEnvEntry(KindTemplata(interfaceRef))),
-        AnonymousSubstructImplName2() -> List(TemplataEnvEntry(ExternImplTemplata(structRef, interfaceRef))))
     val structInnerEnv =
       NamespaceEnvironment(
         Some(outerEnv),
         structFullName,
-        structInnerEnvEntries)
-
-    temputs.addImpl(structRef, interfaceRef)
-
-    temputs.declareStruct(structRef)
-    temputs.declareStructMutability(structRef, mutability)
+        Map(forwarderHeader.fullName.last -> List(TemplataEnvEntry(ExternFunctionTemplata(forwarderHeader)))))
     temputs.declareStructEnv(structRef, structInnerEnv)
 
     val structDef =
@@ -500,22 +472,18 @@ object StructTemplarCore {
         false)
     temputs.add(structDef)
 
-    val argExpressions =
-        forwarderHeader.params.tail.zipWithIndex.map({ case (param, index) =>
-          ArgLookup2(index, param.tyype)
-        })
-
     val forwarderFunction =
       Function2(
         forwarderHeader,
         List(),
         Block2(
           List(
-            FunctionCall2(prototype, argExpressions))))
+            FunctionCall2(
+              prototype,
+              forwarderHeader.params.tail.zipWithIndex.map({ case (param, index) =>
+                ArgLookup2(index, param.tyype)
+              })))))
     temputs.addFunction(forwarderFunction)
-
-    // Dont need to make a constructor because the only user of this function currently
-    // just constructs the struct directly... easy because it's empty.
 
     structRef
   }
@@ -529,7 +497,7 @@ object StructTemplarCore {
     val constructorParams =
       structDef.members.map({
         case StructMember2(name, _, ReferenceMemberType2(reference)) => {
-          Parameter2(vimpl(/*name*/), None, reference)
+          Parameter2(name, None, reference)
         }
       })
     val constructorReturnOwnership = if (structDef.mutability == Mutable) Own else Share
@@ -552,9 +520,7 @@ object StructTemplarCore {
               constructorParams.zipWithIndex.map({ case (p, index) => ArgLookup2(index, p.tyype) })))))
 
     // we cant make the destructor here because they might have a user defined one somewhere
-
-    temputs
-      .declareFunctionReturnType(constructor2.header.toSignature, constructor2.header.returnType)
+    temputs.declareFunctionReturnType(constructor2.header.toSignature, constructor2.header.returnType)
     temputs.addFunction(constructor2);
 
     vassert(temputs.exactDeclaredSignatureExists(constructor2.header.fullName, constructor2.header.toBanner.paramTypes))

@@ -35,6 +35,7 @@ case class ImplNameA(codeLocation: CodeLocationS) extends INameA
 case class LetNameA(codeLocation: CodeLocationS) extends INameA
 case class UnnamedLocalNameA(codeLocation: CodeLocationS) extends IVarNameA
 case class ClosureParamNameA() extends IVarNameA
+case class AnonymousSubstructMemberNameA(index: Int) extends IVarNameA
 case class MagicParamNameA(codeLocation: CodeLocationS) extends IVarNameA
 case class CodeVarNameA(name: String) extends IVarNameA
 // Only made by templar, see if we can take this out

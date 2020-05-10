@@ -196,9 +196,9 @@ object OverloadTemplar {
                   }
                 }
               }
-              case ft @ FunctionTemplata(_, _, function) => {
+              case ft @ FunctionTemplata(_, function) => {
                 // See OFCBT.
-                if (EnvironmentUtils.functionIsTemplateInContext(ft.unevaluatedContainers, ft.function)) {
+                if (ft.function.isTemplate) {
                   function.tyype match {
                     case TemplateTemplataType(identifyingRuneTemplataTypes, FunctionTemplataType) => {
                       val ruleTyper =
@@ -495,8 +495,8 @@ object OverloadTemplar {
       potentialBanner: IPotentialBanner):
   (FunctionBanner2) = {
     potentialBanner match {
-      case PotentialBannerFromFunctionS(signature, ft @ FunctionTemplata(_, _, _)) => {
-        if (EnvironmentUtils.functionIsTemplateInContext(ft.unevaluatedContainers, ft.function)) {
+      case PotentialBannerFromFunctionS(signature, ft @ FunctionTemplata(_, _)) => {
+        if (ft.function.isTemplate) {
           val (EvaluateFunctionSuccess(banner)) =
             FunctionTemplar.evaluateTemplatedLightFunctionFromCallForBanner(
               temputs, ft, List(), signature.paramTypes.map(p => ParamFilter(p, None)));
@@ -520,8 +520,8 @@ object OverloadTemplar {
       args: List[ParamFilter]):
   (Prototype2) = {
     potentialBanner match {
-      case PotentialBannerFromFunctionS(signature, ft @ FunctionTemplata(_, _, _)) => {
-        if (EnvironmentUtils.functionIsTemplateInContext(ft.unevaluatedContainers, ft.function)) {
+      case PotentialBannerFromFunctionS(signature, ft @ FunctionTemplata(_, _)) => {
+        if (ft.function.isTemplate) {
           FunctionTemplar.evaluateTemplatedFunctionFromCallForPrototype(
               temputs, ft, signature.fullName.last.templateArgs, args) match {
             case (EvaluateFunctionSuccess(prototype)) => (prototype)

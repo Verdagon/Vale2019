@@ -15,7 +15,6 @@ object FunctionTemplarEnvLayer {
   def evaluateOrdinaryLightFunctionFromNonCallForBanner(
     containingEnv: IEnvironment,
     temputs: TemputsBox,
-    unevaluatedContainers: List[IContainer],
     function: FunctionA):
   (FunctionBanner2) = {
     val functionNamePart = translateFunctionDeclarationName(function.name)
@@ -25,14 +24,13 @@ object FunctionTemplarEnvLayer {
     FunctionTemplarClosureOrLightLayer.evaluateOrdinaryLightFunctionFromNonCallForBanner(
       funcOuterEnv,
       temputs,
-      unevaluatedContainers,
+
       function)
   }
 
   def evaluateTemplatedLightFunctionFromCallForBanner(
       containingEnv: IEnvironment,
       temputs: TemputsBox,
-      unevaluatedContainers: List[IContainer],
       function: FunctionA,
       alreadySpecifiedTemplateArgs: List[ITemplata],
       paramFilters: List[ParamFilter]):
@@ -49,7 +47,7 @@ object FunctionTemplarEnvLayer {
 
     FunctionTemplarClosureOrLightLayer.evaluateTemplatedFunctionFromCallForBanner(
       funcOuterEnv, temputs,
-      unevaluatedContainers,
+
       function, alreadySpecifiedTemplateArgs, paramFilters)
   }
 
@@ -58,7 +56,6 @@ object FunctionTemplarEnvLayer {
     containingEnv: IEnvironment,
     temputs: TemputsBox,
     closureStructRef: StructRef2,
-    unevaluatedContainers: List[IContainer],
     function: FunctionA,
     alreadySpecifiedTemplateArgs: List[ITemplata],
     argTypes2: List[ParamFilter]):
@@ -75,7 +72,7 @@ object FunctionTemplarEnvLayer {
 
     FunctionTemplarClosureOrLightLayer.evaluateTemplatedClosureFunctionFromCallForBanner(
       funcOuterEnv, temputs, closureStructRef,
-      unevaluatedContainers,
+
       function,
       alreadySpecifiedTemplateArgs, argTypes2)
   }
@@ -85,7 +82,6 @@ object FunctionTemplarEnvLayer {
     containingEnv: IEnvironment,
     temputs: TemputsBox,
     closureStructRef: StructRef2,
-    unevaluatedContainers: List[IContainer],
     function: FunctionA):
   (FunctionBanner2) = {
     val functionFullName = FullName2(containingEnv.fullName.steps, vimpl(function.name.toString))
@@ -96,7 +92,7 @@ object FunctionTemplarEnvLayer {
       funcOuterEnv,
       temputs,
       closureStructRef,
-      unevaluatedContainers,
+
       function)
   }
 
@@ -104,7 +100,6 @@ object FunctionTemplarEnvLayer {
       containingEnv: IEnvironment,
       temputs: TemputsBox,
       closureStructRef: StructRef2,
-      unevaluatedContainers: List[IContainer],
       function: FunctionA):
   (FunctionHeader2) = {
     val functionFullName = containingEnv.fullName.addStep(translateFunctionDeclarationName(function.name))
@@ -115,7 +110,7 @@ object FunctionTemplarEnvLayer {
       funcOuterEnv,
       temputs,
       closureStructRef,
-      unevaluatedContainers,
+
       function)
   }
 
@@ -123,16 +118,14 @@ object FunctionTemplarEnvLayer {
   def evaluateOrdinaryLightFunctionFromNonCallForHeader(
       containingEnv: IEnvironment,
       temputs: TemputsBox,
-      unevaluatedContainers: List[IContainer],
       function: FunctionA):
   (FunctionHeader2) = {
-    val functionFullName = FullName2(containingEnv.fullName.steps, vimpl(function.name.toString))
+    val functionFullName = FullName2(containingEnv.fullName.steps, translateFunctionDeclarationName(function.name))
     val funcOuterEnv =
       FunctionEnvironment(containingEnv, functionFullName, function, Map(), None, List(), 0, List(), Set())
     FunctionTemplarClosureOrLightLayer.evaluateOrdinaryLightFunctionFromNonCallForHeader(
       funcOuterEnv,
       temputs,
-      unevaluatedContainers,
       function)
   }
 
@@ -142,7 +135,6 @@ object FunctionTemplarEnvLayer {
   def evaluateOrdinaryLightFunctionFromNonCallForPrototype(
     containingEnv: IEnvironment,
     temputs: TemputsBox,
-    unevaluatedContainers: List[IContainer],
     function: FunctionA):
   (Prototype2) = {
 
@@ -155,7 +147,7 @@ object FunctionTemplarEnvLayer {
     FunctionTemplarClosureOrLightLayer.evaluateOrdinaryLightFunctionFromNonCallForPrototype(
       funcOuterEnv,
       temputs,
-      unevaluatedContainers,
+
       function)
   }
 
@@ -181,7 +173,6 @@ object FunctionTemplarEnvLayer {
   def evaluateTemplatedLightFunctionFromCallForPrototype(
       containingEnv: IEnvironment,
       temputs: TemputsBox,
-      unevaluatedContainers: List[IContainer],
       function: FunctionA,
       explicitTemplateArgs: List[ITemplata],
       args: List[ParamFilter]):
@@ -191,7 +182,7 @@ object FunctionTemplarEnvLayer {
       FunctionEnvironment(containingEnv, functionFullName, function, Map(), None, List(), 0, List(), Set())
     FunctionTemplarClosureOrLightLayer.evaluateTemplatedLightFunctionFromCallForPrototype2(
       funcOuterEnv, temputs,
-      unevaluatedContainers,
+
       function, explicitTemplateArgs, args)
   }
 
@@ -199,7 +190,6 @@ object FunctionTemplarEnvLayer {
     containingEnv: IEnvironment,
     temputs: TemputsBox,
     closureStructRef: StructRef2,
-    unevaluatedContainers: List[IContainer],
     function: FunctionA,
     alreadySpecifiedTemplateArgs: List[ITemplata],
     argTypes2: List[ParamFilter]):
@@ -218,7 +208,7 @@ object FunctionTemplarEnvLayer {
       funcOuterEnv,
       temputs,
       closureStructRef,
-      unevaluatedContainers,
+
       function,
       alreadySpecifiedTemplateArgs,
       argTypes2)

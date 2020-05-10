@@ -1,7 +1,7 @@
 package net.verdagon.vale.templar.infer
 
 import net.verdagon.vale.astronomer._
-import net.verdagon.vale.templar.IRune2
+import net.verdagon.vale.templar.{IName2, IRune2}
 import net.verdagon.vale.templar.infer.infer.IInferSolveResult
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar.types._
@@ -26,8 +26,8 @@ trait IInfererDelegate[Env, State] {
 
   def getMutability(state: State, kind: Kind): Mutability
 
-  def lookupTemplata(env: Env, name: INameA): ITemplata
-  def lookupTemplata(env: Env, name: IImpreciseNameStepA): ITemplata
+  def lookupTemplata(env: Env, name: IName2): ITemplata
+  def lookupTemplataImprecise(env: Env, name: IImpreciseNameStepA): ITemplata
 
   def evaluateStructTemplata(
     state: State,
@@ -109,12 +109,12 @@ object Inferer {
         delegate.getPackKind(env, state, members)
       }
 
-      override def lookupTemplata(env: Env, name: INameA): ITemplata = {
+      override def lookupTemplata(env: Env, name: IName2): ITemplata = {
         delegate.lookupTemplata(env, name)
       }
 
-      override def lookupTemplata(env: Env, name: IImpreciseNameStepA): ITemplata = {
-        delegate.lookupTemplata(env, name)
+      override def lookupTemplataImprecise(env: Env, name: IImpreciseNameStepA): ITemplata = {
+        delegate.lookupTemplataImprecise(env, name)
       }
 
       override def evaluateInterfaceTemplata(state: State, templata: InterfaceTemplata, templateArgs: List[ITemplata]): (Kind) = {
@@ -150,6 +150,10 @@ object Inferer {
     new IInfererEvaluatorDelegate[Env, State] {
       override def getAncestorInterfaces(temputs: State, descendantCitizenRef: CitizenRef2): (Set[InterfaceRef2]) = {
         delegate.getAncestorInterfaces(temputs, descendantCitizenRef)
+      }
+
+      override def lookupTemplata(env: Env, rune: IName2): ITemplata = {
+        delegate.lookupTemplata(env, rune)
       }
 
       override def lookupMemberTypes(state: State, kind: Kind, expectedNumMembers: Int):

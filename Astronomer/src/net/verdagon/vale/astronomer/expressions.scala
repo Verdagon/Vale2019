@@ -61,9 +61,9 @@ case class BlockAE(
   vassert(exprs.size >= 1)
 }
 
-case class ConstructAE(
-  tyype: ITemplexA,
-  args: List[IExpressionAE]) extends IExpressionAE
+//case class ConstructAE(
+//  tyype: ITemplexA,
+//  args: List[IExpressionAE]) extends IExpressionAE
 
 case class ConstructArrayAE(
     typeTemplex: ITemplexA,

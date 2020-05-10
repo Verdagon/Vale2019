@@ -73,7 +73,7 @@ object FunctionTemplarCore {
         val maybeRetCoord =
           function1.maybeRetCoordRune match {
             case None => vfail("Need return type for abstract function!")
-            case Some(r) => fullEnv.getNearestTemplataWithName(vimpl(r.toString), Set(TemplataLookupContext))
+            case Some(r) => fullEnv.getNearestTemplataWithAbsoluteNameA(r, Set(TemplataLookupContext))
           }
         val retCoord =
           maybeRetCoord match {

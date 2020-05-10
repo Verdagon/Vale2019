@@ -108,7 +108,7 @@ object StructHammer {
 
   def makeBox(hinputs: Hinputs, hamuts: HamutsBox, conceptualVariability: Variability, type2: Coord, typeH: ReferenceH[ReferendH]):
   (StructRefH) = {
-    val boxFullName2 = FullName2(List(), StructName2(BOX_HUMAN_NAME, List(CoordTemplata(type2))))
+    val boxFullName2 = FullName2(List(), CitizenName2(BOX_HUMAN_NAME, List(CoordTemplata(type2))))
     val boxFullNameH = NameHammer.translateName(hinputs, hamuts, boxFullName2)
     hamuts.structDefsByRef2.find(_._2.fullName == boxFullNameH) match {
       case Some((_, structDefH)) => (structDefH.getRef)

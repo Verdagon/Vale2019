@@ -21,10 +21,10 @@ object simpleName {
 //      case ReturnRune2() => None
       case FunctionName2(humanName, _, _) => Some(humanName)
 //      case LambdaName2(_, _, _) => None
-      case StructName2(humanName, _) => Some(humanName)
+//      case CitizenName2(humanName, _) => Some(humanName)
       case TupleName2(_) => None
-      case LambdaStructName2(_) => None
-      case InterfaceName2(humanName, _) => Some(humanName)
+      case LambdaCitizenName2(_) => None
+      case CitizenName2(humanName, _) => Some(humanName)
     }
   }
 }

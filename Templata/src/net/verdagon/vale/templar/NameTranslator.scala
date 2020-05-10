@@ -77,12 +77,17 @@ object NameTranslator {
 //    FullName2(file, initS.map(translateNameStep), translateNameStep(lastS))
 //  }
 
+  def translateCitizenName(name: TopLevelCitizenDeclarationNameA): CitizenTemplateName2 = {
+    val TopLevelCitizenDeclarationNameA(humanName, codeLocation) = name
+    CitizenTemplateName2(humanName, NameTranslator.translateCodeLocation(codeLocation))
+  }
+
   def translateNameStep(name: INameA): IName2 = {
     name match {
 //      case LambdaNameA(codeLocation) => LambdaName2(codeLocation)
 //      case FunctionNameA(name, codeLocation) => FunctionName2(name, codeLocation)
 //      case TopLevelCitizenDeclarationNameA(name, codeLocation) => TopLevelCitizenDeclarationName2(name, codeLocation)
-      case LambdaStructNameA(LambdaNameA(codeLocation)) => LambdaStructName2(NameTranslator.translateCodeLocation(codeLocation))
+      case LambdaStructNameA(LambdaNameA(codeLocation)) => LambdaCitizenName2(NameTranslator.translateCodeLocation(codeLocation))
       case ImplNameA(codeLocation) => ImplDeclareName2(translateCodeLocation(codeLocation))
       case LetNameA(codeLocation) => LetName2(translateCodeLocation(codeLocation))
       case UnnamedLocalNameA(codeLocation) => UnnamedLocalName2(translateCodeLocation(codeLocation))
@@ -90,8 +95,10 @@ object NameTranslator {
       case MagicParamNameA(codeLocation) => MagicParamName2(translateCodeLocation(codeLocation))
       case CodeVarNameA(name) => CodeVarName2(name)
       case ImplicitRuneA(name) => ImplicitRune2(name)
-      case TopLevelCitizenDeclarationNameA(name, codeLocation) => vwat()
+      case t @ TopLevelCitizenDeclarationNameA(_, _) => translateCitizenName(t)
       case CodeRuneA(name) => CodeRune2(name)
+      case MagicImplicitRuneA(codeLocationS) => MagicImplicitRune2(NameTranslator.translateCodeLocation(codeLocationS))
+      case AnonymousSubstructParentInterfaceRuneA() => AnonymousSubstructParentInterfaceRune2()
 //      case ImplicitRuneA(name) => ImplicitRune2(name)
 //      case MagicImplicitRuneA(magicParamIndex) => MagicImplicitRune2(magicParamIndex)
 //      case MemberRuneA(memberIndex) => MemberRune2(memberIndex)
@@ -111,6 +118,7 @@ object NameTranslator {
       case ClosureParamNameA() => ClosureParamName2()
       case MagicParamNameA(codeLocation) => MagicParamName2(translateCodeLocation(codeLocation))
       case CodeVarNameA(name) => CodeVarName2(name)
+      case AnonymousSubstructMemberNameA(index) => AnonymousSubstructMemberName2(index)
     }
   }
 
@@ -121,6 +129,8 @@ object NameTranslator {
       case MagicImplicitRuneA(codeLocation) => MagicImplicitRune2(translateCodeLocation(codeLocation))
       case MemberRuneA(memberIndex) => MemberRune2(memberIndex)
       case ReturnRuneA() => ReturnRune2()
+      case AnonymousSubstructParentInterfaceRuneA() => AnonymousSubstructParentInterfaceRune2()
+      case _ => vimpl()
     }
   }
 

@@ -1,7 +1,7 @@
 package net.verdagon.vale.templar.templata
 
 import net.verdagon.vale.astronomer._
-import net.verdagon.vale.templar.{FunctionName2, IName2, IStructName2, StructName2}
+import net.verdagon.vale.templar.{CitizenName2, FunctionName2, ICitizenName2, IName2}
 import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.{vassert, vfail}
@@ -47,12 +47,12 @@ case class FunctionTemplata(
   // somewhere.
   // See TMRE for more on these environments.
   outerEnv: IEnvironment,
-
-  // The containers are the structs/interfaces/impls/functions that this thing is inside.
-  // E.g. if LinkedList has a Node substruct, then the Node's templata will have one
-  // container, the LinkedList.
-  // See NTKPRR for why we have these parents.
-  unevaluatedContainers: List[IContainer],
+//
+//  // The containers are the structs/interfaces/impls/functions that this thing is inside.
+//  // E.g. if LinkedList has a Node substruct, then the Node's templata will have one
+//  // container, the LinkedList.
+//  // See NTKPRR for why we have these parents.
+//  unevaluatedContainers: List[IContainer],
 
   // This is the env entry that the function came from originally. It has all the parent
   // structs and interfaces. See NTKPRR for more.
@@ -101,7 +101,7 @@ case class StructTemplata(
   // tries to make an interface with the same name as its containing. At that point,
   // feel free to remove this assertion.
   (env.fullName.last, originStruct.name) match {
-    case (StructName2(envFunctionName, _), TopLevelCitizenDeclarationNameA(sourceName, _)) => vassert(envFunctionName != sourceName)
+    case (CitizenName2(envFunctionName, _), TopLevelCitizenDeclarationNameA(sourceName, _)) => vassert(envFunctionName != sourceName)
     case _ =>
   }
 
@@ -141,7 +141,7 @@ case class InterfaceTemplata(
   // tries to make an interface with the same name as its containing. At that point,
   // feel free to remove this assertion.
   (env.fullName.last, originInterface.name) match {
-    case (StructName2(envFunctionName, _), TopLevelCitizenDeclarationNameA(sourceName, _)) => vassert(envFunctionName != sourceName)
+    case (CitizenName2(envFunctionName, _), TopLevelCitizenDeclarationNameA(sourceName, _)) => vassert(envFunctionName != sourceName)
     case _ =>
   }
 

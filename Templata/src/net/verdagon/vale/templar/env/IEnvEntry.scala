@@ -5,7 +5,8 @@ import net.verdagon.vale.templar.templata.{FunctionHeader2, IContainer, ITemplat
 import net.verdagon.vale.templar.types.{InterfaceRef2, StructRef2}
 
 sealed trait IEnvEntry
-case class FunctionEnvEntry(unevaluatedContainers: List[IContainer], function: FunctionA) extends IEnvEntry
+// We dont have the unevaluatedContainers in here because see TMRE
+case class FunctionEnvEntry(function: FunctionA) extends IEnvEntry
 case class ImplEnvEntry(impl: ImplA) extends IEnvEntry
 case class StructEnvEntry(struct: StructA) extends IEnvEntry
 case class InterfaceEnvEntry(interface: InterfaceA) extends IEnvEntry

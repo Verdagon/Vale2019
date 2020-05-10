@@ -126,7 +126,15 @@ case class FunctionEnvironment(
   }
 
   override def getNearestTemplataWithAbsoluteName2(name: IName2, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
-    vimpl()
+    entries
+      .get(name)
+      .toList
+      .flatten
+      .filter(EnvironmentUtils.entryMatchesFilter(_, lookupFilter)) match {
+      case List(entry) => Some(EnvironmentUtils.entryToTemplata(this, entry))
+      case List() => parentEnv.getNearestTemplataWithAbsoluteName2(name, lookupFilter)
+      case multiple => vfail("Too many things named " + name + ":" + multiple);
+    }
   }
 
   override def getAllTemplatasWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): List[ITemplata] = {

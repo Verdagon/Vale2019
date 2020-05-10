@@ -340,7 +340,7 @@ class TemplarTests extends FunSuite with Matchers {
         false,
         _,
         _,
-        Coord(Own, StructRef2(FullName2(List(), StructName2("MySome", List(CoordTemplata(Coord(Share, Int2()))))))),
+        Coord(Own, StructRef2(FullName2(List(), CitizenName2("MySome", List(CoordTemplata(Coord(Share, Int2()))))))),
         _) =>
     }
 

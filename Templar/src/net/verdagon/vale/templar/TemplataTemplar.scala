@@ -133,18 +133,18 @@ object TemplataTemplar {
   def makeInner(): TemplataTemplarInner[IEnvironment, TemputsBox] = {
     new TemplataTemplarInner[IEnvironment, TemputsBox](
       new ITemplataTemplarInnerDelegate[IEnvironment, TemputsBox] {
-        override def lookupTemplata(env: IEnvironment, name: IImpreciseNameStepA): ITemplata = {
+        override def lookupTemplataImprecise(env: IEnvironment, name: IImpreciseNameStepA): ITemplata = {
           // Changed this from AnythingLookupContext to TemplataLookupContext
           // because this is called from StructTemplar to figure out its members.
           // We could instead pipe a lookup context through, if this proves problematic.
           vassertSome(env.getNearestTemplataWithName(name, Set(TemplataLookupContext)))
         }
 
-        override def lookupTemplata(env: IEnvironment, name: INameA): ITemplata = {
+        override def lookupTemplata(env: IEnvironment, name: IName2): ITemplata = {
           // Changed this from AnythingLookupContext to TemplataLookupContext
           // because this is called from StructTemplar to figure out its members.
           // We could instead pipe a lookup context through, if this proves problematic.
-          vassertSome(env.getNearestTemplataWithAbsoluteNameA(name, Set(TemplataLookupContext)))
+          vassertSome(env.getNearestTemplataWithAbsoluteName2(name, Set(TemplataLookupContext)))
         }
 
         override def getMutability(temputs: TemputsBox, kind: Kind): Mutability = {

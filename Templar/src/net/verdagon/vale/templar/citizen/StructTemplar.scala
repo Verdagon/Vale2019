@@ -50,9 +50,17 @@ object StructTemplar {
                 case Some(KindTemplata(ir @ InterfaceRef2(_))) => ir
                 case _ => vwat()
               }
-            val (_, _, constructor) =
+
+            val constructorFullName = env.fullName
+            val (structRef2, _) =
               StructTemplar.makeAnonymousSubstruct(
-                env, temputs, originFunction, env.fullName, interfaceRef2, paramCoords.map(_.tyype))
+                temputs, interfaceRef2, paramCoords.map(_.tyype))
+
+            val structDef = temputs.lookupStruct(structRef2)
+            val constructor =
+              StructTemplar.makeStructConstructor(
+                temputs, originFunction, structDef, constructorFullName)
+
             constructor
           }
         })
@@ -107,12 +115,13 @@ object StructTemplar {
       interfaceA.identifyingRunes ++ interfaceA.internalMethods.indices.map(x => CodeRuneA("Functor" + x))
     val typeByRune =
       interfaceA.typeByRune ++
-      interfaceA.internalMethods.indices.map(i => (CodeRuneA("Functor" + i) -> CoordTemplataType)).toMap
+      interfaceA.internalMethods.indices.map(i => (CodeRuneA("Functor" + i) -> CoordTemplataType)).toMap +
+        (AnonymousSubstructParentInterfaceRuneA() -> KindTemplataType)
     val params =
       interfaceA.internalMethods.indices.toList.map(index => {
         ParameterA(
           AtomAP(
-            CaptureA(CodeVarNameA("functor" + index), FinalP),
+            CaptureA(AnonymousSubstructMemberNameA(index), FinalP),
             None,
             CodeRuneA("Functor" + index),
             None))
@@ -205,33 +214,76 @@ object StructTemplar {
   }
 
   // Makes a struct to back a pack or tuple
-  def makeSeqOrPackUnderstruct(env: NamespaceEnvironment[IName2], temputs: TemputsBox, memberTypes2: List[Coord], name: IStructName2):
+  def makeSeqOrPackUnderstruct(env: NamespaceEnvironment[IName2], temputs: TemputsBox, memberTypes2: List[Coord], name: ICitizenName2):
   (StructRef2, Mutability) = {
     StructTemplarTemplateArgsLayer.makeSeqOrPackUnerstruct(env, temputs, memberTypes2, name)
   }
 
   // Makes an anonymous substruct of the given interface, with the given lambdas as its members.
   def makeAnonymousSubstruct(
-    outerEnv: IEnvironment,
     temputs: TemputsBox,
-    maybeConstructorOriginFunctionA: Option[FunctionA],
-    functionFullName: FullName2[IFunctionName2],
-    interfaceRef: InterfaceRef2,
+    interfaceRef2: InterfaceRef2,
     lambdas: List[Coord]):
-  (StructRef2, Mutability, FunctionHeader2) = {
+  (StructRef2, Mutability) = {
+    val interfaceEnv = vassertSome(temputs.envByInterfaceRef.get(interfaceRef2))
     StructTemplarTemplateArgsLayer.makeAnonymousSubstruct(
-      outerEnv, temputs, maybeConstructorOriginFunctionA, functionFullName, interfaceRef, lambdas)
+        interfaceEnv, temputs, interfaceRef2, lambdas)
   }
 
   // Makes an anonymous substruct of the given interface, which just forwards its method to the given prototype.
-  def prototypeToAnonymousSubstruct(
-    outerEnv: IEnvironment,
+  // This does NOT make a constructor, because its so easy to just Construct2 it.
+  def prototypeToAnonymousStruct(
     temputs: TemputsBox,
-    interfaceRef: InterfaceRef2,
     prototype: Prototype2):
   StructRef2 = {
-    StructTemplarTemplateArgsLayer.prototypeToAnonymousSubstruct(
-      outerEnv, temputs, interfaceRef, prototype)
+    val structFullName = prototype.fullName.addStep(LambdaCitizenName2(CodeLocation2(0, 0)))
+    val outerEnv = temputs.envByFunctionSignature(prototype.toSignature)
+    StructTemplarTemplateArgsLayer.prototypeToAnonymousStruct(
+      outerEnv, temputs, prototype, structFullName)
+  }
+
+  // This doesnt make a constructor, but its easy enough,
+  def prototypeToAnonymousSubstruct(
+      temputs: TemputsBox,
+      interfaceRef2: InterfaceRef2,
+      prototype: Prototype2):
+  (StructRef2, FunctionHeader2) = {
+    val functionStructRef = prototypeToAnonymousStruct(temputs, prototype)
+    val functionStructType = Coord(Share, functionStructRef)
+
+    val (anonymousSubstructRef, _) =
+      makeAnonymousSubstruct(temputs, interfaceRef2, List(functionStructType))
+    val anonymousSubstructType = Coord(Share, anonymousSubstructRef)
+
+    // Now we make a function which constructs a functionStruct, then constructs a substruct.
+    val constructor2 =
+      Function2(
+        FunctionHeader2(
+          prototype.fullName
+            .addStep(AnonymousSubstructName2(List(functionStructType)))
+            .addStep(ConstructorName2(List())),
+          false, false,
+          List(),
+          anonymousSubstructType,
+          None),
+        List(),
+        Block2(
+          List(
+            Construct2(
+              anonymousSubstructRef,
+              anonymousSubstructType,
+              List(
+                Construct2(
+                  functionStructRef,
+                  Coord(Share, functionStructRef),
+                  List()))))))
+    temputs.declareFunctionSignature(constructor2.header.toSignature, None)
+    temputs.declareFunctionReturnType(constructor2.header.toSignature, constructor2.header.returnType)
+    temputs.addFunction(constructor2);
+
+    vassert(temputs.exactDeclaredSignatureExists(constructor2.header.fullName, constructor2.header.toBanner.paramTypes))
+
+    (anonymousSubstructRef, constructor2.header)
   }
 
 //  // Makes a functor for the given prototype.
@@ -256,29 +308,23 @@ object StructTemplar {
   }
 
   def citizenIsFromTemplate(temputs: TemputsBox, citizen: CitizenRef2, template: ITemplata): (Boolean) = {
+    // this print is probably here because once we add namespaces to the syntax
+    // this will false-positive for two interfaces with the same name but in different
+    // namespaces.
     println("someday this is going to bite us")
+
     (citizen, template) match {
       case (InterfaceRef2(fullName), InterfaceTemplata(_, interfaceA)) => {
-        vimpl()
-//        if (interfaceA.namespace.nonEmpty || fullName.steps.size > 1) {
-//          return (false)
-//        }
-//        if (interfaceA.namespace.nonEmpty) {
-//          vimpl()
-//        }
-        val lastStep = fullName.last
-        (lastStep.humanName == interfaceA.name)
+        fullName.last match {
+          case CitizenName2(humanName, templateArgs) => humanName == interfaceA.name.name
+          case _ => vimpl()
+        }
       }
       case (StructRef2(fullName), StructTemplata(_, structA)) => {
-        vimpl()
-//        if (structA.namespace.size != fullName.steps.size - 1) {
-//          return (false)
-//        }
-//        if (structA.namespace.nonEmpty) {
-//          vimpl()
-//        }
-//        val lastStep = fullName.last
-//        (lastStep.humanName == structA.name)
+        fullName.last match {
+          case CitizenName2(humanName, templateArgs) => humanName == structA.name.name
+          case _ => vimpl()
+        }
       }
       case _ => (false)
     }
@@ -315,12 +361,12 @@ object StructTemplar {
   def prototypeToAnonymousIFunctionSubstruct(
       env: IEnvironment,
       temputs: TemputsBox,
-    prototype: Prototype2):
-  (StructRef2, InterfaceRef2) = {
+      prototype: Prototype2):
+  (InterfaceRef2, StructRef2, FunctionHeader2) = {
     val Prototype2(_, List(paramType), returnType) = prototype
 
     val Some(ifunction1Templata@InterfaceTemplata(_, _)) =
-      env.getNearestTemplataWithName(vimpl()/*"IFunction1"*/, Set(TemplataLookupContext))
+      env.getNearestTemplataWithName(CodeTypeNameA("IFunction1"), Set(TemplataLookupContext))
     val ifunction1InterfaceRef =
       StructTemplar.getInterfaceRef(
         temputs,
@@ -330,10 +376,20 @@ object StructTemplar {
           CoordTemplata(paramType),
           CoordTemplata(returnType)))
 
-    val elementDropFunctionAsIFunctionSubstructStructRef =
+    val (elementDropFunctionAsIFunctionSubstructStructRef, constructorHeader) =
       StructTemplar.prototypeToAnonymousSubstruct(
-        env, temputs, ifunction1InterfaceRef, prototype)
+        temputs, ifunction1InterfaceRef, prototype)
 
-    (elementDropFunctionAsIFunctionSubstructStructRef, ifunction1InterfaceRef)
+    (ifunction1InterfaceRef, elementDropFunctionAsIFunctionSubstructStructRef, constructorHeader)
+  }
+
+  def makeStructConstructor(
+    temputs: TemputsBox,
+    maybeConstructorOriginFunctionA: Option[FunctionA],
+    structDef: StructDefinition2,
+    constructorFullName: FullName2[IFunctionName2]):
+  FunctionHeader2 = {
+    StructTemplarCore.makeStructConstructor(
+      temputs, maybeConstructorOriginFunctionA, structDef, constructorFullName)
   }
 }

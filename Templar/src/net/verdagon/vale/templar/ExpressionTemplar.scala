@@ -386,7 +386,7 @@ object ExpressionTemplar {
           fate.getAllTemplatasWithName(name, Set(ExpressionLookupContext)) match {
             case List(BooleanTemplata(value)) => BoolLiteral2(value)
             case List(IntegerTemplata(value)) => IntLiteral2(value)
-            case templatas if templatas.nonEmpty && templatas.collect({ case FunctionTemplata(_, _, _) => case ExternFunctionTemplata(_) => }).size == templatas.size => {
+            case templatas if templatas.nonEmpty && templatas.collect({ case FunctionTemplata(_, _) => case ExternFunctionTemplata(_) => }).size == templatas.size => {
               newGlobalFunctionGroupExpression(fate, name)
             }
             case things if things.size > 1 => {
@@ -559,25 +559,25 @@ object ExpressionTemplar {
           SequenceTemplar.evaluate(fate, temputs, exprs2)
         (expr2, returnsFromElements)
       }
-      case ConstructAE(type1, argExprs1) => {
-        val (argExprs2, returnsFromArgs) =
-          evaluateList(temputs, fate, argExprs1);
-
-        val stuff = vfail() // this is where we do the thing
-
-        val kind = TemplataTemplar.evaluateTemplex(fate.snapshot, temputs, stuff)
-        val constructExpr2 =
-          kind match {
-            case KindTemplata(structRef2 @ StructRef2(_)) => {
-              val structDef2 = temputs.lookupStruct(structRef2)
-              val ownership = if (structDef2.mutability == Mutable) Own else Share
-              val resultPointerType = Coord(ownership, structRef2)
-              Construct2(structRef2, resultPointerType, argExprs2)
-            }
-            case _ => vfail("wat")
-          }
-        (constructExpr2, returnsFromArgs)
-      }
+//      case ConstructAE(type1, argExprs1) => {
+//        val (argExprs2, returnsFromArgs) =
+//          evaluateList(temputs, fate, argExprs1);
+//
+//        val stuff = vfail() // this is where we do the thing
+//
+//        val kind = TemplataTemplar.evaluateTemplex(fate.snapshot, temputs, stuff)
+//        val constructExpr2 =
+//          kind match {
+//            case KindTemplata(structRef2 @ StructRef2(_)) => {
+//              val structDef2 = temputs.lookupStruct(structRef2)
+//              val ownership = if (structDef2.mutability == Mutable) Own else Share
+//              val resultPointerType = Coord(ownership, structRef2)
+//              Construct2(structRef2, resultPointerType, argExprs2)
+//            }
+//            case _ => vfail("wat")
+//          }
+//        (constructExpr2, returnsFromArgs)
+//      }
       case ConstructArrayAE(elementCoordTemplex, sizeExpr1, generatorExpr1, arrayMutabilityP) => {
         val (CoordTemplata(elementCoord)) = TemplataTemplar.evaluateTemplex(fate.snapshot, temputs, elementCoordTemplex)
 
@@ -591,7 +591,7 @@ object ExpressionTemplar {
 
         val memberType2 =
           generatorExpr2.referend match {
-            case InterfaceRef2(FullName2(List(), InterfaceName2("IFunction1", List(MutabilityTemplata(_), CoordTemplata(Coord(Share, Int2())), CoordTemplata(element))))) => element
+            case InterfaceRef2(FullName2(List(), CitizenName2("IFunction1", List(MutabilityTemplata(_), CoordTemplata(Coord(Share, Int2())), CoordTemplata(element))))) => element
             case other => vwat(other.toString)
           }
 

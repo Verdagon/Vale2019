@@ -24,7 +24,6 @@ object FunctionTemplarClosureOrLightLayer {
   def predictOrdinaryLightFunctionBanner(
     outerEnv: FunctionEnvironment,
     temputs: TemputsBox,
-    unevaluatedContainers: List[IContainer],
     function: FunctionA):
   (FunctionBanner2) = {
     function.body match {
@@ -35,14 +34,13 @@ object FunctionTemplarClosureOrLightLayer {
     FunctionTemplarOrdinaryOrTemplatedLayer.predictOrdinaryFunctionBanner(
       outerEnv,
       temputs,
-      unevaluatedContainers, function)
+      function)
   }
 
 
   def evaluateOrdinaryLightFunctionFromNonCallForBanner(
       outerEnv: FunctionEnvironment,
       temputs: TemputsBox,
-    unevaluatedContainers: List[IContainer],
     function: FunctionA):
   (FunctionBanner2) = {
     function.body match {
@@ -53,14 +51,13 @@ object FunctionTemplarClosureOrLightLayer {
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateOrdinaryFunctionFromNonCallForBanner(
       outerEnv,
       temputs,
-      unevaluatedContainers, function)
+      function)
   }
 
   def evaluateTemplatedClosureFunctionFromCallForBanner(
       outerEnv: FunctionEnvironment,
       temputs: TemputsBox,
       closureStructRef: StructRef2,
-    unevaluatedContainers: List[IContainer],
     function: FunctionA,
     alreadySpecifiedTemplateArgs: List[ITemplata],
       argTypes2: List[ParamFilter]):
@@ -94,14 +91,13 @@ object FunctionTemplarClosureOrLightLayer {
     // Now that the variables are added, we've modified the outerEnv to be the nearEnv.
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateTemplatedFunctionFromCallForBanner(
-      nearEnv, temputs, unevaluatedContainers, function, alreadySpecifiedTemplateArgs, argTypes2)
+      nearEnv, temputs, function, alreadySpecifiedTemplateArgs, argTypes2)
   }
 
   def evaluateTemplatedClosureFunctionFromCallForPrototype(
     outerEnv: FunctionEnvironment,
     temputs: TemputsBox,
     closureStructRef: StructRef2,
-    unevaluatedContainers: List[IContainer],
     function: FunctionA,
     alreadySpecifiedTemplateArgs: List[ITemplata],
     argTypes2: List[ParamFilter]):
@@ -135,13 +131,12 @@ object FunctionTemplarClosureOrLightLayer {
     // Now that the variables are added, we've modified the outerEnv to be the nearEnv.
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateTemplatedFunctionFromCallForPrototype(
-      nearEnv, temputs, unevaluatedContainers, function, alreadySpecifiedTemplateArgs, argTypes2)
+      nearEnv, temputs, function, alreadySpecifiedTemplateArgs, argTypes2)
   }
 
   def evaluateTemplatedLightFunctionFromNonCallForHeader(
       ourEnv: FunctionEnvironment,
       temputs: TemputsBox,
-    unevaluatedContainers: List[IContainer],
     function: FunctionA,
       explicitTemplateArgs: List[ITemplata]):
   (FunctionHeader2) = {
@@ -151,13 +146,12 @@ object FunctionTemplarClosureOrLightLayer {
     }
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateTemplatedFunctionFromNonCallForHeader(
-      ourEnv, temputs, unevaluatedContainers, function)
+      ourEnv, temputs, function)
   }
 
   def evaluateTemplatedLightFunctionFromCallForPrototype2(
       ourEnv: FunctionEnvironment,
       temputs: TemputsBox,
-    unevaluatedContainers: List[IContainer],
     function: FunctionA,
       explicitTemplateArgs: List[ITemplata],
       args: List[ParamFilter]):
@@ -168,20 +162,19 @@ object FunctionTemplarClosureOrLightLayer {
     }
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateTemplatedFunctionFromCallForPrototype(
-      ourEnv, temputs, unevaluatedContainers, function, explicitTemplateArgs, args)
+      ourEnv, temputs, function, explicitTemplateArgs, args)
   }
 
   def evaluateOrdinaryLightFunctionFromNonCallForHeader(
       outerEnv: FunctionEnvironment,
       temputs: TemputsBox,
-    unevaluatedContainers: List[IContainer],
     function: FunctionA):
   (FunctionHeader2) = {
     // This should only be called with a non-templated function
     vassert(!function.isTemplate)
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateOrdinaryFunctionFromNonCallForHeader(
-      outerEnv, temputs, unevaluatedContainers, function)
+      outerEnv, temputs, function)
   }
 
   // We would want only the prototype instead of the entire header if, for example,
@@ -190,21 +183,19 @@ object FunctionTemplarClosureOrLightLayer {
   def evaluateOrdinaryLightFunctionFromNonCallForPrototype(
     outerEnv: FunctionEnvironment,
     temputs: TemputsBox,
-    unevaluatedContainers: List[IContainer],
     function: FunctionA
   ): Prototype2 = {
     // This should only be called with a non-templated function
     vassert(!function.isTemplate)
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateOrdinaryFunctionFromNonCallForPrototype(
-      outerEnv, temputs, unevaluatedContainers, function)
+      outerEnv, temputs, function)
   }
 
   def evaluateOrdinaryClosureFunctionFromNonCallForBanner(
     outerEnv: FunctionEnvironment,
     temputs: TemputsBox,
     closureStructRef: StructRef2,
-    unevaluatedContainers: List[IContainer],
     function: FunctionA):
   (FunctionBanner2) = {
     // This should only be called with a non-templated function
@@ -233,14 +224,13 @@ object FunctionTemplarClosureOrLightLayer {
       // Now that the variables are added, we've modified the outerEnv to be the nearEnv.
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateOrdinaryFunctionFromNonCallForBanner(
-      nearEnv, temputs, unevaluatedContainers, function)
+      nearEnv, temputs, function)
   }
 
   def evaluateOrdinaryClosureFunctionFromNonCallForHeader(
       outerEnv: FunctionEnvironment,
       temputs: TemputsBox,
       closureStructRef: StructRef2,
-    unevaluatedContainers: List[IContainer],
     function: FunctionA):
   (FunctionHeader2) = {
     // This should only be called with a non-templated function
@@ -269,7 +259,7 @@ object FunctionTemplarClosureOrLightLayer {
     // Now that the variables are added, we've modified the outerEnv to be the nearEnv.
 
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateOrdinaryFunctionFromNonCallForHeader(
-      nearEnv, temputs, unevaluatedContainers, function)
+      nearEnv, temputs, function)
   }
 
   // This is called while we're trying to figure out what function1s to call when there
@@ -278,25 +268,23 @@ object FunctionTemplarClosureOrLightLayer {
   def evaluateTemplatedLightBannerFromCall(
       functionOuterEnv: FunctionEnvironment,
       temputs: TemputsBox,
-    unevaluatedContainers: List[IContainer],
     function: FunctionA,
       explicitTemplateArgs: List[ITemplata],
       args: List[ParamFilter]):
   (IEvaluateFunctionResult[FunctionBanner2]) = {
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateTemplatedLightBannerFromCall(
-        functionOuterEnv, temputs, unevaluatedContainers, function, explicitTemplateArgs, args)
+        functionOuterEnv, temputs, function, explicitTemplateArgs, args)
   }
 
   def evaluateTemplatedFunctionFromCallForBanner(
       outerEnv: FunctionEnvironment,
       temputs: TemputsBox,
-    unevaluatedContainers: List[IContainer],
     function: FunctionA,
       alreadySpecifiedTemplateArgs: List[ITemplata],
       paramFilters: List[ParamFilter]):
   (IEvaluateFunctionResult[FunctionBanner2]) = {
     FunctionTemplarOrdinaryOrTemplatedLayer.evaluateTemplatedFunctionFromCallForBanner(
-        outerEnv, temputs, unevaluatedContainers, function,
+        outerEnv, temputs, function,
         alreadySpecifiedTemplateArgs,
         paramFilters)
   }
@@ -305,10 +293,9 @@ object FunctionTemplarClosureOrLightLayer {
     env1: FunctionEnvironment,
     temputs: TemputsBox,
     interfaceExplicitTemplateArgs: List[ITemplata],
-    unevaluatedContainers: List[IContainer],
     function: FunctionA):
   (FunctionHeader2) = {
     FunctionTemplarOrdinaryOrTemplatedLayer.scanOrdinaryInterfaceMember(
-      env1, temputs, interfaceExplicitTemplateArgs, unevaluatedContainers, function)
+      env1, temputs, interfaceExplicitTemplateArgs, function)
   }
 }

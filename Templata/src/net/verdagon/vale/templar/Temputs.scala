@@ -282,7 +282,7 @@ case class Temputs(
 
   def declareInterfaceEnv(
     interfaceRef: InterfaceRef2,
-    env: NamespaceEnvironment[InterfaceName2]
+    env: NamespaceEnvironment[CitizenName2]
   ): Temputs = {
     vassert(declaredInterfaces.contains(interfaceRef))
     vassert(!envByInterfaceRef.contains(interfaceRef))
@@ -440,7 +440,7 @@ case class Temputs(
       unknownSizeArrayTypes)
   }
 
-  def structDeclared(fullName: FullName2[IStructName2]): Option[StructRef2] = {
+  def structDeclared(fullName: FullName2[ICitizenName2]): Option[StructRef2] = {
     // This is the only place besides StructDefinition2 and declareStruct thats allowed to make one of these
     val structRef = StructRef2(fullName)
     if (declaredStructs.contains(structRef)) {
@@ -472,7 +472,7 @@ case class Temputs(
     }
   }
 
-  def interfaceDeclared(fullName: FullName2[InterfaceName2]): Option[InterfaceRef2] = {
+  def interfaceDeclared(fullName: FullName2[CitizenName2]): Option[InterfaceRef2] = {
     // This is the only place besides InterfaceDefinition2 and declareInterface thats allowed to make one of these
     val interfaceRef = InterfaceRef2(fullName)
     if (declaredInterfaces.contains(interfaceRef)) {
@@ -556,7 +556,7 @@ case class TemputsBox(var temputs: Temputs) {
     temputs = temputs.declareStructMutability(structRef, mutability)
   }
 
-  def declareStructEnv(structRef: StructRef2, env: NamespaceEnvironment[IStructName2]): Unit = {
+  def declareStructEnv(structRef: StructRef2, env: NamespaceEnvironment[ICitizenName2]): Unit = {
     temputs = temputs.declareStructEnv(structRef, env)
   }
 
@@ -568,7 +568,7 @@ case class TemputsBox(var temputs: Temputs) {
     temputs = temputs.declareInterfaceMutability(interfaceRef, mutability)
   }
 
-  def declareInterfaceEnv(interfaceRef: InterfaceRef2, env: NamespaceEnvironment[InterfaceName2]): Unit = {
+  def declareInterfaceEnv(interfaceRef: InterfaceRef2, env: NamespaceEnvironment[CitizenName2]): Unit = {
     temputs = temputs.declareInterfaceEnv(interfaceRef, env)
   }
 
@@ -596,7 +596,7 @@ case class TemputsBox(var temputs: Temputs) {
     temputs = temputs.addImpl(structRef2, interfaceRef2)
   }
 
-  def structDeclared(fullName: FullName2[IStructName2]): Option[StructRef2] = temputs.structDeclared(fullName)
+  def structDeclared(fullName: FullName2[ICitizenName2]): Option[StructRef2] = temputs.structDeclared(fullName)
 
   def lookupMutability(citizenRef2: CitizenRef2): Mutability = temputs.lookupMutability(citizenRef2)
 
@@ -604,7 +604,7 @@ case class TemputsBox(var temputs: Temputs) {
 
   def lookupCitizen(citizenRef: CitizenRef2): CitizenDefinition2 = temputs.lookupCitizen(citizenRef)
 
-  def interfaceDeclared(fullName: FullName2[InterfaceName2]): Option[InterfaceRef2] = temputs.interfaceDeclared(fullName)
+  def interfaceDeclared(fullName: FullName2[CitizenName2]): Option[InterfaceRef2] = temputs.interfaceDeclared(fullName)
 
   def lookupInterface(interfaceRef: InterfaceRef2): InterfaceDefinition2 = temputs.lookupInterface(interfaceRef)
 

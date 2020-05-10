@@ -39,13 +39,15 @@ object BuiltInFunctions {
       .addEntry(
         FunctionTemplateName2(CallTemplar.DESTRUCTOR_NAME, CodeLocation2(0, 0)),
         FunctionEnvEntry(
-          List(), // No parent struct, this should apply to any struct
           FunctionA(
             FunctionNameA(CallTemplar.DESTRUCTOR_NAME, s.CodeLocationS(0, 0)),
             true,
             TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
             List(CodeRuneA("T")),
-            Map(CodeRuneA("T") -> CoordTemplataType),
+            Map(
+              ImplicitRuneA(0) -> KindTemplataType,
+              CodeRuneA("T") -> CoordTemplataType,
+              CodeRuneA("V") -> CoordTemplataType),
             List(
               ParameterA(AtomAP(CaptureA(CodeVarNameA("this"), FinalP), None, CodeRuneA("T"), None))),
             Some(CodeRuneA("V")),
@@ -118,13 +120,15 @@ object BuiltInFunctions {
     (
     currentlyConstructingEnv
       .addUnevaluatedFunction(
-        List(), // No parent interface, this should apply to all interfaces
         FunctionA(
           FunctionNameA(CallTemplar.INTERFACE_DESTRUCTOR_NAME, CodeLocationS(0, 0)),
           true,
           TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
           List(CodeRuneA("T")),
-          Map(CodeRuneA("T") -> CoordTemplataType),
+          Map(
+            CodeRuneA("T") -> CoordTemplataType,
+            CodeRuneA("V") -> CoordTemplataType,
+            ImplicitRuneA(0) -> KindTemplataType),
           List(
             ParameterA(AtomAP(CaptureA(CodeVarNameA("this"), FinalP), Some(AbstractAP), CodeRuneA("T"), None))),
           Some(CodeRuneA("V")),
@@ -180,13 +184,15 @@ object BuiltInFunctions {
     (
     currentlyConstructingEnv
       .addUnevaluatedFunction(
-        List(), // No parent interface or struct or impl, this should apply to any struct
         FunctionA(
           FunctionNameA(CallTemplar.INTERFACE_DESTRUCTOR_NAME, CodeLocationS(0, 0)),
           true,
           TemplateTemplataType(List(CoordTemplataType, KindTemplataType), FunctionTemplataType),
           List(CodeRuneA("T"), CodeRuneA("I")),
-          Map(CodeRuneA("T") -> CoordTemplataType, CodeRuneA("I") -> KindTemplataType),
+          Map(
+            CodeRuneA("T") -> CoordTemplataType,
+            CodeRuneA("I") -> KindTemplataType,
+            CodeRuneA("V") -> CoordTemplataType),
           List(
             ParameterA(AtomAP(CaptureA(CodeVarNameA("this"), FinalP), Some(OverrideAP(CodeRuneA("I"))), CodeRuneA("T"), None))),
           Some(CodeRuneA("V")),
@@ -254,13 +260,14 @@ object BuiltInFunctions {
     (
       currentlyConstructingEnv
         .addUnevaluatedFunction(
-          List(), // No parent struct, this should apply to any struct
           FunctionA(
             FunctionNameA(CallTemplar.DROP_FUNCTION_NAME, CodeLocationS(0, 0)),
             true,
             TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
             List(CodeRuneA("T")),
-            Map(CodeRuneA("T") -> CoordTemplataType),
+            Map(
+              CodeRuneA("T") -> CoordTemplataType,
+              CodeRuneA("V") -> CoordTemplataType),
             List(
               ParameterA(AtomAP(CaptureA(CodeVarNameA("x"), FinalP), None, CodeRuneA("T"), None))),
             Some(CodeRuneA("V")),
@@ -293,13 +300,16 @@ object BuiltInFunctions {
   private def addArrayLen(currentlyConstructingEnv: NamespaceEnvironment[IName2]): NamespaceEnvironment[IName2] = {
     currentlyConstructingEnv
       .addUnevaluatedFunction(
-        List(),
         FunctionA(
           FunctionNameA("len", s.CodeLocationS(0, 0)),
           true,
           TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
           List(CodeRuneA("T")),
-          Map(CodeRuneA("T") -> CoordTemplataType),
+          Map(
+            CodeRuneA("T") -> CoordTemplataType,
+            ImplicitRuneA(0) -> MutabilityTemplataType,
+            CodeRuneA("__1") -> CoordTemplataType,
+            CodeRuneA("I") -> CoordTemplataType),
           List(
             ParameterA(AtomAP(CaptureA(CodeVarNameA("arr"), FinalP), None, CodeRuneA("T"), None))),
           Some(CodeRuneA("I")),
@@ -329,7 +339,6 @@ object BuiltInFunctions {
                   ArrayLengthAE(
                     LocalLoadAE(CodeVarNameA("arr"), false))))))))
       .addUnevaluatedFunction(
-        List(),
         FunctionA(
           FunctionNameA("len", s.CodeLocationS(0, 1)),
           true,
@@ -338,7 +347,9 @@ object BuiltInFunctions {
           Map(
             CodeRuneA("A") -> CoordTemplataType,
             CodeRuneA("N") -> IntegerTemplataType,
-            CodeRuneA("T") -> CoordTemplataType),
+            CodeRuneA("T") -> CoordTemplataType,
+            CodeRuneA("I") -> CoordTemplataType,
+            CodeRuneA("M") -> MutabilityTemplataType),
           List(
             ParameterA(AtomAP(CaptureA(CodeVarNameA("arr"), FinalP), None, CodeRuneA("A"), None))),
           Some(CodeRuneA("I")),
@@ -370,7 +381,6 @@ object BuiltInFunctions {
   private def addPanic(currentlyConstructingEnv: NamespaceEnvironment[IName2]): NamespaceEnvironment[IName2] = {
     currentlyConstructingEnv
       .addUnevaluatedFunction(
-        List(),
         FunctionA(
           FunctionNameA("panic", s.CodeLocationS(0, 0)),
           true,

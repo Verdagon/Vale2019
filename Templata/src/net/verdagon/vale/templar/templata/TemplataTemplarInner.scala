@@ -3,6 +3,7 @@ package net.verdagon.vale.templar.templata
 import net.verdagon.vale.astronomer._
 import net.verdagon.vale.parser.ShareP
 import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
+import net.verdagon.vale.templar.{IName2, NameTranslator}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.{vassert, vfail, vimpl}
 
@@ -20,8 +21,8 @@ case class TypeDistance(upcastDistance: Int, ownershipDistance: Int) {
 }
 
 trait ITemplataTemplarInnerDelegate[Env, State] {
-  def lookupTemplata(env: Env, name: INameA): ITemplata
-  def lookupTemplata(env: Env, name: IImpreciseNameStepA): ITemplata
+  def lookupTemplata(env: Env, name: IName2): ITemplata
+  def lookupTemplataImprecise(env: Env, name: IImpreciseNameStepA): ITemplata
 
   def getMutability(state: State, kind: Kind): Mutability
 
@@ -104,8 +105,12 @@ class TemplataTemplarInner[Env, State](delegate: ITemplataTemplarInnerDelegate[E
     vassert(type1.isInstanceOf[ITemplexA])
     type1 match {
       case NameAT(name, tyype) => {
-        val thing = delegate.lookupTemplata(env, name)
+        val thing = delegate.lookupTemplataImprecise(env, name)
         coerce(state, thing, tyype)
+      }
+      case RuneAT(rune, resultType) => {
+        val thing = delegate.lookupTemplata(env, NameTranslator.translateRune(rune))
+        coerce(state, thing, resultType)
       }
       case RepeaterSequenceAT(mutabilityTemplexS, sizeTemplexS, elementTemplexS, tyype) => {
 
@@ -430,7 +435,7 @@ class TemplataTemplarInner[Env, State](delegate: ITemplataTemplarInnerDelegate[E
   def lookupTemplata(
     env: Env,
     state: State,
-    name: INameA,
+    name: IName2,
     expectedType: ITemplataType):
   (ITemplata) = {
     val uncoercedTemplata = delegate.lookupTemplata(env, name)
@@ -443,7 +448,7 @@ class TemplataTemplarInner[Env, State](delegate: ITemplataTemplarInnerDelegate[E
     name: IImpreciseNameStepA,
     expectedType: ITemplataType):
   (ITemplata) = {
-    val uncoercedTemplata = delegate.lookupTemplata(env, name)
+    val uncoercedTemplata = delegate.lookupTemplataImprecise(env, name)
     coerce(state, uncoercedTemplata, expectedType)
   }
 

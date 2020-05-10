@@ -511,7 +511,7 @@ case class ConstructArray2(
     sizeExpr: ReferenceExpression2,
     generator: ReferenceExpression2) extends ReferenceExpression2 {
   generator.referend match {
-    case InterfaceRef2(FullName2(List(), InterfaceName2("IFunction1", List(_, CoordTemplata(Coord(Share, Int2())), _)))) =>
+    case InterfaceRef2(FullName2(List(), CitizenName2("IFunction1", List(_, CoordTemplata(Coord(Share, Int2())), _)))) =>
     case _ => vfail("Generator has to be an IFunction1<_, Int, T>")
   }
 

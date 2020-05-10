@@ -2,6 +2,7 @@ package net.verdagon.vale.templar
 
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar.types._
+import net.verdagon.vale.vimpl
 
 object TemplataNamer {
   // Identifier names need to come from the Templar output because some things are erased
@@ -46,9 +47,11 @@ object TemplataNamer {
 //      case ReturnRune2() => "ᚱ"
       case FunctionName2(humanName, templateArgs, parameters) => "ᚫ" + humanName + stringifyTemplateArgs(templateArgs) + stringifyParametersArgs(parameters)
 //      case LambdaName2(codeLocation, templateArgs, parameters) => "ᛈ" + codeLocation + stringifyTemplateArgs(templateArgs) + stringifyParametersArgs(parameters)
-      case StructName2(humanName, templateArgs) => "ᛟ" + humanName + stringifyTemplateArgs(templateArgs)
-      case InterfaceName2(humanName, templateArgs) => "ᛘ" + humanName + stringifyTemplateArgs(templateArgs)
-      case LambdaStructName2(codeLocation) => "ᛊ" + codeLocation
+//      case CitizenName2(humanName, templateArgs) => "ᛟ" + humanName + stringifyTemplateArgs(templateArgs)
+      case CitizenName2(humanName, templateArgs) => "ᛘ" + humanName + stringifyTemplateArgs(templateArgs)
+      case LambdaCitizenName2(codeLocation) => "ᛊ" + codeLocation
+      case AnonymousSubstructName2(thing) =>
+      case x => vimpl(x.toString)
     }).mkString(".")
   }
 

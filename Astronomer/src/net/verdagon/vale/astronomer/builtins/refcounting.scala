@@ -13,7 +13,12 @@ object RefCounting {
       false,
       TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
       List(CodeRuneA("T")),
-      Map(CodeRuneA("T") -> CoordTemplataType),
+      Map(
+        CodeRuneA("I") -> CoordTemplataType,
+        CodeRuneA("T") -> CoordTemplataType,
+        CodeRuneA("V") -> CoordTemplataType,
+        ImplicitRuneA(0) -> KindTemplataType
+      ),
       List(
         ParameterA(AtomAP(CaptureA(CodeVarNameA("obj"), FinalP), None, CodeRuneA("T"), None)),
         ParameterA(AtomAP(CaptureA(CodeVarNameA("num"), FinalP), None, CodeRuneA("I"), None))),
@@ -49,7 +54,9 @@ object RefCounting {
       false,
       TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
       List(CodeRuneA("T")),
-      Map(CodeRuneA("T") -> CoordTemplataType),
+      Map(CodeRuneA("I") -> CoordTemplataType,
+        CodeRuneA("T") -> CoordTemplataType,
+        CodeRuneA("V") -> CoordTemplataType),
       List(
         ParameterA(AtomAP(CaptureA(CodeVarNameA("obj"), FinalP), None, CodeRuneA("T"), None)),
         ParameterA(AtomAP(CaptureA(CodeVarNameA("num"), FinalP), None, CodeRuneA("I"), None))),

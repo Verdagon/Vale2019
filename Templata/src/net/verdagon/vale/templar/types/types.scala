@@ -264,10 +264,10 @@ trait CitizenDefinition2 {
 
 // We include templateArgTypes to aid in looking this up... same reason we have name
 case class StructDefinition2(
-  fullName: FullName2[IStructName2],
-  mutability: Mutability,
-  members: List[StructMember2],
-  isClosure: Boolean
+                              fullName: FullName2[ICitizenName2],
+                              mutability: Mutability,
+                              members: List[StructMember2],
+                              isClosure: Boolean
 ) extends CitizenDefinition2 with Queriable2 {
 
   // debt: move this to somewhere else. let's allow packs to have packs, just nothing else.
@@ -308,7 +308,7 @@ case class StructDefinition2(
 }
 
 case class InterfaceDefinition2(
-    fullName: FullName2[InterfaceName2],
+    fullName: FullName2[CitizenName2],
     mutability: Mutability,
     // This does not include abstract functions declared outside the interface.
     // See IMRFDI for why we need to remember only the internal methods here.
@@ -326,7 +326,9 @@ trait CitizenRef2 extends Kind {
 }
 
 // These should only be made by struct templar, which puts the definition into temputs at the same time
-case class StructRef2(fullName: FullName2[IStructName2]) extends CitizenRef2 {
+case class StructRef2(fullName: FullName2[ICitizenName2]) extends CitizenRef2 {
+  println("hi")
+
   override def order: Int = 14;
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
@@ -382,7 +384,7 @@ case class OverloadSet(
 //}
 
 case class InterfaceRef2(
-  fullName: FullName2[InterfaceName2]
+  fullName: FullName2[ICitizenName2]
 ) extends CitizenRef2 with Queriable2 {
   override def order: Int = 15;
 
@@ -480,7 +482,7 @@ object FullNameComparator extends Ordering[FullName2[IName2]] {
 //                return templateArgsDiff
 //              TemplataTypeListComparator.compare(parametersA.map(CoordTemplata), parametersB.map(CoordTemplata))
 //            }
-            case (StructName2(humanNameA, templateArgsA), StructName2(humanNameB, templateArgsB)) => {
+            case (CitizenName2(humanNameA, templateArgsA), CitizenName2(humanNameB, templateArgsB)) => {
               val nameDiff = humanNameA.compareTo(humanNameB)
               if (nameDiff != 0)
                 return nameDiff
@@ -489,10 +491,10 @@ object FullNameComparator extends Ordering[FullName2[IName2]] {
             case (TupleName2(membersA), TupleName2(membersB)) => {
               TemplataTypeListComparator.compare(membersA.map(CoordTemplata), membersB.map(CoordTemplata))
             }
-            case (LambdaStructName2(codeLocationA), LambdaStructName2(codeLocationB)) => {
+            case (LambdaCitizenName2(codeLocationA), LambdaCitizenName2(codeLocationB)) => {
               compare(codeLocationA, codeLocationB)
             }
-            case (InterfaceName2(humanNameA, templateArgsA), InterfaceName2(humanNameB, templateArgsB)) => {
+            case (CitizenName2(humanNameA, templateArgsA), CitizenName2(humanNameB, templateArgsB)) => {
               val nameDiff = humanNameA.compareTo(humanNameB)
               if (nameDiff != 0)
                 return nameDiff

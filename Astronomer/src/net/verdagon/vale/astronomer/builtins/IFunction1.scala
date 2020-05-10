@@ -29,7 +29,9 @@ object IFunction1 {
           true,
           FunctionTemplataType,
           List(),
-          Map(CodeRuneA("ThisK") -> CoordTemplataType),
+          Map(
+            CodeRuneA("BorrowThis") -> CoordTemplataType,
+            CodeRuneA("ThisK") -> CoordTemplataType),
           List(
             ParameterA(AtomAP(CaptureA(CodeVarNameA("this"), FinalP), Some(AbstractAP), CodeRuneA("BorrowThis"), None)),
             ParameterA(AtomAP(CaptureA(CodeVarNameA("p1"), FinalP), None, CodeRuneA("P1"), None))),

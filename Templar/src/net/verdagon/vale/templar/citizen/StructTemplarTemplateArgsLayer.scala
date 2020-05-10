@@ -14,26 +14,16 @@ import scala.collection.immutable.List
 
 object StructTemplarTemplateArgsLayer {
 
-  def translateStructNameWithTemplateArgs(nameA: INameA, templateArgs: List[ITemplata]): IStructName2 = {
-    nameA match {
-      case _ => vimpl()
-    }
-  }
-
-  def translateInterfaceNameWithTemplateArgs(nameA: INameA, templateArgs: List[ITemplata]): InterfaceName2 = {
-    nameA match {
-      case _ => vimpl()
-    }
-  }
-
   def getStructRef(
     temputs: TemputsBox,
     structTemplata: StructTemplata,
     templateArgs: List[ITemplata]):
   (StructRef2) = {
     val StructTemplata(env, structA) = structTemplata
-
-    val fullName = env.fullName.addStep(translateStructNameWithTemplateArgs(structA.name, templateArgs))
+    val TopLevelCitizenDeclarationNameA(humanName, codeLocation) = structA.name
+    val structTemplateName = NameTranslator.translateCitizenName(structA.name)
+    val structLastName = structTemplateName.makeCitizenName(templateArgs)
+    val fullName = env.fullName.addStep(structLastName)
 
     temputs.structDeclared(fullName) match {
       case Some(structRef2) => {
@@ -89,7 +79,10 @@ object StructTemplarTemplateArgsLayer {
     templateArgs: List[ITemplata]):
   (InterfaceRef2) = {
     val InterfaceTemplata(env, interfaceS) = interfaceTemplata
-    val fullName = env.fullName.addStep(translateInterfaceNameWithTemplateArgs(interfaceS.name, templateArgs))
+    val TopLevelCitizenDeclarationNameA(humanName, codeLocation) = interfaceS.name
+    val interfaceTemplateName = NameTranslator.translateCitizenName(interfaceS.name)
+    val interfaceLastName = interfaceTemplateName.makeCitizenName(templateArgs)
+    val fullName = env.fullName.addStep(interfaceLastName)
 
     temputs.interfaceDeclared(fullName) match {
       case Some(interfaceRef2) => {
@@ -153,37 +146,33 @@ object StructTemplarTemplateArgsLayer {
   }
 
   // Makes a struct to back a pack or tuple
-  def makeSeqOrPackUnerstruct(env: NamespaceEnvironment[IName2], temputs: TemputsBox, memberTypes2: List[Coord], name: IStructName2):
+  def makeSeqOrPackUnerstruct(env: NamespaceEnvironment[IName2], temputs: TemputsBox, memberTypes2: List[Coord], name: ICitizenName2):
   (StructRef2, Mutability) = {
     StructTemplarMiddle.makeSeqOrPackUnderstruct(env, temputs, memberTypes2, name)
   }
 
   // Makes an anonymous substruct of the given interface, with the given lambdas as its members.
   def makeAnonymousSubstruct(
-    outerEnv: IEnvironment,
+    interfaceEnv: IEnvironment,
     temputs: TemputsBox,
-    maybeConstructorOriginFunctionA: Option[FunctionA],
-    functionFullName: FullName2[IFunctionName2],
     interfaceRef: InterfaceRef2,
     lambdas: List[Coord]):
-  (StructRef2, Mutability, FunctionHeader2) = {
+  (StructRef2, Mutability) = {
     StructTemplarMiddle.makeAnonymousSubstruct(
-      outerEnv,
+      interfaceEnv,
       temputs,
-      maybeConstructorOriginFunctionA,
-      functionFullName,
       interfaceRef,
       lambdas)
   }
 
   // Makes an anonymous substruct of the given interface, which just forwards its method to the given prototype.
-  def prototypeToAnonymousSubstruct(
+  def prototypeToAnonymousStruct(
     outerEnv: IEnvironment,
     temputs: TemputsBox,
-    interfaceRef: InterfaceRef2,
-    prototype: Prototype2):
+    prototype: Prototype2,
+    structFullName: FullName2[ICitizenName2]):
   StructRef2 = {
-    StructTemplarMiddle.prototypeToAnonymousSubstruct(
-      outerEnv, temputs, interfaceRef, prototype)
+    StructTemplarMiddle.prototypeToAnonymousStruct(
+      outerEnv, temputs, prototype, structFullName)
   }
 }

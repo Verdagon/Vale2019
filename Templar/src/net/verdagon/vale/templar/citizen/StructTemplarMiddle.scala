@@ -5,7 +5,7 @@ import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
 import net.verdagon.vale.templar._
-import net.verdagon.vale.templar.env.{IEnvironment, InterfaceEnvEntry, NamespaceEnvironment, TemplataEnvEntry}
+import net.verdagon.vale.templar.env.{FunctionEnvironment, IEnvironment, InterfaceEnvEntry, NamespaceEnvironment, TemplataEnvEntry}
 import net.verdagon.vale.templar.function.{FunctionTemplar, FunctionTemplarCore, VirtualTemplar}
 import net.verdagon.vale.{vfail, vimpl}
 
@@ -72,48 +72,43 @@ object StructTemplarMiddle {
     env: NamespaceEnvironment[IName2],
     temputs: TemputsBox,
     memberTypes2: List[Coord],
-    name: IStructName2):
+    name: ICitizenName2):
   (StructRef2, Mutability) = {
     StructTemplarCore.makeSeqOrPackUnderstruct(env, temputs, memberTypes2, name)
   }
 
   // Makes an anonymous substruct of the given interface, with the given lambdas as its members.
   def makeAnonymousSubstruct(
-    outerEnv: IEnvironment,
+    interfaceEnv: IEnvironment,
     temputs: TemputsBox,
-    maybeConstructorOriginFunctionA: Option[FunctionA],
-    functionFullName: FullName2[IFunctionName2],
     interfaceRef: InterfaceRef2,
     lambdas: List[Coord]):
-  (StructRef2, Mutability, FunctionHeader2) = {
+  (StructRef2, Mutability) = {
 
-    vimpl()
-//    maybe this?:
-//    val anonymousSubstructName: FullName2[AnonymousSubstructName2] =
-//      functionFullName.addStep(AnonymousSubstructName2())
+//    val anonymousSubstructName: FullName2[AnonymousSubCitizenName2] =
+//      functionFullName.addStep(AnonymousSubCitizenName2())
     // but we do need some sort of codelocation in there, right?
     // otherwise i can say IMyInterface(sum, mul) + IMyInterface(sum, mul)
     // actually thats probably fine. we would just reuse the existing one.
     // ...we best write a doc section on this.
 
-    val anonymousSubstructName = interfaceRef.fullName.addStep(AnonymousSubstructName2(List(functionFullName)))
+    val anonymousSubstructName = interfaceRef.fullName.addStep(AnonymousSubstructName2(lambdas))
     StructTemplarCore.makeAnonymousSubstruct(
-      outerEnv,
+      interfaceEnv,
       temputs,
-      maybeConstructorOriginFunctionA,
       anonymousSubstructName,
       interfaceRef,
       lambdas)
   }
 
   // Makes an anonymous substruct of the given interface, which just forwards its method to the given prototype.
-  def prototypeToAnonymousSubstruct(
+  def prototypeToAnonymousStruct(
     outerEnv: IEnvironment,
     temputs: TemputsBox,
-    interfaceRef: InterfaceRef2,
-    prototype: Prototype2):
+    prototype: Prototype2,
+    structFullName: FullName2[ICitizenName2]):
   StructRef2 = {
-    StructTemplarCore.prototypeToAnonymousSubstruct(
-      outerEnv, temputs, interfaceRef, prototype)
+    StructTemplarCore.prototypeToAnonymousStruct(
+      outerEnv, temputs, prototype, structFullName)
   }
 }
