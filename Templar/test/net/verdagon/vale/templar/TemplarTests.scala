@@ -289,7 +289,7 @@ class TemplarTests extends FunSuite with Matchers {
       """
         |interface MyOption<T> imm rules(T Ref) { }
         |struct MySome<T> imm rules(T Ref) { value T; }
-        |impl MySome<T> for MyOption<T>;
+        |impl<T> MySome<T> for MyOption<T>;
         |fn moo(a MySome<*Int>) { }
       """.stripMargin)
     val temputs = compile.getTemputs()
@@ -409,7 +409,7 @@ class TemplarTests extends FunSuite with Matchers {
         |interface MyOption<T> rules(T Ref) { }
         |
         |struct MySome<T> rules(T Ref) {}
-        |impl MySome<T> for MyOption<T>;
+        |impl<T> MySome<T> for MyOption<T>;
         |
         |fn doSomething(opt MyOption<*Int>) *Int {
         |  = 9;
@@ -553,9 +553,9 @@ class TemplarTests extends FunSuite with Matchers {
       """
         |interface IOption<T> rules(T Ref) { }
         |struct Some<T> rules(T Ref) { value T; }
-        |impl Some<T> for IOption<T>;
+        |impl<T> Some<T> for IOption<T>;
         |struct None<T> rules(T Ref) { }
-        |impl None<T> for IOption<T>;
+        |impl<T> None<T> for IOption<T>;
         |
         |fn main() {
         |  m IOption<Int> = None<Int>();
@@ -575,9 +575,9 @@ class TemplarTests extends FunSuite with Matchers {
       """
         |interface IOption<T> rules(T Ref) { }
         |struct Some<T> rules(T Ref) { value T; }
-        |impl Some<T> for IOption<T>;
+        |impl<T> Some<T> for IOption<T>;
         |struct None<T> rules(T Ref) { }
-        |impl None<T> for IOption<T>;
+        |impl<T> None<T> for IOption<T>;
         |
         |struct Marine {
         |  weapon IOption<Int>;
@@ -601,7 +601,7 @@ class TemplarTests extends FunSuite with Matchers {
     // This is what spurred namespace support.
 
     val compile = new Compilation(
-      """fn helperFunc(x T) {
+      """fn helperFunc<T>(x T) {
         |  { print(x); }();
         |}
         |fn main() {

@@ -3,30 +3,30 @@ package net.verdagon.vale
 object TemplatedLinkedList {
   val code =
     """
-      |interface MyOption<#T> imm rules(#T: Ref) { }
+      |interface MyOption<T> imm rules(T Ref) { }
       |
-      |struct MySome<#T> imm rules(#T: Ref) {
-      |  value: #T;
+      |struct MySome<T> imm rules(T Ref) {
+      |  value T;
       |}
-      |impl MySome<#T> for MyOption<#T>;
+      |impl<T> MySome<T> for MyOption<T>;
       |
-      |struct MyNone<#T> imm rules(#T: Ref) { }
-      |impl MyNone<#T> for MyOption<#T>;
+      |struct MyNone<T> imm rules(T Ref) { }
+      |impl<T> MyNone<T> for MyOption<T>;
       |
       |
-      |struct MyList<#T> imm rules(#T: Ref) {
-      |  value: #T;
-      |  next: *MyOption<*MyList<#T>>;
+      |struct MyList<T> imm rules(T Ref) {
+      |  value T;
+      |  next *MyOption<*MyList<T>>;
       |}
       |
-      |fn printValues(list: *MyList<*Int>) Void {
+      |fn printValues(list *MyList<*Int>) Void {
       |	 print(list.value);
       |	 printNextValue(list.next);
       |}
       |
-      |fn printNextValue(opt: virtual *MyOption<*MyList<*Int>>) Void { }
-      |fn printNextValue(opt: *MyNone<*MyList<*Int>> for MyOption<*MyList<*Int>>) Void { }
-      |fn printNextValue(opt: *MySome<*MyList<*Int>> for MyOption<*MyList<*Int>>) Void {
+      |fn printNextValue(virtual opt *MyOption<*MyList<*Int>>) Void { }
+      |fn printNextValue(opt *MyNone<*MyList<*Int>> impl MyOption<*MyList<*Int>>) Void { }
+      |fn printNextValue(opt *MySome<*MyList<*Int>> impl MyOption<*MyList<*Int>>) Void {
       |	 printValues(opt.value);
       |}
       |

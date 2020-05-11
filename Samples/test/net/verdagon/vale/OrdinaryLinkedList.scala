@@ -6,7 +6,7 @@ object OrdinaryLinkedList {
       |interface MyOption imm { }
       |
       |struct MySome imm {
-      |  value: *MyList;
+      |  value *MyList;
       |}
       |impl MySome for MyOption;
       |
@@ -15,18 +15,18 @@ object OrdinaryLinkedList {
       |
       |
       |struct MyList imm {
-      |  value: *Int;
-      |  next: *MyOption;
+      |  value *Int;
+      |  next *MyOption;
       |}
       |
-      |fn printValues(list: *MyList) Void {
+      |fn printValues(list *MyList) Void {
       |	 print(list.value);
       |	 printNextValue(list.next);
       |}
       |
-      |fn printNextValue(opt: virtual *MyOption) Void { }
-      |fn printNextValue(opt: *MyNone for MyOption) Void { }
-      |fn printNextValue(opt: *MySome for MyOption) Void {
+      |fn printNextValue(virtual opt *MyOption) Void { }
+      |fn printNextValue(opt *MyNone impl MyOption) Void { }
+      |fn printNextValue(opt *MySome impl MyOption) Void {
       |	 printValues(opt.value);
       |}
       |
