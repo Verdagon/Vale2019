@@ -327,8 +327,6 @@ trait CitizenRef2 extends Kind {
 
 // These should only be made by struct templar, which puts the definition into temputs at the same time
 case class StructRef2(fullName: FullName2[ICitizenName2]) extends CitizenRef2 {
-  println("hi")
-
   override def order: Int = 14;
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {

@@ -14,6 +14,9 @@ object NameTranslator {
         case FunctionNameA(name, codeLocation) => {
           FunctionTemplateName2(name, NameTranslator.translateCodeLocation(codeLocation))
         }
+        case ConstructorNameA(TopLevelCitizenDeclarationNameA(name, codeLocation)) => {
+          FunctionTemplateName2(name, NameTranslator.translateCodeLocation(codeLocation))
+        }
       }
   }
 
@@ -101,7 +104,7 @@ object NameTranslator {
       case AnonymousSubstructParentInterfaceRuneA() => AnonymousSubstructParentInterfaceRune2()
 //      case ImplicitRuneA(name) => ImplicitRune2(name)
 //      case MagicImplicitRuneA(magicParamIndex) => MagicImplicitRune2(magicParamIndex)
-//      case MemberRuneA(memberIndex) => MemberRune2(memberIndex)
+      case MemberRuneA(memberIndex) => MemberRune2(memberIndex)
       case ReturnRuneA() => ReturnRune2()
       case _ => vimpl(name.toString)
     }
@@ -130,6 +133,7 @@ object NameTranslator {
       case MemberRuneA(memberIndex) => MemberRune2(memberIndex)
       case ReturnRuneA() => ReturnRune2()
       case AnonymousSubstructParentInterfaceRuneA() => AnonymousSubstructParentInterfaceRune2()
+      case ExplicitTemplateArgRuneA(index) => ExplicitTemplateArgRune2(index)
       case _ => vimpl()
     }
   }

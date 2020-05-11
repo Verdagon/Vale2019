@@ -1,12 +1,13 @@
 package net.verdagon.vale.templar.function
 
+import net.verdagon.vale.astronomer.GlobalFunctionFamilyNameA
 import net.verdagon.vale.templar.OverloadTemplar.{ScoutExpectedFunctionFailure, ScoutExpectedFunctionSuccess}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.citizen.StructTemplar
 import net.verdagon.vale.templar.env.IEnvironment
-import net.verdagon.vale.{vassert, vfail, vimpl}
+import net.verdagon.vale.{vassert, vcurious, vfail, vimpl}
 
 import scala.collection.immutable.List
 
@@ -110,8 +111,13 @@ object VirtualTemplar {
             }
           })
 
+        val nameToScoutFor =
+          sparkHeader.fullName.last match {
+            case FunctionName2(humanName, _, _) => GlobalFunctionFamilyNameA(humanName)
+            case _ => vcurious()
+          }
         OverloadTemplar.scoutExpectedFunctionForPrototype(
-          env, temputs, vimpl(/*sparkHeader.fullName.last.humanName*/), List(), needleSuperFunctionParamFilters, true) match {
+          env, temputs, nameToScoutFor, List(), needleSuperFunctionParamFilters, true) match {
           case (ScoutExpectedFunctionSuccess(_)) => {
             // Throw away the prototype, we just want it to be in the temputs.
 

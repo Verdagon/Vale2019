@@ -1,6 +1,6 @@
 package net.verdagon.vale.templar.function
 
-import net.verdagon.vale.astronomer.{CodeBodyA, ConstructorNameA, FunctionA, FunctionNameA, IFunctionDeclarationNameA, LambdaNameA}
+import net.verdagon.vale.astronomer.{CodeBodyA, ConstructorNameA, FunctionA, FunctionNameA, IFunctionDeclarationNameA, LambdaNameA, TopLevelCitizenDeclarationNameA}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.scout.CodeBody1
@@ -218,6 +218,7 @@ object FunctionTemplarEnvLayer {
       functionNameA match {
         case FunctionNameA(humanName, codeLocationS) => FunctionName2(humanName, List(), List())
         case LambdaNameA(codeLocation) => FunctionName2(CallTemplar.CALL_FUNCTION_NAME, List(), List())
+        case ConstructorNameA(TopLevelCitizenDeclarationNameA(name, codeLocation)) => FunctionName2(name, List(), List())
         case _ => vimpl()
       }
   }

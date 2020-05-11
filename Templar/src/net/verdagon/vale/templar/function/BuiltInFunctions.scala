@@ -192,7 +192,8 @@ object BuiltInFunctions {
           Map(
             CodeRuneA("T") -> CoordTemplataType,
             CodeRuneA("I") -> KindTemplataType,
-            CodeRuneA("V") -> CoordTemplataType),
+            CodeRuneA("V") -> CoordTemplataType,
+            ImplicitRuneA(0) -> KindTemplataType),
           List(
             ParameterA(AtomAP(CaptureA(CodeVarNameA("this"), FinalP), Some(OverrideAP(CodeRuneA("I"))), CodeRuneA("T"), None))),
           Some(CodeRuneA("V")),

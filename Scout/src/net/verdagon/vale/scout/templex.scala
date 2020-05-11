@@ -61,6 +61,8 @@ case class ImplicitRuneS(name: Int) extends IRuneS
 case class MagicParamRuneS(codeLocationS: CodeLocationS) extends IRuneS
 case class MemberRuneS(memberIndex: Int) extends IRuneS
 case class ReturnRuneS() extends IRuneS
+// These are only made by the templar
+case class ExplicitTemplateArgRuneS(index: Int) extends IRuneS
 
 sealed trait IImpreciseNameStepS
 case class CodeTypeNameS(name: String) extends IImpreciseNameStepS

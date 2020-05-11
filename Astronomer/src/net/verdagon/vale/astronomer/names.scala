@@ -49,8 +49,9 @@ case class ImplicitRuneA(name: Int) extends IRuneA
 case class MemberRuneA(memberIndex: Int) extends IRuneA
 case class MagicImplicitRuneA(codeLocationS: CodeLocationS) extends IRuneA
 case class ReturnRuneA() extends IRuneA
-// Only made by templar, see if we can take this out
+// Only made by templar, see if we can take these out
 case class AnonymousSubstructParentInterfaceRuneA() extends IRuneA
+case class ExplicitTemplateArgRuneA(index: Int) extends IRuneA
 
 sealed trait IImpreciseNameStepA
 case class CodeTypeNameA(name: String) extends IImpreciseNameStepA

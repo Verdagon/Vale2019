@@ -48,6 +48,9 @@ class InfererEvaluator[Env, State](
   equator: InfererEquator[Env, State],
   delegate: IInfererEvaluatorDelegate[Env, State]) {
 
+  // typeByRune only contains stuff that we need to solve.
+  // If it's a rune thats already figured out and in the environment, dont
+  // include it in typeByRune.
   private[infer] def solve(
     env: Env,
     state: State,
@@ -502,7 +505,9 @@ class InfererEvaluator[Env, State](
           case k @ KindTemplata(InterfaceRef2(_)) => {
             (InferEvaluateSuccess(k, deeplySatisfied))
           }
-          case _ => return (InferEvaluateConflict(inferences.inferences, "passThroughIfInterface expected interface kind, but got " + templata, List()))
+          case _ => {
+            return (InferEvaluateConflict(inferences.inferences, "passThroughIfInterface expected interface kind, but got " + templata, List()))
+          }
         }
       }
       case "passThroughIfStruct" => {
@@ -524,10 +529,12 @@ class InfererEvaluator[Env, State](
           }
         val List(templata) = argTemplatas
         templata match {
-          case k @ KindTemplata(InterfaceRef2(_)) => {
+          case k @ KindTemplata(StructRef2(_)) => {
             (InferEvaluateSuccess(k, deeplySatisfied))
           }
-          case _ => return (InferEvaluateConflict(inferences.inferences, "passThroughIfInterface expected interface kind, but got " + templata, List()))
+          case _ => {
+            return (InferEvaluateConflict(inferences.inferences, "passThroughIfStruct expected struct kind, but got " + templata, List()))
+          }
         }
       }
       case _ => vfail("Unknown function \"" + name + "\"!");

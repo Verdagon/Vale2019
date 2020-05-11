@@ -32,7 +32,10 @@ case class Environment(
     absoluteName: INameS,
     needleImpreciseNameS: IImpreciseNameStepS):
   Boolean = {
-    vimpl()
+    (absoluteName, needleImpreciseNameS) match {
+      case (TopLevelCitizenDeclarationNameS(humanNameA, _), CodeTypeNameS(humanNameB)) => humanNameA == humanNameB
+      case _ => vimpl()
+    }
 
 //    val envNameSteps = maybeName.map(_.steps).getOrElse(List())
 //
@@ -550,6 +553,7 @@ object Astronomer {
       case MagicParamRuneS(magicParamIndex) => MagicImplicitRuneA(magicParamIndex)
       case MemberRuneS(memberIndex) => MemberRuneA(memberIndex)
       case ReturnRuneS() => ReturnRuneA()
+      case ExplicitTemplateArgRuneS(index) => ExplicitTemplateArgRuneA(index)
     }
   }
 

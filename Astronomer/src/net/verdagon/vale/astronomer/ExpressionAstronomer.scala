@@ -103,7 +103,7 @@ object ExpressionAstronomer {
       case FloatLiteralSE(value) => FloatLiteralAE(value)
       case FunctionSE(functionS) => {
         val functionA = Astronomer.translateFunction(astrouts, env, functionS)
-        val lambdaName = functionA.name match { case n @ LambdaNameA(_, _) => n }
+        val lambdaName = functionA.name match { case n @ LambdaNameA(_) => n }
         FunctionAE(lambdaName, functionA)
       }
       case DotSE(leftS, member, borrowContainer) => {

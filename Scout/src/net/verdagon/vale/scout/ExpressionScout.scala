@@ -111,7 +111,12 @@ object ExpressionScout {
         (declarations, lookup, noVariableUses, noVariableUses)
       }
       case LookupPE(templateName, templateArgs) => {
-        (noDeclarations, NormalResult(TemplateSpecifiedLookupSE(templateName, templateArgs.map(TemplexScout.translateTemplex(Set(), _)))), noVariableUses, noVariableUses)
+        val result =
+          NormalResult(
+            TemplateSpecifiedLookupSE(
+              templateName,
+              templateArgs.map(TemplexScout.translateTemplex(stackFrame.parentEnv.allUserDeclaredRunes(), _))))
+        (noDeclarations, result, noVariableUses, noVariableUses)
       }
       case FunctionCallPE(callablePE, argsPackPE, borrowCallable) => {
         if (borrowCallable != true) {

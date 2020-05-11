@@ -71,14 +71,19 @@ object StructTemplarCore {
     implementedInterfaceRefs2.foreach({
       case (implementedInterfaceRef2) => {
         val ownership = if (structDef2.mutability == Mutable) Own else Share
-        val (ScoutExpectedFunctionSuccess(_)) =
-          OverloadTemplar.scoutExpectedFunctionForPrototype(
-            structInnerEnv,
-            temputs,
-            GlobalFunctionFamilyNameA(CallTemplar.INTERFACE_DESTRUCTOR_NAME),
-            List(),
-            List(ParamFilter(Coord(ownership, structDef2.getRef), Some(Override2(implementedInterfaceRef2)))),
-            true)
+        OverloadTemplar.scoutExpectedFunctionForPrototype(
+          structInnerEnv,
+          temputs,
+          GlobalFunctionFamilyNameA(CallTemplar.INTERFACE_DESTRUCTOR_NAME),
+          List(),
+          List(ParamFilter(Coord(ownership, structDef2.getRef), Some(Override2(implementedInterfaceRef2)))),
+          true) match {
+          case ScoutExpectedFunctionSuccess(_) =>
+          case sf @ ScoutExpectedFunctionFailure(humanName, args, outscoredReasonByPotentialBanner, rejectedReasonByBanner, rejectedReasonByFunction) => {
+            val derp = sf
+            vfail(derp.toString)
+          }
+        }
       }
     })
 

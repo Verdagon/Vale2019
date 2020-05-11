@@ -5,7 +5,7 @@ import net.verdagon.vale.astronomer.ruletyper.{IRuleTyperEvaluatorDelegate, Rule
 import net.verdagon.vale.scout.rules.{EqualsSR, TemplexSR, TypedSR}
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata.{IPotentialBanner, _}
-import net.verdagon.vale.scout.{CodeRuneS, CodeTypeNameS, INameS, ITemplexS}
+import net.verdagon.vale.scout.{CodeRuneS, CodeTypeNameS, ExplicitTemplateArgRuneS, INameS, ITemplexS}
 import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.function.FunctionTemplar
 import net.verdagon.vale.templar.function.FunctionTemplar.{EvaluateFunctionFailure, EvaluateFunctionSuccess, IEvaluateFunctionResult}
@@ -233,32 +233,50 @@ object OverloadTemplar {
 
                       // There might be less explicitly specified template args than there are types, and that's
                       // fine. Hopefully the rest will be figured out by the rule evaluator.
-                      val runeNamesS = explicitlySpecifiedTemplateArgTemplexesS.indices.toList.map(i => CodeRuneS(i.toString))
+                      val templateArgRuneNamesS = explicitlySpecifiedTemplateArgTemplexesS.indices.toList.map(ExplicitTemplateArgRuneS)
                       val equalsRules =
-                        explicitlySpecifiedTemplateArgTemplexesS.zip(identifyingRuneTemplataTypes).zip(runeNamesS).map({
-                          case ((explicitlySpecifiedTemplateArgTemplexS, identifyingRuneTemplataType), runeName) => {
+                        explicitlySpecifiedTemplateArgTemplexesS.zip(identifyingRuneTemplataTypes).zip(templateArgRuneNamesS).map({
+                          case ((explicitlySpecifiedTemplateArgTemplexS, identifyingRuneTemplataType), templateArgRuneNames) => {
                             EqualsSR(
-                              TypedSR(runeName, Conversions.unevaluateTemplataType(identifyingRuneTemplataType)),
+                              TypedSR(templateArgRuneNames, Conversions.unevaluateTemplataType(identifyingRuneTemplataType)),
                               TemplexSR(explicitlySpecifiedTemplateArgTemplexS))
                           }
                         })
-                      val runeNamesA = runeNamesS.map(Astronomer.translateRune)
-                      val runeNames2 = runeNamesA.map(NameTranslator.translateRune)
+                      val templateArgRuneNamesA = templateArgRuneNamesS.map(Astronomer.translateRune)
+                      val templateArgRuneNames2 = templateArgRuneNamesA.map(NameTranslator.translateRune)
 
                       // And now that we know the types that are expected of these template arguments, we can
                       // run these template argument templexes through the solver so it can evaluate them in
                       // context of the current environment and spit out some templatas.
-                      ruleTyper.solve(temputs, env, equalsRules, List(), Some(runeNamesA.toSet)) match {
+                      ruleTyper.solve(temputs, env, equalsRules, List(), Some(templateArgRuneNamesA.toSet)) match {
                         case (_, rtsf @ RuleTyperSolveFailure(_, _, _)) => (List(), Map(), Map(function -> ("Specified template args don't match expected types!\nExpected types: (" + identifyingRuneTemplataTypes.mkString(",") + ")\nSpecified template args: " + explicitlySpecifiedTemplateArgTemplexesS + "\nCause: " + rtsf.toString)))
                         case (runeTypeConclusions, RuleTyperSolveSuccess(rulesA)) => {
                           // rulesA is the equals rules, but rule typed. Now we'll run them through the solver to get
                           // some actual templatas.
+//
+//                          val explicitTemplatas = TemplataTemplar.evaluateTemplexes(env, temputs, explicitlySpecifiedTemplateArgTemplexesS)
 
+                          // typeByRune should contain only the things we want to solve for. For example in
+                          //   doThing<T>(4, 5)
+                          // we don't need to solve for T, even though we just figured out that e.g. that
+                          // TemplexS("T") is a TemplexA("T", KindTemplata).
+                          // T is already in the environment.
+                          // So, we shouldn't include it in typeByRune.
+                          // We do want to figure out these template arg runes though.
+                          val typeByRuneToSolve =
+                              templateArgRuneNamesA
+                                 .zip(templateArgRuneNamesA.map(runeTypeConclusions.typeByRune))
+                                  .toMap
+
+                          // We only want to solve the template arg runes
+                          println("bworp " + functionName)
                           InferTemplar.inferFromExplicitTemplateArgs(
-                              env, temputs, List(), rulesA, runeTypeConclusions.typeByRune, List(), None, List()) match {
-                            case (isf @ InferSolveFailure(_, _, _, _, _, _)) => (List(), Map(), Map(function -> ("Couldn't evaluate template args: " + isf.toString)))
+                              env, temputs, List(), rulesA, typeByRuneToSolve, List(), None, List()) match {
+                            case (isf @ InferSolveFailure(_, _, _, _, _, _)) => {
+                              (List(), Map(), Map(function -> ("Couldn't evaluate template args: " + isf.toString)))
+                            }
                             case (InferSolveSuccess(inferences)) => {
-                              val explicitlySpecifiedTemplateArgTemplatas = runeNames2.map(inferences.templatasByRune)
+                              val explicitlySpecifiedTemplateArgTemplatas = templateArgRuneNames2.map(inferences.templatasByRune)
 
                               FunctionTemplar.evaluateTemplatedFunctionFromCallForBanner(
                                 temputs, ft, explicitlySpecifiedTemplateArgTemplatas, paramFilters) match {

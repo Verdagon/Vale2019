@@ -719,6 +719,27 @@ case class CompleteProgram2(
     matches.head
   }
 
+  def nameIsLambdaIn(name: FullName2[IFunctionName2], needleFunctionHumanName: String): Boolean = {
+    val lastThree = name.steps.slice(name.steps.size - 3, name.steps.size)
+    lastThree match {
+      case List(
+      FunctionName2(functionHumanName, _, _),
+      LambdaCitizenName2(_),
+      FunctionName2("__call", _, _)) if functionHumanName == needleFunctionHumanName => true
+      case _ => false
+    }
+  }
+
+  def lookupLambdaIn(needleFunctionHumanName: String): Function2 = {
+    val matches = functions.filter(f => nameIsLambdaIn(f.header.fullName, needleFunctionHumanName))
+    if (matches.size == 0) {
+      vfail("Lambda for \"" + needleFunctionHumanName + "\" not found!")
+    } else if (matches.size > 1) {
+      vfail("Multiple found!")
+    }
+    matches.head
+  }
+
   def lookupFunction(signature2: Signature2): Option[Function2] = {
     functions.find(_.header.toSignature == signature2).headOption
   }

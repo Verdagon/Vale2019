@@ -124,10 +124,10 @@ class TemplarTests extends FunSuite with Matchers {
     val temputs = compile.getTemputs()
 
     // Make sure it inferred the param type and return type correctly
-    temputs.lookupFunction("main:lam1")
+    temputs.lookupLambdaIn("main")
         .only({ case Parameter2(_, None, Coord(Share, Int2())) => })
 
-    temputs.lookupFunction("main:lam1").header.returnType shouldEqual
+    temputs.lookupLambdaIn("main").header.returnType shouldEqual
         Coord(Share, Int2())
   }
 
@@ -137,15 +137,15 @@ class TemplarTests extends FunSuite with Matchers {
     val compile = new Compilation("fn main(){(a Int){+(a,a)}(3)}");
     val temputs = compile.getTemputs()
 
-    val lambda = temputs.lookupFunction("main:lam1");
+    val lambda = temputs.lookupLambdaIn("main");
 
     // Check that the param type is right
     lambda.only({ case Parameter2(CodeVarName2("a"), None, Coord(Share, Int2())) => {} })
     // Check the name is right
-    lambda.header match { case functionName("main:lam1") => }
+    vassert(temputs.nameIsLambdaIn(lambda.header.fullName, "main"))
 
     val main = temputs.lookupFunction("main");
-    main.only({ case FunctionCall2(functionName("main:lam1"), _) => })
+    main.only({ case FunctionCall2(callee, _) if temputs.nameIsLambdaIn(callee.fullName, "main") => })
   }
 
   test("Test overloads") {

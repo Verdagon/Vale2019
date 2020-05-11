@@ -275,6 +275,7 @@ object EnvironmentUtils {
       case AnonymousSubstructImplName2() =>
       case SolverKindRune2(_) =>
       case ImplDeclareName2(_) =>
+      case MemberRune2(_) =>
       case _ => vimpl()
     }
     (nameA, name2) match {

@@ -50,7 +50,7 @@ object FunctionTemplarMiddleLayer {
       case None => (None)
       case Some(AbstractAP) => (Some(Abstract2))
       case Some(OverrideAP(interfaceRune)) => {
-        env.getNearestTemplataWithName(vimpl(interfaceRune.toString), Set(TemplataLookupContext)) match {
+        env.getNearestTemplataWithAbsoluteNameA(interfaceRune, Set(TemplataLookupContext)) match {
           case None => vcurious()
           case Some(KindTemplata(ir @ InterfaceRef2(_))) => (Some(Override2(ir)))
           case Some(it @ InterfaceTemplata(_, _)) => {
