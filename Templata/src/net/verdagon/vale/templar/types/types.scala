@@ -292,14 +292,14 @@ case class StructDefinition2(
     }
   }
 
-  private def getIndex(memberName: String): Int = {
+  private def getIndex(memberName: IVarName2): Int = {
     members.zipWithIndex.find(p => p._1.name.equals(memberName)) match {
       case None => vfail("wat")
       case Some((member, index)) => index
     }
   }
 
-  def getMemberAndIndex(memberName: String): (StructMember2, Int) = {
+  def getMemberAndIndex(memberName: IVarName2): (StructMember2, Int) = {
     members.zipWithIndex.find(p => p._1.name.equals(memberName)) match {
       case None => vfail("wat")
       case Some((member, index)) => (member, index)
@@ -385,8 +385,6 @@ case class InterfaceRef2(
   fullName: FullName2[ICitizenName2]
 ) extends CitizenRef2 with Queriable2 {
   override def order: Int = 15;
-
-  vassert(fullName.last.templateArgs.nonEmpty)
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func) ++ fullName.all(func)

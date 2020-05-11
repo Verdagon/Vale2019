@@ -481,6 +481,7 @@ object ExpressionTemplar {
         (exprTemplata, returnsFromContainerExpr ++ returnsFromIndexExpr)
       }
       case DotAE(containerExpr1, memberNameStr, borrowContainer) => {
+        var memberName = CodeVarName2(memberNameStr)
         val (unborrowedContainerExpr2, returnsFromContainerExpr) =
           evaluate(temputs, fate, containerExpr1);
         val containerExpr2 =
@@ -491,12 +492,12 @@ object ExpressionTemplar {
             case structRef @ StructRef2(_) => {
               temputs.lookupStruct(structRef) match {
                 case structDef : StructDefinition2 => {
-                  val (structMember, memberIndex) = structDef.getMemberAndIndex(memberNameStr)
-                  val memberName = structDef.fullName.addStep(structDef.members(memberIndex).name)
+                  val (structMember, memberIndex) = structDef.getMemberAndIndex(memberName)
+                  val memberFullName = structDef.fullName.addStep(structDef.members(memberIndex).name)
                   val memberType = structMember.tyype.expectReferenceMember().reference;
                   ReferenceMemberLookup2(
                     containerExpr2,
-                    memberName,
+                    memberFullName,
                     memberType)
                 }
               }
@@ -504,10 +505,10 @@ object ExpressionTemplar {
             case TupleT2(_, structRef) => {
               temputs.lookupStruct(structRef) match {
                 case structDef @ StructDefinition2(_, _, _, _) => {
-                  val (structMember, memberIndex) = structDef.getMemberAndIndex(memberNameStr)
-                  val memberName = structDef.fullName.addStep(structDef.members(memberIndex).name)
+                  val (structMember, memberIndex) = structDef.getMemberAndIndex(memberName)
+                  val memberFullName = structDef.fullName.addStep(structDef.members(memberIndex).name)
                   val memberType = structMember.tyype.expectReferenceMember().reference;
-                  ReferenceMemberLookup2(containerExpr2, memberName, memberType)
+                  ReferenceMemberLookup2(containerExpr2, memberFullName, memberType)
                 }
               }
             }
