@@ -180,11 +180,33 @@ object EnvironmentUtils {
       oldEntries: Map[IName2, List[IEnvEntry]],
       newEntries: Map[IName2, List[IEnvEntry]]):
   Map[IName2, List[IEnvEntry]] = {
-    oldEntries ++
-      newEntries ++
-      oldEntries.keySet.intersect(newEntries.keySet)
-        .map(key => (key -> (oldEntries(key) ++ newEntries(key))))
-        .toMap
+    val combinedEntries =
+      oldEntries ++
+        newEntries ++
+        oldEntries.keySet.intersect(newEntries.keySet)
+          .map(key => (key -> (oldEntries(key) ++ newEntries(key))))
+          .toMap
+
+    newEntries.keys.foreach(newEntryName => {
+      val entriesWithThisName = combinedEntries(newEntryName)
+      val (unflattenedNumTemplatas, unflattenedNumNonTemplatas) =
+        entriesWithThisName
+          .map({
+            case tee @ TemplataEnvEntry(_) => (1, 0)
+            case other => (0, 1)
+          })
+          .unzip
+      val numTemplatas = unflattenedNumTemplatas.sum
+      val numNonTemplatas = unflattenedNumNonTemplatas.sum
+      // Itd be weird to have two templatas directly in this env, there would be
+      // no way to distinguish them.
+      vassert(numTemplatas <= 1)
+      // We dont want both a templata and a non templata directly in this env,
+      // the templata would always take precedence.
+      vassert(numTemplatas == 0 || numNonTemplatas == 0)
+    })
+
+    combinedEntries
   }
 
   def addEntry(
@@ -275,6 +297,7 @@ object EnvironmentUtils {
       case AnonymousSubstructImplName2() =>
       case SolverKindRune2(_) =>
       case ImplDeclareName2(_) =>
+      case LetImplicitRune2(_, _) =>
       case MemberRune2(_) =>
       case _ => vimpl()
     }

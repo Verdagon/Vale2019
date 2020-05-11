@@ -673,6 +673,9 @@ case class CompleteProgram2(
   def lookupStruct(structRef: StructRef2): StructDefinition2 = {
     structs.find(_.getRef == structRef).get
   }
+  def lookupImpl(structRef: StructRef2, interfaceRef: InterfaceRef2): Impl2 = {
+    impls.find(impl => impl.struct == structRef && impl.interface == interfaceRef).get
+  }
 
   def lookupInterface(interfaceRef: InterfaceRef2): InterfaceDefinition2 = {
     interfaces.find(_.getRef == interfaceRef).get

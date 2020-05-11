@@ -102,6 +102,7 @@ object NameTranslator {
       case CodeRuneA(name) => CodeRune2(name)
       case MagicImplicitRuneA(codeLocationS) => MagicImplicitRune2(NameTranslator.translateCodeLocation(codeLocationS))
       case AnonymousSubstructParentInterfaceRuneA() => AnonymousSubstructParentInterfaceRune2()
+      case LetImplicitRuneA(codeLocation, name) => LetImplicitRune2(translateCodeLocation(codeLocation), name)
 //      case ImplicitRuneA(name) => ImplicitRune2(name)
 //      case MagicImplicitRuneA(magicParamIndex) => MagicImplicitRune2(magicParamIndex)
       case MemberRuneA(memberIndex) => MemberRune2(memberIndex)
@@ -129,6 +130,7 @@ object NameTranslator {
     rune match {
       case CodeRuneA(name) => CodeRune2(name)
       case ImplicitRuneA(name) => ImplicitRune2(name)
+      case LetImplicitRuneA(codeLocation, name) => LetImplicitRune2(translateCodeLocation(codeLocation), name)
       case MagicImplicitRuneA(codeLocation) => MagicImplicitRune2(translateCodeLocation(codeLocation))
       case MemberRuneA(memberIndex) => MemberRune2(memberIndex)
       case ReturnRuneA() => ReturnRune2()

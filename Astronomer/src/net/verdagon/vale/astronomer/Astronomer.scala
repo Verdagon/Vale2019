@@ -550,6 +550,7 @@ object Astronomer {
     rune match {
       case CodeRuneS(name) => CodeRuneA(name)
       case ImplicitRuneS(name) => ImplicitRuneA(name)
+      case LetImplicitRuneS(codeLocation, name) => LetImplicitRuneA(codeLocation, name)
       case MagicParamRuneS(magicParamIndex) => MagicImplicitRuneA(magicParamIndex)
       case MemberRuneS(memberIndex) => MemberRuneA(memberIndex)
       case ReturnRuneS() => ReturnRuneA()

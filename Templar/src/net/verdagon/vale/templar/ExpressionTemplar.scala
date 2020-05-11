@@ -622,6 +622,7 @@ object ExpressionTemplar {
         val (sourceExpr2, returnsFromSource) =
           evaluateAndCoerceToReferenceExpression(temputs, fate, sourceExpr1)
 
+        val fateSnapshot = fate.snapshot
         val lets2 =
           PatternTemplar.nonCheckingInferAndTranslate(
             temputs, fate, rulesA, typeByRune, pattern, sourceExpr2)

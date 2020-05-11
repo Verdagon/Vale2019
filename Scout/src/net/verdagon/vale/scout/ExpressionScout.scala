@@ -3,7 +3,7 @@ package net.verdagon.vale.scout
 import net.verdagon.vale.parser._
 import net.verdagon.vale.{scout, vfail, vimpl, vwat}
 import net.verdagon.vale.scout.Scout.{noDeclarations, noVariableUses}
-import net.verdagon.vale.scout.patterns.{PatternScout, RuleState, RuleStateBox}
+import net.verdagon.vale.scout.patterns.{LetRuleState, PatternScout, RuleState, RuleStateBox}
 import net.verdagon.vale.scout.rules.RuleScout
 import net.verdagon.vale.scout.templatepredictor.PredictorEvaluator
 
@@ -180,7 +180,7 @@ object ExpressionScout {
 
         val letFullName = LetNameS(codeLocation)
 
-        val ruleState = RuleStateBox(RuleState(letFullName, 0))
+        val ruleState = RuleStateBox(LetRuleState(letFullName, codeLocation, 0))
         val userRulesS =
           RuleScout.translateRulexes(
             ruleState, stackFrame.parentEnv.allUserDeclaredRunes(), rulesP)

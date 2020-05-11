@@ -58,6 +58,7 @@ case class CodeVarNameS(name: String) extends IVarNameS
 sealed trait IRuneS
 case class CodeRuneS(name: String) extends IRuneS
 case class ImplicitRuneS(name: Int) extends IRuneS
+case class LetImplicitRuneS(codeLocationS: CodeLocationS, name: Int) extends IRuneS
 case class MagicParamRuneS(codeLocationS: CodeLocationS) extends IRuneS
 case class MemberRuneS(memberIndex: Int) extends IRuneS
 case class ReturnRuneS() extends IRuneS

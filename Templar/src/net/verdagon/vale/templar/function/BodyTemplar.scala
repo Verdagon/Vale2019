@@ -61,6 +61,7 @@ object BodyTemplar {
 
         funcOuterEnv.setReturnType(Some(expectedRetCoord))
 
+        val funcOuterEnvSnapshot = funcOuterEnv.snapshot
         val (unconvertedBody2, returnsFromRets) =
           evaluateFunctionBody(
             funcOuterEnv,

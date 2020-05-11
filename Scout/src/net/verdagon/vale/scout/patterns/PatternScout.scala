@@ -7,20 +7,34 @@ import net.verdagon.vale.{vassert, vassertSome, vfail}
 
 import scala.collection.immutable.List
 
-// Sometimes referred to as a "rate"
-case class RuleState(
-  envFullName: INameS,
-  nextImplicitRune: Int) {
-  def newImplicitRune(): (RuleState, IRuneS) = {
-    (RuleState(envFullName, nextImplicitRune + 1), ImplicitRuneS(nextImplicitRune))
-  }
-}
-
-case class RuleStateBox(var rate: RuleState) {
+case class RuleStateBox(var rate: IRuleState) {
   def newImplicitRune(): IRuneS = {
     val (newRate, rune) = rate.newImplicitRune()
     rate = newRate
     rune
+  }
+}
+
+sealed trait IRuleState {
+  def newImplicitRune(): (IRuleState, IRuneS)
+}
+
+// Sometimes referred to as a "rate"
+case class RuleState(
+    envFullName: INameS,
+    nextImplicitRune: Int) extends IRuleState {
+  def newImplicitRune(): (RuleState, IRuneS) = {
+    (RuleState(envFullName, nextImplicitRune + 1), ImplicitRuneS(nextImplicitRune))
+  }
+}
+case class LetRuleState(
+    envFullName: INameS,
+    letCodeLocation: CodeLocationS,
+    nextImplicitRune: Int) extends IRuleState {
+  def newImplicitRune(): (LetRuleState, IRuneS) = {
+    (
+      LetRuleState(envFullName, letCodeLocation, nextImplicitRune + 1),
+      LetImplicitRuneS(letCodeLocation, nextImplicitRune))
   }
 }
 
