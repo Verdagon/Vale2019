@@ -58,6 +58,7 @@ object CallTemplar {
               functionName,
               explicitlySpecifiedTemplateArgTemplexesS,
               argsParamFilters,
+              List(),
               exact = false) match {
             case (seff @ ScoutExpectedFunctionFailure(_, _, _, _, _)) => {
               vfail("Couldn't find function to call!\n" + seff.toString)
@@ -120,6 +121,7 @@ object CallTemplar {
         functionName,
         explicitlySpecifiedTemplateArgTemplexesS,
         argsParamFilters,
+        List(),
         exact = false) match {
         case (seff @ ScoutExpectedFunctionFailure(_, _, _, _, _)) => {
           vfail("Couldn't find function to call!\n" + seff.toString)
@@ -173,7 +175,7 @@ object CallTemplar {
         argsTypes2.map(argType => ParamFilter(argType, None))
     val (maybePrototype, outscoredReasonByPotentialBanner, rejectedReasonByBanner, rejectedReasonByFunctionS) =
       OverloadTemplar.scoutMaybeFunctionForPrototype(
-        env, temputs, GlobalFunctionFamilyNameA(CallTemplar.CALL_FUNCTION_NAME), explicitlySpecifiedTemplateArgTemplexesS, paramFilters, false)
+        env, temputs, GlobalFunctionFamilyNameA(CallTemplar.CALL_FUNCTION_NAME), explicitlySpecifiedTemplateArgTemplexesS, paramFilters, List(), false)
     val prototype2 =
       maybePrototype match {
         case None => {

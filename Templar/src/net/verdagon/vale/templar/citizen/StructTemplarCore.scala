@@ -77,6 +77,7 @@ object StructTemplarCore {
           GlobalFunctionFamilyNameA(CallTemplar.INTERFACE_DESTRUCTOR_NAME),
           List(),
           List(ParamFilter(Coord(ownership, structDef2.getRef), Some(Override2(implementedInterfaceRef2)))),
+          List(),
           true) match {
           case ScoutExpectedFunctionSuccess(_) =>
           case sf @ ScoutExpectedFunctionFailure(humanName, args, outscoredReasonByPotentialBanner, rejectedReasonByBanner, rejectedReasonByFunction) => {
@@ -114,13 +115,25 @@ object StructTemplarCore {
     val fullName = interfaceRunesEnv.fullName.addStep(CitizenName2(humanName, coercedFinalTemplateArgs2))
     val temporaryInferfaceRef = InterfaceRef2(fullName)
 
-    val interfaceInnerEnv =
+    val interfaceInnerEnv0 =
       NamespaceEnvironment(
         Some(interfaceRunesEnv),
         fullName,
+        Map())
+    val interfaceInnerEnv1 =
+      interfaceInnerEnv0.addEntries(
         interfaceA.identifyingRunes.zip(coercedFinalTemplateArgs2)
           .map({ case (rune, templata) => (NameTranslator.translateRune(rune), List(TemplataEnvEntry(templata))) })
           .toMap)
+    val interfaceInnerEnv2 =
+      interfaceInnerEnv1.addEntries(
+        interfaceA.internalMethods
+          .map(internalMethod => {
+            val functionName = NameTranslator.translateFunctionNameToTemplateName(internalMethod.name)
+            (functionName -> List(FunctionEnvEntry(internalMethod)))
+          })
+          .toMap[IName2, List[IEnvEntry]])
+    val interfaceInnerEnv = interfaceInnerEnv2
 
     temputs
       .declareInterfaceEnv(
@@ -411,6 +424,7 @@ object StructTemplarCore {
           GlobalFunctionFamilyNameA(CallTemplar.CALL_FUNCTION_NAME),
           List(),
           forwardedCallArgs,
+          List(),
           true) match {
             case seff @ ScoutExpectedFunctionFailure(_, _, _, _, _) => vfail(seff.toString)
             case ScoutExpectedFunctionSuccess(prototype) => prototype

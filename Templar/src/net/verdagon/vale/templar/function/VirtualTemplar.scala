@@ -116,12 +116,13 @@ object VirtualTemplar {
             case FunctionName2(humanName, _, _) => GlobalFunctionFamilyNameA(humanName)
             case _ => vcurious()
           }
-//        start here
-//          // make overloadtemplar take in a list of envs to look for
-//          // and maybe provide a helper for assembling them, see MLIOET.
+
+        // See MLIOET
+        val superInterfaceEnv = temputs.envByInterfaceRef(superInterfaceRef2)
+        val extraEnvsToLookIn = List(superInterfaceEnv)
 
         OverloadTemplar.scoutExpectedFunctionForPrototype(
-          env, temputs, nameToScoutFor, List(), needleSuperFunctionParamFilters, true) match {
+          env, temputs, nameToScoutFor, List(), needleSuperFunctionParamFilters, extraEnvsToLookIn, true) match {
           case (ScoutExpectedFunctionSuccess(_)) => {
             // Throw away the prototype, we just want it to be in the temputs.
 

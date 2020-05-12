@@ -69,7 +69,7 @@ object Printing {
                       List(
                         LocalLoadAE(CodeVarNameA("line"), false))))))))))))
 
-  val printIntName = FunctionNameA("println", CodeLocationS(0, 0))
+  val printIntName = FunctionNameA("print", CodeLocationS(0, 0))
   val printInt =
     FunctionA(
       printIntName,

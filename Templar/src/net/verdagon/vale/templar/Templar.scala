@@ -205,6 +205,7 @@ object Templar {
               neededOverride.name,
               List(), // No explicitly specified ones. It has to be findable just by param filters.
               neededOverride.paramFilters,
+              List(),
               true) match {
             case (seff @ ScoutExpectedFunctionFailure(_, _, _, _, _)) => {
               vfail("Couldn't find function for vtable!\n" + seff.toString)

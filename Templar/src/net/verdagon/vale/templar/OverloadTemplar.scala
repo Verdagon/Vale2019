@@ -22,6 +22,7 @@ object OverloadTemplar {
       functionName: GlobalFunctionFamilyNameA,
       explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
       args: List[ParamFilter],
+    extraEnvsToLookIn: List[IEnvironment],
       exact: Boolean):
   (
     Option[Prototype2],
@@ -34,7 +35,7 @@ object OverloadTemplar {
   ) = {
     val (maybePotentialBanner, outscoredReasonByPotentialBanner, rejectedReasonByBanner, rejectedReasonByFunction) =
       scoutPotentialFunction(
-        env, temputs, functionName, explicitlySpecifiedTemplateArgTemplexesS, args, exact)
+        env, temputs, functionName, explicitlySpecifiedTemplateArgTemplexesS, args, extraEnvsToLookIn, exact)
     maybePotentialBanner match {
       case None => {
         (None, outscoredReasonByPotentialBanner, rejectedReasonByBanner, rejectedReasonByFunction)
@@ -79,11 +80,12 @@ object OverloadTemplar {
     functionName: GlobalFunctionFamilyNameA,
     explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
     args: List[ParamFilter],
+    extraEnvsToLookIn: List[IEnvironment],
     exact: Boolean):
   (IScoutExpectedFunctionResult) = {
     val (maybeFunction, outscoredReasonByPotentialBanner, rejectedReasonByBanner, rejectedReasonByFunction) =
       scoutMaybeFunctionForPrototype(
-        env, temputs, functionName, explicitlySpecifiedTemplateArgTemplexesS, args, exact)
+        env, temputs, functionName, explicitlySpecifiedTemplateArgTemplexesS, args, extraEnvsToLookIn, exact)
     maybeFunction match {
       case None => {
         (ScoutExpectedFunctionFailure(functionName, args, outscoredReasonByPotentialBanner, rejectedReasonByBanner, rejectedReasonByFunction))
@@ -157,6 +159,7 @@ object OverloadTemplar {
     functionName: GlobalFunctionFamilyNameA,
     explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
     paramFilters: List[ParamFilter],
+    extraEnvsToLookIn: List[IEnvironment],
     exact: Boolean):
   (
     Set[IPotentialBanner],
@@ -165,7 +168,7 @@ object OverloadTemplar {
     // rejection reason by function
     Map[FunctionA, String]
   ) = {
-    val hayTemplatas = findHayTemplatas(env, temputs, functionName, paramFilters)
+    val hayTemplatas = findHayTemplatas(env, temputs, functionName, paramFilters, extraEnvsToLookIn)
 
     val (allPotentialBanners, allRejectionReasonByBanner, allRejectionReasonByFunction) =
       hayTemplatas.foldLeft((Set[IPotentialBanner](), Map[FunctionBanner2, String](), Map[FunctionA, String]()))({
@@ -174,17 +177,17 @@ object OverloadTemplar {
             templata match {
               case KindTemplata(OverloadSet(overloadsEnv, nameInOverloadsEnv, _)) => {
                 getCandidateBanners(
-                  overloadsEnv, temputs, nameInOverloadsEnv, explicitlySpecifiedTemplateArgTemplexesS, paramFilters, exact)
+                  overloadsEnv, temputs, nameInOverloadsEnv, explicitlySpecifiedTemplateArgTemplexesS, paramFilters, List(), exact)
               }
               case KindTemplata(sr @ StructRef2(_)) => {
                 val structEnv = temputs.envByStructRef(sr)
                 getCandidateBanners(
-                  structEnv, temputs, GlobalFunctionFamilyNameA(CallTemplar.CALL_FUNCTION_NAME), explicitlySpecifiedTemplateArgTemplexesS, paramFilters, exact)
+                  structEnv, temputs, GlobalFunctionFamilyNameA(CallTemplar.CALL_FUNCTION_NAME), explicitlySpecifiedTemplateArgTemplexesS, paramFilters, List(), exact)
               }
               case KindTemplata(sr @ InterfaceRef2(_)) => {
                 val interfaceEnv = temputs.envByInterfaceRef(sr)
                 getCandidateBanners(
-                  interfaceEnv, temputs, GlobalFunctionFamilyNameA(CallTemplar.CALL_FUNCTION_NAME), explicitlySpecifiedTemplateArgTemplexesS, paramFilters, exact)
+                  interfaceEnv, temputs, GlobalFunctionFamilyNameA(CallTemplar.CALL_FUNCTION_NAME), explicitlySpecifiedTemplateArgTemplexesS, paramFilters, List(), exact)
               }
               case ExternFunctionTemplata(header) => {
                 paramsMatch(temputs, paramFilters, header.params, exact) match {
@@ -269,7 +272,6 @@ object OverloadTemplar {
                                   .toMap
 
                           // We only want to solve the template arg runes
-                          println("bworp " + functionName)
                           InferTemplar.inferFromExplicitTemplateArgs(
                               env, temputs, List(), rulesA, typeByRuneToSolve, List(), None, List()) match {
                             case (isf @ InferSolveFailure(_, _, _, _, _, _)) => {
@@ -363,9 +365,10 @@ object OverloadTemplar {
       env: IEnvironment,
       temputs: TemputsBox,
       impreciseName: IImpreciseNameStepA,
-      paramFilters: List[ParamFilter]):
+      paramFilters: List[ParamFilter],
+      extraEnvsToLookIn: List[IEnvironment]):
   Set[ITemplata] = {
-    val environments = env :: getParamEnvironments(temputs, paramFilters)
+    val environments = env :: getParamEnvironments(temputs, paramFilters) ++ extraEnvsToLookIn
     environments.flatMap(_.getAllTemplatasWithName(impreciseName, Set(ExpressionLookupContext))).toSet
   }
 
@@ -382,6 +385,7 @@ object OverloadTemplar {
       functionName: GlobalFunctionFamilyNameA,
       explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
       args: List[ParamFilter],
+    extraEnvsToLookIn: List[IEnvironment],
       exact: Boolean):
   (
     // Best match, if any
@@ -394,7 +398,7 @@ object OverloadTemplar {
     Map[FunctionA, String]
   ) = {
     val (candidateBanners, rejectionReasonByBanner, rejectionReasonByFunction) =
-      getCandidateBanners(env, temputs, functionName, explicitlySpecifiedTemplateArgTemplexesS, args, exact);
+      getCandidateBanners(env, temputs, functionName, explicitlySpecifiedTemplateArgTemplexesS, args, extraEnvsToLookIn, exact);
     if (candidateBanners.isEmpty) {
       (None, Map(), rejectionReasonByBanner, rejectionReasonByFunction)
     } else if (candidateBanners.size == 1) {

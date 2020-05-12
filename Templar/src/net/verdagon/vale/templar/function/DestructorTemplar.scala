@@ -24,6 +24,7 @@ object DestructorTemplar {
             GlobalFunctionFamilyNameA(CallTemplar.DESTRUCTOR_NAME),
             List(),
             List(ParamFilter(type2, None)),
+            List(),
             true)  match {
           case (seff @ ScoutExpectedFunctionFailure(_, _, _, _, _)) => {
             vfail("Couldn't find concrete destructor!\n" + seff.toString)
@@ -38,6 +39,7 @@ object DestructorTemplar {
           GlobalFunctionFamilyNameA(CallTemplar.INTERFACE_DESTRUCTOR_NAME),
           List(),
           List(ParamFilter(type2, None)),
+          List(),
           true) match {
           case (seff @ ScoutExpectedFunctionFailure(_, _, _, _, _)) => {
             vfail("Couldn't find interface destructor!\n" + seff.toString)
@@ -60,6 +62,7 @@ object DestructorTemplar {
       GlobalFunctionFamilyNameA(CallTemplar.DESTRUCTOR_NAME),
       List(),
       List(ParamFilter(type2, None)),
+      List(),
       true) match {
       case (seff @ ScoutExpectedFunctionFailure(_, _, _, _, _)) => {
         vfail("Couldn't find array destructor!\n" + seff.toString)
@@ -80,6 +83,7 @@ object DestructorTemplar {
       GlobalFunctionFamilyNameA(CallTemplar.DROP_FUNCTION_NAME),
       List(),
       List(ParamFilter(type2, None)),
+      List(),
       true) match {
       case (seff @ ScoutExpectedFunctionFailure(_, _, _, _, _)) => {
         vfail("Couldn't find drop function!\n" + seff.toString)
