@@ -387,7 +387,7 @@ object BuiltInFunctions {
           true,
           FunctionTemplataType,
           List(),
-          Map(),
+          Map(CodeRuneA("N") -> CoordTemplataType),
           List(),
           Some(CodeRuneA("N")),
           List(

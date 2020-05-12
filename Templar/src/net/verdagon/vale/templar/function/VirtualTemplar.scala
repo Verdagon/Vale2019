@@ -116,6 +116,10 @@ object VirtualTemplar {
             case FunctionName2(humanName, _, _) => GlobalFunctionFamilyNameA(humanName)
             case _ => vcurious()
           }
+//        start here
+//          // make overloadtemplar take in a list of envs to look for
+//          // and maybe provide a helper for assembling them, see MLIOET.
+
         OverloadTemplar.scoutExpectedFunctionForPrototype(
           env, temputs, nameToScoutFor, List(), needleSuperFunctionParamFilters, true) match {
           case (ScoutExpectedFunctionSuccess(_)) => {

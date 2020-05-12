@@ -435,7 +435,7 @@ object Astronomer {
       isUserFunction,
       tyype,
       identifyingRunesA,
-      conclusions.typeByRune,
+      conclusions.typeByRune.filter({ case (key, _) => allRunesA.contains(key) }),
       paramsA,
       maybeRetCoordRune.map(translateRune),
       rulesA,

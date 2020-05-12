@@ -16,6 +16,8 @@ import scala.collection.immutable.List
 object PredictorEvaluator {
 
   private[scout] def getAllRunes(
+    // See MKKRFA
+    knowableRunesFromAbove: Set[IRuneS],
     envFullName: INameS,
     identifyingRunes: List[IRuneS],
     rules: List[IRulexSR],
@@ -27,14 +29,17 @@ object PredictorEvaluator {
         patterns1.flatMap(PatternSUtils.getDistinctOrderedRunesForPattern) ++
         RuleSUtils.getDistinctOrderedRunesForRulexes(envFullName, rules) ++
         maybeRetRune.toList
-      ).toSet
+      ).toSet --
+      knowableRunesFromAbove
   }
 
   private[scout] def solve(
+    // See MKKRFA
+    knowableRunesFromAbove: Set[IRuneS],
     rules: List[IRulexSR],
     paramAtoms: List[AtomSP],
   ): Conclusions = {
-    val conclusionsBox = ConclusionsBox(Conclusions(Set(), Map()))
+    val conclusionsBox = ConclusionsBox(Conclusions(knowableRunesFromAbove, Map()))
     solveUntilSettled(rules, conclusionsBox)
     conclusionsBox.conclusions
   }
@@ -43,9 +48,11 @@ object PredictorEvaluator {
     rules: List[IRulexSR],
     conclusions: ConclusionsBox,
   ): Unit = {
+    val conclusionsBefore = conclusions.conclusions
+
     val _ = evaluateRules(conclusions, rules)
 
-    if (conclusions != conclusions) {
+    if (conclusions.conclusions != conclusionsBefore) {
       // Things have not settled, we made some sort of progress in this last iteration.
       // Keep going.
       solveUntilSettled(rules, conclusions)

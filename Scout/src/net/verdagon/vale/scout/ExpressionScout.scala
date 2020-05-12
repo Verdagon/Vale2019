@@ -191,7 +191,7 @@ object ExpressionScout {
             patternP)
         val rulesS = userRulesS ++ implicitRulesS
 
-        val allRunes = PredictorEvaluator.getAllRunes(letFullName, List(), rulesS, List(patternS), None)
+        val allRunes = PredictorEvaluator.getAllRunes(stackFrame.parentEnv.allUserDeclaredRunes(), letFullName, List(), rulesS, List(patternS), None)
 
         val declarationsFromPattern = VariableDeclarations(PatternScout.getParameterCaptures(patternS))
         (declarations ++ declarationsFromPattern, NormalResult(LetSE(rulesS, allRunes, patternS, expr1)), selfUses, childUses)

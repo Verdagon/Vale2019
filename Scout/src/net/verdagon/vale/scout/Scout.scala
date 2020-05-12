@@ -99,8 +99,8 @@ object Scout {
       RuleScout.translateRulexes(rate, implEnv.allUserDeclaredRunes(), templateRulesP)
 
     // We gather all the runes from the scouted rules to be consistent with the function scout.
-    val allRunes = PredictorEvaluator.getAllRunes(implEnv.name, identifyingRunes, userRulesS, List(), None)
-    val Conclusions(knowableValueRunes, _) = PredictorEvaluator.solve(userRulesS, List())
+    val allRunes = PredictorEvaluator.getAllRunes(Set(), implEnv.name, identifyingRunes, userRulesS, List(), None)
+    val Conclusions(knowableValueRunes, _) = PredictorEvaluator.solve(Set(), userRulesS, List())
     val isTemplate = knowableValueRunes != allRunes
 
     val (implicitRulesFromStruct, structRune) =
@@ -150,8 +150,8 @@ object Scout {
       memberRules
 
     // We gather all the runes from the scouted rules to be consistent with the function scout.
-    val allRunes = PredictorEvaluator.getAllRunes(structEnv.name, identifyingRunes, rulesS, List(), None)
-    val Conclusions(knowableValueRunes, predictedTypeByRune) = PredictorEvaluator.solve(rulesS, List())
+    val allRunes = PredictorEvaluator.getAllRunes(Set(), structEnv.name, identifyingRunes, rulesS, List(), None)
+    val Conclusions(knowableValueRunes, predictedTypeByRune) = PredictorEvaluator.solve(Set(), rulesS, List())
     val isTemplate = knowableValueRunes != allRunes
 
     val membersS =
@@ -202,9 +202,9 @@ object Scout {
     val rulesS = RuleScout.translateRulexes(ruleState, interfaceEnv.allUserDeclaredRunes(), rulesP)
 
     // We gather all the runes from the scouted rules to be consistent with the function scout.
-    val allRunes = PredictorEvaluator.getAllRunes(interfaceFullName, identifyingRunes, rulesS, List(), None)
+    val allRunes = PredictorEvaluator.getAllRunes(Set(), interfaceFullName, identifyingRunes, rulesS, List(), None)
     val Conclusions(knowableValueRunes, predictedTypeByRune) =
-      PredictorEvaluator.solve(rulesS, List())
+      PredictorEvaluator.solve(Set(), rulesS, List())
     val isTemplate = knowableValueRunes != userDeclaredRunes.toSet
 
     val maybePredictedType =

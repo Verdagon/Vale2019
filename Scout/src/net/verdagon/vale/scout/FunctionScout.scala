@@ -110,6 +110,7 @@ object FunctionScout {
 
     val allRunes =
       PredictorEvaluator.getAllRunes(
+        Set(),
         name,
         identifyingRunes,
         rulesS,
@@ -117,6 +118,7 @@ object FunctionScout {
         maybeRetCoordRune)
     val Conclusions(knowableValueRunes, predictedTypeByRune) =
       PredictorEvaluator.solve(
+        Set(),
         rulesS,
         explicitParams1.map(_.pattern))
 
@@ -245,6 +247,7 @@ object FunctionScout {
 
     val allRunes =
       PredictorEvaluator.getAllRunes(
+        Set(),
         lambdaName,
         identifyingRunes,
         rulesS,
@@ -252,6 +255,7 @@ object FunctionScout {
         maybeRetCoordRune)
     val Conclusions(knowableValueRunes, predictedTypeByRune) =
       PredictorEvaluator.solve(
+        parentStackFrame.parentEnv.allUserDeclaredRunes(),
         rulesS,
         explicitParams1.map(_.pattern))
     val isTemplate = knowableValueRunes != allRunes
@@ -417,6 +421,7 @@ object FunctionScout {
 
     val allRunes =
       PredictorEvaluator.getAllRunes(
+        interfaceEnv.allUserDeclaredRunes(),
         funcName,
         identifyingRunes,
         rulesS,
@@ -424,9 +429,10 @@ object FunctionScout {
         maybeReturnRune)
     val Conclusions(knowableValueRunes, predictedTypeByRune) =
       PredictorEvaluator.solve(
+        interfaceEnv.allUserDeclaredRunes(),
         rulesS,
         paramsS.map(_.pattern))
-    val isTemplate = knowableValueRunes != allRunes
+    val isTemplate = (allRunes -- knowableValueRunes).nonEmpty
 
     val maybePredictedType =
       if (isTemplate) {

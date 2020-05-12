@@ -14,13 +14,14 @@ import scala.collection.immutable.List
 class RunePredictorTests extends FunSuite with Matchers {
   test("Predict doesnt crash for simple templex") {
     val conclusions =
-      PredictorEvaluator.solve(List(TemplexSR(NameST(CodeTypeNameS("Int")))), List())
+      PredictorEvaluator.solve(Set(), List(TemplexSR(NameST(CodeTypeNameS("Int")))), List())
     conclusions shouldEqual Conclusions(Set(), Map())
   }
 
   test("Can know rune from simple equals") {
     val conclusions =
       PredictorEvaluator.solve(
+        Set(),
         List(
           EqualsSR(TemplexSR(RuneST(CodeRuneS("T"))), TemplexSR(NameST(CodeTypeNameS("Int"))))),
         List())
@@ -30,6 +31,7 @@ class RunePredictorTests extends FunSuite with Matchers {
   test("Predict for simple equals 2") {
     val conclusions =
       PredictorEvaluator.solve(
+        Set(),
         List(
           TypedSR(ImplicitRuneS(0),CoordTypeSR),
           EqualsSR(
@@ -45,6 +47,7 @@ class RunePredictorTests extends FunSuite with Matchers {
     val bRune = ImplicitRuneS(1)
     val conclusions =
       PredictorEvaluator.solve(
+        Set(),
         List(
           ComponentsSR(
             TypedSR(tRune,CoordTypeSR),
@@ -63,6 +66,7 @@ class RunePredictorTests extends FunSuite with Matchers {
     // we can have a templated destructor that matches any of those.
     val conclusions =
     PredictorEvaluator.solve(
+      Set(),
       List(
         ComponentsSR(
           TypedSR(CodeRuneS("T"),CoordTypeSR),
@@ -85,6 +89,7 @@ class RunePredictorTests extends FunSuite with Matchers {
     // we can have a templated destructor that matches any of those.
     val conclusions =
     PredictorEvaluator.solve(
+      Set(),
       List(
         TypedSR(ImplicitRuneS(0),CoordTypeSR),
         EqualsSR(
@@ -100,6 +105,7 @@ class RunePredictorTests extends FunSuite with Matchers {
     // we can have a templated destructor that matches any of those.
     val conclusions =
     PredictorEvaluator.solve(
+      Set(),
       List(
         ComponentsSR(
           TypedSR(CodeRuneS("T"),CoordTypeSR),
@@ -123,6 +129,7 @@ class RunePredictorTests extends FunSuite with Matchers {
     // we can have a templated destructor that matches any of those.
     val conclusions =
     PredictorEvaluator.solve(
+      Set(),
       List(
         ComponentsSR(
           TypedSR(CodeRuneS("T"),CoordTypeSR),
@@ -132,5 +139,29 @@ class RunePredictorTests extends FunSuite with Matchers {
         CallSR("passThroughIfInterface",List(TemplexSR(RuneST(CodeRuneS("I")))))),
       List())
     conclusions shouldEqual Conclusions(Set(), Map(CodeRuneS("T") -> CoordTypeSR))
+  }
+
+  // See MKKRFA.
+  test("Predict runes from above") {
+    val conclusions =
+      PredictorEvaluator.solve(
+        Set(CodeRuneS("P1"), CodeRuneS("R")),
+        List(
+          EqualsSR(
+            TypedSR(ImplicitRuneS(0),CoordTypeSR),
+            TemplexSR(
+              OwnershippedST(
+                BorrowP,
+                CallST(
+                  NameST(CodeTypeNameS("MyIFunction1")),
+                  List(
+                    RuneST(CodeRuneS("P1")),
+                    RuneST(CodeRuneS("R"))))))),
+          TypedSR(CodeRuneS("P1"),CoordTypeSR),
+          TypedSR(CodeRuneS("R"),CoordTypeSR)),
+        List())
+    vassert(conclusions.knowableValueRunes.contains(CodeRuneS("P1")))
+    vassert(conclusions.knowableValueRunes.contains(CodeRuneS("R")))
+    vassert(conclusions.knowableValueRunes.contains(ImplicitRuneS(0)))
   }
 }

@@ -259,18 +259,7 @@ object EnvironmentUtils {
   // See NTKPRR
   def assembleRulesFromFunctionAndContainers(/*containers: List[IContainer], */function: FunctionA):
   (List[IRulexAR], Map[IRuneA, ITemplataType]) = {
-    val (containersRules, containersTypeByRune) = (List(), List())
-//      containers
-//        .map({
-//          case ContainerInterface(interface) => (interface.rules, interface.typeByRune)
-//          case ContainerStruct(struct) => (struct.rules, struct.typeByRune)
-//          case ContainerFunction(function) => (function.templateRules, function.typeByRune)
-//          case ContainerImpl(impl) => vimpl()
-//        })
-//        .unzip
-    val rules = containersRules.foldLeft(List[IRulexAR]())(_ ++ _)
-    val typeByRune = containersTypeByRune.foldLeft(Map[IRuneA, ITemplataType]())(_ ++ _)
-    (rules ++ function.templateRules, typeByRune ++ function.typeByRune)
+    (function.templateRules, function.typeByRune)
   }
 
   def impreciseNamesMatch(nameA: IImpreciseNameStepA, name2: IName2): Boolean = {

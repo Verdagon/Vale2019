@@ -100,7 +100,11 @@ case class InterfaceS(
     isTemplate: Boolean,
     rules: List[IRulexSR],
     // See IMRFDI
-    internalMethods: List[FunctionS])
+    internalMethods: List[FunctionS]) {
+  internalMethods.foreach(internalMethod => {
+    vassert(!internalMethod.isTemplate)
+  })
+}
 
 object interfaceSName {
   // The extraction method (mandatory)
@@ -174,14 +178,14 @@ case class FunctionS(
   body match {
     case ExternBody1 | AbstractBody1 | GeneratedBody1(_) => {
       name match {
-        case LambdaNameS(_, _) => vwat()
+        case LambdaNameS(_) => vwat()
         case _ =>
       }
     }
     case CodeBody1(body1) => {
       if (body1.closuredNames.nonEmpty) {
         name match {
-          case LambdaNameS(_, _) =>
+          case LambdaNameS(_) =>
           case _ => vwat()
         }
       }

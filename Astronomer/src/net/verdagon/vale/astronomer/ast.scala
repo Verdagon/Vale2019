@@ -85,6 +85,10 @@ case class InterfaceA(
     rules: List[IRulexAR],
     // See IMRFDI
     internalMethods: List[FunctionA]) {
+  internalMethods.foreach(internalMethod => {
+    vassert(!internalMethod.isTemplate);
+  })
+
   def isTemplate: Boolean = tyype match {
     case KindTemplataType => false
     case TemplateTemplataType(_, _) => true
