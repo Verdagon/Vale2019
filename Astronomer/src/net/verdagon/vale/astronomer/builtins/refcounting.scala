@@ -12,7 +12,9 @@ object RefCounting {
       checkVarRcName,
       false,
       TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
+      Set(CodeRuneA("V"), CodeRuneA("I")),
       List(CodeRuneA("T")),
+      Set(CodeRuneA("T"), ImplicitRuneA(0), CodeRuneA("V"), CodeRuneA("I")),
       Map(
         CodeRuneA("I") -> CoordTemplataType,
         CodeRuneA("T") -> CoordTemplataType,
@@ -53,8 +55,11 @@ object RefCounting {
       checkMemberRcName,
       false,
       TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
+      Set(CodeRuneA("V"), CodeRuneA("I")),
       List(CodeRuneA("T")),
-      Map(CodeRuneA("I") -> CoordTemplataType,
+      Set(CodeRuneA("T"), CodeRuneA("V"), CodeRuneA("I")),
+      Map(
+        CodeRuneA("I") -> CoordTemplataType,
         CodeRuneA("T") -> CoordTemplataType,
         CodeRuneA("V") -> CoordTemplataType),
       List(

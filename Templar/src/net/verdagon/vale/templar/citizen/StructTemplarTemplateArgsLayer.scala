@@ -41,16 +41,14 @@ object StructTemplarTemplateArgsLayer {
           case None => temputs
           case Some(predictedMutability) => temputs.declareStructMutability(temporaryStructRef, Conversions.evaluateMutability(predictedMutability))
         }
-        val (rulesForStructAndParents, typeByRuneForStructAndParents) =
-//          EnvironmentUtils.assembleRulesFromEnvEntryAndParents(structAndParents)
-          (structA.rules, structA.typeByRune)
         val result =
           InferTemplar.inferFromExplicitTemplateArgs(
             env,
             temputs,
             structA.identifyingRunes,
-            rulesForStructAndParents,
-            typeByRuneForStructAndParents,
+            structA.rules,
+            structA.typeByRune,
+            structA.localRunes,
             List(),
             None,
             templateArgs)
@@ -102,16 +100,14 @@ object StructTemplarTemplateArgsLayer {
           case Some(predictedMutability) => temputs.declareInterfaceMutability(temporaryInterfaceRef, Conversions.evaluateMutability(predictedMutability))
         }
 
-        val (rulesForInterfaceAndParents, typeByRuneForInterfaceAndParents) =
-//          EnvironmentUtils.assembleRulesFromEnvEntryAndParents(interfaceAndParents)
-          (interfaceS.rules, interfaceS.typeByRune)
         val result =
           InferTemplar.inferFromExplicitTemplateArgs(
             env,
             temputs,
             interfaceS.identifyingRunes,
-            rulesForInterfaceAndParents,
-            typeByRuneForInterfaceAndParents,
+            interfaceS.rules,
+            interfaceS.typeByRune,
+            interfaceS.localRunes,
             List(),
             None,
             templateArgs)

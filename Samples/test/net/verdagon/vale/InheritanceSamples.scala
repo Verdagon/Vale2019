@@ -66,7 +66,7 @@ object InheritanceSamples {
       |
       |struct MyStruct<T> rules(T Ref) { }
       |impl<T> MyStruct<T> for MyInterface<T>;
-      |fn doThing(x MyStruct<T> impl MyInterface<T>) *Int {4}
+      |fn doThing<T>(x MyStruct<T> impl MyInterface<T>) *Int {4}
       |
       |fn main() {
       |  x = MyStruct<*Int>();

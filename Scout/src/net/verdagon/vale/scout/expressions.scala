@@ -9,7 +9,8 @@ import net.verdagon.vale.vassert
 // collide with other things
 case class LetSE(
     rules: List[IRulexSR],
-    allRunes: Set[IRuneS],
+    unknowableRunes: Set[IRuneS],
+    localRunes: Set[IRuneS],
     pattern: AtomSP,
     expr: IExpressionSE) extends IExpressionSE
 

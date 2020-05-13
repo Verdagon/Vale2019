@@ -70,8 +70,9 @@ case class StructS(
     name: TopLevelCitizenDeclarationNameS,
     mutability: MutabilityP,
     maybePredictedMutability: Option[MutabilityP],
+    knowableRunes: Set[IRuneS],
     identifyingRunes: List[IRuneS],
-    allRunes: Set[IRuneS],
+    localRunes: Set[IRuneS],
     maybePredictedType: Option[ITypeSR],
     isTemplate: Boolean,
     rules: List[IRulexSR],
@@ -85,7 +86,8 @@ case class StructMemberS(
 case class ImplS(
     name: ImplNameS,
     rules: List[IRulexSR],
-    allRunes: Set[IRuneS],
+    knowableRunes: Set[IRuneS],
+    localRunes: Set[IRuneS],
     isTemplate: Boolean,
     structKindRune: IRuneS,
     interfaceKindRune: IRuneS)
@@ -94,8 +96,9 @@ case class InterfaceS(
     name: TopLevelCitizenDeclarationNameS,
     mutability: MutabilityP,
     maybePredictedMutability: Option[MutabilityP],
+    knowableRunes: Set[IRuneS],
     identifyingRunes: List[IRuneS],
-    allRunes: Set[IRuneS],
+    localRunes: Set[IRuneS],
     maybePredictedType: Option[ITypeSR],
     isTemplate: Boolean,
     rules: List[IRulexSR],
@@ -160,10 +163,14 @@ case class FunctionS(
     name: IFunctionDeclarationNameS,
     isUserFunction: Boolean,
 
+    // Runes that we can know without looking at args or template args.
+    knowableRunes: Set[IRuneS],
     // This is not necessarily only what the user specified, the compiler can add
     // things to the end here, see CCAUIR.
     identifyingRunes: List[IRuneS],
-    allRunes: Set[IRuneS],
+    // Runes that we need the args or template args to indirectly figure out.
+    localRunes: Set[IRuneS],
+
     maybePredictedType: Option[ITypeSR],
 
     params: List[ParameterS],
@@ -175,6 +182,11 @@ case class FunctionS(
     templateRules: List[IRulexSR],
     body: IBody1
 ) {
+  // Make sure we have to solve all identifying runes
+  vassert((identifyingRunes.toSet -- localRunes).isEmpty)
+
+  vassert(isTemplate == identifyingRunes.nonEmpty)
+
   body match {
     case ExternBody1 | AbstractBody1 | GeneratedBody1(_) => {
       name match {

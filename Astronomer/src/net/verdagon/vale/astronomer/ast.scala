@@ -22,14 +22,14 @@ case class ProgramA(
     val matches = interfaces.find(_.name == name)
     vassert(matches.size == 1)
     matches.head match {
-      case i @ InterfaceA(_, _, _, _, _, _, _, _) => i
+      case i @ InterfaceA(_, _, _, _, _, _, _, _, _, _) => i
     }
   }
   def lookupStruct(name: INameA) = {
     val matches = structs.find(_.name == name)
     vassert(matches.size == 1)
     matches.head match {
-      case i @ StructA(_, _, _, _, _, _, _, _) => i
+      case i @ StructA(_, _, _, _, _, _, _, _, _, _) => i
     }
   }
 }
@@ -44,7 +44,9 @@ case class StructA(
     mutability: MutabilityP,
     maybePredictedMutability: Option[MutabilityP],
     tyype: ITemplataType,
+    knowableRunes: Set[IRuneA],
     identifyingRunes: List[IRuneA],
+    localRunes: Set[IRuneA],
     typeByRune: Map[IRuneA, ITemplataType],
     rules: List[IRulexAR],
     members: List[StructMemberA]
@@ -65,6 +67,7 @@ case class ImplA(
     name: ImplNameA,
     rules: List[IRulexAR],
     typeByRune: Map[IRuneA, ITemplataType],
+    localRunes: Set[IRuneA],
     structKindRune: IRuneA,
     interfaceKindRune: IRuneA)
 
@@ -80,7 +83,9 @@ case class InterfaceA(
     mutability: MutabilityP,
     maybePredictedMutability: Option[MutabilityP],
     tyype: ITemplataType,
+    knowableRunes: Set[IRuneA],
     identifyingRunes: List[IRuneA],
+    localRunes: Set[IRuneA],
     typeByRune: Map[IRuneA, ITemplataType],
     rules: List[IRulexAR],
     // See IMRFDI
@@ -131,9 +136,12 @@ case class FunctionA(
     isUserFunction: Boolean,
 
     tyype: ITemplataType,
+    knowableRunes: Set[IRuneA],
     // This is not necessarily only what the user specified, the compiler can add
     // things to the end here, see CCAUIR.
     identifyingRunes: List[IRuneA],
+    localRunes: Set[IRuneA],
+
     typeByRune: Map[IRuneA, ITemplataType],
 
     params: List[ParameterA],
@@ -144,6 +152,11 @@ case class FunctionA(
     templateRules: List[IRulexAR],
     body: IBodyA
 ) {
+  // Make sure we have to solve all the identifying runes.
+  vassert((identifyingRunes.toSet -- localRunes).isEmpty)
+
+  vassert(typeByRune.keySet == (knowableRunes ++ localRunes))
+
   def isLight(): Boolean = {
     body match {
       case ExternBodyA | AbstractBodyA | GeneratedBodyA(_) => true

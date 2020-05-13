@@ -14,7 +14,9 @@ object IFunction1 {
       MutableP,
       Some(MutableP),
       TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType, CoordTemplataType), KindTemplataType),
+      Set(),
       List(CodeRuneA("M"), CodeRuneA("P1"), CodeRuneA("R")),
+      Set(CodeRuneA("M"), CodeRuneA("P1"), CodeRuneA("R")),
       Map(
         CodeRuneA("M") -> MutabilityTemplataType,
         CodeRuneA("P1") -> CoordTemplataType,
@@ -28,7 +30,9 @@ object IFunction1 {
           FunctionNameA("__call", CodeLocationS(1, 0)),
           true,
           FunctionTemplataType,
+          Set(),
           List(),
+          Set(CodeRuneA("BorrowThis"), CodeRuneA("ThisK")),
           Map(
             CodeRuneA("BorrowThis") -> CoordTemplataType,
             CodeRuneA("ThisK") -> CoordTemplataType),

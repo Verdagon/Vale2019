@@ -183,14 +183,14 @@ case class AnonymousSubstructImplName2() extends IName2 {
     List(this).collect(func)
   }
 }
-// This one is probably only used by the templar, so we can have a way to
-// figure out the closure struct for a certain environment.
-case class EnvClosureName2() extends IName2 {
-  def order = 32;
-  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
-    List(this).collect(func)
-  }
-}
+//// This one is probably only used by the templar, so we can have a way to
+//// figure out the closure struct for a certain environment.
+//case class EnvClosureName2() extends IName2 {
+//  def order = 32;
+//  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
+//    List(this).collect(func)
+//  }
+//}
 
 // This is an IName2 because we put these into the environment.
 // We don't just reuse INameA because there are some templar-specific ones.

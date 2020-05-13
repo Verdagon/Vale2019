@@ -273,9 +273,10 @@ object Astronomer {
   }
 
   def translateStruct(astrouts: AstroutsBox, env: Environment, structS: StructS): StructA = {
-    val StructS(nameS, mutability, maybePredictedMutability, identifyingRunesS, allRunesS, predictedTypeByRune, isTemplate, rules, members) = structS
+    val StructS(nameS, mutability, maybePredictedMutability, knowableRunesS, identifyingRunesS, localRunesS, predictedTypeByRune, isTemplate, rules, members) = structS
     val nameA = Astronomer.translateTopLevelCitizenDeclarationName(nameS)
-    val allRunesA = allRunesS.map(Astronomer.translateRune)
+    val localRunesA = localRunesS.map(Astronomer.translateRune)
+    val knowableRunesA = knowableRunesS.map(Astronomer.translateRune)
     val identifyingRunesA = identifyingRunesS.map(Astronomer.translateRune)
 
     // predictedTypeByRune is used by the rule typer delegate to short-circuit infinite recursion
@@ -288,7 +289,7 @@ object Astronomer {
     }
 
     val (conclusions, rulesA) =
-      makeRuleTyper().solve(astrouts, env, rules, List(), Some(allRunesA)) match {
+      makeRuleTyper().solve(astrouts, env, rules, List(), Some(localRunesA ++ knowableRunesA)) match {
         case (_, rtsf @ RuleTyperSolveFailure(_, _, _)) => vfail(rtsf.toString)
         case (c, RuleTyperSolveSuccess(r)) => (c, r)
       }
@@ -310,15 +311,18 @@ object Astronomer {
       mutability,
       maybePredictedMutability,
       tyype,
+      knowableRunesA,
       identifyingRunesA,
+      localRunesA,
       conclusions.typeByRune,
       rulesA,
       membersA)
   }
 
   def translateInterface(astrouts: AstroutsBox, env: Environment, interfaceS: InterfaceS): InterfaceA = {
-    val InterfaceS(nameS, mutability, maybePredictedMutability, identifyingRunesS, allRunesS, predictedTypeByRune, isTemplate, rules, internalMethodsS) = interfaceS
-    val allRunesA = allRunesS.map(Astronomer.translateRune)
+    val InterfaceS(nameS, mutability, maybePredictedMutability, knowableRunesS, identifyingRunesS, localRunesS, predictedTypeByRune, isTemplate, rules, internalMethodsS) = interfaceS
+    val localRunesA = localRunesS.map(Astronomer.translateRune)
+    val knowableRunesA = knowableRunesS.map(Astronomer.translateRune)
     val identifyingRunesA = identifyingRunesS.map(Astronomer.translateRune)
     val nameA = TopLevelCitizenDeclarationNameA(nameS.name, nameS.codeLocation)
 
@@ -332,7 +336,7 @@ object Astronomer {
     }
 
     val (conclusions, rulesA) =
-      makeRuleTyper().solve(astrouts, env, rules, List(), Some(allRunesA)) match {
+      makeRuleTyper().solve(astrouts, env, rules, List(), Some(knowableRunesA ++ localRunesA)) match {
         case (_, rtsf @ RuleTyperSolveFailure(_, _, _)) => vfail(rtsf.toString)
         case (c, RuleTyperSolveSuccess(r)) => (c, r)
       }
@@ -352,7 +356,9 @@ object Astronomer {
         mutability,
         maybePredictedMutability,
         tyype,
+        knowableRunesA,
         identifyingRunesA,
+        localRunesA,
         conclusions.typeByRune,
         rulesA,
         internalMethodsA)
@@ -360,9 +366,10 @@ object Astronomer {
   }
 
   def translateImpl(astrouts: AstroutsBox, env: Environment, implS: ImplS): ImplA = {
-    val ImplS(nameS, rules, allRunesS, isTemplate, structKindRuneS, interfaceKindRuneS) = implS
+    val ImplS(nameS, rules, knowableRunesS, localRunesS, isTemplate, structKindRuneS, interfaceKindRuneS) = implS
     val nameA = translateImplName(nameS)
-    val allRunesA = allRunesS.map(Astronomer.translateRune)
+    val localRunesA = localRunesS.map(Astronomer.translateRune)
+    val knowableRunesA = knowableRunesS.map(Astronomer.translateRune)
 
     astrouts.getImpl(nameA) match {
       case Some(existingImplA) => return existingImplA
@@ -370,7 +377,7 @@ object Astronomer {
     }
 
     val (conclusions, rulesA) =
-      makeRuleTyper().solve(astrouts, env, rules, List(), Some(allRunesA)) match {
+      makeRuleTyper().solve(astrouts, env, rules, List(), Some(knowableRunesA ++ localRunesA)) match {
         case (_, rtsf @ RuleTyperSolveFailure(_, _, _)) => vfail(rtsf.toString)
         case (c, RuleTyperSolveSuccess(r)) => (c, r)
       }
@@ -379,6 +386,7 @@ object Astronomer {
       nameA,
       rulesA,
       conclusions.typeByRune,
+      localRunesA,
       translateRune(structKindRuneS),
       translateRune(interfaceKindRuneS))
   }
@@ -406,15 +414,16 @@ object Astronomer {
   }
 
   def translateFunction(astrouts: AstroutsBox, env: Environment, functionS: FunctionS): FunctionA = {
-    val FunctionS(nameS, isUserFunction, identifyingRunesS, allRunesS, maybePredictedType, paramsS, maybeRetCoordRune, isTemplate, templateRules, bodyS) = functionS
+    val FunctionS(nameS, isUserFunction, knowableRunesS, identifyingRunesS, localRunesS, maybePredictedType, paramsS, maybeRetCoordRune, isTemplate, templateRules, bodyS) = functionS
     val nameA = translateFunctionDeclarationName(nameS)
-    val allRunesA = allRunesS.map(Astronomer.translateRune)
+    val knowableRunesA = knowableRunesS.map(Astronomer.translateRune)
+    val localRunesA = localRunesS.map(Astronomer.translateRune)
     val identifyingRunesA = identifyingRunesS.map(Astronomer.translateRune)
 
     val paramsA = paramsS.map(translateParameter)
 
     val (conclusions, rulesA) =
-      makeRuleTyper().solve(astrouts, env, templateRules, List(), Some(allRunesA)) match {
+      makeRuleTyper().solve(astrouts, env, templateRules, List(), Some(localRunesA)) match {
         case (_, rtsf @ RuleTyperSolveFailure(_, _, _)) => vfail(rtsf.toString)
         case (c, RuleTyperSolveSuccess(r)) => (c, r)
       }
@@ -434,8 +443,10 @@ object Astronomer {
       nameA,
       isUserFunction,
       tyype,
+      knowableRunesA,
       identifyingRunesA,
-      conclusions.typeByRune.filter({ case (key, _) => allRunesA.contains(key) }),
+      localRunesA,
+      conclusions.typeByRune ++ env.typeByRune,
       paramsA,
       maybeRetCoordRune.map(translateRune),
       rulesA,

@@ -1,5 +1,7 @@
 package net.verdagon.vale.astronomer
 
+import net.verdagon.vale.vassert
+
 import scala.collection.immutable.List
 
 sealed trait ITemplataType
@@ -18,4 +20,6 @@ case object VariabilityTemplataType extends ITemplataType
 case class TemplateTemplataType(
   paramTypes: List[ITemplataType],
   returnType: ITemplataType
-) extends ITemplataType
+) extends ITemplataType {
+  vassert(paramTypes.nonEmpty)
+}

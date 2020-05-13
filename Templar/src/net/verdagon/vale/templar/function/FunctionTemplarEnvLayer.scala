@@ -61,7 +61,7 @@ object FunctionTemplarEnvLayer {
     argTypes2: List[ParamFilter]):
   (IEvaluateFunctionResult[FunctionBanner2]) = {
 
-    val functionFullName = FullName2(containingEnv.fullName.steps, vimpl(function.name.toString))
+    val functionFullName = FullName2(containingEnv.fullName.steps, translateFunctionDeclarationName(function.name))
     val funcOuterEnv =
       FunctionEnvironment(containingEnv, functionFullName, function, Map(), None, List(), 0, List(), Set())
 
@@ -84,7 +84,7 @@ object FunctionTemplarEnvLayer {
     closureStructRef: StructRef2,
     function: FunctionA):
   (FunctionBanner2) = {
-    val functionFullName = FullName2(containingEnv.fullName.steps, vimpl(function.name.toString))
+    val functionFullName = containingEnv.fullName.addStep(translateFunctionDeclarationName(function.name))
     val funcOuterEnv =
       FunctionEnvironment(containingEnv, functionFullName, function, Map(), None, List(), 0, List(), Set())
 

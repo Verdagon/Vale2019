@@ -4,7 +4,7 @@ import net.verdagon.vale.astronomer.{BFunctionA, FunctionA, INameA, IVarNameA, L
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.parser._
-import net.verdagon.vale.{scout, vassert, vassertSome, vimpl}
+import net.verdagon.vale.{scout, vassert, vassertSome, vimpl, vwat}
 import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
 import net.verdagon.vale.scout.patterns.{AbstractSP, AtomSP, OverrideSP}
 import net.verdagon.vale.scout.rules._
@@ -122,10 +122,16 @@ object FunctionTemplar {
       evaluateOrdinaryLightFunctionFromNonCallForPrototype(
         env, temputs, function)
     } else {
+      val lambdaCitizenName2 =
+        functionTemplata.function.name match {
+          case LambdaNameA(codeLocation) => LambdaCitizenName2(NameTranslator.translateCodeLocation(codeLocation))
+          case _ => vwat()
+        }
+
       val KindTemplata(closureStructRef @ StructRef2(_)) =
         vassertSome(
           env.getNearestTemplataWithAbsoluteName2(
-            EnvClosureName2(),
+            lambdaCitizenName2,
             Set(TemplataLookupContext)))
       val header =
         evaluateOrdinaryClosureFunctionFromNonCallForHeader(
@@ -143,10 +149,16 @@ object FunctionTemplar {
       evaluateOrdinaryLightFunctionFromNonCallForBanner(
         env, temputs, function)
     } else {
+      val lambdaCitizenName2 =
+        functionTemplata.function.name match {
+          case LambdaNameA(codeLocation) => LambdaCitizenName2(NameTranslator.translateCodeLocation(codeLocation))
+          case _ => vwat()
+        }
+
       val KindTemplata(closureStructRef @ StructRef2(_)) =
         vassertSome(
           env.getNearestTemplataWithAbsoluteName2(
-            EnvClosureName2(),
+            lambdaCitizenName2,
             Set(TemplataLookupContext)))
       evaluateOrdinaryClosureFunctionFromNonCallForBanner(
         env, temputs, closureStructRef, function)
@@ -173,10 +185,17 @@ object FunctionTemplar {
       evaluateTemplatedLightFunctionFromCallForBanner(
         temputs, functionTemplata, alreadySpecifiedTemplateArgs, paramFilters)
     } else {
-      val Some(KindTemplata(closureStructRef @ StructRef2(_))) =
-        env.getNearestTemplataWithName(
-          vimpl(),//FunctionScout.CLOSURE_STRUCT_ENV_ENTRY_NAME,
-          Set(TemplataLookupContext))
+      val lambdaCitizenName2 =
+        functionTemplata.function.name match {
+          case LambdaNameA(codeLocation) => LambdaCitizenName2(NameTranslator.translateCodeLocation(codeLocation))
+          case _ => vwat()
+        }
+
+      val KindTemplata(closureStructRef @ StructRef2(_)) =
+        vassertSome(
+          env.getNearestTemplataWithAbsoluteName2(
+            lambdaCitizenName2,
+            Set(TemplataLookupContext)))
       val banner =
         evaluateTemplatedClosureFunctionFromCallForBanner(
           env, temputs, closureStructRef, function, alreadySpecifiedTemplateArgs, paramFilters)

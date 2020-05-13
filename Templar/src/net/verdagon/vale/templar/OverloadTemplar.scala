@@ -259,21 +259,9 @@ object OverloadTemplar {
 //
 //                          val explicitTemplatas = TemplataTemplar.evaluateTemplexes(env, temputs, explicitlySpecifiedTemplateArgTemplexesS)
 
-                          // typeByRune should contain only the things we want to solve for. For example in
-                          //   doThing<T>(4, 5)
-                          // we don't need to solve for T, even though we just figured out that e.g. that
-                          // TemplexS("T") is a TemplexA("T", KindTemplata).
-                          // T is already in the environment.
-                          // So, we shouldn't include it in typeByRune.
-                          // We do want to figure out these template arg runes though.
-                          val typeByRuneToSolve =
-                              templateArgRuneNamesA
-                                 .zip(templateArgRuneNamesA.map(runeTypeConclusions.typeByRune))
-                                  .toMap
-
                           // We only want to solve the template arg runes
                           InferTemplar.inferFromExplicitTemplateArgs(
-                              env, temputs, List(), rulesA, typeByRuneToSolve, List(), None, List()) match {
+                              env, temputs, List(), rulesA, runeTypeConclusions.typeByRune, templateArgRuneNamesA.toSet, List(), None, List()) match {
                             case (isf @ InferSolveFailure(_, _, _, _, _, _)) => {
                               (List(), Map(), Map(function -> ("Couldn't evaluate template args: " + isf.toString)))
                             }

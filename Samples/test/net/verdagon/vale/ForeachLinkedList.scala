@@ -8,10 +8,10 @@ object ForeachLinkedList {
       |struct MySome<T> rules(T Ref) {
       |  value T;
       |}
-      |impl MySome<T> for MyOption<T>;
+      |impl<T> MySome<T> for MyOption<T>;
       |
       |struct MyNone<T> rules(T Ref) { }
-      |impl MyNone<T> for MyOption<T>;
+      |impl<T> MyNone<T> for MyOption<T>;
       |
       |
       |struct MyList<T> rules(T Ref) {
@@ -19,7 +19,7 @@ object ForeachLinkedList {
       |  next ^MyOption<^MyList<T>>;
       |}
       |
-      |abstract fn forEach<F, T>(opt virtual &MyOption<MyList<T>>, func F) *Int;
+      |abstract fn forEach<F, T>(virtual opt &MyOption<MyList<T>>, func F) *Int;
       |fn forEach<F, T>(opt &MyNone<MyList<T>> impl MyOption<MyList<T>>, func F) *Int { 0 }
       |fn forEach<F, T>(opt &MySome<MyList<T>> impl MyOption<MyList<T>>, func F) *Int {
       |   forEach<F, T>(opt.value, func);

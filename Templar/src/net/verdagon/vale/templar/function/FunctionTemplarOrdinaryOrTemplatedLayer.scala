@@ -36,7 +36,7 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
       EnvironmentUtils.assembleRulesFromFunctionAndContainers(function)
     val inferences =
       InferTemplar.inferOrdinaryRules(
-        nearEnv, temputs, rules, typeByRune)
+        nearEnv, temputs, rules, typeByRune, function.localRunes)
     val runedEnv = addRunedDataToNearEnv(nearEnv, List(), inferences, function.maybeRetCoordRune)
 
     FunctionTemplarMiddleLayer.predictOrdinaryFunctionBanner(runedEnv, temputs, function)
@@ -55,7 +55,7 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
       EnvironmentUtils.assembleRulesFromFunctionAndContainers(function)
     val inferences =
       InferTemplar.inferOrdinaryRules(
-        nearEnv, temputs, rules, typeByRune)
+        nearEnv, temputs, rules, typeByRune, function.localRunes)
     val runedEnv = addRunedDataToNearEnv(nearEnv, List(), inferences, function.maybeRetCoordRune)
 
     FunctionTemplarMiddleLayer.getOrEvaluateFunctionForBanner(runedEnv, temputs, function)
@@ -84,6 +84,7 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
         function.identifyingRunes,
         rules,
         typeByRune,
+        function.localRunes,
         function.params.map(_.pattern),
         function.maybeRetCoordRune,
         List(),
@@ -127,6 +128,7 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
           function.identifyingRunes,
           rules,
           typeByRune,
+          function.localRunes,
           function.params.map(_.pattern),
           function.maybeRetCoordRune,
           explicitTemplateArgs,
@@ -169,6 +171,7 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
         function.identifyingRunes,
         rules,
         typeByRune,
+        function.localRunes,
         function.params.map(_.pattern),
         function.maybeRetCoordRune,
         alreadySpecifiedTemplateArgs,
@@ -214,6 +217,7 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
         function.identifyingRunes,
         rules,
         typeByRune,
+        function.localRunes,
         function.params.map(_.pattern),
         function.maybeRetCoordRune,
         List())
@@ -247,7 +251,7 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
       EnvironmentUtils.assembleRulesFromFunctionAndContainers(function)
     val inferences =
       InferTemplar.inferOrdinaryRules(
-        nearEnv, temputs, rules, typeByRune)
+        nearEnv, temputs, rules, typeByRune, function.localRunes)
     val runedEnv = addRunedDataToNearEnv(nearEnv, List(), inferences, function.maybeRetCoordRune)
 
     FunctionTemplarMiddleLayer.getOrEvaluateFunctionForHeader(
@@ -271,7 +275,7 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
       EnvironmentUtils.assembleRulesFromFunctionAndContainers(function)
     val inferences =
       InferTemplar.inferOrdinaryRules(
-        nearEnv, temputs, rules, typeByRune)
+        nearEnv, temputs, rules, typeByRune, function.localRunes)
     val runedEnv = addRunedDataToNearEnv(nearEnv, List(), inferences, function.maybeRetCoordRune)
 
     FunctionTemplarMiddleLayer.getOrEvaluateFunctionForPrototype(
@@ -306,6 +310,7 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
         function.identifyingRunes,
         rules,
         typeByRune,
+        function.localRunes,
         function.params.map(_.pattern),
         function.maybeRetCoordRune,
         explicitTemplateArgs,
@@ -342,6 +347,7 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
         function.identifyingRunes,
         rules,
         typeByRune,
+        function.localRunes,
         function.params.map(_.pattern),
         function.maybeRetCoordRune,
         interfaceExplicitTemplateArgs)
@@ -383,7 +389,7 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
     function.body match {
       case CodeBodyA(body1) => {
         body1.closuredNames.foreach(name => {
-          vimpl()//vassert(nearEnv.variables.exists(_.id.variableName == name))
+          vassert(nearEnv.variables.exists(_.id.last == NameTranslator.translateNameStep(name)))
         })
       }
       case _ =>

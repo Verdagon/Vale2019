@@ -12,7 +12,9 @@ object Printing {
       printlnStrName,
       false,
       FunctionTemplataType,
+      Set(CodeRuneA("S"), CodeRuneA("R")),
       List(),
+      Set(CodeRuneA("S"), CodeRuneA("R")),
       Map(
         CodeRuneA("R") -> CoordTemplataType,
         CodeRuneA("S") -> CoordTemplataType),
@@ -44,7 +46,9 @@ object Printing {
       printlnIntName,
       false,
       FunctionTemplataType,
+      Set(CodeRuneA("R"), CodeRuneA("I")),
       List(),
+      Set(CodeRuneA("R"), CodeRuneA("I")),
       Map(
         CodeRuneA("R") -> CoordTemplataType,
         CodeRuneA("I") -> CoordTemplataType),
@@ -75,7 +79,9 @@ object Printing {
       printIntName,
       false,
       FunctionTemplataType,
+      Set(CodeRuneA("I"), CodeRuneA("R")),
       List(),
+      Set(CodeRuneA("I"), CodeRuneA("R")),
       Map(
         CodeRuneA("I") -> CoordTemplataType,
         CodeRuneA("R") -> CoordTemplataType,

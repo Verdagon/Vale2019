@@ -207,14 +207,13 @@ object FunctionTemplarClosureOrLightLayer {
       outerEnv
         .addVariables(
         closureStructDef.members.map(member => {
-          val containingFunctionLambdaNumber = vimpl()//outerEnv.function.lambdaNumber
-          val variableId = FullName2(containingFunctionLambdaNumber, member.name)
+          val variableFullName = closureStructDef.fullName.addStep(member.name)
           member.tyype match {
             case AddressMemberType2(reference) => {
-              AddressibleClosureVariable2(variableId, closureStructRef, member.variability, reference)
+              AddressibleClosureVariable2(variableFullName, closureStructRef, member.variability, reference)
             }
             case ReferenceMemberType2(reference) => {
-              ReferenceClosureVariable2(variableId, closureStructRef, member.variability, reference)
+              ReferenceClosureVariable2(variableFullName, closureStructRef, member.variability, reference)
             }
           }
         }))
@@ -242,14 +241,13 @@ object FunctionTemplarClosureOrLightLayer {
       outerEnv
         .addVariables(
           closureStructDef.members.map(member => {
-            val containingFunctionLambdaNumber = vimpl()//outerEnv.function.lambdaNumber
-            val variableId = FullName2(containingFunctionLambdaNumber, member.name)
+            val variableFullName = closureStructDef.fullName.addStep(member.name)
             member.tyype match {
               case AddressMemberType2(reference) => {
-                AddressibleClosureVariable2(variableId, closureStructRef, member.variability, reference)
+                AddressibleClosureVariable2(variableFullName, closureStructRef, member.variability, reference)
               }
               case ReferenceMemberType2(reference) => {
-                ReferenceClosureVariable2(variableId, closureStructRef, member.variability, reference)
+                ReferenceClosureVariable2(variableFullName, closureStructRef, member.variability, reference)
               }
             }
           }))

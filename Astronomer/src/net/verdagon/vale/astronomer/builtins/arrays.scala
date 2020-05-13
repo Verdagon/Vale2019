@@ -14,7 +14,16 @@ object Arrays {
         name,
         false,
         TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), FunctionTemplataType),
+        Set(CodeRuneA("I")),
         List(CodeRuneA("ArrayMutability"), CodeRuneA("T"), CodeRuneA("Generator")),
+        Set(
+          CodeRuneA("I"),
+          CodeRuneA("ArrayMutability"),
+          CodeRuneA("T"),
+          CodeRuneA("Generator"),
+          CodeRuneA("M"),
+          CodeRuneA("R"),
+          ImplicitRuneA(0)),
         Map(
           CodeRuneA("ArrayMutability") -> MutabilityTemplataType,
           CodeRuneA("I") -> CoordTemplataType,

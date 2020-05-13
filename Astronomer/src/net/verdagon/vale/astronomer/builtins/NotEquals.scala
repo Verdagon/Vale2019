@@ -12,7 +12,9 @@ object NotEquals {
       name,
       false,
       TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
+      Set(),
       List(CodeRuneA("T")),
+      Set(CodeRuneA("T")),
       Map(CodeRuneA("T") -> CoordTemplataType),
       List(
         ParameterA(AtomAP(CaptureA(CodeVarNameA("left"), FinalP), None, CodeRuneA("T"), None)),

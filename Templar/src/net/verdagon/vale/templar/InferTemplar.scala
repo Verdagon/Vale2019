@@ -18,6 +18,7 @@ object InferTemplar {
     state: TemputsBox,
     rules: List[IRulexAR],
     typeByRune: Map[IRuneA, ITemplataType],
+    localRunes: Set[IRuneA],
     directInputs: Map[IRuneA, ITemplata],
     paramAtoms: List[AtomAP],
     maybeParamInputs: Option[List[ParamFilter]],
@@ -29,6 +30,7 @@ object InferTemplar {
       state,
       translateRules(rules),
       typeByRune.map({ case (key, value) => NameTranslator.translateRune(key) -> value}),
+      localRunes.map(NameTranslator.translateRune),
       directInputs.map({ case (key, value) => NameTranslator.translateRune(key) -> value}),
       paramAtoms,
       maybeParamInputs,
@@ -156,9 +158,10 @@ object InferTemplar {
     env0: IEnvironment,
     temputs: TemputsBox,
     rules: List[IRulexAR],
-    typeByRune: Map[IRuneA, ITemplataType]
+    typeByRune: Map[IRuneA, ITemplataType],
+    localRunes: Set[IRuneA],
   ): (Map[IRune2, ITemplata]) = {
-    solve(env0, temputs, rules, typeByRune, Map(), List(), None, true) match {
+    solve(env0, temputs, rules, typeByRune, localRunes, Map(), List(), None, true) match {
       case (InferSolveSuccess(inferences)) => {
         (inferences.templatasByRune)
       }
@@ -174,6 +177,7 @@ object InferTemplar {
     identifyingRunes: List[IRuneA],
     rules: List[IRulexAR],
     typeByRune: Map[IRuneA, ITemplataType],
+    localRunes: Set[IRuneA],
     patterns1: List[AtomAP],
     maybeRetRune: Option[IRuneA],
     explicits: List[ITemplata],
@@ -187,6 +191,7 @@ object InferTemplar {
       temputs,
       rules,
       typeByRune,
+      localRunes,
       identifyingRunes.zip(explicits).toMap,
       patterns1,
       None,
@@ -199,6 +204,7 @@ object InferTemplar {
     identifyingRunes: List[IRuneA],
     rules: List[IRulexAR],
     typeByRune: Map[IRuneA, ITemplataType],
+    localRunes: Set[IRuneA],
     patterns1: List[AtomAP],
     maybeRetRune: Option[IRuneA],
     alreadySpecifiedTemplateArgs: List[ITemplata],
@@ -210,6 +216,7 @@ object InferTemplar {
       temputs,
       rules,
       typeByRune,
+      localRunes,
       // Note: this two things we're zipping are of different length, that's fine.
       identifyingRunes.zip(alreadySpecifiedTemplateArgs).toMap,
       patterns1,

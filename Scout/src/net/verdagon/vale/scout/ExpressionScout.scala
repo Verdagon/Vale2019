@@ -4,6 +4,7 @@ import net.verdagon.vale.parser._
 import net.verdagon.vale.{scout, vfail, vimpl, vwat}
 import net.verdagon.vale.scout.Scout.{noDeclarations, noVariableUses}
 import net.verdagon.vale.scout.patterns.{LetRuleState, PatternScout, RuleState, RuleStateBox}
+import net.verdagon.vale.scout.predictor.Conclusions
 import net.verdagon.vale.scout.rules.RuleScout
 import net.verdagon.vale.scout.templatepredictor.PredictorEvaluator
 
@@ -191,10 +192,17 @@ object ExpressionScout {
             patternP)
         val rulesS = userRulesS ++ implicitRulesS
 
-        val allRunes = PredictorEvaluator.getAllRunes(stackFrame.parentEnv.allUserDeclaredRunes(), letFullName, List(), rulesS, List(patternS), None)
+        val allRunes = PredictorEvaluator.getAllRunes(letFullName, List(), rulesS, List(patternS), None)
+
+        // See MKKRFA
+        val knowableRunesFromAbove = stackFrame.parentEnv.allUserDeclaredRunes()
+        val allUnknownRunes = allRunes -- knowableRunesFromAbove
+        val Conclusions(knowableValueRunes, predictedTypeByRune) =
+          PredictorEvaluator.solve(Set(), rulesS, List())
+        val localRunes = allRunes -- knowableRunesFromAbove
 
         val declarationsFromPattern = VariableDeclarations(PatternScout.getParameterCaptures(patternS))
-        (declarations ++ declarationsFromPattern, NormalResult(LetSE(rulesS, allRunes, patternS, expr1)), selfUses, childUses)
+        (declarations ++ declarationsFromPattern, NormalResult(LetSE(rulesS, allUnknownRunes, localRunes, patternS, expr1)), selfUses, childUses)
       }
       case MutatePE(destinationExprPE, sourceExprPE) => {
         val (exportedNames1, sourceExpr1, sourceInnerSelfUses, sourceChildUses) =

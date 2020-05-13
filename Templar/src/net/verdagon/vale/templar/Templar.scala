@@ -81,7 +81,7 @@ object Templar {
     val emptyPackStructRef = StructTemplar.addBuiltInStructs(env11, temputs)
 
       structsA.foreach({
-        case (structS @ StructA(_, _, _, _, _, _, _, _)) => {
+        case (structS @ StructA(_, _, _, _, _, _, _, _, _, _)) => {
           if (structS.isTemplate) {
             // Do nothing, it's a template
           } else {
@@ -92,7 +92,7 @@ object Templar {
       })
 
       interfacesA.foreach({
-        case (interfaceS @ InterfaceA(_, _, _, _, _, _, _, _)) => {
+        case (interfaceS @ InterfaceA(_, _, _, _, _, _, _, _, _, _)) => {
           if (interfaceS.isTemplate) {
             // Do nothing, it's a template
           } else {

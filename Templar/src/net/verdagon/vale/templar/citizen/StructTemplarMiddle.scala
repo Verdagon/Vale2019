@@ -24,7 +24,7 @@ object StructTemplarMiddle {
       structOuterEnv.addEntries(
         templatasByRune.map({ case (rune, templata) => (rune, List(TemplataEnvEntry(templata))) }))
     val structDefinition2 =
-      StructTemplarCore.makeStruct(
+      StructTemplarCore.maakeStruct(
         localEnv, temputs, structS, coercedFinalTemplateArgs2);
 
     (structDefinition2.getRef)

@@ -139,7 +139,7 @@ class InfererTests extends FunSuite with Matchers {
   def makeCannedEnvironment(): SimpleEnvironment = {
     var entries = Map[INameA, IEnvEntry]()
     val immInterfaceName = TopLevelCitizenDeclarationNameA("ImmInterface", CodeLocationS(0, 0))
-    entries = entries ++ Map(immInterfaceName -> InterfaceEnvEntry(InterfaceA(immInterfaceName, ImmutableP, Some(ImmutableP), KindTemplataType, List(), Map(), List(), List())))
+    entries = entries ++ Map(immInterfaceName -> InterfaceEnvEntry(InterfaceA(immInterfaceName, ImmutableP, Some(ImmutableP), KindTemplataType, Set(), List(), Set(), Map(), List(), List())))
     val arrayName = TopLevelCitizenDeclarationNameA("Array", CodeLocationS(0, 0))
     entries = entries ++ Map(arrayName -> TemplataEnvEntry(ArrayTemplateTemplata()))
     val mutTStructName = TopLevelCitizenDeclarationNameA("MutTStruct", CodeLocationS(0, 0))
@@ -151,7 +151,9 @@ class InfererTests extends FunSuite with Matchers {
               MutableP,
               Some(MutableP),
               TemplateTemplataType(List(CoordTemplataType), KindTemplataType),
+              Set(),
               List(CodeRuneA("T")),
+              Set(CodeRuneA("T")),
               Map(CodeRuneA("T") -> CoordTemplataType),
               List(),
               List())))
@@ -163,16 +165,18 @@ class InfererTests extends FunSuite with Matchers {
           MutableP,
           Some(MutableP),
           TemplateTemplataType(List(CoordTemplataType), KindTemplataType),
+          Set(),
           List(CodeRuneA("T")),
+          Set(CodeRuneA("T")),
           Map(CodeRuneA("T") -> CoordTemplataType),
           List(),
           List())))
     val mutStructName = TopLevelCitizenDeclarationNameA("MutStruct", CodeLocationS(0, 0))
     entries = entries ++ Map(mutStructName ->
-      StructEnvEntry(StructA(mutStructName, MutableP, Some(MutableP), KindTemplataType, List(), Map(), List(), List())))
+      StructEnvEntry(StructA(mutStructName, MutableP, Some(MutableP), KindTemplataType, Set(), List(), Set(), Map(), List(), List())))
     val mutInterfaceName = TopLevelCitizenDeclarationNameA("MutInterface", CodeLocationS(0, 0))
     entries = entries ++ Map(mutInterfaceName ->
-      InterfaceEnvEntry(InterfaceA(mutInterfaceName, MutableP, Some(MutableP), KindTemplataType, List(), Map(), List(), List())))
+      InterfaceEnvEntry(InterfaceA(mutInterfaceName, MutableP, Some(MutableP), KindTemplataType, Set(), List(), Set(), Map(), List(), List())))
     val mutStructBorrowName = TopLevelCitizenDeclarationNameA("MutStructBorrow", CodeLocationS(0, 0))
     entries = entries ++ Map(mutStructBorrowName ->
       TemplataEnvEntry(CoordTemplata(Coord(Borrow, StructRef2(FullName2(List(), CitizenName2("MutStruct", List())))))))
@@ -308,6 +312,7 @@ class InfererTests extends FunSuite with Matchers {
               TemplexTR(RuneTT(CodeRune2("__C"), CoordTemplataType)),
               TemplexTR(OwnershippedTT(BorrowP,NameTT(CodeTypeNameA("ImmInterface"), CoordTemplataType))))),
           Map(CodeRune2("__C") -> CoordTemplataType),
+          Set(CodeRune2("__C")),
           Map(),
           List(),
           None,
@@ -326,6 +331,7 @@ class InfererTests extends FunSuite with Matchers {
           FakeState(),
           List(TemplexTR(RuneTT(CodeRune2("C"), CoordTemplataType))),
           Map(CodeRune2("C") -> CoordTemplataType),
+          Set(CodeRune2("C")),
           Map(CodeRune2("C") -> KindTemplata(InterfaceRef2(FullName2(List(), CitizenName2("ImmInterface",List(KindTemplata(Int2()))))))),
           List(),
           None,
@@ -342,6 +348,7 @@ class InfererTests extends FunSuite with Matchers {
           FakeState(),
           List(EqualsTR(TemplexTR(RuneTT(CodeRune2("C"), CoordTemplataType)), TemplexTR(RuneTT(CodeRune2("A"), KindTemplataType)))),
           Map(CodeRune2("A") -> KindTemplataType),
+          Set(CodeRune2("A")),
           Map(CodeRune2("A") -> KindTemplata(Int2())),
           List(),
           None,
@@ -361,6 +368,7 @@ class InfererTests extends FunSuite with Matchers {
               TemplexTR(RuneTT(CodeRune2("C"), CoordTemplataType)),
               CallTR("toRef", List(TemplexTR(RuneTT(CodeRune2("A"), KindTemplataType))), CoordTemplataType))),
           Map(CodeRune2("C") -> CoordTemplataType, CodeRune2("A") -> KindTemplataType),
+          Set(CodeRune2("C"), CodeRune2("A")),
           Map(CodeRune2("A") -> KindTemplata(Int2())),
           List(),
           None,
@@ -379,6 +387,7 @@ class InfererTests extends FunSuite with Matchers {
             TemplexTR(RuneTT(ImplicitRune2(0), CoordTemplataType)),
             EqualsTR(TemplexTR(RuneTT(ImplicitRune2(0), CoordTemplataType)),TemplexTR(NameTT(CodeTypeNameA("Int"), CoordTemplataType)))),
           Map(ImplicitRune2(0) -> CoordTemplataType),
+          Set(ImplicitRune2(0)),
           Map(),
           List(),
           None,
@@ -398,6 +407,7 @@ class InfererTests extends FunSuite with Matchers {
               TemplexTR(RuneTT(CodeRune2("__RetRune"), CoordTemplataType)),
               CallTR("toRef",List(TemplexTR(NameTT(CodeTypeNameA("MutStruct"), KindTemplataType))), TemplateTemplataType(List(KindTemplataType), CoordTemplataType)))),
           Map(CodeRune2("__RetRune") -> CoordTemplataType),
+          Set(CodeRune2("__RetRune")),
           Map(),
           List(),
           None,
@@ -417,6 +427,7 @@ class InfererTests extends FunSuite with Matchers {
             TemplexTR(RuneTT(ImplicitRune2(0), CoordTemplataType)),
             EqualsTR(TemplexTR(RuneTT(ImplicitRune2(0), CoordTemplataType)),CallTR("toRef", List(TemplexTR(NameTT(CodeTypeNameA("Int"), KindTemplataType))), CoordTemplataType))),
           Map(ImplicitRune2(0) -> CoordTemplataType),
+          Set(ImplicitRune2(0)),
           Map(),
           List(),
           None,
@@ -436,6 +447,7 @@ class InfererTests extends FunSuite with Matchers {
               TemplexTR(RuneTT(CodeRune2("X"), KindTemplataType)),
               TemplexTR(CallTT(NameTT(CodeTypeNameA("MutTInterface"), TemplateTemplataType(List(CoordTemplataType), KindTemplataType)),List(RuneTT(CodeRune2("T"), CoordTemplataType)), KindTemplataType)))),
           Map(CodeRune2("X") -> KindTemplataType, CodeRune2("T") -> CoordTemplataType),
+          Set(CodeRune2("X"), CodeRune2("T")),
           Map(CodeRune2("X") -> KindTemplata(InterfaceRef2(FullName2(List(), CitizenName2("MutTInterface",List(CoordTemplata(Coord(Share, Int2())))))))),
           List(),
           None,
@@ -467,6 +479,7 @@ class InfererTests extends FunSuite with Matchers {
           Map(
             ImplicitRune2(1337) -> KindTemplataType,
             ImplicitRune2(0) -> CoordTemplataType),
+          Set(ImplicitRune2(1337), ImplicitRune2(0)),
           Map(),
           List(AtomAP(CaptureA(CodeVarNameA("m"),FinalP),None,ImplicitRuneA(0),None)),
           Some(List(ParamFilter(Coord(Borrow,InterfaceRef2(FullName2(List(), CitizenName2("MutInterface", List())))),None))),
@@ -487,6 +500,7 @@ class InfererTests extends FunSuite with Matchers {
               TemplexTR(RuneTT(CodeRune2("__Let0_"), CoordTemplataType)),
               CallTR("toRef", List(TemplexTR(NameTT(CodeTypeNameA("MutInterface"), KindTemplataType))), CoordTemplataType))),
           Map(CodeRune2("__Let0_") -> KindTemplataType),
+          Set(CodeRune2("__Let0_")),
           Map(),
           List(AtomAP(CaptureA(CodeVarNameA("x"),FinalP),None,CodeRuneA("__Let0_"),None)),
           Some(List(ParamFilter(Coord(Own,StructRef2(FullName2(List(), CitizenName2("MutStruct",List())))),None))),
@@ -515,6 +529,7 @@ class InfererTests extends FunSuite with Matchers {
                       KindTemplataType))),
                 CoordTemplataType))),
           Map(CodeRune2("__Let0_") -> KindTemplataType, CodeRune2("T") -> CoordTemplataType),
+          Set(CodeRune2("__Let0_"), CodeRune2("T")),
           Map(),
           List(AtomAP(CaptureA(CodeVarNameA("x"),FinalP),None,CodeRuneA("__Let0_"),None)),
           Some(List(ParamFilter(Coord(Own,StructRef2(FullName2(List(), CitizenName2("MutTStruct",List(CoordTemplata(Coord(Share, Int2()))))))),None))),
@@ -553,6 +568,7 @@ class InfererTests extends FunSuite with Matchers {
           FakeState(),
           rules,
           Map(CodeRune2("V") -> CoordTemplataType, CodeRune2("T") -> CoordTemplataType),
+          Set(CodeRune2("V"), CodeRune2("T")),
           Map(),
           atoms,
           Some(List(paramFilter)),
@@ -607,6 +623,7 @@ class InfererTests extends FunSuite with Matchers {
           FakeState(),
           rules,
           Map(CodeRune2("T") -> CoordTemplataType, CodeRune2("V") -> CoordTemplataType),
+          Set(CodeRune2("T"), CodeRune2("V")),
           Map(),
           atoms,
           Some(List(paramFilter)),
@@ -652,6 +669,7 @@ class InfererTests extends FunSuite with Matchers {
           FakeState(),
           rules,
           Map(CodeRune2("T") -> CoordTemplataType),
+          Set(CodeRune2("T")),
           Map(),
           atoms,
           Some(List(paramFilter)),
@@ -703,6 +721,7 @@ class InfererTests extends FunSuite with Matchers {
         FakeState(),
         rules,
         Map(ImplicitRune2(0) -> CoordTemplataType),
+        Set(ImplicitRune2(0)),
         Map(),
         atoms,
         None,
@@ -727,6 +746,7 @@ class InfererTests extends FunSuite with Matchers {
         FakeState(),
         rules,
         Map(CodeRune2("__Par0") -> CoordTemplataType),
+        Set(CodeRune2("__Par0")),
         Map(),
         atoms,
         None,
@@ -753,6 +773,7 @@ class InfererTests extends FunSuite with Matchers {
         FakeState(),
         rules,
         Map(ImplicitRune2(0) -> KindTemplataType),
+        Set(ImplicitRune2(0)),
         Map(),
         List(AtomAP(CaptureA(CodeVarNameA("x"),FinalP),Some(AbstractAP),ImplicitRuneA(0),None)),
         Some(List(ParamFilter(Coord(Own,StructRef2(FullName2(List(), CitizenName2("MutTStruct",List(CoordTemplata(Coord(Share,Int2()))))))),None))),
@@ -771,6 +792,7 @@ class InfererTests extends FunSuite with Matchers {
           TemplexTR(RuneTT(CodeRune2("__Let0__Mem_0"), CoordTemplataType)),
           TemplexTR(RuneTT(CodeRune2("__Let0__Mem_1"), CoordTemplataType))),
         Map(CodeRune2("__Let0_") -> CoordTemplataType, CodeRune2("__Let0__Mem_0") -> CoordTemplataType, CodeRune2("__Let0__Mem_1") -> CoordTemplataType),
+        Set(CodeRune2("__Let0_"), CodeRune2("__Let0__Mem_0"), CodeRune2("__Let0__Mem_1")),
         Map(),
         List(
           AtomAP(
@@ -807,6 +829,7 @@ class InfererTests extends FunSuite with Matchers {
             TemplexTR(RuneTT(ImplicitRune2(0), CoordTemplataType)),
             TemplexTR(RepeaterSequenceTT(MutabilityTT(ImmutableP), IntTT(5),OwnershippedTT(ShareP,NameTT(CodeTypeNameA("Int"), CoordTemplataType)), CoordTemplataType)))),
         Map(ImplicitRune2(0) -> CoordTemplataType),
+        Set(ImplicitRune2(0)),
         Map(),
         List(),
         None,
@@ -830,6 +853,7 @@ class InfererTests extends FunSuite with Matchers {
                 RuneTT(CodeRune2("E"), CoordTemplataType),
                 CoordTemplataType)))),
         Map(CodeRune2("E") -> CoordTemplataType),
+        Set(CodeRune2("E")),
         Map(),
         List(),
         None,
@@ -854,6 +878,7 @@ class InfererTests extends FunSuite with Matchers {
                 RuneTT(CodeRune2("E"), CoordTemplataType),
                 KindTemplataType)))),
         Map(CodeRune2("E") -> CoordTemplataType),
+        Set(CodeRune2("E")),
         Map(),
         List(),
         None,
@@ -884,6 +909,7 @@ class InfererTests extends FunSuite with Matchers {
                 List(RuneTT(CodeRune2("M"), MutabilityTemplataType), RuneTT(CodeRune2("T"), CoordTemplataType)),
                 KindTemplataType)))),
         Map(CodeRune2("T") -> CoordTemplataType, CodeRune2("M") -> MutabilityTemplataType, CodeRune2("K") -> KindTemplataType),
+        Set(CodeRune2("T"), CodeRune2("M"), CodeRune2("K")),
         Map(),
         List(),
         None,
@@ -903,6 +929,7 @@ class InfererTests extends FunSuite with Matchers {
               TemplexTR(RuneTT(CodeRune2("K"), KindTemplataType)),
               TemplexTR(NameTT(CodeTypeNameA("MutInterface"), KindTemplataType)))),
           Map(CodeRune2("K") -> KindTemplataType),
+          Set(CodeRune2("K")),
           Map(CodeRune2("K") -> KindTemplata(StructRef2(FullName2(List(), CitizenName2("MutStruct", List()))))),
           List(),
           None,
@@ -918,6 +945,7 @@ class InfererTests extends FunSuite with Matchers {
               TemplexTR(RuneTT(CodeRune2("K"), KindTemplataType)),
               TemplexTR(NameTT(CodeTypeNameA("MutInterface"), KindTemplataType)))),
           Map(CodeRune2("K") -> KindTemplataType),
+          Set(CodeRune2("K")),
           Map(CodeRune2("K") -> KindTemplata(StructRef2(FullName2(List(), CitizenName2("MutSoloStruct", List()))))),
           List(),
           None,
@@ -938,6 +966,7 @@ class InfererTests extends FunSuite with Matchers {
                 TemplexTR(RuneTT(ImplicitRune2(0), KindTemplataType)),
                 TemplexTR(NameTT(CodeTypeNameA("MutInterface"), KindTemplataType))))),
           Map(CodeRune2("K") -> KindTemplataType),
+          Set(CodeRune2("K")),
           Map(CodeRune2("K") -> KindTemplata(StructRef2(FullName2(List(), CitizenName2("MutStruct", List()))))),
           List(),
           None,
@@ -953,6 +982,7 @@ class InfererTests extends FunSuite with Matchers {
               TemplexTR(RuneTT(CodeRune2("K"), KindTemplataType)),
               TemplexTR(NameTT(CodeTypeNameA("MutInterface"), KindTemplataType)))),
           Map(CodeRune2("K") -> KindTemplataType),
+          Set(CodeRune2("K")),
           Map(CodeRune2("K") -> KindTemplata(StructRef2(FullName2(List(), CitizenName2("MutSoloStruct", List()))))),
           List(),
           None,
@@ -971,6 +1001,7 @@ class InfererTests extends FunSuite with Matchers {
               TemplexTR(RuneTT(CodeRune2("T"), CoordTemplataType)),
               TemplexTR(OwnershippedTT(targetOwnership, NameTT(CodeTypeNameA(sourceName), CoordTemplataType))))),
           Map(CodeRune2("T") -> CoordTemplataType),
+          Set(CodeRune2("T")),
           Map(),
           List(AtomAP(CaptureA(CodeVarNameA("this"),FinalP),None,CodeRuneA("T"),None)),
           None,
@@ -1017,6 +1048,7 @@ class InfererTests extends FunSuite with Matchers {
               TemplexTR(NameTT(CodeTypeNameA(sourceName), CoordTemplataType)),
               TemplexTR(OwnershippedTT(targetOwnership, RuneTT(CodeRune2("T"), CoordTemplataType))))),
           Map(CodeRune2("T") -> CoordTemplataType),
+          Set(CodeRune2("T")),
           Map(),
           List(),
           None,

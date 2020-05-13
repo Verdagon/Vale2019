@@ -16,21 +16,18 @@ import scala.collection.immutable.List
 object PredictorEvaluator {
 
   private[scout] def getAllRunes(
-    // See MKKRFA
-    knowableRunesFromAbove: Set[IRuneS],
     envFullName: INameS,
-    identifyingRunes: List[IRuneS],
+    userSpecifiedIdentifyingRunes: List[IRuneS],
     rules: List[IRulexSR],
     patterns1: List[AtomSP],
     maybeRetRune: Option[IRuneS]
   ): Set[IRuneS] = {
     (
-      identifyingRunes ++
+      userSpecifiedIdentifyingRunes ++
         patterns1.flatMap(PatternSUtils.getDistinctOrderedRunesForPattern) ++
         RuleSUtils.getDistinctOrderedRunesForRulexes(envFullName, rules) ++
         maybeRetRune.toList
-      ).toSet --
-      knowableRunesFromAbove
+      ).toSet
   }
 
   private[scout] def solve(

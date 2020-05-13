@@ -19,8 +19,9 @@ object ExpressionAstronomer {
 
   def translateExpression(env: Environment, astrouts: AstroutsBox, iexprS: IExpressionSE): IExpressionAE = {
     iexprS match {
-      case LetSE(rules, allRunesS, patternS, expr) => {
+      case LetSE(rules, allRunesS, localRunesS, patternS, expr) => {
         val allRunesA = allRunesS.map(Astronomer.translateRune)
+        val localRunesA = localRunesS.map(Astronomer.translateRune)
         val (conclusions, rulesA) =
           Astronomer.makeRuleTyper().solve(astrouts, env, rules, List(patternS), Some(allRunesA)) match {
             case (_, rtsf @ RuleTyperSolveFailure(_, _, _)) => vfail(rtsf.toString)
@@ -33,6 +34,7 @@ object ExpressionAstronomer {
         LetAE(
           rulesA,
           conclusions.typeByRune,
+          localRunesA,
           patternA,
           exprA)
       }

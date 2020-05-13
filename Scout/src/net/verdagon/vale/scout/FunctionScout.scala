@@ -79,13 +79,6 @@ object FunctionScout {
         .foldLeft(noDeclarations)(_ ++ _)
     val myStackFrame = StackFrame(name, functionEnv, None, captureDeclarations)
 
-    val identifyingRunes: List[IRuneS] =
-      (
-        userSpecifiedIdentifyingRunes //++
-        // Patterns can't define runes
-        // filledParamsP.flatMap(PatternPUtils.getOrderedIdentifyingRunesFromPattern)
-      ).distinct
-
     val (implicitRulesFromRet, maybeRetCoordRune) =
       PatternScout.translateMaybeTypeIntoMaybeRune(
         userDeclaredRunes.toSet,
@@ -110,9 +103,8 @@ object FunctionScout {
 
     val allRunes =
       PredictorEvaluator.getAllRunes(
-        Set(),
         name,
-        identifyingRunes,
+        userSpecifiedIdentifyingRunes,
         rulesS,
         explicitParams1.map(_.pattern),
         maybeRetCoordRune)
@@ -122,7 +114,11 @@ object FunctionScout {
         rulesS,
         explicitParams1.map(_.pattern))
 
-    val isTemplate = knowableValueRunes != allRunes
+    val localRunes = allRunes
+    val unknowableRunes = allRunes -- knowableValueRunes
+    val identifyingRunes =
+      userSpecifiedIdentifyingRunes ++ (unknowableRunes -- userSpecifiedIdentifyingRunes)
+    val isTemplate = identifyingRunes.nonEmpty
 
     val maybePredictedType =
       if (isTemplate) {
@@ -138,8 +134,9 @@ object FunctionScout {
     FunctionS(
       name,
       isUserFunction,
+      knowableValueRunes,
       identifyingRunes,
-      allRunes,
+      localRunes,
       maybePredictedType,
       explicitParams1,
       maybeRetCoordRune,
@@ -225,7 +222,7 @@ object FunctionScout {
         })
         .unzip
 
-    val identifyingRunes =
+    val userSpecifiedAndMagicParamRunes =
       (
         userSpecifiedIdentifyingRunes ++
         // Patterns can't define runes
@@ -247,9 +244,8 @@ object FunctionScout {
 
     val allRunes =
       PredictorEvaluator.getAllRunes(
-        Set(),
         lambdaName,
-        identifyingRunes,
+        userSpecifiedAndMagicParamRunes,
         rulesS,
         explicitParams1.map(_.pattern),
         maybeRetCoordRune)
@@ -258,11 +254,17 @@ object FunctionScout {
         parentStackFrame.parentEnv.allUserDeclaredRunes(),
         rulesS,
         explicitParams1.map(_.pattern))
-    val isTemplate = knowableValueRunes != allRunes
+
+
+    val localRunes = allRunes -- myStackFrame.parentEnv.allUserDeclaredRunes()
+    val unknowableRunes = allRunes -- knowableValueRunes
+    val identifyingRunes =
+      userSpecifiedIdentifyingRunes ++ (unknowableRunes -- userSpecifiedIdentifyingRunes)
+    val isTemplate = identifyingRunes.nonEmpty
 
     val maybePredictedType =
       if (isTemplate) {
-        if ((identifyingRunes.toSet -- predictedTypeByRune.keySet).isEmpty) {
+        if (identifyingRunes.isEmpty) {
           Some(TemplateTypeSR(identifyingRunes.map(predictedTypeByRune), FunctionTypeSR))
         } else {
           None
@@ -275,8 +277,9 @@ object FunctionScout {
       FunctionS(
         lambdaName,
         isUserFunction,
+        knowableValueRunes,
         identifyingRunes,
-        allRunes,
+        localRunes,
         maybePredictedType,
         totalParams,
         maybeRetCoordRune,
@@ -392,13 +395,6 @@ object FunctionScout {
       userSpecifiedIdentifyingRuneNames
         .map(identifyingRuneName => CodeRuneS(identifyingRuneName))
 
-    val identifyingRunes: List[IRuneS] =
-      (
-        userSpecifiedIdentifyingRunes// ++
-        // Patterns can't define runes
-        // filledParamsP.flatMap(PatternPUtils.getOrderedIdentifyingRunesFromPattern)
-      ).distinct
-
     val rate = RuleStateBox(RuleState(funcName, 0))
 
     val userRulesS = RuleScout.translateRulexes(rate, interfaceEnv.allUserDeclaredRunes(), templateRulesP)
@@ -421,9 +417,8 @@ object FunctionScout {
 
     val allRunes =
       PredictorEvaluator.getAllRunes(
-        interfaceEnv.allUserDeclaredRunes(),
         funcName,
-        identifyingRunes,
+        userSpecifiedIdentifyingRunes,
         rulesS,
         paramsS.map(_.pattern),
         maybeReturnRune)
@@ -432,7 +427,13 @@ object FunctionScout {
         interfaceEnv.allUserDeclaredRunes(),
         rulesS,
         paramsS.map(_.pattern))
-    val isTemplate = (allRunes -- knowableValueRunes).nonEmpty
+
+    val localRunes = allRunes -- interfaceEnv.allUserDeclaredRunes()
+    val unknowableRunes = allRunes -- knowableValueRunes
+    val identifyingRunes =
+      userSpecifiedIdentifyingRunes ++ (unknowableRunes -- userSpecifiedIdentifyingRunes)
+    val isTemplate = identifyingRunes.nonEmpty
+    vassert(!isTemplate) // interface members cant be templates
 
     val maybePredictedType =
       if (isTemplate) {
@@ -448,8 +449,9 @@ object FunctionScout {
     FunctionS(
       funcName,
       true,
+      knowableValueRunes,
       identifyingRunes,
-      allRunes,
+      localRunes,
       maybePredictedType,
       paramsS,
       maybeReturnRune,

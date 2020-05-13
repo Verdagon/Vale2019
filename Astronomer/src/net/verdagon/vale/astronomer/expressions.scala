@@ -11,6 +11,7 @@ import net.verdagon.vale.vassert
 case class LetAE(
     rules: List[IRulexAR],
     typeByRune: Map[IRuneA, ITemplataType],
+    localRunes: Set[IRuneA],
     pattern: AtomAP,
     expr: IExpressionAE) extends IExpressionAE
 

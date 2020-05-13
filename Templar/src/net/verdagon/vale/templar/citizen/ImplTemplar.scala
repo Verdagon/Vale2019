@@ -18,18 +18,16 @@ object ImplTemplar {
     implTemplata: ImplTemplata):
   (Option[InterfaceRef2]) = {
     val ImplTemplata(env, impl) = implTemplata
-    val ImplA(codeLocation, rules, _, structKindRune, interfaceKindRune) = impl
+    val ImplA(codeLocation, rules, typeByRune, localRunes, structKindRune, interfaceKindRune) = impl
 
-    val (rulesForImplAndParents, typeByRuneForImplAndParents) =
-//      EnvironmentUtils.assembleRulesFromContainers(implAndParents)
-      (impl.rules, impl.typeByRune)
     val result =
       InferTemplar.inferFromExplicitTemplateArgs(
         env,
         temputs,
         List(structKindRune),
-        rulesForImplAndParents,
-        typeByRuneForImplAndParents,
+        rules,
+        typeByRune,
+        localRunes,
         List(),
         None,
         List(KindTemplata(childCitizenRef)))

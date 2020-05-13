@@ -539,7 +539,7 @@ object ExpressionTemplar {
 
         (expr2, returnsFromContainerExpr)
       }
-      case FunctionAE(name, function1 @ FunctionA(_, _, _, _, _, _, _, _, CodeBodyA(body))) => {
+      case FunctionAE(name, function1 @ FunctionA(_, _, _, _, _, _, _, _, _, _, CodeBodyA(body))) => {
         val callExpr2 = evaluateClosure(temputs, fate, name, BFunctionA(function1, body))
         (callExpr2, Set())
       }
@@ -618,14 +618,14 @@ object ExpressionTemplar {
             generatorExpr2)
         (constructExpr2, returnsFromSize ++ returnsFromGenerator)
       }
-      case LetAE(rulesA, typeByRune, pattern, sourceExpr1) => {
+      case LetAE(rulesA, typeByRune, localRunesA, pattern, sourceExpr1) => {
         val (sourceExpr2, returnsFromSource) =
           evaluateAndCoerceToReferenceExpression(temputs, fate, sourceExpr1)
 
         val fateSnapshot = fate.snapshot
         val lets2 =
           PatternTemplar.nonCheckingInferAndTranslate(
-            temputs, fate, rulesA, typeByRune, pattern, sourceExpr2)
+            temputs, fate, rulesA, typeByRune, localRunesA, pattern, sourceExpr2)
 
         val resultExprBlock2 = Consecutor2(lets2)
 

@@ -39,6 +39,7 @@ object PatternTemplar {
     fate: FunctionEnvironmentBox,
     rules: List[IRulexAR],
     typeByRune: Map[IRuneA, ITemplataType],
+    localRunes: Set[IRuneA],
     patterns1: List[AtomAP],
     patternInputExprs2: List[ReferenceExpression2]):
   List[ReferenceExpression2] = {
@@ -46,7 +47,7 @@ object PatternTemplar {
     val patternInputCoords = patternInputExprs2.map(_.resultRegister.reference)
 
     val templatasByRune =
-      InferTemplar.inferFromArgCoords(fate.snapshot, temputs, List(), rules, typeByRune, patterns1, None, List(), patternInputCoords.map(arg => ParamFilter(arg, None))) match {
+      InferTemplar.inferFromArgCoords(fate.snapshot, temputs, List(), rules, typeByRune, localRunes, patterns1, None, List(), patternInputCoords.map(arg => ParamFilter(arg, None))) match {
         case (InferSolveFailure(_, _, _, _, _, _)) => vfail("Couldn't figure out runes for pattern!")
         case (InferSolveSuccess(tbr)) => (tbr.templatasByRune.mapValues(v => List(TemplataEnvEntry(v))))
       }
@@ -97,12 +98,13 @@ object PatternTemplar {
       fate: FunctionEnvironmentBox,
       rules: List[IRulexAR],
       typeByRune: Map[IRuneA, ITemplataType],
+    localRunes: Set[IRuneA],
       pattern: AtomAP,
       inputExpr: ReferenceExpression2):
   (List[ReferenceExpression2]) = {
 
     val templatasByRune =
-      InferTemplar.inferFromArgCoords(fate.snapshot, temputs, List(), rules, typeByRune, List(pattern), None, List(), List(ParamFilter(inputExpr.resultRegister.reference, None))) match {
+      InferTemplar.inferFromArgCoords(fate.snapshot, temputs, List(), rules, typeByRune, localRunes, List(pattern), None, List(), List(ParamFilter(inputExpr.resultRegister.reference, None))) match {
         case (isf @ InferSolveFailure(_, _, _, _, _, _)) => vfail("Couldn't figure out runes for pattern!\n" + isf)
         case (InferSolveSuccess(tbr)) => (tbr.templatasByRune.mapValues(v => List(TemplataEnvEntry(v))))
       }

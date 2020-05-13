@@ -26,7 +26,7 @@ object StructTemplarCore {
     (structDef2.getRef)
   }
 
-  def makeStruct(
+  def maakeStruct(
     // The environment that the struct was defined in.
     structRunesEnv: NamespaceEnvironment[IName2],
     temputs: TemputsBox,
@@ -69,20 +69,21 @@ object StructTemplarCore {
       ImplTemplar.getParentInterfaces(temputs, temporaryStructRef);
 
     implementedInterfaceRefs2.foreach({
-      case (implementedInterfaceRef2) => {
+      case (implementedInterfaceRefT) => {
         val ownership = if (structDef2.mutability == Mutable) Own else Share
-        OverloadTemplar.scoutExpectedFunctionForPrototype(
-          structInnerEnv,
-          temputs,
-          GlobalFunctionFamilyNameA(CallTemplar.INTERFACE_DESTRUCTOR_NAME),
-          List(),
-          List(ParamFilter(Coord(ownership, structDef2.getRef), Some(Override2(implementedInterfaceRef2)))),
-          List(),
-          true) match {
+        val sefResult =
+          OverloadTemplar.scoutExpectedFunctionForPrototype(
+            structInnerEnv,
+            temputs,
+            GlobalFunctionFamilyNameA(CallTemplar.INTERFACE_DESTRUCTOR_NAME),
+            List(),
+            List(ParamFilter(Coord(ownership, structDef2.getRef), Some(Override2(implementedInterfaceRefT)))),
+            List(),
+            true)
+          sefResult match {
           case ScoutExpectedFunctionSuccess(_) =>
-          case sf @ ScoutExpectedFunctionFailure(humanName, args, outscoredReasonByPotentialBanner, rejectedReasonByBanner, rejectedReasonByFunction) => {
-            val derp = sf
-            vfail(derp.toString)
+          case ScoutExpectedFunctionFailure(humanName, args, outscoredReasonByPotentialBanner, rejectedReasonByBanner, rejectedReasonByFunction) => {
+            vfail(sefResult.toString)
           }
         }
       }

@@ -94,6 +94,8 @@ object StructTemplar {
             AbsoluteNameAT(struct1.name, CoordTemplataType)
           }))
 
+    val isTemplate = struct1.tyype != KindTemplataType
+
     FunctionA(
       ConstructorNameA(struct1.name),
       true,
@@ -101,7 +103,9 @@ object StructTemplar {
         case KindTemplataType => FunctionTemplataType
         case TemplateTemplataType(params, KindTemplataType) => TemplateTemplataType(params, FunctionTemplataType)
       },
+      struct1.knowableRunes ++ (if (isTemplate) List() else List(retRune)),
       struct1.identifyingRunes,
+      struct1.localRunes ++ List(retRune),
       struct1.typeByRune + (retRune -> CoordTemplataType),
       params,
       Some(retRune),
@@ -111,11 +115,11 @@ object StructTemplar {
 
   def getInterfaceConstructor(interfaceA: InterfaceA): FunctionA = {
     println("todo: put all the members' rules up in the top of the struct")
-    val identifyingRunes =
-      interfaceA.identifyingRunes ++ interfaceA.internalMethods.indices.map(x => CodeRuneA("Functor" + x))
+    val identifyingRunes = interfaceA.identifyingRunes
+    val functorRunes = interfaceA.internalMethods.indices.map(i => (CodeRuneA("Functor" + i)))
     val typeByRune =
       interfaceA.typeByRune ++
-      interfaceA.internalMethods.indices.map(i => (CodeRuneA("Functor" + i) -> CoordTemplataType)).toMap +
+      functorRunes.map(functorRune => (functorRune -> CoordTemplataType)).toMap +
         (AnonymousSubstructParentInterfaceRuneA() -> KindTemplataType)
     val params =
       interfaceA.internalMethods.indices.toList.map(index => {
@@ -153,6 +157,8 @@ object StructTemplar {
             AbsoluteNameAT(interfaceA.name, KindTemplataType)
           }))
 
+    val isTemplate = interfaceA.tyype != KindTemplataType
+
     val TopLevelCitizenDeclarationNameA(name, codeLocation) = interfaceA.name
     FunctionA(
       FunctionNameA(name, codeLocation),
@@ -161,7 +167,9 @@ object StructTemplar {
         case KindTemplataType => FunctionTemplataType
         case TemplateTemplataType(params, KindTemplataType) => TemplateTemplataType(params, FunctionTemplataType)
       },
+      interfaceA.knowableRunes ++ functorRunes ++ (if (isTemplate) List() else List(AnonymousSubstructParentInterfaceRuneA())),
       identifyingRunes,
+      interfaceA.localRunes ++ functorRunes ++ List(AnonymousSubstructParentInterfaceRuneA()),
       typeByRune,
       params,
       None,
@@ -323,6 +331,7 @@ object StructTemplar {
       case (StructRef2(fullName), StructTemplata(_, structA)) => {
         fullName.last match {
           case CitizenName2(humanName, templateArgs) => humanName == structA.name.name
+          case TupleName2(_) => false
           case _ => vimpl()
         }
       }

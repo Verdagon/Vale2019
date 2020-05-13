@@ -27,11 +27,16 @@ object makeSimpleFunction {
     val paramRules = runeByType.map({ case (tyype, rune) => simpleCoordRuneAR(rune, tyype) }).toList
     val allRules = simpleCoordRuneAR(returnRune, retType) :: paramRules
 
+    val knowableRunes = runeByType.values.toSet[IRuneA] + returnRune
+    val localRunes = runeByType.values.toSet[IRuneA] + returnRune
+
     FunctionA(
       name,
       false,
       FunctionTemplataType,
+      knowableRunes,
       List(),
+      localRunes,
       runeByType
         .map({ case (_, rune) => (rune, CoordTemplataType) })
         .toMap[IRuneA, ITemplataType] +
