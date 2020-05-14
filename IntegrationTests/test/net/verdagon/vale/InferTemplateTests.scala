@@ -10,7 +10,7 @@ class InferTemplateTests extends FunSuite with Matchers {
   test("Test inferring a borrowed argument") {
     val compile = new Compilation(
       """
-        |struct Muta { hp: Int; }
+        |struct Muta { hp Int; }
         |fn moo<T>(m &T) { m.hp }
         |fn main() {
         |  x = Muta(10);

@@ -15,7 +15,7 @@ class IfTests extends FunSuite with Matchers {
         |}
       """.stripMargin)
     val scoutput = compile.getScoutput()
-    val main = scoutput.implementedFunctions.find(_.name == "main").get
+    val main = scoutput.lookupFunction("main")
     val CodeBody1(BodySE(_, BlockSE(_, List(IfSE(_, _, _))))) = main.body
 
     val temputs = compile.getTemputs()
@@ -65,10 +65,10 @@ class IfTests extends FunSuite with Matchers {
         |fn main() {
         |  m = Marine(5);
         |  = if (false) {
-        |      [x] = m;
+        |      (x) = m;
         |      = x;
         |    } else {
-        |      [y] = m;
+        |      (y) = m;
         |      = y;
         |    }
         |}
@@ -134,8 +134,8 @@ class IfTests extends FunSuite with Matchers {
 
   test("Can continue if other branch would have returned") {
     val compile = new Compilation(
-      """struct Marine { hp: Int; }
-        |fn destructor(marine: Marine) Void {
+      """struct Marine { hp Int; }
+        |fn destructor(marine Marine) Void {
         |  println("Destroying marine!");
         |  Marine(weapon) = marine;
         |}

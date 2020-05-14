@@ -51,6 +51,7 @@ object TemplataNamer {
       case CitizenName2(humanName, templateArgs) => "ᛘ" + humanName + stringifyTemplateArgs(templateArgs)
       case LambdaCitizenName2(codeLocation) => "ᛊ" + codeLocation
       case AnonymousSubstructName2(thing) =>
+      case TupleName2(members) => "tup#"
       case x => vimpl(x.toString)
     }).mkString(".")
   }

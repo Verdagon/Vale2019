@@ -46,7 +46,9 @@ case class LocalVariable1(
     selfMutated: IVariableUseCertainty,
     childBorrowed: IVariableUseCertainty,
     childMoved: IVariableUseCertainty,
-    childMutated: IVariableUseCertainty)
+    childMutated: IVariableUseCertainty) {
+  println("hallo")
+}
 
 case class BodySE(
     // These are all the variables we use from parent environments.

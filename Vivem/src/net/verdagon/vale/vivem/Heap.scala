@@ -710,7 +710,7 @@ class Heap(in_vivemDout: PrintStream) {
           structH.fullName.toString,
           None,
           structH.members.zip(members).zipWithIndex.map({ case ((memberH, memberV), index) =>
-            VonMember(None, Some(memberH.name), toVon(memberV))
+            VonMember(None, Some(vimpl(memberH.name.von.toString)), toVon(memberV))
           }).toVector)
       }
     }

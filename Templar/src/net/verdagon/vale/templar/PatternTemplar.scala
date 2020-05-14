@@ -168,10 +168,10 @@ object PatternTemplar {
         temputs, fate, variableId, Conversions.evaluateVariability(variability), expectedCoord)
     val let = LetNormal2(export, inputExpr);
 
-    val localLookupExpr =
-      ExpressionTemplar.borrowSoftLoad(
-        temputs, LocalLookup2(export, inputExpr.resultRegister.reference))
     fate.addVariable(export)
+    val localLookupExpr =
+      ExpressionTemplar.softLoad(
+        fate, LocalLookup2(export, inputExpr.resultRegister.reference), false)
 
     val lets0 = List(let)
 

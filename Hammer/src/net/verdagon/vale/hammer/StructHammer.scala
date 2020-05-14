@@ -120,7 +120,7 @@ object StructHammer {
         val _ = conceptualVariability
         val actualVariability = Varying
 
-        val memberH = StructMemberH(BOX_MEMBER_NAME, Conversions.evaluateVariability(actualVariability), typeH)
+        val memberH = StructMemberH(temporaryStructRefH.fullName.addStep(BOX_MEMBER_NAME), Conversions.evaluateVariability(actualVariability), typeH)
 
         val structDefH =
           StructDefinitionH(

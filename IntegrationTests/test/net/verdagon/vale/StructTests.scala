@@ -72,9 +72,9 @@ class StructTests extends FunSuite with Matchers {
       """
         |interface Opt<T> rules(T Ref) { }
         |struct Some<T> rules(T Ref) { value T; }
-        |impl Some<T> for Opt<T>;
+        |impl<T> Some<T> for Opt<T>;
         |struct None<T> rules(T Ref) { }
-        |impl None<T> for Opt<T>;
+        |impl<T> None<T> for Opt<T>;
         |
         |abstract fn getOr<T>(virtual opt &Opt<T>, default T) T;
         |fn getOr<T>(opt &None<T> impl Opt<T>, default T) T {
@@ -139,13 +139,13 @@ class StructTests extends FunSuite with Matchers {
       """
         |interface Opt<T> rules(T Ref) { }
         |struct Some<T> rules(T Ref) { value T; }
-        |impl Some<T> for Opt<T>;
+        |impl<T> Some<T> for Opt<T>;
         |struct None<T> rules(T Ref) { }
-        |impl None<T> for Opt<T>;
+        |impl<T> None<T> for Opt<T>;
         |
         |abstract fn get<T>(opt virtual &Opt<T>) &T;
-        |fn get<T>(opt &None<T> for Opt<T>) &T { panic() }
-        |fn get<T>(opt &Some<T> for Opt<T>) &T { opt.value }
+        |fn get<T>(opt &None<T> impl Opt<T>) &T { panic() }
+        |fn get<T>(opt &Some<T> impl Opt<T>) &T { opt.value }
         |
         |fn main() {
         |  m Opt<Int> = None<Int>();
@@ -164,7 +164,7 @@ class StructTests extends FunSuite with Matchers {
 
   test("Call borrow parameter with shared reference") {
     val compile = new Compilation(
-      """fn get(a &T) &T { a }
+      """fn get<T>(a &T) &T { a }
         |
         |fn main() Int {
         |  = get(6);

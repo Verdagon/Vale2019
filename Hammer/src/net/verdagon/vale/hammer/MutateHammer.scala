@@ -150,16 +150,17 @@ object MutateHammer {
 
     // We're storing into a struct's member that is a box. The stack is also
     // pointing at this box. First, get the box, then mutate what's inside.
+    val nameH = NameHammer.translateFullName(hinputs, hamuts, memberName)
     val loadBoxNode =
-    nodesByLine.addNode(
-      MemberLoadH(
-        nodesByLine.nextId(),
-        destinationResultLine.expectStructAccess(),
-        memberIndex,
-        m.Borrow,
-        expectedStructBoxMemberType,
-        expectedBorrowBoxResultType,
-        NameHammer.translateFullName(hinputs, hamuts, memberName)))
+      nodesByLine.addNode(
+        MemberLoadH(
+          nodesByLine.nextId(),
+          destinationResultLine.expectStructAccess(),
+          memberIndex,
+          m.Borrow,
+          expectedStructBoxMemberType,
+          expectedBorrowBoxResultType,
+          nameH))
     val loadBoxAccess =
       RegisterAccessH(loadBoxNode.registerId, expectedBorrowBoxResultType)
     val storeNode =
@@ -169,7 +170,7 @@ object MutateHammer {
           loadBoxAccess,
           StructHammer.BOX_MEMBER_INDEX,
           sourceExprResultLine,
-          StructHammer.BOX_MEMBER_NAME))
+          nameH.addStep(StructHammer.BOX_MEMBER_NAME)))
     val oldValueAccess = RegisterAccessH(storeNode.registerId, sourceExprResultLine.expectedType)
     (oldValueAccess, destinationDeferreds)
   }
@@ -228,6 +229,7 @@ object MutateHammer {
 
     // This means we're trying to mutate a local variable that holds a box.
     // We need to load the box, then mutate its contents.
+    val nameH = NameHammer.translateFullName(hinputs, hamuts, varId)
     val loadBoxNode =
     nodesByLine.addNode(
       LocalLoadH(
@@ -236,7 +238,7 @@ object MutateHammer {
         m.Borrow,
         expectedLocalBoxType,
         expectedBorrowBoxResultType,
-        NameHammer.translateFullName(hinputs, hamuts, varId)))
+        nameH))
     val loadBoxAccess =
       RegisterAccessH(loadBoxNode.registerId, expectedBorrowBoxResultType)
     val storeNode =
@@ -246,7 +248,7 @@ object MutateHammer {
           loadBoxAccess,
           StructHammer.BOX_MEMBER_INDEX,
           sourceExprResultLine,
-          StructHammer.BOX_MEMBER_NAME))
+          nameH.addStep(StructHammer.BOX_MEMBER_NAME)))
     val oldValueAccess = RegisterAccessH(storeNode.registerId, sourceExprResultLine.expectedType)
     (oldValueAccess, List())
   }

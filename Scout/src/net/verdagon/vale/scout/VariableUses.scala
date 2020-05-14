@@ -23,6 +23,7 @@ case class VariableDeclarations(vars: List[VariableDeclaration]) {
   def find(needle: String): Option[IVarNameS] = {
     vars.map(_.name).find({
       case CodeVarNameS(humanName) => humanName == needle
+      case UnnamedLocalNameS(_) => false
       case MagicParamNameS(_) => false
     })
   }

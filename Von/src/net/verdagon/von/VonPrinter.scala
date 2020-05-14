@@ -4,10 +4,18 @@ import net.verdagon.vale.{vfail, vimpl}
 import org.apache.commons.lang.StringEscapeUtils
 
 sealed trait ISyntax
-case object VonSyntax extends ISyntax
+case class VonSyntax(
+  includeFieldNames: Boolean = true,
+  squareBracesForArrays: Boolean = true,
+  includeEmptyParams: Boolean = true,
+  includeEmptyArrayMembersAtEnd: Boolean = true,
+) extends ISyntax
 case object JsonSyntax extends ISyntax
 
-class VonPrinter(syntax: ISyntax, lineWidth: Int) {
+class VonPrinter(
+    syntax: ISyntax,
+    lineWidth: Int
+) {
   def print(data: IVonData): String = {
     printSingleLine(data, lineWidth) match {
       case Some(str) => str
@@ -25,7 +33,7 @@ class VonPrinter(syntax: ISyntax, lineWidth: Int) {
       case VonBool(value) => value.toString
       case VonStr(value) => {
         syntax match {
-          case VonSyntax => "\"" + StringEscapeUtils.escapeJava(value) + "\""
+          case VonSyntax(_, _, _, _) => "\"" + StringEscapeUtils.escapeJava(value) + "\""
           case JsonSyntax => "\"" + StringEscapeUtils.escapeJavaScript(value) + "\""
         }
       }
@@ -38,7 +46,9 @@ class VonPrinter(syntax: ISyntax, lineWidth: Int) {
   }
 
   def printObjectMultiline(obbject: VonObject, indentation: Int): String = {
-    val VonObject(tyype, None, members) = obbject
+    val VonObject(tyype, None, unfilteredMembers) = obbject
+
+    val members = filterMembers(unfilteredMembers)
 
     printObjectStart(tyype, members.nonEmpty) + "\n" + members.zipWithIndex.map({ case (member, index) =>
       val memberStr =
@@ -47,33 +57,37 @@ class VonPrinter(syntax: ISyntax, lineWidth: Int) {
           case Some(s) => s
         }
       "  ".repeat(indentation + 1) + memberStr + (if (index == members.size - 1) "" else ",")
-    }).mkString("\n") + printObjectEnd()
+    }).mkString("\n") + printObjectEnd(members.nonEmpty)
   }
 
   def printObjectStart(tyype: String, hasMembers: Boolean): String = {
     syntax match {
-      case VonSyntax => tyype + "("
+      case VonSyntax(_, _, true, _) => tyype + "("
+      case VonSyntax(_, _, false, _) => tyype + (if (hasMembers) "(" else "")
       case JsonSyntax => {
         "{__type: " + "\"" + StringEscapeUtils.escapeJavaScript(tyype) + "\"" + (if (hasMembers) ", " else "")
       }
     }
   }
-  def printObjectEnd(): String = {
+  def printObjectEnd(hasMembers: Boolean): String = {
     syntax match {
-      case VonSyntax => ")"
+      case VonSyntax(_, _, true, _) => ")"
+      case VonSyntax(_, _, false, _) => (if (hasMembers) ")" else "")
       case JsonSyntax => "}"
     }
   }
 
   def printArrayStart(): String = {
     syntax match {
-      case VonSyntax => "List("
+      case VonSyntax(_, false, _, _) => "List("
+      case VonSyntax(_, true, _, _) => "["
       case JsonSyntax => "["
     }
   }
   def printArrayEnd(): String = {
     syntax match {
-      case VonSyntax => ")"
+      case VonSyntax(_, false, _, _) => ")"
+      case VonSyntax(_, true, _, _) => "]"
       case JsonSyntax => "]"
     }
   }
@@ -124,7 +138,7 @@ class VonPrinter(syntax: ISyntax, lineWidth: Int) {
       case VonStr(value) => {
         Some(
           syntax match {
-            case VonSyntax => "\"" + StringEscapeUtils.escapeJava(value) + "\""
+            case VonSyntax(_, _, _, _) => "\"" + StringEscapeUtils.escapeJava(value) + "\""
             case JsonSyntax => "\"" + StringEscapeUtils.escapeJavaScript(value) + "\""
           })
       }
@@ -136,12 +150,39 @@ class VonPrinter(syntax: ISyntax, lineWidth: Int) {
     }
   }
 
+  def objectIsEmpty(data: IVonData): Boolean = {
+    data match {
+      case VonInt(value) => value == 0
+      case VonStr(value) => value == ""
+      case VonBool(value) => value == false
+      case VonFloat(value) => value == 0
+      case VonArray(_, members) => members.forall(objectIsEmpty)
+      case VonObject(_, _, members) => false
+    }
+  }
+
+  def filterMembers(members: Vector[VonMember]): Vector[VonMember] = {
+    syntax match {
+      case JsonSyntax => members
+      case VonSyntax(_, _, _, true) => members
+      case VonSyntax(_, _, _, false) => {
+        if (members.nonEmpty && objectIsEmpty(members.last.value)) {
+          filterMembers(members.init)
+        } else {
+          members
+        }
+      }
+    }
+  }
+
   def printObjectSingleLine(
     obbject: VonObject,
     lineWidthRemainingForWholeObject: Int):
     // None if we failed to put it on the one line.
   Option[String] = {
-    val VonObject(tyype, None, members) = obbject
+    val VonObject(tyype, None, unfilteredMembers) = obbject
+
+    val members = filterMembers(unfilteredMembers)
 
     val prefix = printObjectStart(tyype, members.nonEmpty)
 
@@ -174,7 +215,7 @@ class VonPrinter(syntax: ISyntax, lineWidth: Int) {
       maybeMembersStr match {
         case None => None
         case Some(membersStr) => {
-          val wholeObjectStr = membersStr + printObjectEnd()
+          val wholeObjectStr = membersStr + printObjectEnd(members.nonEmpty)
           if (wholeObjectStr.length > lineWidthRemainingForWholeObject) {
             None
           } else {
@@ -214,7 +255,7 @@ class VonPrinter(syntax: ISyntax, lineWidth: Int) {
                 if (memberStrMaybeWithComma.length > lineWidthRemaining) {
                   None
                 } else {
-                  Some(objectStrSoFar + memberStr)
+                  Some(objectStrSoFar + memberStrMaybeWithComma)
                 }
               }
             }
@@ -236,7 +277,8 @@ class VonPrinter(syntax: ISyntax, lineWidth: Int) {
 
   def printMemberPrefix(name: String): String = {
     syntax match {
-      case VonSyntax => name + " = "
+      case VonSyntax(true, _, _, _) => name + " = "
+      case VonSyntax(false, _, _, _) => ""
       case JsonSyntax => name + ": "
     }
   }

@@ -15,7 +15,7 @@ class OwnershipTests extends FunSuite with Matchers {
   test("Borrowing a temporary mutable makes a local var") {
     val compile = new Compilation(
       """
-        |struct Muta { hp: *Int; }
+        |struct Muta { hp *Int; }
         |fn main() {
         |  = (&Muta(9)).hp;
         |}
@@ -23,7 +23,7 @@ class OwnershipTests extends FunSuite with Matchers {
 
     val main = compile.getTemputs().lookupFunction("main")
     main.only({
-      case LetAndLend2(ReferenceLocalVariable2(FullName2(_, null/*"__0_temp"*/), Final, Coord(Own, StructRef2(simpleName("Muta")))), refExpr) => {
+      case LetAndLend2(ReferenceLocalVariable2(FullName2(List(FunctionName2("main",List(),List())),TemplarBlockResultVarName2(1)), Final, Coord(Own, StructRef2(simpleName("Muta")))), refExpr) => {
         refExpr.resultRegister.reference match {
           case Coord(Own, StructRef2(simpleName("Muta"))) =>
         }
@@ -40,7 +40,7 @@ class OwnershipTests extends FunSuite with Matchers {
         |
         |fn destructor(m ^Muta) Void {
         |  println("Destroying!");
-        |  Muta[] = m;
+        |  Muta() = m;
         |}
         |
         |fn main() {
@@ -62,7 +62,7 @@ class OwnershipTests extends FunSuite with Matchers {
         |
         |fn destructor(m ^Muta) {
         |  println("Destroying!");
-        |  Muta[hp] = m;
+        |  Muta(hp) = m;
         |}
         |
         |fn main() {
@@ -83,7 +83,7 @@ class OwnershipTests extends FunSuite with Matchers {
         |
         |fn destructor(m ^Muta) {
         |  println("Destroying!");
-        |  Muta[] = m;
+        |  Muta() = m;
         |}
         |
         |fn main() {
@@ -106,7 +106,7 @@ class OwnershipTests extends FunSuite with Matchers {
         |
         |fn destructor(m ^Muta) {
         |  println("Destroying!");
-        |  Muta[] = m;
+        |  Muta() = m;
         |}
         |
         |fn moo(m ^Muta) {
@@ -146,7 +146,7 @@ class OwnershipTests extends FunSuite with Matchers {
         |
         |fn destructor(m ^Muta) {
         |  println("Destroying!");
-        |  Muta[hp] = m;
+        |  Muta(hp) = m;
         |}
         |
         |fn main() {

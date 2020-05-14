@@ -288,6 +288,7 @@ object EnvironmentUtils {
       case ImplDeclareName2(_) =>
       case LetImplicitRune2(_, _) =>
       case MemberRune2(_) =>
+      case CitizenName2(_, _) =>
       case _ => vimpl()
     }
     (nameA, name2) match {
@@ -295,6 +296,7 @@ object EnvironmentUtils {
       case (CodeTypeNameA(humanNameA), CitizenTemplateName2(humanNameT, _)) => humanNameA == humanNameT
       case (CodeTypeNameA(humanNameA), FunctionTemplateName2(humanNameT, _)) => humanNameA == humanNameT
       case (CodeTypeNameA(humanNameA), PrimitiveName2(humanNameT)) => humanNameA == humanNameT
+      case (CodeTypeNameA(humanNameA), CitizenName2(humanNameT, _)) => humanNameA == humanNameT
       case (GlobalFunctionFamilyNameA(humanNameA), FunctionTemplateName2(humanNameT, _)) => humanNameA == humanNameT
       case (GlobalFunctionFamilyNameA(humanNameA), FunctionName2(humanNameT, _, _)) => humanNameA == humanNameT
       case (ImplImpreciseNameA(), ImplDeclareName2(_)) => true

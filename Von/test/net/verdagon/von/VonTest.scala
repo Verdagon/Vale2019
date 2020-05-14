@@ -6,13 +6,13 @@ class VonTest extends FunSuite with Matchers {
 
   test("Test 1") {
     val data = VonObject("MyObj", None, Vector(VonMember(None, Some("mem"), VonInt(42))))
-    new VonPrinter(VonSyntax, 30).print(data) shouldEqual
+    new VonPrinter(VonSyntax(), 30).print(data) shouldEqual
       "MyObj(mem = 42)"
   }
 
   test("Test 2") {
     val data = VonObject("MySuperSuperLongObject", None, Vector(VonMember(None, Some("member"), VonInt(42))))
-    new VonPrinter(VonSyntax, 30).print(data) shouldEqual
+    new VonPrinter(VonSyntax(), 30).print(data) shouldEqual
       """
         |MySuperSuperLongObject(
         |  member = 42)
@@ -43,13 +43,13 @@ class VonTest extends FunSuite with Matchers {
                         None,
                         Some("member"),
                         VonInt(42))))))))))
-    new VonPrinter(VonSyntax, 30).print(data) shouldEqual
+    new VonPrinter(VonSyntax(), 30).print(data) shouldEqual
       """
         |MyObj(
         |  member = MyObj(
         |    member = MyObj(member = 42)))
       """.stripMargin.trim
-    new VonPrinter(VonSyntax, 25).print(data) shouldEqual
+    new VonPrinter(VonSyntax(), 25).print(data) shouldEqual
       """
         |MyObj(
         |  member = MyObj(

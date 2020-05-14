@@ -229,7 +229,7 @@ object LoadHammer {
         case PackT2(_, sr) => sr
       }
     val structDef2 = hinputs.program2.lookupStruct(structRef2)
-    val memberIndex = structDef2.members.indexWhere(_.name == memberName)
+    val memberIndex = structDef2.members.indexWhere(member => structDef2.fullName.addStep(member.name) == memberName)
     vassert(memberIndex >= 0)
 
     val resultTypeH =
@@ -300,7 +300,7 @@ object LoadHammer {
           targetOwnership,
           localTypeH,
           resultTypeH,
-          varNameH.addStep(StructHammer.BOX_MEMBER_NAME))
+          varNameH.addStep(StructHammer.BOX_MEMBER_NAME)))
     val loadedAccess =
       RegisterAccessH(loadedNode.registerId, resultTypeH)
     (loadedAccess, List())

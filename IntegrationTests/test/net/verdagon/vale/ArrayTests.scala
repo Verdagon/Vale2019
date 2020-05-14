@@ -238,7 +238,7 @@ class ArrayTests extends FunSuite with Matchers {
       """
         |struct MyIntIdentity {}
         |impl MyIntIdentity for IFunction1<mut, Int, Int>;
-        |fn __call(this &MyIntIdentity for IFunction1<mut, Int, Int>, i Int) Int { i }
+        |fn __call(this &MyIntIdentity impl IFunction1<mut, Int, Int>, i Int) Int { i }
         |fn main() {
         |  m = MyIntIdentity();
         |  arr = Array<mut, Int>(10, &m);

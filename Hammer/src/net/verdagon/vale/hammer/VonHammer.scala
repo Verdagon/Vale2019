@@ -116,7 +116,7 @@ object VonHammer {
     val ReferenceH(ownership, kind) = coord
 
     VonObject(
-      "Reference",
+      "Ref",
       None,
       Vector(
         VonMember(None, Some("ownership"), vonifyOwnership(ownership)),
@@ -166,11 +166,11 @@ object VonHammer {
 
   def vonifyKind(referend: ReferendH): IVonData = {
     referend match {
-      case IntH() => VonObject("IntH", None, Vector())
-      case BoolH() => VonObject("BoolH", None, Vector())
-      case StrH() => VonObject("StrH", None, Vector())
-      case VoidH() => VonObject("VoidH", None, Vector())
-      case FloatH() => VonObject("FloatH", None, Vector())
+      case IntH() => VonObject("Int", None, Vector())
+      case BoolH() => VonObject("Bool", None, Vector())
+      case StrH() => VonObject("Str", None, Vector())
+      case VoidH() => VonObject("Void", None, Vector())
+      case FloatH() => VonObject("Float", None, Vector())
       case ir @ InterfaceRefH(_) => vonifyInterfaceRef(ir)
       case sr @ StructRefH(_) => vonifyStructRef(sr)
       case UnknownSizeArrayTH(rawArray) => {
@@ -487,8 +487,9 @@ object VonHammer {
 //    }
 //  }
 
-  def vonifyFullName(hinputs: Hinputs, hamuts: HamutsBox, fullName2: FullName2[IName2]): VonArray = {
-    VonArray(None, fullName2.steps.map(step => translateName(hinputs, hamuts, step)).toVector)
+  def vonifyFullName(hinputs: Hinputs, hamuts: HamutsBox, fullName2: FullName2[IName2]): VonStr = {
+    val array = VonArray(None, fullName2.steps.map(step => translateName(hinputs, hamuts, step)).toVector)
+    VonStr(array.toString)
   }
 
   def vonifyTemplata(
@@ -564,7 +565,7 @@ object VonHammer {
 //      "Container",
 //      None,
 //      Vector(
-//        VonMember(None, Some("humanName"), VonStr(humanName)),
+//        VonMember(None, Some(humanName), VonStr(humanName)),
 //        VonMember(None, Some("codeLocation"), vonifyCodeLocation(location))))
 //  }
 
@@ -691,7 +692,7 @@ object VonHammer {
           "PrimitiveName",
           None,
           Vector(
-            VonMember(None, Some("humanName"), VonStr(humanName))))
+            VonMember(None, Some(humanName), VonStr(humanName))))
       }
       case GlobalNamespaceName2() => {
         VonObject(
@@ -701,7 +702,7 @@ object VonHammer {
       }
       case FunctionName2(humanName, templateArgs, parameters) => {
         VonObject(
-          "FunctionName",
+          "F",
           None,
           Vector(
             VonMember(None, Some("humanName"), VonStr(humanName)),
@@ -728,7 +729,7 @@ object VonHammer {
           "FunctionTemplateName",
           None,
           Vector(
-            VonMember(None, Some("humanName"), VonStr(humanName)),
+            VonMember(None, Some(humanName), VonStr(humanName)),
             VonMember(None, Some("codeLocation"), vonifyCodeLocation2(codeLocation))))
       }
       case LambdaTemplateName2(codeLocation) => {
@@ -749,7 +750,7 @@ object VonHammer {
           "CitizenName",
           None,
           Vector(
-            VonMember(None, Some("humanName"), VonStr(humanName))))
+            VonMember(None, Some(humanName), VonStr(humanName))))
       }
       case TupleName2(members) => {
         VonObject(
@@ -769,7 +770,7 @@ object VonHammer {
           "CitizenTemplateName",
           None,
           Vector(
-            VonMember(None, Some("humanName"), VonStr(humanName)),
+            VonMember(None, Some(humanName), VonStr(humanName)),
             VonMember(None, Some("codeLocation"), vonifyCodeLocation2(codeLocation))))
       }
       case AnonymousSubstructName2(callables) => {

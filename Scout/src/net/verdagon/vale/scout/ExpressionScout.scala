@@ -40,8 +40,13 @@ object ExpressionScout {
           childUses.isMutated(declared.name))
       })
 
+    val selfUsesOfThingsFromAbove =
+      VariableUses(selfUses.uses.filter(selfUseName => !locals.map(_.varName).contains(selfUseName)))
+    val childUsesOfThingsFromAbove =
+      VariableUses(childUses.uses.filter(selfUseName => !locals.map(_.varName).contains(selfUseName)))
+
     // Notice how the fate is continuing on
-    (NormalResult(BlockSE(locals, elements1)), selfUses, childUses)
+    (NormalResult(BlockSE(locals, elements1)), selfUsesOfThingsFromAbove, childUsesOfThingsFromAbove)
   }
 
   // Returns:
