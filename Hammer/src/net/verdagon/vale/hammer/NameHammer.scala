@@ -3,28 +3,45 @@ package net.verdagon.vale.hammer
 import net.verdagon.vale.hinputs.Hinputs
 import net.verdagon.vale.metal._
 import net.verdagon.vale.scout.CodeLocationS
-import net.verdagon.vale.templar.{FullName2, IName2, Templar}
+import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.env.{IEnvironment, NamespaceEnvironment}
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.{vassert, vfail, vimpl}
-import net.verdagon.von.VonStr
+import net.verdagon.von.{IVonData, VonArray, VonInt, VonMember, VonObject, VonStr}
 
 import scala.collection.immutable.List
 
 object NameHammer {
-  // This is here temporarily until we make INameH fully support stuff.
-  // Maybe we want INameH to be more general, so people downstream dont have to support stuff?
-  // Maybe make a SpecialNodeH(Str) or something.
-  def stringify(name: FullName2[IName2]): String = {
-    name.toString
-  }
-  def stringifyNamePart(name: IName2): String = {
-    name.toString
+//  // This is here temporarily until we make INameH fully support stuff.
+//  // Maybe we want INameH to be more general, so people downstream dont have to support stuff?
+//  // Maybe make a SpecialNodeH(Str) or something.
+//  def stringify(name: FullName2[IName2]): String = {
+//    name.toString
+//  }
+//  def stringifyNamePart(name: IName2): String = {
+//    name.toString
+//  }
+
+  def translateFullName(
+    hinputs: Hinputs,
+    hamuts: HamutsBox,
+    fullName2: FullName2[IName2]
+  ): FullNameH = {
+    FullNameH(
+      VonArray(
+        None,
+        fullName2.steps.map(step => VonHammer.translateName(hinputs, hamuts, step)).toVector))
   }
 
-  def translateName(hinputs: Hinputs, hamuts: HamutsBox, fullName2: FullName2[IName2]): FullNameH = {
-    FullNameH(fullName2.steps.map(step => VonStr(stringifyNamePart(step))))
+  def translateCodeLocation(location: CodeLocation2): VonObject = {
+    val CodeLocation2(line, char) = location
+    VonObject(
+      "CodeLocation",
+      None,
+      Vector(
+        VonMember(None, Some("line"), VonInt(line)),
+        VonMember(None, Some("char"), VonInt(char))))
   }
 
 //  def translateContainer(container: IContainer): IContainerH = {

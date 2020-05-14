@@ -42,7 +42,7 @@ object StructHammer {
     hamuts.interfaceRefs.get(interfaceRef2) match {
       case Some(structRefH) => structRefH
       case None => {
-        val (fullNameH) = NameHammer.translateName(hinputs, hamuts, interfaceRef2.fullName)
+        val (fullNameH) = NameHammer.translateFullName(hinputs, hamuts, interfaceRef2.fullName)
         // This is the only place besides InterfaceDefinitionH that can make a InterfaceRefH
         val temporaryInterfaceRefH = InterfaceRefH(fullNameH);
         hamuts.forwardDeclareInterface(interfaceRef2, temporaryInterfaceRefH)
@@ -83,7 +83,7 @@ object StructHammer {
     hamuts.structRefsByRef2.get(structRef2) match {
       case Some(structRefH) => structRefH
       case None => {
-        val (fullNameH) = NameHammer.translateName(hinputs, hamuts, structRef2.fullName)
+        val (fullNameH) = NameHammer.translateFullName(hinputs, hamuts, structRef2.fullName)
         // This is the only place besides StructDefinitionH that can make a StructRefH
         val temporaryStructRefH = StructRefH(fullNameH);
         hamuts.forwardDeclareStruct(structRef2, temporaryStructRefH)
@@ -109,7 +109,7 @@ object StructHammer {
   def makeBox(hinputs: Hinputs, hamuts: HamutsBox, conceptualVariability: Variability, type2: Coord, typeH: ReferenceH[ReferendH]):
   (StructRefH) = {
     val boxFullName2 = FullName2(List(), CitizenName2(BOX_HUMAN_NAME, List(CoordTemplata(type2))))
-    val boxFullNameH = NameHammer.translateName(hinputs, hamuts, boxFullName2)
+    val boxFullNameH = NameHammer.translateFullName(hinputs, hamuts, boxFullName2)
     hamuts.structDefsByRef2.find(_._2.fullName == boxFullNameH) match {
       case Some((_, structDefH)) => (structDefH.getRef)
       case None => {

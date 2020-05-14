@@ -534,7 +534,7 @@ object ExpressionHammer {
 
   def makeEmptyPackStruct(hinputs: Hinputs, hamuts: HamutsBox, nodesByLine: NodesBox):
   RegisterAccessH[StructRefH] = {
-    val emptyPackType = PackTemplar.emptyPackType
+    val emptyPackType = Program2.emptyPackType
     val (underlyingStructRefH) =
       StructHammer.translateStructRef(hinputs, hamuts, emptyPackType.underlyingStruct);
     val reference =

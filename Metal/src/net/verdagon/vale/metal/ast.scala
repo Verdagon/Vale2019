@@ -1,7 +1,7 @@
 package net.verdagon.vale.metal
 
 import net.verdagon.vale.{vassert, vcurious, vfail, vimpl}
-import net.verdagon.von.{IVonData, VonStr}
+import net.verdagon.von.{IVonData, VonArray, VonStr}
 
 import scala.collection.immutable.ListMap
 
@@ -21,13 +21,13 @@ case class ProgramH(
   def nonExternFunctions = functions.filter(!_.isExtern)
   def getAllUserFunctions = functions.filter(_.isUserFunction)
   def main() = {
-    val matching = functions.filter(_.fullName.parts.last == VonStr("main"))
+    val matching = functions.filter(_.fullName.von.members.last == VonStr("main"))
     vassert(matching.size == 1)
     matching.head
   }
 
   def lookupFunction(humanName: String) = {
-    val matches = functions.filter(_.fullName.parts.last == vimpl(humanName))
+    val matches = functions.filter(_.fullName.von.members.last == vimpl(humanName))
     vassert(matches.size == 1)
     matches.head
   }
@@ -65,7 +65,7 @@ case class StructDefinitionH(
 }
 
 case class StructMemberH(
-  name: String,
+  name: FullNameH,
   variability: Variability,
   tyype: ReferenceH[ReferendH])
 
@@ -104,7 +104,11 @@ case class PrototypeH(
   returnType: ReferenceH[ReferendH]
 )
 
-case class FullNameH(parts: List[IVonData])
+case class FullNameH(von: VonArray) {
+  def addStep(s: String) = {
+    FullNameH(VonArray(von.id, von.members :+ VonStr(s)))
+  }
+}
 
 case class CodeLocationH(
   file: String,

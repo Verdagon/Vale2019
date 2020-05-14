@@ -38,7 +38,7 @@ class BlockTests extends FunSuite with Matchers {
     val block = main.body match { case CodeBody1(BodySE(_,BlockSE(_,List(b @ BlockSE(_,_), _)))) => b }
     vassert(block.locals.size == 1)
     block.locals.head match {
-      case LocalVariable1("y", FinalP, NotUsed, NotUsed, NotUsed, NotUsed, NotUsed, NotUsed) =>
+      case LocalVariable1(CodeVarNameS("y"), FinalP, NotUsed, NotUsed, NotUsed, NotUsed, NotUsed, NotUsed) =>
     }
 
     compile.evalForReferend(Vector()) shouldEqual VonInt(3)

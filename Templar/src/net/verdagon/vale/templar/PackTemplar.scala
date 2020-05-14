@@ -11,10 +11,7 @@ import net.verdagon.vale.templar.function.DestructorTemplar
 import net.verdagon.vale.{vassert, vfail}
 
 object PackTemplar {
-  val emptyPackType: PackT2 = PackT2(List(), Program2.emptyTupleStructRef)
-  val emptyPackReference: Coord = Coord(Share, emptyPackType)
-
-  val emptyPackExpression: PackE2 = PackE2(List(), Coord(Share, PackTemplar.emptyPackType), PackTemplar.emptyPackType)
+  val emptyPackExpression: PackE2 = PackE2(List(), Coord(Share, Program2.emptyPackType), Program2.emptyPackType)
 
   def evaluate(temputs: TemputsBox, fate: FunctionEnvironmentBox, packExpr1: PackAE):
   (ReferenceExpression2, Set[Coord]) = {

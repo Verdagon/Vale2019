@@ -121,7 +121,7 @@ class IntegrationTestsA extends FunSuite with Matchers {
     val heap = new Heap(System.out)
     val ref =
       heap.add(m.Own, StructInstanceV(
-        hamuts.structs.find(_.fullName.parts.last.humanName == "SomeStruct").get,
+        hamuts.structs.find(_.fullName.parts.last == null/*"SomeStruct"*/).get,
         Vector()))
     compile.run(heap, Vector(ref))
   }

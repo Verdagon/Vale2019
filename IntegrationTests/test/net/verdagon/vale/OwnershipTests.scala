@@ -5,7 +5,7 @@ import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Env
 import net.verdagon.vale.scout.patterns.AtomSP
 import net.verdagon.vale.scout.rules.{CoordTypeSR, TypedSR}
 import net.verdagon.vale.templar._
-import net.verdagon.vale.templar.env.{ReferenceLocalVariable2, FullName2}
+import net.verdagon.vale.templar.env.{ReferenceLocalVariable2}
 import net.verdagon.vale.templar.templata.{FunctionHeader2, Prototype2}
 import net.verdagon.vale.templar.types._
 import net.verdagon.von.VonInt
@@ -23,7 +23,7 @@ class OwnershipTests extends FunSuite with Matchers {
 
     val main = compile.getTemputs().lookupFunction("main")
     main.only({
-      case LetAndLend2(ReferenceLocalVariable2(FullName2(0, "__0_temp"), Final, Coord(Own, StructRef2(simpleName("Muta")))), refExpr) => {
+      case LetAndLend2(ReferenceLocalVariable2(FullName2(_, null/*"__0_temp"*/), Final, Coord(Own, StructRef2(simpleName("Muta")))), refExpr) => {
         refExpr.resultRegister.reference match {
           case Coord(Own, StructRef2(simpleName("Muta"))) =>
         }

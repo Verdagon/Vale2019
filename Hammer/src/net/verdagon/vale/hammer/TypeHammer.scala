@@ -37,7 +37,7 @@ object TypeHammer {
         }
       }
     StructMemberH(
-      NameHammer.stringify(structName.addStep(member2.name)),
+      NameHammer.translateFullName(hinputs, hamuts, structName.addStep(member2.name)),
       Conversions.evaluateVariability(member2.variability),
       memberH)
   }

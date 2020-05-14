@@ -1,9 +1,10 @@
 package net.verdagon.vale
 
+import net.verdagon.vale.astronomer.{CodeVarNameA, LocalVariableA}
 import net.verdagon.vale.parser.{FinalP, ImmutableP, MutableP, VaryingP}
-import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
+import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
 import net.verdagon.vale.templar._
-import net.verdagon.vale.templar.env.{AddressibleLocalVariable2, ReferenceLocalVariable2, FullName2}
+import net.verdagon.vale.templar.env.{AddressibleLocalVariable2, ReferenceLocalVariable2}
 import net.verdagon.vale.templar.templata.{FunctionHeader2, Parameter2}
 import net.verdagon.vale.templar.types._
 import net.verdagon.von.VonInt
@@ -22,13 +23,13 @@ class ClosureTests extends FunSuite with Matchers {
       val addressibleIfMutable =
         ExpressionTemplar.determineIfLocalIsAddressible(
           Mutable,
-          LocalVariable1(
-            "x", VaryingP, selfBorrowed, selfMoved, selfMutated, childBorrowed, childMoved, childMutated))
+          LocalVariableA(
+            CodeVarNameA("x"), VaryingP, selfBorrowed, selfMoved, selfMutated, childBorrowed, childMoved, childMutated))
       val addressibleIfImmutable =
         ExpressionTemplar.determineIfLocalIsAddressible(
           Immutable,
-          LocalVariable1(
-            "x", VaryingP, selfBorrowed, selfMoved, selfMutated, childBorrowed, childMoved, childMutated))
+          LocalVariableA(
+            CodeVarNameA("x"), VaryingP, selfBorrowed, selfMoved, selfMutated, childBorrowed, childMoved, childMutated))
       (addressibleIfMutable, addressibleIfImmutable)
     }
 
@@ -110,8 +111,8 @@ class ClosureTests extends FunSuite with Matchers {
 
     temputs.lookupFunction("main:lam1").variables match {
       case List(
-        ReferenceLocalVariable2(FullName2(_,"__closure"),Final,Coord(Share,StructRef2(simpleName("__Closure:main:lam1")))),
-        ReferenceLocalVariable2(FullName2(_,"__blockresult_0"),Final,Coord(Share,Int2()))
+        ReferenceLocalVariable2(FullName2(_,null/*CodeVarNameA("__closure")*/),Final,Coord(Share,StructRef2(simpleName("__Closure:main:lam1")))),
+        ReferenceLocalVariable2(FullName2(_,null/*CodeVarNameA("__blockresult_0")*/),Final,Coord(Share,Int2()))
       ) =>
     }
   }
@@ -124,14 +125,14 @@ class ClosureTests extends FunSuite with Matchers {
     // It's a reference because we know for sure that it's moved from our child,
     // which means we don't need to check afterwards, which means it doesn't need
     // to be boxed/addressible.
-    val closuredVarsStruct = temputs.structs.find(_.fullName.last.humanName == "__Closure:main:lam1").get;
-    val expectedMembers = List(StructMember2("x", Final, ReferenceMemberType2(Coord(Share, Int2()))));
+    val closuredVarsStruct = temputs.structs.find(_.fullName.last == null/*"__Closure:main:lam1"*/).get;
+    val expectedMembers = List(StructMember2(CodeVarName2("x"), Final, ReferenceMemberType2(Coord(Share, Int2()))));
     vassert(closuredVarsStruct.members == expectedMembers)
 
     // Make sure we're doing a referencememberlookup, since it's a reference member
     // in the closure struct.
     temputs.only({
-      case ReferenceMemberLookup2(_, "x", _) =>
+      case ReferenceMemberLookup2(_, FullName2(List(), CodeVarName2("x")), _) =>
     })
 
     // Make sure there's a function that takes in the closured vars struct, and returns an int
@@ -139,7 +140,6 @@ class ClosureTests extends FunSuite with Matchers {
       case Function2(
       FunctionHeader2(
       simpleName("main:lam1"),
-      _,
       _,
       true,
       List(Parameter2(_, None, Coord(Share, StructRef2(simpleName("__Closure:main:lam1"))))),
@@ -150,7 +150,7 @@ class ClosureTests extends FunSuite with Matchers {
     })
 
     // Make sure we make it with a function pointer and a constructed vars struct
-    val main = temputs.functions.find(_.header.fullName.last.humanName == "main").get;
+    val main = temputs.functions.find(_.header.fullName.last == FunctionName2("main", List(), List())).get;
     main.only({
       case Construct2(StructRef2(simpleName("__Closure:main:lam1")), _, _) =>
     })
@@ -159,11 +159,11 @@ class ClosureTests extends FunSuite with Matchers {
     main.onlyOf(classOf[FunctionCall2])
 
 
-    val lambda = temputs.functions.find(_.header.fullName.last.humanName == "main:lam1").get;
+    val lambda = temputs.functions.find(_.header.fullName.last == null/*"main:lam1"*/).get;
 
     println(lambda.allOf(classOf[LocalLookup2]))
     lambda.only({
-      case LocalLookup2(ReferenceLocalVariable2(FullName2(_, "__closure"), _, _), _) =>
+      case LocalLookup2(ReferenceLocalVariable2(FullName2(_, null/*"__closure"*/), _, _), _) =>
     })
 
     compile.evalForReferend(Vector()) shouldEqual VonInt(4)
@@ -181,13 +181,13 @@ class ClosureTests extends FunSuite with Matchers {
     val scoutput = compile.getScoutput()
     val temputs = compile.getTemputs()
     // The struct should have an int x in it.
-    val closuredVarsStruct = temputs.structs.find(_.fullName.last.humanName == "__Closure:main:lam1").get;
-    val expectedMembers = List(StructMember2("x", Varying, AddressMemberType2(Coord(Share, Int2()))));
+    val closuredVarsStruct = temputs.structs.find(_.fullName.last == null/*"__Closure:main:lam1"*/).get;
+    val expectedMembers = List(StructMember2(null/*"x"*/, Varying, AddressMemberType2(Coord(Share, Int2()))));
     vassert(closuredVarsStruct.members == expectedMembers)
 
     temputs.only({
       case Mutate2(
-        AddressMemberLookup2(_, "x", FullName2(_, "x"), Coord(Share, Int2())),
+        AddressMemberLookup2(_, FullName2(_, null/*"x"*/), Coord(Share, Int2())),
         _) =>
     })
 

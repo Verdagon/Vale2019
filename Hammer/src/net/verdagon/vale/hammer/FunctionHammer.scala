@@ -80,7 +80,7 @@ object FunctionHammer {
     val Prototype2(fullName2, params2, returnType2) = prototype2;
     val (paramsTypesH) = TypeHammer.translateReferences(hinputs, hamuts, params2)
     val (returnTypeH) = TypeHammer.translateReference(hinputs, hamuts, returnType2)
-    val (fullNameH) = NameHammer.translateName(hinputs, hamuts, fullName2)
+    val (fullNameH) = NameHammer.translateFullName(hinputs, hamuts, fullName2)
     val prototypeH = PrototypeH(fullNameH, paramsTypesH, returnTypeH)
     (prototypeH)
   }

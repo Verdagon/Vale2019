@@ -3,7 +3,7 @@ package net.verdagon.vale
 import com.sun.tools.javac.util.ArrayUtils
 import net.verdagon.vale.parser.ImmutableP
 import net.verdagon.vale.templar._
-import net.verdagon.vale.templar.env.{ReferenceLocalVariable2, FullName2}
+import net.verdagon.vale.templar.env.{ReferenceLocalVariable2}
 import net.verdagon.vale.templar.types._
 import net.verdagon.von.{VonBool, VonInt}
 import org.scalatest.{FunSuite, Matchers}
@@ -21,7 +21,7 @@ class ArrayTests extends FunSuite with Matchers {
     val temputs = compile.getTemputs()
     val main = temputs.lookupFunction("main")
     main.only({
-      case LetNormal2(ReferenceLocalVariable2(FullName2(_, "a"), _, _), expr) => {
+      case LetNormal2(ReferenceLocalVariable2(FullName2(_, CodeVarName2("a")), _, _), expr) => {
         expr.resultRegister.reference.referend match {
           case ArraySequenceT2(5, RawArrayT2(Coord(Share, Int2()), Immutable)) =>
         }

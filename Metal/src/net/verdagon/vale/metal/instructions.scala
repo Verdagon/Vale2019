@@ -71,7 +71,7 @@ case class StackifyH(
   // Describes the local we're making.
   local: Local,
   // Name of the local variable. Unique per block.
-  name: String
+  name: FullNameH
 ) extends NodeH
 
 // Takes a value from a local variable on the stack, and moves it into a register.
@@ -157,7 +157,7 @@ case class LocalStoreH(
   // As with any read from a register, this will invalidate the register.
   sourceRegister: RegisterAccessH[ReferendH],
   // Name of the local variable, for debug purposes.
-  localName: String
+  localName: FullNameH
 ) extends NodeH
 
 // Takes a reference from the given local variable, and puts it into a new register.
@@ -177,7 +177,7 @@ case class LocalLoadH(
   // TODO: Get rid of this, it's reduntant.
   expectedResultType: ReferenceH[ReferendH],
   // Name of the local variable, for debug purposes.
-  localName: String
+  localName: FullNameH
 ) extends NodeH {
   vassert(expectedLocalType.kind == expectedResultType.kind)
   vassert(expectedResultType.ownership == targetOwnership)
@@ -196,7 +196,7 @@ case class MemberStoreH(
   // As with any read from a register, this will invalidate the register.
   sourceRegister: RegisterAccessH[ReferendH],
   // Name of the member, for debug purposes.
-  memberName: String
+  memberName: FullNameH
 ) extends NodeH
 
 // Takes a reference from the given "struct" register, and copies it into a new
@@ -218,7 +218,7 @@ case class MemberLoadH(
   // The type of the resulting reference.
   expectedResultType: ReferenceH[ReferendH],
   // Member's name, for debug purposes.
-  memberName: String
+  memberName: FullNameH
 ) extends NodeH {
   vassert(expectedMemberType.kind == expectedResultType.kind)
   vassert(expectedResultType.ownership == targetOwnership)
@@ -617,7 +617,7 @@ case class VariableIdH(
   // the same number.
   number: Int,
   // Just for debugging purposes
-  name: Option[IVarName2])
+  name: Option[FullNameH])
 
 case class StackHeightBox(var inner: StackHeight) {
   def blockHeight: Int = inner.blockHeight

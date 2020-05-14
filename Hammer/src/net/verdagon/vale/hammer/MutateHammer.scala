@@ -29,7 +29,7 @@ object MutateHammer {
     val (oldValueAccess, destinationDeferreds) =
       destinationExpr2 match {
         case LocalLookup2(ReferenceLocalVariable2(varId, variability, reference), varType2) => {
-          translateMundaneLocalMutate(hamuts, locals, stackHeight, nodesByLine, sourceExprResultLine, varId)
+          translateMundaneLocalMutate(hinputs, hamuts, locals, stackHeight, nodesByLine, sourceExprResultLine, varId)
         }
         case LocalLookup2(AddressibleLocalVariable2(varId, variability, reference), varType2) => {
           translateAddressibleLocalMutate(hinputs, hamuts, locals, stackHeight, nodesByLine, sourceExprResultLine, sourceResultPointerTypeH, varId, variability, reference)
@@ -159,7 +159,7 @@ object MutateHammer {
         m.Borrow,
         expectedStructBoxMemberType,
         expectedBorrowBoxResultType,
-        NameHammer.stringify(memberName)))
+        NameHammer.translateFullName(hinputs, hamuts, memberName)))
     val loadBoxAccess =
       RegisterAccessH(loadBoxNode.registerId, expectedBorrowBoxResultType)
     val storeNode =
@@ -203,7 +203,7 @@ object MutateHammer {
           destinationResultLine.expectStructAccess(),
           memberIndex,
           sourceExprResultLine,
-          NameHammer.stringify(memberName)))
+          NameHammer.translateFullName(hinputs, hamuts, memberName)))
     val oldValueAccess = RegisterAccessH(storeNode.registerId, sourceExprResultLine.expectedType)
     (oldValueAccess, destinationDeferreds)
   }
@@ -236,7 +236,7 @@ object MutateHammer {
         m.Borrow,
         expectedLocalBoxType,
         expectedBorrowBoxResultType,
-        NameHammer.stringify(varId)))
+        NameHammer.translateFullName(hinputs, hamuts, varId)))
     val loadBoxAccess =
       RegisterAccessH(loadBoxNode.registerId, expectedBorrowBoxResultType)
     val storeNode =
@@ -252,6 +252,7 @@ object MutateHammer {
   }
 
   private def translateMundaneLocalMutate(
+      hinputs: Hinputs,
       hamuts: HamutsBox,
       locals: LocalsBox,
       stackHeight: StackHeightBox,
@@ -266,7 +267,7 @@ object MutateHammer {
           nodesByLine.nextId(),
           local,
           sourceExprResultLine,
-          NameHammer.stringify(varId)))
+          NameHammer.translateFullName(hinputs, hamuts, varId)))
     val oldValueAccess = RegisterAccessH(newStoreNode.registerId, sourceExprResultLine.expectedType)
     (oldValueAccess, List())
   }

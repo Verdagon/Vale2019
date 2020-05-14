@@ -38,11 +38,13 @@ case class LocalsBox(var inner: Locals) {
   }
 
   def addTemplarLocal(
+    hinputs: Hinputs,
+    hamuts: HamutsBox,
     varId2: FullName2[IVarName2],
     height: StackHeight,
     tyype: ReferenceH[ReferendH]):
   Local = {
-    val (newInner, local) = inner.addTemplarLocal(varId2, height, tyype)
+    val (newInner, local) = inner.addTemplarLocal(hinputs, hamuts, varId2, height, tyype)
     inner = newInner
     local
   }
@@ -63,6 +65,8 @@ case class Locals(
     locals: Map[VariableIdH, Local]) {
 
   def addTemplarLocal(
+    hinputs: Hinputs,
+    hamuts: HamutsBox,
     varId2: FullName2[IVarName2],
     height: StackHeight,
     tyype: ReferenceH[ReferendH]):
@@ -71,7 +75,8 @@ case class Locals(
       vfail("wot")
     }
     val newLocalIdNumber = locals.size
-    val newLocalId = VariableIdH(newLocalIdNumber, Some(varId2.last))
+    val varIdNameH = NameHammer.translateFullName(hinputs, hamuts, varId2)
+    val newLocalId = VariableIdH(newLocalIdNumber, Some(varIdNameH))
     val newLocal = Local(newLocalId, height, tyype)
     val newLocals =
       Locals(

@@ -19,7 +19,7 @@ class VirtualTests extends FunSuite with Matchers {
       vassert(temputs.getAllUserFunctions.size == 2)
       vassert(temputs.lookupFunction("main").header.returnType == Coord(Share, Int2()))
 
-      val doThing = temputs.lookupFunction(Signature2(simpleName("doThing"), List(Coord(Own, InterfaceRef2(simpleName("I")))))).get
+      val doThing = temputs.lookupFunction(Signature2(vimpl()/*simpleName("doThing")*/, List(Coord(Own, InterfaceRef2(vimpl(/*simpleName("I")*/)))))).get
       vassert(doThing.header.params(0).virtuality.get == Abstract2)
     }
 
@@ -37,7 +37,7 @@ class VirtualTests extends FunSuite with Matchers {
     vassert(temputs.getAllUserFunctions.size == 2)
     vassert(temputs.lookupFunction("main").header.returnType == Coord(Share, Int2()))
 
-    val doThing = temputs.lookupFunction(Signature2(simpleName("doThing"), List(Coord(Own, InterfaceRef2(simpleName("I")))))).get
+    val doThing = temputs.lookupFunction(Signature2(vimpl(/*simpleName("doThing")*/), List(Coord(Own, InterfaceRef2(vimpl(/*simpleName("I")*/)))))).get
     vassert(doThing.header.params(0).virtuality.get == Abstract2)
   }
 
@@ -56,7 +56,7 @@ class VirtualTests extends FunSuite with Matchers {
     vassert(temputs.getAllUserFunctions.size == 1)
     vassert(temputs.lookupFunction("main").header.returnType == Coord(Share, Int2()))
 
-    val doThing = temputs.lookupFunction(Signature2(simpleName("doThing"), List(Coord(Own, InterfaceRef2(simpleName("I")))))).get
+    val doThing = temputs.lookupFunction(Signature2(vimpl(/*simpleName("doThing")*/), List(Coord(Own, InterfaceRef2(vimpl(/*simpleName("I")*/)))))).get
     vassert(doThing.header.params(0).virtuality.get == Abstract2)
   }
 

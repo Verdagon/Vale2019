@@ -1,10 +1,10 @@
 package net.verdagon.vale.templar.templata
 
 import net.verdagon.vale.astronomer._
-import net.verdagon.vale.templar.{CitizenName2, FunctionName2, ICitizenName2, IName2}
+import net.verdagon.vale.templar.{CitizenName2, CitizenTemplateName2, FunctionName2, FunctionTemplateName2, ICitizenName2, IName2, ImplDeclareName2, NameTranslator}
 import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.types._
-import net.verdagon.vale.{vassert, vfail}
+import net.verdagon.vale.{vassert, vfail, vimpl}
 
 import scala.collection.immutable.List
 
@@ -74,6 +74,13 @@ case class FunctionTemplata(
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func)
   }
+
+  def getTemplateName(): IName2 = {
+    function.name match {
+      case LambdaNameA(codeLocation) => vimpl()
+      case FunctionNameA(name, codeLocation) => FunctionTemplateName2(name, NameTranslator.translateCodeLocation(codeLocation))
+    }
+  }
 }
 
 case class StructTemplata(
@@ -107,6 +114,10 @@ case class StructTemplata(
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func)
+  }
+
+  def getTemplateName(): IName2 = {
+    CitizenTemplateName2(originStruct.name.name, NameTranslator.translateCodeLocation(originStruct.name.codeLocation))
   }
 }
 
@@ -148,6 +159,10 @@ case class InterfaceTemplata(
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func)
   }
+
+  def getTemplateName(): IName2 = {
+    CitizenTemplateName2(originInterface.name.name, NameTranslator.translateCodeLocation(originInterface.name.codeLocation))
+  }
 }
 
 case class ImplTemplata(
@@ -170,6 +185,10 @@ case class ImplTemplata(
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func)
+  }
+
+  def getTemplateName(): IName2 = {
+    ImplDeclareName2(NameTranslator.translateCodeLocation(impl.name.codeLocation))
   }
 }
 

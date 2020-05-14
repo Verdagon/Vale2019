@@ -92,7 +92,7 @@ object LetHammer {
     val expectedLocalBoxType = ReferenceH(m.Own, boxStructRefH)
 
     val local =
-      locals.addTemplarLocal(varId, stackHeight.snapshot, expectedLocalBoxType)
+      locals.addTemplarLocal(hinputs, hamuts, varId, stackHeight.snapshot, expectedLocalBoxType)
     stackHeight.oneLocalHigher()
     val boxNode =
       nodesByLine.addNode(
@@ -106,7 +106,7 @@ object LetHammer {
           nodesByLine.nextId(),
           RegisterAccessH(boxNode.registerId, expectedLocalBoxType),
           local,
-          NameHammer.stringify(varId)))
+          NameHammer.translateFullName(hinputs, hamuts, varId)))
     val _ = stackNode // Don't need it
   }
 
@@ -152,7 +152,7 @@ object LetHammer {
       varId: FullName2[IVarName2]):
   Unit = {
     val localIndex =
-      locals.addTemplarLocal(varId, stackHeight.snapshot, sourceResultPointerTypeH)
+      locals.addTemplarLocal(hinputs, hamuts, varId, stackHeight.snapshot, sourceResultPointerTypeH)
     stackHeight.oneLocalHigher()
     val stackNode =
       nodesByLine.addNode(
@@ -160,7 +160,7 @@ object LetHammer {
           nodesByLine.nextId(),
           sourceExprResultLine,
           localIndex,
-          NameHammer.stringify(varId)))
+          NameHammer.translateFullName(hinputs, hamuts, varId)))
     val _ = stackNode // Don't need it
   }
 
@@ -313,7 +313,7 @@ object LetHammer {
                 TypeHammer.translateReference(hinputs, hamuts, memberRefType2)
               val localIndex =
                 locals.addTemplarLocal(
-                  destinationReferenceLocalVariable.id, stackHeight.snapshot, memberRefTypeH)
+                  hinputs, hamuts, destinationReferenceLocalVariable.id, stackHeight.snapshot, memberRefTypeH)
               stackHeight.oneLocalHigher()
               (remainingDestinationReferenceLocalVariables.tail, previousLocalTypes :+ memberRefTypeH, previousLocalIndices :+ localIndex)
             }

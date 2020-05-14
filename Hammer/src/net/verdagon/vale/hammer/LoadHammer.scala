@@ -174,6 +174,7 @@ object LoadHammer {
 
     // We're storing into a struct's member that is a box. The stack is also
     // pointing at this box. First, get the box, then mutate what's inside.
+    var varFullNameH = NameHammer.translateFullName(hinputs, hamuts, memberName)
     val loadBoxNode =
       nodesByLine.addNode(
         MemberLoadH(
@@ -183,7 +184,7 @@ object LoadHammer {
           m.Borrow,
           expectedStructBoxMemberType,
           expectedBorrowBoxResultType,
-          NameHammer.stringify(memberName)))
+          varFullNameH))
     val loadBoxAccess =
       RegisterAccessH(loadBoxNode.registerId, expectedBorrowBoxResultType)
     val loadedNodeH =
@@ -195,7 +196,7 @@ object LoadHammer {
           targetOwnership,
           boxedTypeH,
           ReferenceH(targetOwnership, boxedTypeH.kind),
-          StructHammer.BOX_MEMBER_NAME))
+          varFullNameH.addStep(StructHammer.BOX_MEMBER_NAME)))
 
     val loadedAccess =
       RegisterAccessH(loadedNodeH.registerId, boxedTypeH)
@@ -244,7 +245,7 @@ object LoadHammer {
           targetOwnership,
           expectedMemberTypeH,
           resultTypeH,
-          NameHammer.stringify(memberName)))
+          NameHammer.translateFullName(hinputs, hamuts, memberName)))
     val loadedAccess =
       RegisterAccessH(loadedNode.registerId, resultTypeH)
     (loadedAccess, structDeferreds)
@@ -276,6 +277,7 @@ object LoadHammer {
 
     // This means we're trying to load from a local variable that holds a box.
     // We need to load the box, then mutate its contents.
+    val varNameH = NameHammer.translateFullName(hinputs, hamuts, varId)
     val loadBoxNode =
       nodesByLine.addNode(
         LocalLoadH(
@@ -284,7 +286,7 @@ object LoadHammer {
           m.Borrow,
           expectedStructBoxMemberType,
           expectedBorrowBoxResultType,
-          NameHammer.stringify(varId)))
+          varNameH))
     val loadBoxAccess =
       RegisterAccessH(loadBoxNode.registerId, expectedBorrowBoxResultType)
 
@@ -298,7 +300,7 @@ object LoadHammer {
           targetOwnership,
           localTypeH,
           resultTypeH,
-          StructHammer.BOX_MEMBER_NAME))
+          varNameH.addStep(StructHammer.BOX_MEMBER_NAME))
     val loadedAccess =
       RegisterAccessH(loadedNode.registerId, resultTypeH)
     (loadedAccess, List())
@@ -338,7 +340,7 @@ object LoadHammer {
           targetOwnership,
           local.typeH,
           resultTypeH,
-          NameHammer.stringify(varId)))
+          NameHammer.translateFullName(hinputs, hamuts, varId)))
     val loadedAccess =
       RegisterAccessH(loadedNode.registerId, resultTypeH)
     (loadedAccess, List())
@@ -372,7 +374,7 @@ object LoadHammer {
         m.Borrow,
         expectedStructBoxMemberType,
         expectedBorrowBoxResultType,
-        NameHammer.stringify(localVar.id)))
+        NameHammer.translateFullName(hinputs, hamuts, localVar.id)))
     val loadBoxAccess =
       RegisterAccessH(loadBoxNode.registerId, expectedBorrowBoxResultType)
     (loadBoxAccess)
@@ -428,7 +430,7 @@ object LoadHammer {
         m.Borrow,
         expectedStructBoxMemberType,
         expectedBorrowBoxResultType,
-        NameHammer.stringify(memberName)))
+        NameHammer.translateFullName(hinputs, hamuts, memberName)))
     val loadBoxAccess =
       RegisterAccessH(loadBoxNode.registerId, expectedBorrowBoxResultType)
 

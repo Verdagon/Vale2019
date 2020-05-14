@@ -634,6 +634,9 @@ case class Edge2(
 
 object Program2 {
   val emptyTupleStructRef = StructRef2(FullName2(List(), TupleName2(List())))
+  val emptyPackType: PackT2 = PackT2(List(), Program2.emptyTupleStructRef)
+  val emptyPackReference: Coord = Coord(Share, emptyPackType)
+
 }
 
 //trait Program2 {
