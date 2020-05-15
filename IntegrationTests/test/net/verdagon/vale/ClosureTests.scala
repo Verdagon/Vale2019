@@ -109,11 +109,16 @@ class ClosureTests extends FunSuite with Matchers {
     val compile = new Compilation("fn main() { x = 4; = {x}(); }")
     val temputs = compile.getTemputs()
 
-    temputs.lookupFunction("main:lam1").variables match {
+    temputs.lookupLambdaIn("main").variables match {
       case List(
-        ReferenceLocalVariable2(FullName2(_,null/*CodeVarNameA("__closure")*/),Final,Coord(Share,StructRef2(simpleName("__Closure:main:lam1")))),
-        ReferenceLocalVariable2(FullName2(_,null/*CodeVarNameA("__blockresult_0")*/),Final,Coord(Share,Int2()))
-      ) =>
+        ReferenceLocalVariable2(
+          FullName2(List(FunctionName2("main",_,_), LambdaCitizenName2(_), FunctionName2("__call",_,_)), ClosureParamName2()),
+          Final,
+          Coord(Share,StructRef2(FullName2(List(FunctionName2("main",List(),List())),LambdaCitizenName2(_))))),
+        ReferenceLocalVariable2(
+          FullName2(List(FunctionName2("main",_,_), LambdaCitizenName2(_), FunctionName2("__call",_,_)),TemplarBlockResultVarName2(0)),
+          Final,
+          Coord(Share,Int2()))) =>
     }
   }
 
@@ -125,45 +130,44 @@ class ClosureTests extends FunSuite with Matchers {
     // It's a reference because we know for sure that it's moved from our child,
     // which means we don't need to check afterwards, which means it doesn't need
     // to be boxed/addressible.
-    val closuredVarsStruct = temputs.structs.find(_.fullName.last == null/*"__Closure:main:lam1"*/).get;
+    val closuredVarsStruct = vassertSome(temputs.structs.find(struct => struct.fullName.last match { case l @ LambdaCitizenName2(_) => true case _ => false }));
     val expectedMembers = List(StructMember2(CodeVarName2("x"), Final, ReferenceMemberType2(Coord(Share, Int2()))));
     vassert(closuredVarsStruct.members == expectedMembers)
 
+    val lambda = temputs.lookupLambdaIn("main")
     // Make sure we're doing a referencememberlookup, since it's a reference member
     // in the closure struct.
-    temputs.only({
-      case ReferenceMemberLookup2(_, FullName2(List(), CodeVarName2("x")), _) =>
+    lambda.only({
+      case ReferenceMemberLookup2(_, FullName2(_, CodeVarName2("x")), _) =>
     })
 
     // Make sure there's a function that takes in the closured vars struct, and returns an int
-    temputs.only({
-      case Function2(
-      FunctionHeader2(
-      simpleName("main:lam1"),
-      _,
-      true,
-      List(Parameter2(_, None, Coord(Share, StructRef2(simpleName("__Closure:main:lam1"))))),
-      Coord(Share, Int2()),
-      _),
-      _,
-      _) =>
-    })
+    val lambdaCall =
+      vassertSome(
+        temputs.functions.find(func => {
+          func.header.fullName.last match {
+            case FunctionName2("__call", _, _) => true
+            case _ => false
+          }
+        }))
+    lambdaCall.header.paramTypes.head match {
+      case Coord(Share, StructRef2(FullName2(List(FunctionName2("main",List(),List())),LambdaCitizenName2(_)))) =>
+    }
+    lambdaCall.header.returnType shouldEqual Coord(Share, Int2())
 
     // Make sure we make it with a function pointer and a constructed vars struct
-    val main = temputs.functions.find(_.header.fullName.last == FunctionName2("main", List(), List())).get;
+    val main = temputs.lookupFunction("main")
     main.only({
-      case Construct2(StructRef2(simpleName("__Closure:main:lam1")), _, _) =>
+      case Construct2(StructRef2(FullName2(List(FunctionName2("main",List(),List())),LambdaCitizenName2(_))), _, _) =>
     })
 
     // Make sure we call the function somewhere
     main.onlyOf(classOf[FunctionCall2])
 
 
-    val lambda = temputs.functions.find(_.header.fullName.last == null/*"main:lam1"*/).get;
-
     println(lambda.allOf(classOf[LocalLookup2]))
     lambda.only({
-      case LocalLookup2(ReferenceLocalVariable2(FullName2(_, null/*"__closure"*/), _, _), _) =>
+      case LocalLookup2(ReferenceLocalVariable2(FullName2(_,ClosureParamName2()),Final,_),_) =>
     })
 
     compile.evalForReferend(Vector()) shouldEqual VonInt(4)
@@ -181,13 +185,14 @@ class ClosureTests extends FunSuite with Matchers {
     val scoutput = compile.getScoutput()
     val temputs = compile.getTemputs()
     // The struct should have an int x in it.
-    val closuredVarsStruct = temputs.structs.find(_.fullName.last == null/*"__Closure:main:lam1"*/).get;
-    val expectedMembers = List(StructMember2(null/*"x"*/, Varying, AddressMemberType2(Coord(Share, Int2()))));
+    val closuredVarsStruct = vassertSome(temputs.structs.find(struct => struct.fullName.last match { case l @ LambdaCitizenName2(_) => true case _ => false }));
+    val expectedMembers = List(StructMember2(CodeVarName2("x"), Varying, AddressMemberType2(Coord(Share, Int2()))));
     vassert(closuredVarsStruct.members == expectedMembers)
 
-    temputs.only({
+    val lambda = temputs.lookupLambdaIn("main")
+    lambda.only({
       case Mutate2(
-        AddressMemberLookup2(_, FullName2(_, null/*"x"*/), Coord(Share, Int2())),
+        AddressMemberLookup2(_,FullName2(List(FunctionName2("main",List(),List()), LambdaCitizenName2(_)),CodeVarName2("x")),Coord(Share,Int2())),
         _) =>
     })
 

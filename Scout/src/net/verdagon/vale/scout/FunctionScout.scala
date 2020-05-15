@@ -358,8 +358,14 @@ object FunctionScout {
     val (NormalResult(block1WithoutParamLocals), selfUses, childUses) =
       ExpressionScout.scoutBlock(stackFrame, body0)
 
+    vcurious(
+      childUses.uses.map(_.name).collect({ case mpn @ MagicParamNameS(_) => mpn }).isEmpty)
+    val magicParamNames =
+      selfUses.uses.map(_.name).collect({ case mpn @ MagicParamNameS(_) => mpn })
+    val magicParamVars = magicParamNames.map(n => VariableDeclaration(n, FinalP))
+
     val paramLocals =
-      paramDeclarations.vars.map({ declared =>
+      (paramDeclarations.vars ++ magicParamVars).map({ declared =>
         LocalVariable1(
           declared.name,
           declared.variability,
@@ -413,13 +419,7 @@ object FunctionScout {
         }
       })
 
-    val magicParams =
-      allUses.uses.flatMap(_.name match {
-        case mpn @ MagicParamNameS(_) => List(mpn)
-        case _ => List()
-      })
-
-    (BodySE(usesOfParentVariables.map(_.name), block1WithParamLocals), VariableUses(usesOfParentVariables), magicParams)
+    (BodySE(usesOfParentVariables.map(_.name), block1WithParamLocals), VariableUses(usesOfParentVariables), magicParamNames)
   }
 
   def getContainingFunctionName(name: INameS): IFunctionDeclarationNameS = {

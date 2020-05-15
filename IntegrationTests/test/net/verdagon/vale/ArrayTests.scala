@@ -40,8 +40,6 @@ class ArrayTests extends FunSuite with Matchers {
         |}
       """.stripMargin)
 
-    println(compile.getScoutput().implementedFunctions.find(_.name == "main").get)
-
     compile.evalForReferend(Vector()) shouldEqual VonInt(5)
   }
 

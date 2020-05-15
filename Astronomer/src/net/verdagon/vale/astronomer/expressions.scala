@@ -1,7 +1,7 @@
 package net.verdagon.vale.astronomer
 
 import net.verdagon.vale.parser.{MutabilityP, VariabilityP}
-import net.verdagon.vale.scout.{ITemplexS, IVariableUseCertainty, LocalVariable1, RefCountCategory}
+import net.verdagon.vale.scout.{CodeLocationS, ITemplexS, IVariableUseCertainty, LocalVariable1, RefCountCategory}
 import net.verdagon.vale.scout.patterns.AtomSP
 import net.verdagon.vale.scout.rules.IRulexSR
 import net.verdagon.vale.vassert

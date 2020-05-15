@@ -78,7 +78,7 @@ class Allocation(
   }
 
   override def finalize(): Unit = {
-    vassert(referrers.isEmpty)
+//    vassert(referrers.isEmpty)
   }
 
   def unapply(arg: Allocation): Option[ReferendV] = Some(referend)

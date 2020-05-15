@@ -580,6 +580,7 @@ class Heap(in_vivemDout: PrintStream) {
 
 
   def checkReference(expectedType: ReferenceH[ReferendH], actualReference: ReferenceV): Unit = {
+    vassert(objectsById.contains(actualReference))
     if (actualReference.seenAsCoord.hamut != expectedType) {
       vfail("Expected " + expectedType + " but was " + actualReference.seenAsCoord.hamut)
     }

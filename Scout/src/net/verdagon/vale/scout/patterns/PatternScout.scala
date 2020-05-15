@@ -3,7 +3,7 @@ package net.verdagon.vale.scout.patterns
 import net.verdagon.vale.parser._
 import net.verdagon.vale.scout.rules._
 import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
-import net.verdagon.vale.{vassert, vassertSome, vfail}
+import net.verdagon.vale.{vassert, vassertSome, vfail, vwat}
 
 import scala.collection.immutable.List
 
@@ -214,6 +214,10 @@ object PatternScout {
       templexP: ITemplexPPT):
   (List[IRulexSR], ITemplexS, Option[IRuneS]) = {
     templexP match {
+      case AnonymousRunePPT() => {
+        val rune = rulesS.newImplicitRune()
+        (List(), RuneST(rune), Some(rune))
+      }
       case IntPPT(value) => (List(), IntST(value), None)
       case BoolPPT(value) => (List(), BoolST(value), None)
       case NameOrRunePPT(nameOrRune) => {
@@ -282,6 +286,7 @@ object PatternScout {
 
 //        (rulesS, FunctionST(mutableS, PackST(paramsS), retS), None)
       }
+      case _ => vwat()
     }
   }
 }

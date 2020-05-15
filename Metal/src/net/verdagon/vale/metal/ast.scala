@@ -128,6 +128,13 @@ case class FullNameH(parts: List[IVonData]) {
         "Own" -> "^",
         "CoordTemplata" -> "TR",
         "KindTemplata" -> "TK",
+        "CitizenName" -> "C",
+        "Immutable" -> "imm",
+        "MutabilityTemplata" -> "TM",
+        "StructId" -> "SId",
+        "InterfaceId" -> "IId",
+        "AnonymousSubstructName" -> "AS",
+        "LambdaCitizenName" -> "LC",
       )
     val printer = new VonPrinter(VonSyntax(false, true, false, false), Int.MaxValue, nameMap, false);
     parts.map(printer.print).mkString(":")

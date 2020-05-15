@@ -139,7 +139,7 @@ object Hammer {
 
     ProgramH(
       hamuts.interfaceDefs.values.toList,
-      hamuts.structDefsByRef2.values.toList,
+      hamuts.structDefs,
       emptyPackStructRefH,
       List() /* externs */,
       hamuts.functionDefs.values.toList)

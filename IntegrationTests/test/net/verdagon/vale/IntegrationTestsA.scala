@@ -393,7 +393,7 @@ class IntegrationTestsA extends FunSuite with Matchers {
         |fn map<T, R>(opt &None<T> impl Opt<T>, func &IFunction1<mut, T, R>) Opt<R> {
         |  None<R>()
         |}
-        |fn map<T, R>(opt &Some<T> impl Opt<T>, func &IFunction1<mut, T, R>) OptR> {
+        |fn map<T, R>(opt &Some<T> impl Opt<T>, func &IFunction1<mut, T, R>) Opt<R> {
         |  Some<R>(func(opt.value))
         |}
         |

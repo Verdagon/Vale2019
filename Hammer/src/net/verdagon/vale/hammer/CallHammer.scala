@@ -1,12 +1,11 @@
 package net.verdagon.vale.hammer
 
 import net.verdagon.vale.hinputs.Hinputs
-import net.verdagon.vale.{metal => m}
+import net.verdagon.vale.{vassert, vassertSome, vcurious, vfail, metal => m}
 import net.verdagon.vale.metal.{Share => _, _}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.templata.{FunctionBanner2, FunctionHeader2, Prototype2}
 import net.verdagon.vale.templar.types._
-import net.verdagon.vale.{vassert, vcurious, vfail}
 
 object CallHammer {
 
@@ -161,6 +160,12 @@ object CallHammer {
     val (Some(consumerCallableResultLine), consumerCallableDeferreds) =
       ExpressionHammer.translate(
         hinputs, hamuts, locals, stackHeight, nodesByLine, consumerExpr2);
+
+    val consumerInterfaceRef = consumerCallableResultLine.expectInterfaceAccess().expectedType.kind;
+    val consumerInterfaceDef = vassertSome(hamuts.interfaceDefs.values.find(_.getRef == consumerInterfaceRef))
+    vassert(consumerInterfaceDef.prototypes.head.params.size == 2)
+    vassert(consumerInterfaceDef.prototypes.head.params(0).kind == consumerInterfaceRef)
+    vassert(consumerInterfaceDef.prototypes.head.params(1) == arrayTypeH.rawArray.elementType)
 
     val destroyArraySequenceCallNode =
       nodesByLine.addNode(

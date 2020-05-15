@@ -262,7 +262,7 @@ object ExpressionVivem {
         }
       }
       case NewStructH(_, sourceLines, structRefH) => {
-        val structDefH = programH.structs.find(_.getRef == structRefH.kind).get
+        val structDefH = vassertSome(programH.structs.find(_.getRef == structRefH.kind))
 
         val memberReferences =
           heap.takeReferencesFromRegistersInReverse(blockId, sourceLines)
@@ -515,10 +515,15 @@ object ExpressionVivem {
         val consumerInterfaceRef =
           heap.takeReferenceFromRegister(
             RegisterId(blockId, consumerInterfaceRegister.registerId), consumerInterfaceRegister.expectedType)
+        heap.checkReference(consumerInterfaceRegister.expectedType, consumerInterfaceRef)
 
         val arrayReference =
           heap.takeReferenceFromRegister(RegisterId(blockId, arrayRegister.registerId), arrayRegister.expectedType)
         heap.ensureTotalRefCount(arrayReference, 0)
+
+        val consumerInterfaceDefH =
+          programH.interfaces.find(_.getRef == consumerInterfaceRegister.expectedType.kind).get
+        val consumerInterfaceMethodPrototype = consumerInterfaceDefH.prototypes.head
 
         val size = arrayRegister.expectedType.kind.size
         (0 until size).foreach(ascendingI => {
@@ -527,23 +532,20 @@ object ExpressionVivem {
           heap.vivemDout.println()
           heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (consumer)")
 
-          val indexReference = heap.allocateTransient(Share, IntV(i))
-
           // We're assuming here that theres only 1 method in the interface.
           val indexInEdge = 0
           // We're assuming that it takes self then the index int as arguments.
           val virtualParamIndex = 0
 
-          val consumerPrototypeH =
-            PrototypeH(
-              vimpl(),//FullNameH(List(NamePartH("__call", None, None, None))),
-              List(consumerInterfaceRegister.expectedType, ReferenceH(Share, IntH())),
-              arrayRegister.expectedType.kind.rawArray.elementType)
-
           heap.vivemDout.println()
 
           heap.vivemDout.println()
           heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (icall)")
+
+          val elementReference = heap.deinitializeArrayElement(arrayReference, i)
+
+          val consumerInterfaceRefAlias =
+            heap.alias(consumerInterfaceRef, consumerInterfaceRegister.expectedType, consumerInterfaceRegister.expectedType.ownership)
 
           val (functionH, maybeReturnReference) =
             executeInterfaceFunction(
@@ -551,11 +553,11 @@ object ExpressionVivem {
               stdin,
               stdout,
               heap,
-              List(consumerInterfaceRef, indexReference),
+              List(consumerInterfaceRefAlias, elementReference),
               virtualParamIndex,
               consumerInterfaceRegister.expectedType.kind,
               indexInEdge,
-              consumerPrototypeH)
+              consumerInterfaceMethodPrototype)
 
           // This instruction is specifically about NOT producing a new array. The return
           // better be empty.
@@ -563,6 +565,9 @@ object ExpressionVivem {
         });
 
         heap.deallocate(arrayReference)
+
+        dropReference(programH, heap, stdout, stdin, blockId, consumerInterfaceRef)
+
         NodeContinue(None)
       }
 
@@ -575,6 +580,10 @@ object ExpressionVivem {
           heap.takeReferenceFromRegister(RegisterId(blockId, arrayRegister.registerId), arrayRegister.expectedType)
         heap.ensureTotalRefCount(arrayReference, 0)
 
+        val consumerInterfaceDefH =
+          programH.interfaces.find(_.getRef == consumerInterfaceRegister.expectedType.kind).get
+        val consumerInterfaceMethodPrototype = consumerInterfaceDefH.prototypes.head
+
         val ArrayInstanceV(_, _, size, _) = heap.dereference(arrayReference)
 
         (0 until size).foreach(ascendingI => {
@@ -583,20 +592,14 @@ object ExpressionVivem {
           heap.vivemDout.println()
           heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (consumer)")
 
-          val indexReference = heap.allocateTransient(Share, IntV(i))
-
           // We're assuming here that theres only 1 method in the interface.
           val indexInEdge = 0
           // We're assuming that it takes self then the index int as arguments.
           val virtualParamIndex = 0
 
-          val consumerPrototypeH =
-            PrototypeH(
-              vimpl(),//FullNameH(List(NamePartH("__call", None, None, None))),
-              List(consumerInterfaceRegister.expectedType, ReferenceH(Share, IntH())),
-              arrayRegister.expectedType.kind.rawArray.elementType)
-
           heap.vivemDout.println()
+
+          val elementReference = heap.deinitializeArrayElement(arrayReference, i)
 
           heap.vivemDout.println()
           heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (icall)")
@@ -607,11 +610,11 @@ object ExpressionVivem {
               stdin,
               stdout,
               heap,
-              List(consumerInterfaceRef, indexReference),
+              List(consumerInterfaceRef, elementReference),
               virtualParamIndex,
               consumerInterfaceRegister.expectedType.kind,
               indexInEdge,
-              consumerPrototypeH)
+              consumerInterfaceMethodPrototype)
 
           // This instruction is specifically about NOT producing a new array. The return
           // better be empty.
@@ -721,13 +724,13 @@ object ExpressionVivem {
             }
             case UnknownSizeArrayTH(_) => {
               val ArrayInstanceV(_, _, _, elements) = heap.dereference(reference)
-              val references = elements.indices.map(heap.deinitializeArrayElement(reference, _))
+              val references = elements.indices.map(i => heap.deinitializeArrayElement(reference, elements.size - 1 - i))
               heap.deallocate(reference)
               references.foreach(dropReference(programH, heap, stdout, stdin, blockId, _))
             }
             case KnownSizeArrayTH(_, _) => {
               val ArrayInstanceV(_, _, _, elements) = heap.dereference(reference)
-              val references = elements.indices.map(heap.deinitializeArrayElement(reference, _))
+              val references = elements.indices.map(i => heap.deinitializeArrayElement(reference, elements.size - 1 - i))
               heap.deallocate(reference)
               references.foreach(dropReference(programH, heap, stdout, stdin, blockId, _))
             }

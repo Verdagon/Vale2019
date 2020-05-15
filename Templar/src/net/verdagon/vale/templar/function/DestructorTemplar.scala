@@ -261,7 +261,7 @@ object DestructorTemplar {
     sequenceRefType2: Coord,
     sequence: ArraySequenceT2):
   (FunctionHeader2) = {
-    vimpl("turn this into just a regular destructor template function? dont see why its special.")
+    println("turn this into just a regular destructor template function? dont see why its special.")
 
     val arrayOwnership = if (sequence.array.mutability == Mutable) Own else Share
     val arrayBorrowOwnership = if (sequence.array.mutability == Mutable) Borrow else Share

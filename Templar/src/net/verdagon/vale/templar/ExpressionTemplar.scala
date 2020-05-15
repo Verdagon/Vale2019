@@ -147,7 +147,7 @@ object ExpressionTemplar {
               ReferenceLocalVariable2(closureParamVarName2, Final, closuredVarsStructRefRef),
               closuredVarsStructRefRef))
         val closuredVarsStructDef = temputs.lookupStruct(closuredVarsStructRef)
-        vassert(closuredVarsStructDef.members.exists(_.name == id))
+        vassert(closuredVarsStructDef.members.exists(member => closuredVarsStructRef.fullName.addStep(member.name) == id))
         val lookup = AddressMemberLookup2(borrowExpr, id, tyype)
         Some(lookup)
       }

@@ -516,10 +516,11 @@ object StructTemplarCore {
         List(),
         Block2(
           List(
+            Discard2(ArgLookup2(0, Coord(Share, structRef))),
             FunctionCall2(
               prototype,
               forwarderHeader.params.tail.zipWithIndex.map({ case (param, index) =>
-                ArgLookup2(index, param.tyype)
+                ArgLookup2(index + 1, param.tyype)
               })))))
     temputs.addFunction(forwarderFunction)
 

@@ -130,7 +130,7 @@ object MutateHammer {
         case PackT2(_, sr) => sr
       }
     val structDef2 = hinputs.program2.lookupStruct(structRef2)
-    val memberIndex = structDef2.members.indexWhere(_.name == memberName)
+    val memberIndex = structDef2.members.indexWhere(member => structDef2.fullName.addStep(member.name) == memberName)
     vassert(memberIndex >= 0)
     val member2 = structDef2.members(memberIndex)
 
@@ -193,7 +193,9 @@ object MutateHammer {
         case sr @ StructRef2(_) => sr
       }
     val structDef2 = hinputs.program2.lookupStruct(structRef2)
-    val memberIndex = structDef2.members.indexWhere(_.name == memberName)
+    val memberIndex =
+      structDef2.members
+        .indexWhere(member => structDef2.fullName.addStep(member.name) == memberName)
     vassert(memberIndex >= 0)
 
     // We're storing into a regular reference member of a struct.

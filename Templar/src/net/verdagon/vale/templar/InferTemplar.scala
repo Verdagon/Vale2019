@@ -250,6 +250,7 @@ object InferTemplar {
       case MutabilityAT(m) => MutabilityTT(m)
       case RepeaterSequenceAT(mutability, size, element, resultType) => RepeaterSequenceTT(translateTemplex(mutability), translateTemplex(size), translateTemplex(element), resultType)
       case PackAT(members, resultType) => PackTT(members.map(translateTemplex), resultType)
+      case IntAT(value) => IntTT(value)
       case _ => vimpl(templexA.toString)
     }
   }

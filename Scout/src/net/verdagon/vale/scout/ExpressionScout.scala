@@ -41,9 +41,9 @@ object ExpressionScout {
       })
 
     val selfUsesOfThingsFromAbove =
-      VariableUses(selfUses.uses.filter(selfUseName => !locals.map(_.varName).contains(selfUseName)))
+      VariableUses(selfUses.uses.filter(selfUseName => !locals.map(_.varName).contains(selfUseName.name)))
     val childUsesOfThingsFromAbove =
-      VariableUses(childUses.uses.filter(selfUseName => !locals.map(_.varName).contains(selfUseName)))
+      VariableUses(childUses.uses.filter(selfUseName => !locals.map(_.varName).contains(selfUseName.name)))
 
     // Notice how the fate is continuing on
     (NormalResult(BlockSE(locals, elements1)), selfUsesOfThingsFromAbove, childUsesOfThingsFromAbove)
@@ -105,8 +105,11 @@ object ExpressionScout {
       case mpl @ MagicParamLookupPE() => {
         val name = MagicParamNameS(CodeLocationS(mpl.pos.line, mpl.pos.column))
         val lookup = LocalLookupResult(name)
-        val declarations = VariableDeclarations(List(VariableDeclaration(lookup.name, FinalP)))
-        (declarations, lookup, noVariableUses.markMoved(name), noVariableUses)
+        // We dont declare it here, because then scoutBlock will think its a local and
+        // hide it from those above.
+        //   val declarations = VariableDeclarations(List(VariableDeclaration(lookup.name, FinalP)))
+        // Leave it to scoutLambda to declare it.
+        (noDeclarations, lookup, noVariableUses.markMoved(name), noVariableUses)
       }
       case LookupPE(name, List()) => {
         val (lookup, declarations) =
