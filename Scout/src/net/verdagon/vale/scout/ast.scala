@@ -182,6 +182,7 @@ case class FunctionS(
     templateRules: List[IRulexSR],
     body: IBody1
 ) {
+
   // Make sure we have to solve all identifying runes
   vassert((identifyingRunes.toSet -- localRunes).isEmpty)
 

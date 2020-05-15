@@ -192,7 +192,7 @@ object StructTemplarCore {
     temputs: TemputsBox,
     member: StructMemberA):
   (StructMember2) = {
-    val CoordTemplata(coord) = vassertSome(env.getNearestTemplataWithAbsoluteNameA(member.typeRune, Set(TemplataLookupContext)))
+    val CoordTemplata(coord) = vassertSome(env.getNearestTemplataWithAbsoluteName2(NameTranslator.translateRune(member.typeRune), Set(TemplataLookupContext)))
     (StructMember2(CodeVarName2(member.name), Conversions.evaluateVariability(member.variability), ReferenceMemberType2(coord)))
   }
 
@@ -408,42 +408,60 @@ object StructTemplarCore {
         false)
     temputs.add(structDef)
 
-    forwarderFunctionHeaders.zip(callables).foreach({ case (forwarderHeader, lambda) =>
-      val localVariables =
-        forwarderHeader.params.map(param => {
-          ReferenceLocalVariable2(forwarderHeader.fullName.addStep(param.name), Final, param.tyype)
-        })
+    forwarderFunctionHeaders.zip(callables).zipWithIndex.foreach({
+      case ((forwarderHeader, lambda), methodIndex) => {
+        val localVariables =
+          forwarderHeader.params.map(param => {
+            ReferenceLocalVariable2(forwarderHeader.fullName.addStep(param.name), Final, param.tyype)
+          })
 
-      // The args for the call inside the forwarding function.
-      val forwardedCallArgs =
-        (Coord(Borrow, lambda.referend) :: forwarderHeader.paramTypes.tail).map(ParamFilter(_, None))
+        // The args for the call inside the forwarding function.
+        val forwardedCallArgs =
+          (Coord(if (lambda.ownership == Share) Share else Borrow, lambda.referend) ::
+          forwarderHeader.paramTypes.tail).map(ParamFilter(_, None))
 
-      val lambdaFunctionPrototype =
-        OverloadTemplar.scoutExpectedFunctionForPrototype(
-          interfaceEnv, // Shouldnt matter here, because the callables themselves should have a __call
-          temputs,
-          GlobalFunctionFamilyNameA(CallTemplar.CALL_FUNCTION_NAME),
-          List(),
-          forwardedCallArgs,
-          List(),
-          true) match {
-            case seff @ ScoutExpectedFunctionFailure(_, _, _, _, _) => vfail(seff.toString)
+//        start here
+        // since IFunction has a drop() method, its looking for a drop() for the
+        // lambda we gave it. but its immutable, so it needs no drop... or wait,
+        // maybe imms have drops?
+
+        val lambdaFunctionPrototype =
+          OverloadTemplar.scoutExpectedFunctionForPrototype(
+            interfaceEnv, // Shouldnt matter here, because the callables themselves should have a __call
+            temputs,
+            GlobalFunctionFamilyNameA(CallTemplar.CALL_FUNCTION_NAME),
+            List(),
+            forwardedCallArgs,
+            List(),
+            true) match {
+            case seff@ScoutExpectedFunctionFailure(_, _, _, _, _) => vfail(seff.toString)
             case ScoutExpectedFunctionSuccess(prototype) => prototype
-        }
+          }
 
-      val argExpressions =
-        forwarderHeader.params.tail.zipWithIndex.map({ case (param, index) =>
-          ArgLookup2(index, param.tyype)
-        })
+        val argExpressions =
+          SoftLoad2(
+            ReferenceMemberLookup2(
+              ArgLookup2(
+                0,
+                Coord(
+                  if (structDef.mutability == Immutable) Share else Borrow,
+                  structDef.getRef)),
+              structDef.fullName.addStep(structDef.members(methodIndex).name),
+              structDef.members(methodIndex).tyype.reference),
+            if (structDef.members(methodIndex).tyype.reference.ownership == Share) Share else Borrow) ::
+          forwarderHeader.params.tail.zipWithIndex.map({ case (param, index) =>
+            ArgLookup2(index + 1, param.tyype)
+          })
 
-      val forwarderFunction =
-        Function2(
-          forwarderHeader,
-          localVariables,
-          Block2(
-            List(
-              FunctionCall2(lambdaFunctionPrototype, argExpressions))))
-      temputs.addFunction(forwarderFunction)
+        val forwarderFunction =
+          Function2(
+            forwarderHeader,
+            localVariables,
+            Block2(
+              List(
+                FunctionCall2(lambdaFunctionPrototype, argExpressions))))
+        temputs.addFunction(forwarderFunction)
+      }
     })
 
     (structRef, mutability)
@@ -463,7 +481,7 @@ object StructTemplarCore {
     temputs.declareStructMutability(structRef, mutability)
 
     val forwarderParams =
-      Parameter2(TemplarTemporaryVarName2(-1), None, Coord(Borrow, structRef)) ::
+      Parameter2(TemplarTemporaryVarName2(-1), None, Coord(if (mutability == Immutable) Share else Borrow, structRef)) ::
       prototype.paramTypes.zipWithIndex.map({ case (paramType, index) =>
         Parameter2(TemplarTemporaryVarName2(index), None, paramType)
       })

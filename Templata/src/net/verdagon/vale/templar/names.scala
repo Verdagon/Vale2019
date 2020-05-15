@@ -72,20 +72,45 @@ case class GlobalNamespaceName2() extends IName2 { def order = 25; def all[T](fu
 // We use this one to look for impls, which are disambiguated by the above ImplDeclareName2
 //case class ImplImpreciseName2() extends IName2 { def order = 22; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
 
+// This is the name of a function that we're still figuring out in the function templar.
+// We have its closured variables, but are still figuring out its template args and params.
+case class BuildingFunctionNameWithClosureds2(
+  templateName: IFunctionTemplateName2,
+) extends IName2 {
+  def order = 33;
+  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
+    List(this).collect(func) ++ templateName.all(func)
+  }
+}
+// This is the name of a function that we're still figuring out in the function templar.
+// We have its closured variables and template args, but are still figuring out its params.
+case class BuildingFunctionNameWithClosuredsAndTemplateArgs2(
+  templateName: IFunctionTemplateName2,
+  templateArgs: List[ITemplata]
+) extends IName2 {
+  def order = 37;
+  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
+    List(this).collect(func) ++ templateName.all(func) ++ templateArgs.flatMap(_.all(func))
+  }
+}
+
 case class FunctionName2(
   humanName: String,
   templateArgs: List[ITemplata],
   parameters: List[Coord]
 ) extends IFunctionName2 {
+
   def order = 13;
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func) ++ templateArgs.flatMap(_.all(func)) ++ parameters.flatMap(_.all(func))
   }
 }
+sealed trait IFunctionTemplateName2 extends IName2
+
 case class FunctionTemplateName2(
     humanName: String,
     codeLocation: CodeLocation2
-) extends IName2 {
+) extends IName2 with IFunctionTemplateName2 {
   def order = 31;
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func) ++ codeLocation.all(func)
@@ -93,8 +118,16 @@ case class FunctionTemplateName2(
 }
 case class LambdaTemplateName2(
   codeLocation: CodeLocation2
-) extends IName2 {
-  def order = 31;
+) extends IName2 with IFunctionTemplateName2 {
+  def order = 36;
+  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
+    List(this).collect(func) ++ codeLocation.all(func)
+  }
+}
+case class ConstructorTemplateName2(
+  codeLocation: CodeLocation2
+) extends IName2 with IFunctionTemplateName2 {
+  def order = 35;
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func) ++ codeLocation.all(func)
   }

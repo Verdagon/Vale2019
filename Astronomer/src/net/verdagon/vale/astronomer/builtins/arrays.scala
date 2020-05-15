@@ -1,8 +1,8 @@
 package net.verdagon.vale.astronomer.builtins
 
 import net.verdagon.vale.astronomer._
-import net.verdagon.vale.parser.{CaptureP, FinalP, MutabilityP, MutableP}
-import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
+import net.verdagon.vale.parser.{BorrowP, CaptureP, FinalP, MutabilityP, MutableP}
+import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
 import net.verdagon.vale.scout.patterns.AtomSP
 
 object Arrays {
@@ -22,16 +22,14 @@ object Arrays {
           CodeRuneA("T"),
           CodeRuneA("Generator"),
           CodeRuneA("M"),
-          CodeRuneA("R"),
-          ImplicitRuneA(0)),
+          CodeRuneA("R")),
         Map(
           CodeRuneA("ArrayMutability") -> MutabilityTemplataType,
           CodeRuneA("I") -> CoordTemplataType,
           CodeRuneA("T") -> CoordTemplataType,
           CodeRuneA("Generator") -> CoordTemplataType,
           CodeRuneA("M") -> MutabilityTemplataType,
-          CodeRuneA("R") -> MutabilityTemplataType,
-          ImplicitRuneA(0) -> OwnershipTemplataType),
+          CodeRuneA("R") -> MutabilityTemplataType),
         List(
           ParameterA(AtomAP(CaptureA(CodeVarNameA("size"), FinalP), None, CodeRuneA("I"), None)),
           ParameterA(AtomAP(CaptureA(CodeVarNameA("generator"), FinalP), None, CodeRuneA("Generator"), None))),
@@ -45,7 +43,7 @@ object Arrays {
             ComponentsAR(
               CoordTemplataType,
               List(
-                TemplexAR(RuneAT(ImplicitRuneA(0), OwnershipTemplataType)),
+                TemplexAR(OwnershipAT(BorrowP)),
                 TemplexAR(
                   CallAT(
                     NameAT(CodeTypeNameA("IFunction1"), TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType, CoordTemplataType), KindTemplataType)),

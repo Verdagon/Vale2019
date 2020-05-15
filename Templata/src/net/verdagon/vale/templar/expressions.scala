@@ -439,6 +439,10 @@ case class ExternFunctionCall2(
 case class FunctionCall2(
     callable: Prototype2,
     args: List[ReferenceExpression2]) extends ReferenceExpression2 {
+
+  vassert(callable.paramTypes.size == args.size)
+  vassert(callable.paramTypes == args.map(_.resultRegister.reference))
+
   override def resultRegister: ReferenceRegister2 = {
     ReferenceRegister2(callable.returnType)
   }

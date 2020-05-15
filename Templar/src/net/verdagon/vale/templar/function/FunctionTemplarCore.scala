@@ -20,7 +20,6 @@ object FunctionTemplarCore {
   def evaluateFunctionForHeader(
     startingFullEnv: FunctionEnvironment,
       temputs: TemputsBox,
-      function1: FunctionA,
       params2: List[Parameter2]):
   (FunctionHeader2) = {
     val fullEnv = FunctionEnvironmentBox(startingFullEnv)
@@ -28,13 +27,18 @@ object FunctionTemplarCore {
     println("Evaluating function " + fullEnv.fullName)
 
     val isDestructor =
-      function1.name == CallTemplar.DESTRUCTOR_NAME && params2.head.tyype.ownership == Own;
+      params2.nonEmpty &&
+      params2.head.tyype.ownership == Own &&
+      (startingFullEnv.fullName.last match {
+        case FunctionName2(humanName, _, _) if humanName == CallTemplar.DESTRUCTOR_NAME => true
+        case _ => false
+      })
 
-    function1.body match {
+    startingFullEnv.function.body match {
       case CodeBodyA(body) => {
         val (header, body2) =
           BodyTemplar.declareAndEvaluateFunctionBody(
-            fullEnv, temputs, BFunctionA(function1, body), params2, isDestructor)
+            fullEnv, temputs, BFunctionA(startingFullEnv.function, body), params2, isDestructor)
 
         // Funny story... let's say we're current instantiating a constructor,
         // for example MySome<T>().
@@ -71,9 +75,9 @@ object FunctionTemplarCore {
       }
       case AbstractBodyA => {
         val maybeRetCoord =
-          function1.maybeRetCoordRune match {
+          startingFullEnv.function.maybeRetCoordRune match {
             case None => vfail("Need return type for abstract function!")
-            case Some(r) => fullEnv.getNearestTemplataWithAbsoluteNameA(r, Set(TemplataLookupContext))
+            case Some(r) => fullEnv.getNearestTemplataWithAbsoluteName2(NameTranslator.translateRune(r), Set(TemplataLookupContext))
           }
         val retCoord =
           maybeRetCoord match {
@@ -81,12 +85,12 @@ object FunctionTemplarCore {
             case Some(CoordTemplata(r)) => r
           }
         val header =
-          makeInterfaceFunction(fullEnv.snapshot, temputs, Some(function1), params2, retCoord)
+          makeInterfaceFunction(fullEnv.snapshot, temputs, Some(startingFullEnv.function), params2, retCoord)
         (header)
       }
       case ExternBodyA => {
         val maybeRetCoord =
-          fullEnv.getNearestTemplataWithAbsoluteNameA(function1.maybeRetCoordRune.get, Set(TemplataLookupContext))
+          fullEnv.getNearestTemplataWithAbsoluteName2(NameTranslator.translateRune(startingFullEnv.function.maybeRetCoordRune.get), Set(TemplataLookupContext))
         val retCoord =
           maybeRetCoord match {
             case None => vfail("wat")
@@ -96,19 +100,19 @@ object FunctionTemplarCore {
           makeExternFunction(
             temputs,
             fullEnv.fullName,
-            function1.isUserFunction,
+            startingFullEnv.function.isUserFunction,
             params2,
             retCoord,
-            Some(function1))
+            Some(startingFullEnv.function))
         (header)
       }
       case GeneratedBodyA(generatorId) => {
         val signature2 = Signature2(fullEnv.fullName, params2.map(_.tyype));
         val maybeRetTemplata =
-          function1.maybeRetCoordRune match {
+          startingFullEnv.function.maybeRetCoordRune match {
             case None => (None)
             case Some(retCoordRune) => {
-              fullEnv.getNearestTemplataWithAbsoluteNameA(retCoordRune, Set(TemplataLookupContext))
+              fullEnv.getNearestTemplataWithAbsoluteName2(NameTranslator.translateRune(retCoordRune), Set(TemplataLookupContext))
             }
           }
         val maybeRetCoord =
@@ -139,7 +143,7 @@ object FunctionTemplarCore {
             val generator = temputs.functionGeneratorByName(generatorId)
             val header =
               generator.generate(
-                fullEnv.snapshot, temputs, Some(function1), params2, maybeRetCoord)
+                fullEnv.snapshot, temputs, Some(startingFullEnv.function), params2, maybeRetCoord)
             if (header.toSignature != signature2) {
               vfail("Generator made a function whose signature doesn't match the expected one!\n" +
               "Expected:  " + signature2 + "\n" +
@@ -179,6 +183,9 @@ object FunctionTemplarCore {
     params2: List[Parameter2],
     returnReferenceType2: Coord):
   (FunctionHeader2) = {
+//
+//    val newName = assembleName(runedEnv.fullName, params2.map(_.tyype))
+
     vassert(params2.exists(_.virtuality == Some(Abstract2)))
     val header =
       FunctionHeader2(

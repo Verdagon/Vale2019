@@ -9,6 +9,52 @@ import net.verdagon.vale.{vassert, vfail, vimpl}
 
 import scala.collection.immutable.{List, Map, Set}
 
+case class BuildingFunctionEnvironmentWithClosureds(
+  parentEnv: IEnvironment,
+  fullName: FullName2[BuildingFunctionNameWithClosureds2],
+  function: FunctionA,
+  variables: List[IVariable2],
+  entries: Map[IName2, List[IEnvEntry]]
+) extends IEnvironment {
+  override def getParentEnv(): Option[IEnvironment] = Some(parentEnv)
+  override def globalEnv: NamespaceEnvironment[IName2] = parentEnv.globalEnv
+  override def getAllTemplatasWithAbsoluteName2(name: IName2, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
+    EnvironmentUtils.getAllTemplatasWithAbsoluteName2(this, name, lookupFilter)
+  }
+  override def getNearestTemplataWithAbsoluteName2(name: IName2, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
+    EnvironmentUtils.getNearestTemplataWithAbsoluteName2(this, name, lookupFilter)
+  }
+  override def getAllTemplatasWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
+    EnvironmentUtils.getAllTemplatasWithName(this, name, lookupFilter)
+  }
+  override def getNearestTemplataWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
+    EnvironmentUtils.getNearestTemplataWithName(this, name, lookupFilter)
+  }
+}
+
+case class BuildingFunctionEnvironmentWithClosuredsAndTemplateArgs(
+  parentEnv: IEnvironment,
+  fullName: FullName2[BuildingFunctionNameWithClosuredsAndTemplateArgs2],
+  function: FunctionA,
+  variables: List[IVariable2],
+  entries: Map[IName2, List[IEnvEntry]]
+) extends IEnvironment {
+  override def getParentEnv(): Option[IEnvironment] = Some(parentEnv)
+  override def globalEnv: NamespaceEnvironment[IName2] = parentEnv.globalEnv
+  override def getAllTemplatasWithAbsoluteName2(name: IName2, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
+    EnvironmentUtils.getAllTemplatasWithAbsoluteName2(this, name, lookupFilter)
+  }
+  override def getNearestTemplataWithAbsoluteName2(name: IName2, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
+    EnvironmentUtils.getNearestTemplataWithAbsoluteName2(this, name, lookupFilter)
+  }
+  override def getAllTemplatasWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
+    EnvironmentUtils.getAllTemplatasWithName(this, name, lookupFilter)
+  }
+  override def getNearestTemplataWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
+    EnvironmentUtils.getNearestTemplataWithName(this, name, lookupFilter)
+  }
+}
+
 case class FunctionEnvironment(
   // These things are the "environment"; they are the same for every line in a function.
   parentEnv: IEnvironment,
@@ -37,6 +83,7 @@ case class FunctionEnvironment(
   vassert(scoutedLocals == scoutedLocals.distinct)
   vassert(variables == variables.distinct)
 
+  override def getParentEnv(): Option[IEnvironment] = Some(parentEnv)
   override def globalEnv: NamespaceEnvironment[IName2] = parentEnv.globalEnv
 
   def addScoutedLocals(newScoutedLocals: List[LocalVariableA]): FunctionEnvironment = {
@@ -98,67 +145,17 @@ case class FunctionEnvironment(
       moveds)
   }
 
-  override def getAllTemplatasWithAbsoluteNameA(name: INameA, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
-    entries
-      .get(NameTranslator.translateNameStep(name))
-      .toList
-      .flatten
-      .filter(EnvironmentUtils.entryMatchesFilter(_, lookupFilter))
-      .map(EnvironmentUtils.entryToTemplata(this, _))
-      .toList ++
-      parentEnv.getAllTemplatasWithAbsoluteNameA(name, lookupFilter)
-  }
-
-  override def getNearestTemplataWithAbsoluteNameA(name: INameA, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
-    entries
-      .get(NameTranslator.translateNameStep(name))
-      .toList
-      .flatten
-      .filter(EnvironmentUtils.entryMatchesFilter(_, lookupFilter)) match {
-      case List(entry) => Some(EnvironmentUtils.entryToTemplata(this, entry))
-      case List() => parentEnv.getNearestTemplataWithAbsoluteNameA(name, lookupFilter)
-      case multiple => vfail("Too many things named " + name + ":" + multiple);
-    }
-  }
-
   override def getAllTemplatasWithAbsoluteName2(name: IName2, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
-    vimpl()
+    EnvironmentUtils.getAllTemplatasWithAbsoluteName2(this, name, lookupFilter)
   }
-
   override def getNearestTemplataWithAbsoluteName2(name: IName2, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
-    entries
-      .get(name)
-      .toList
-      .flatten
-      .filter(EnvironmentUtils.entryMatchesFilter(_, lookupFilter)) match {
-      case List(entry) => Some(EnvironmentUtils.entryToTemplata(this, entry))
-      case List() => parentEnv.getNearestTemplataWithAbsoluteName2(name, lookupFilter)
-      case multiple => vfail("Too many things named " + name + ":" + multiple);
-    }
+    EnvironmentUtils.getNearestTemplataWithAbsoluteName2(this, name, lookupFilter)
   }
-
   override def getAllTemplatasWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
-    entries
-      .filter({ case (key, _) => EnvironmentUtils.impreciseNamesMatch(name, key) })
-      .values
-      .toList
-      .flatten
-      .filter(EnvironmentUtils.entryMatchesFilter(_, lookupFilter))
-      .map(x => EnvironmentUtils.entryToTemplata(this, x))
-      .toList ++
-    parentEnv.getAllTemplatasWithName(name, lookupFilter)
+    EnvironmentUtils.getAllTemplatasWithName(this, name, lookupFilter)
   }
-
   override def getNearestTemplataWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
-    entries
-      .filter({ case (key, _) => EnvironmentUtils.impreciseNamesMatch(name, key) })
-      .values
-      .flatten
-      .filter(EnvironmentUtils.entryMatchesFilter(_, lookupFilter)) match {
-      case List(entry) => Some(EnvironmentUtils.entryToTemplata(this, entry))
-      case List() => parentEnv.getNearestTemplataWithName(name, lookupFilter)
-      case multiple => vfail("Too many things named " + name + ":" + multiple);
-    }
+    EnvironmentUtils.getNearestTemplataWithName(this, name, lookupFilter)
   }
 
   def getVariable(name: IVarName2): Option[IVariable2] = {
@@ -245,12 +242,12 @@ case class FunctionEnvironmentBox(var functionEnvironment: FunctionEnvironment) 
     functionEnvironment = functionEnvironment.addEntries(newEntries)
   }
 
-  override def getAllTemplatasWithAbsoluteNameA(name: INameA, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
-    functionEnvironment.getAllTemplatasWithAbsoluteNameA(name, lookupFilter)
+  override def getAllTemplatasWithAbsoluteName2(name: IName2, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
+    functionEnvironment.getAllTemplatasWithAbsoluteName2(name, lookupFilter)
   }
 
-  override def getNearestTemplataWithAbsoluteNameA(name: INameA, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
-    functionEnvironment.getNearestTemplataWithAbsoluteNameA(name, lookupFilter)
+  override def getNearestTemplataWithAbsoluteName2(name: IName2, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
+    functionEnvironment.getNearestTemplataWithAbsoluteName2(name, lookupFilter)
   }
 
   override def getAllTemplatasWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): List[ITemplata] = {

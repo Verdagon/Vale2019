@@ -121,7 +121,7 @@ class IntegrationTestsA extends FunSuite with Matchers {
     val heap = new Heap(System.out)
     val ref =
       heap.add(m.Own, StructInstanceV(
-        hamuts.structs.find(_.fullName.von.members.last == null/*"SomeStruct"*/).get,
+        hamuts.structs.find(_.fullName.parts.last == null/*"SomeStruct"*/).get,
         Vector()))
     compile.run(heap, Vector(ref))
   }
@@ -209,11 +209,11 @@ class IntegrationTestsA extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |interface MyInterface<T> rules(T Ref) { }
-        |abstract fn doThing<T>(x virtual MyInterface<T>) *Int;
+        |abstract fn doThing<T>(virtual x MyInterface<T>) *Int;
         |
         |struct MyStruct<T> rules(T Ref) { }
         |impl<T> MyStruct<T> for MyInterface<T>;
-        |fn doThing(x MyStruct<T> impl MyInterface<T>) *Int {4}
+        |fn doThing<T>(x MyStruct<T> impl MyInterface<T>) *Int {4}
         |
         |fn main() {
         |  x = MyStruct<*Int>();
@@ -304,7 +304,7 @@ class IntegrationTestsA extends FunSuite with Matchers {
         |struct None<T> rules(T Ref) { }
         |impl<T> None<T> for Opt<T>;
         |
-        |abstract fn getOr<T>(opt virtual &Opt<*T>, default *T) *T;
+        |abstract fn getOr<T>(virtual opt &Opt<*T>, default *T) *T;
         |fn getOr<T>(opt &None<*T> impl Opt<*T>, default *T) *T {
         |  default
         |}
@@ -382,7 +382,7 @@ class IntegrationTestsA extends FunSuite with Matchers {
         |struct None<T> rules(T Ref) { }
         |impl<T> None<T> for Opt<T>;
         |
-        |abstract fn getOr<T>(opt virtual &Opt<T>, default T) T;
+        |abstract fn getOr<T>(virtual opt &Opt<T>, default T) T;
         |fn getOr<T>(opt &None<T> impl Opt<T>, default T) T {
         |  default
         |}

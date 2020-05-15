@@ -463,11 +463,9 @@ object ExpressionVivem {
           // We're assuming that it takes self then the index int as arguments.
           val virtualParamIndex = 0
 
-          val generatorPrototypeH =
-            PrototypeH(
-              vimpl(),//FullNameH(List(NamePartH("__call", None, None, None))),
-              List(generatorInterfaceRegister.expectedType, ReferenceH(Share, IntH())),
-              arrayRefType.kind.rawArray.elementType)
+          val interfaceDefH =
+            programH.interfaces.find(_.getRef == generatorInterfaceRegister.expectedType.kind).get
+          val interfaceMethodPrototype = interfaceDefH.prototypes.head
 
           heap.vivemDout.println()
 
@@ -484,7 +482,7 @@ object ExpressionVivem {
               virtualParamIndex,
               generatorInterfaceRegister.expectedType.kind,
               indexInEdge,
-              generatorPrototypeH)
+              interfaceMethodPrototype)
 
           heap.vivemDout.print("  " * blockId.blockHeight + "Getting return reference")
 

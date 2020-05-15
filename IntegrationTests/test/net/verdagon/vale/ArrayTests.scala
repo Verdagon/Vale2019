@@ -255,7 +255,7 @@ class ArrayTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |fn main() {
-        |  a = Array<mut, Int>(11, {_});
+        |  a = Array<mut, Int>(11, &IFunction1<imm, Int, Int>({_}));
         |  = len(&a);
         |}
       """.stripMargin)

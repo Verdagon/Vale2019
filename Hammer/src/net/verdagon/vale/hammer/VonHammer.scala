@@ -32,7 +32,7 @@ object VonHammer {
       "StructId",
       None,
       Vector(
-        VonMember(None, Some("fullName"), fullName.von)))
+        VonMember(None, Some("fullName"), fullName.toVonArray())))
   }
 
   def vonifyInterfaceRef(ref: InterfaceRefH): IVonData = {
@@ -42,7 +42,7 @@ object VonHammer {
       "InterfaceId",
       None,
       Vector(
-        VonMember(None, Some("fullName"), fullName.von)))
+        VonMember(None, Some("fullName"), fullName.toVonArray())))
   }
 
   def vonfiyInterface(interface: InterfaceDefinitionH): IVonData = {
@@ -52,7 +52,7 @@ object VonHammer {
       "Interface",
       None,
       Vector(
-        VonMember(None, Some("fullName"), fullName.von),
+        VonMember(None, Some("fullName"), fullName.toVonArray()),
         VonMember(None, Some("mutability"), vonifyMutability(mutability)),
         VonMember(None, Some("superInterfaces"), VonArray(None, superInterfaces.map(vonifyInterfaceRef).toVector)),
         VonMember(None, Some("methods"), VonArray(None, prototypes.map(vonifyPrototype).toVector))))
@@ -65,7 +65,7 @@ object VonHammer {
       "Struct",
       None,
       Vector(
-        VonMember(None, Some("fullName"), fullName.von),
+        VonMember(None, Some("fullName"), fullName.toVonArray()),
         VonMember(None, Some("mutability"), vonifyMutability(mutability)),
         VonMember(None, Some("edges"), VonArray(None, edges.map(edge => vonifyEdge(edge)).toVector)),
         VonMember(None, Some("members"), VonArray(None, members.map(vonifyStructMember).toVector))))
@@ -107,7 +107,7 @@ object VonHammer {
       "Prototype",
       None,
       Vector(
-        VonMember(None, Some("fullName"), fullName.von),
+        VonMember(None, Some("fullName"), fullName.toVonArray()),
         VonMember(None, Some("params"), VonArray(None, params.map(vonifyCoord).toVector)),
         VonMember(None, Some("returnType"), vonifyCoord(returnType))))
   }
@@ -159,7 +159,7 @@ object VonHammer {
       "StructMember",
       None,
       Vector(
-        VonMember(None, Some("name"), name.von),
+        VonMember(None, Some("name"), name.toVonArray()),
         VonMember(None, Some("variability"), vonifyVariability(variability)),
         VonMember(None, Some("type"), vonifyCoord(tyype))))
   }
@@ -194,7 +194,6 @@ object VonHammer {
   def vonifyRawArray(t: RawArrayTH): IVonData = {
     val RawArrayTH(elementType) = t
 
-    vimpl() // this needs a mutability doesnt it?
     VonObject(
       "Array",
       None,
@@ -285,7 +284,7 @@ object VonHammer {
             VonMember(None, Some("registerId"), VonStr(registerId)),
             VonMember(None, Some("sourceRegister"), vonifyRegisterAccess(sourceRegister)),
             VonMember(None, Some("local"), vonifyLocal(local)),
-            VonMember(None, Some("name"), name.von)))
+            VonMember(None, Some("name"), name.toVonArray())))
       }
       case UnstackifyH(registerId, local, expectedType) => {
         VonObject(
@@ -331,7 +330,7 @@ object VonHammer {
             VonMember(None, Some("targetOwnership"), vonifyOwnership(targetOwnership)),
             VonMember(None, Some("expectedLocalType"), vonifyCoord(expectedLocalType)),
             VonMember(None, Some("expectedResultType"), vonifyCoord(expectedResultType)),
-            VonMember(None, Some("localName"), localName.von)))
+            VonMember(None, Some("localName"), localName.toVonArray())))
       }
       case MemberStoreH(registerId, structRegister, memberIndex, sourceRegister, memberName) => {
         vimpl()
@@ -424,7 +423,7 @@ object VonHammer {
         VonMember(
           None,
           Some("name"),
-          vonifyOptional[FullNameH](maybeName, x => x.von))))
+          vonifyOptional[FullNameH](maybeName, x => x.toVonArray()))))
   }
 
   def vonifyOptional[T](opt: Option[T], func: (T) => IVonData): IVonData = {

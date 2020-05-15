@@ -16,7 +16,7 @@ class HammerTests extends FunSuite with Matchers {
     val hamuts = compile.getHamuts()
 
     vassert(hamuts.getAllUserFunctions.size == 1)
-    vassert(hamuts.getAllUserFunctions.head.prototype.fullName.von.members.last == null/*"main"*/);
+    vassert(hamuts.getAllUserFunctions.head.prototype.fullName.parts.last == null/*"main"*/);
   }
 
 //  // Make sure a ListNode struct made it out
@@ -29,7 +29,7 @@ class HammerTests extends FunSuite with Matchers {
 //        |fn main(a: *ListNode:*Int) {}
 //      """.stripMargin)
 //    val hamuts = compile.getHamuts()
-//    hamuts.structs.find(_.fullName.von.members.last.humanName == "ListNode").get;
+//    hamuts.structs.find(_.fullName.parts.last.humanName == "ListNode").get;
 //  }
 
   test("Two templated structs make it into hamuts") {
@@ -44,13 +44,13 @@ class HammerTests extends FunSuite with Matchers {
         |fn main(a *MySome<*Int>, b *MyNone<*Int>) {}
       """.stripMargin)
     val hamuts = compile.getHamuts()
-    hamuts.interfaces.find(_.fullName.von.members.last == null/*"MyOption"*/).get;
+    hamuts.interfaces.find(_.fullName.parts.last == null/*"MyOption"*/).get;
 
-    val mySome = hamuts.structs.find(_.fullName.von.members.last == null/*"MySome"*/).get;
+    val mySome = hamuts.structs.find(_.fullName.parts.last == null/*"MySome"*/).get;
     vassert(mySome.members.size == 1);
     vassert(mySome.members.head.tyype == ReferenceH[IntH](m.Share, IntH()))
 
-    val myNone = hamuts.structs.find(_.fullName.von.members.last == null/*"MyNone"*/).get;
+    val myNone = hamuts.structs.find(_.fullName.parts.last == null/*"MyNone"*/).get;
     vassert(myNone.members.isEmpty);
   }
 
@@ -58,13 +58,13 @@ class HammerTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |interface Blark imm { }
-        |abstract fn wot(b virtual *Blark) *Int;
+        |abstract fn wot(virtual b *Blark) *Int;
         |struct MyStruct imm {}
         |impl<T> MyStruct for Blark;
         |fn wot(b *MyStruct impl Blark) *Int { 9 }
       """.stripMargin)
     val hamuts = compile.getHamuts()
-    hamuts.nonExternFunctions.find(f => f.prototype.fullName.von.members.last == null/*"wot"*/).get;
+    hamuts.nonExternFunctions.find(f => f.prototype.fullName.parts.last == null/*"wot"*/).get;
 //    hamuts.nonExternFunctions.find(f => f.prototype.humanName == "MyStruct").get;
     vassert(hamuts.abstractFunctions.size == 2)
     vassert(hamuts.getAllUserImplementedFunctions.size == 1)

@@ -33,35 +33,29 @@ object InfererTestUtils {
   }
 }
 
-case class SimpleEnvironment(entries: Map[IName2, IEnvEntry]) extends IEnvironment {
+case class SimpleEnvironment(simpleEntries: Map[IName2, IEnvEntry]) extends IEnvironment {
+  override def entries: Map[IName2, List[IEnvEntry]] = simpleEntries.mapValues(a => List(a))
+  override def getParentEnv(): Option[IEnvironment] = None
   def fullName = FullName2(List(), CitizenName2("SimpleEnv", List()))
   def globalEnv: NamespaceEnvironment[IName2] = {
     vfail()
   }
-  override def getAllTemplatasWithAbsoluteNameA(name: INameA, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
-    entries.get(NameTranslator.translateNameStep(name)).toList.map(EnvironmentUtils.entryToTemplata(this, _))
+  override def getAllTemplatasWithAbsoluteName2(name: IName2, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
+    simpleEntries.get(name).toList.map(EnvironmentUtils.entryToTemplata(this, _))
   }
-  override def getNearestTemplataWithAbsoluteNameA(name: INameA, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
-    entries.get(NameTranslator.translateNameStep(name)).map(EnvironmentUtils.entryToTemplata(this, _))
+  override def getNearestTemplataWithAbsoluteName2(name: IName2, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
+    simpleEntries.get(name).map(EnvironmentUtils.entryToTemplata(this, _))
   }
   override def getAllTemplatasWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
     vimpl()
   }
   override def getNearestTemplataWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
     val values =
-      entries
+      simpleEntries
         .filter({ case (key, _) => EnvironmentUtils.impreciseNamesMatch(name, key)})
         .values
     vassert(values.size <= 1)
     values.headOption.map(EnvironmentUtils.entryToTemplata(this, _))
-  }
-
-  override def getAllTemplatasWithAbsoluteName2(name: IName2, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
-    entries.get(name).toList.map(EnvironmentUtils.entryToTemplata(this, _))
-  }
-
-  override def getNearestTemplataWithAbsoluteName2(name: IName2, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
-    vimpl()
   }
 }
 

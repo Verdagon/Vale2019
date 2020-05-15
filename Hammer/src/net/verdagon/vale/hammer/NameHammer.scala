@@ -28,10 +28,7 @@ object NameHammer {
     hamuts: HamutsBox,
     fullName2: FullName2[IName2]
   ): FullNameH = {
-    FullNameH(
-      VonArray(
-        None,
-        fullName2.steps.map(step => VonHammer.translateName(hinputs, hamuts, step)).toVector))
+    FullNameH(fullName2.steps.map(step => VonHammer.translateName(hinputs, hamuts, step)))
   }
 
   def translateCodeLocation(location: CodeLocation2): VonObject = {

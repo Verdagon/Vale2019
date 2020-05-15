@@ -54,8 +54,9 @@ object BodyTemplar {
       case Some(expectedRetCoordRune) => {
         val CoordTemplata(expectedRetCoord) =
           vassertSome(
-            funcOuterEnv.getNearestTemplataWithAbsoluteNameA(
-              expectedRetCoordRune, Set(TemplataLookupContext)))
+            funcOuterEnv.getNearestTemplataWithAbsoluteName2(
+              NameTranslator.translateRune(expectedRetCoordRune),
+              Set(TemplataLookupContext)))
         val header = FunctionHeader2(functionFullName, false, function1.isUserFunction, params2, expectedRetCoord, Some(function1));
         temputs.declareFunctionReturnType(header.toSignature, expectedRetCoord)
 

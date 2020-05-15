@@ -14,8 +14,12 @@ case object JsonSyntax extends ISyntax
 
 class VonPrinter(
     syntax: ISyntax,
-    lineWidth: Int
+    lineWidth: Int,
+    typeNameMap: Map[String, String] = Map(),
+    includeSpaceAfterComma: Boolean = true,
 ) {
+  val memberSeparator = if (includeSpaceAfterComma) ", " else ","
+
   def print(data: IVonData): String = {
     printSingleLine(data, lineWidth) match {
       case Some(str) => str
@@ -60,12 +64,13 @@ class VonPrinter(
     }).mkString("\n") + printObjectEnd(members.nonEmpty)
   }
 
-  def printObjectStart(tyype: String, hasMembers: Boolean): String = {
+  def printObjectStart(originalType: String, hasMembers: Boolean): String = {
+    val mappedType = typeNameMap.getOrElse(originalType, originalType)
     syntax match {
-      case VonSyntax(_, _, true, _) => tyype + "("
-      case VonSyntax(_, _, false, _) => tyype + (if (hasMembers) "(" else "")
+      case VonSyntax(_, _, true, _) => mappedType + "("
+      case VonSyntax(_, _, false, _) => mappedType + (if (hasMembers) "(" else "")
       case JsonSyntax => {
-        "{__type: " + "\"" + StringEscapeUtils.escapeJavaScript(tyype) + "\"" + (if (hasMembers) ", " else "")
+        "{__type: " + "\"" + StringEscapeUtils.escapeJavaScript(mappedType) + "\"" + (if (hasMembers) memberSeparator else "")
       }
     }
   }
@@ -202,7 +207,7 @@ class VonPrinter(
             printMemberSingleLine(member, lineWidthRemaining) match {
               case None => None
               case Some(memberStr) => {
-                val memberStrMaybeWithComma = memberStr + (if (index == members.size - 1) "" else ", ")
+                val memberStrMaybeWithComma = memberStr + (if (index == members.size - 1) "" else memberSeparator)
                 if (memberStrMaybeWithComma.length > lineWidthRemaining) {
                   None
                 } else {
@@ -251,7 +256,7 @@ class VonPrinter(
             printSingleLine(member, lineWidthRemaining) match {
               case None => None
               case Some(memberStr) => {
-                val memberStrMaybeWithComma = memberStr + (if (index == members.size - 1) "" else ", ")
+                val memberStrMaybeWithComma = memberStr + (if (index == members.size - 1) "" else memberSeparator)
                 if (memberStrMaybeWithComma.length > lineWidthRemaining) {
                   None
                 } else {

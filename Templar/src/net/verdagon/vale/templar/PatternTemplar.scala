@@ -147,7 +147,7 @@ object PatternTemplar {
       // function's parameters. Ignore them.
     }
 
-    val expectedTemplata = fate.getNearestTemplataWithAbsoluteNameA(coordRuneA, Set(TemplataLookupContext))
+    val expectedTemplata = fate.getNearestTemplataWithAbsoluteName2(NameTranslator.translateRune(coordRuneA), Set(TemplataLookupContext))
     val expectedCoord =
       expectedTemplata match {
         case Some(CoordTemplata(coord)) => coord

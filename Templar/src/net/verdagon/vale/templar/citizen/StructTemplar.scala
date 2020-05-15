@@ -250,7 +250,7 @@ object StructTemplar {
       outerEnv, temputs, prototype, structFullName)
   }
 
-  // This doesnt make a constructor, but its easy enough,
+  // This doesnt make a constructor, but its easy enough to make manually.
   def prototypeToAnonymousSubstruct(
       temputs: TemputsBox,
       interfaceRef2: InterfaceRef2,

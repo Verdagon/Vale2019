@@ -51,7 +51,7 @@ object ExpressionTemplar {
   private def evaluateLookup(
     temputs: TemputsBox,
     fate: FunctionEnvironmentBox,
-    name: IVarNameA,
+    name: IVarName2,
     borrow: Boolean):
   (Option[Expression2]) = {
     evaluateAddressibleLookup(temputs, fate, name) match {
@@ -60,7 +60,7 @@ object ExpressionTemplar {
         (Some(thing))
       }
       case None => {
-        fate.getNearestTemplataWithAbsoluteNameA(name, Set(TemplataLookupContext)) match {
+        fate.getNearestTemplataWithAbsoluteName2(name, Set(TemplataLookupContext)) match {
           case Some(IntegerTemplata(num)) => (Some(IntLiteral2(num)))
           case Some(BooleanTemplata(bool)) => (Some(BoolLiteral2(bool)))
           case None => (None)
@@ -314,8 +314,9 @@ object ExpressionTemplar {
       case StrLiteralAE(s) => (StrLiteral2(s), Set())
       case FloatLiteralAE(f) => (FloatLiteral2(f), Set())
       case ArgLookupAE(index) => {
-        val paramCoordRune = fate.function.params(index).pattern.coordRune
-        val paramCoordTemplata = fate.getNearestTemplataWithAbsoluteNameA(paramCoordRune, Set(TemplataLookupContext)).get
+        val paramCoordRuneA = fate.function.params(index).pattern.coordRune
+        val paramCoordRune = NameTranslator.translateRune(paramCoordRuneA)
+        val paramCoordTemplata = fate.getNearestTemplataWithAbsoluteName2(paramCoordRune, Set(TemplataLookupContext)).get
         val CoordTemplata(paramCoord) = paramCoordTemplata
         (ArgLookup2(index, paramCoord), Set())
       }
@@ -367,7 +368,8 @@ object ExpressionTemplar {
           }
         (resultExpr2, returnsFromInner)
       }
-      case LocalLoadAE(name, borrow) => {
+      case LocalLoadAE(nameA, borrow) => {
+        val name = NameTranslator.translateVarNameStep(nameA)
         val lookupExpr1 =
           evaluateLookup(temputs, fate, name, borrow) match {
             case (None) => vfail("Couldnt find " + name)

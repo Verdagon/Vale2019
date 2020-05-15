@@ -76,10 +76,7 @@ case class FunctionTemplata(
   }
 
   def getTemplateName(): IName2 = {
-    function.name match {
-      case LambdaNameA(codeLocation) => vimpl()
-      case FunctionNameA(name, codeLocation) => FunctionTemplateName2(name, NameTranslator.translateCodeLocation(codeLocation))
-    }
+    NameTranslator.translateFunctionNameToTemplateName(function.name)
   }
 }
 

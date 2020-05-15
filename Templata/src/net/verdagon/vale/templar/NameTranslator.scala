@@ -6,7 +6,7 @@ import net.verdagon.vale.templar.templata.CodeLocation2
 import net.verdagon.vale.{vimpl, vwat}
 
 object NameTranslator {
-  def translateFunctionNameToTemplateName(functionName: IFunctionDeclarationNameA): IName2 = {
+  def translateFunctionNameToTemplateName(functionName: IFunctionDeclarationNameA): IFunctionTemplateName2 = {
       functionName match {
         case LambdaNameA(/*parent, */codeLocation) => {
           LambdaTemplateName2(NameTranslator.translateCodeLocation(codeLocation))

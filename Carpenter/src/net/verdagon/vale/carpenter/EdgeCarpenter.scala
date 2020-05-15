@@ -1,7 +1,7 @@
 package net.verdagon.vale.carpenter
 
 import net.verdagon.vale.templar.types.InterfaceDefinition2
-import net.verdagon.vale.templar.{Edge2, Impl2, InterfaceEdgeBlueprint}
+import net.verdagon.vale.templar.{Edge2, FunctionName2, Impl2, InterfaceEdgeBlueprint}
 import net.verdagon.vale.{vassert, vfail}
 
 object EdgeCarpenter {
@@ -73,7 +73,10 @@ object EdgeCarpenter {
             val matchesAndIndices =
               edgeBlueprint.superFamilyRootBanners.zipWithIndex
                 .filter({ case (possibleSuperFunction, index) =>
-                  possibleSuperFunction.fullName.last == overrideFunction.header.fullName.last &&
+                  ((possibleSuperFunction.fullName.last, overrideFunction.header.fullName.last) match {
+                    case (FunctionName2(a, _, _), FunctionName2(b, _, _)) => a == b
+                    case _ => false
+                  }) &&
                     possibleSuperFunction.paramTypes == needleSuperFunctionParamTypes
                 })
             matchesAndIndices match {

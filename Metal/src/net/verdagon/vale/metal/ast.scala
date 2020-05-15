@@ -21,13 +21,13 @@ case class ProgramH(
   def nonExternFunctions = functions.filter(!_.isExtern)
   def getAllUserFunctions = functions.filter(_.isUserFunction)
   def main() = {
-    val matching = functions.filter(_.fullName.toString == "[F(\"main\")]")
+    val matching = functions.filter(f => f.fullName.toString.startsWith("F(\"main\"") && f.fullName.parts.size == 1)
     vassert(matching.size == 1)
     matching.head
   }
 
   def lookupFunction(humanName: String) = {
-    val matches = functions.filter(_.fullName.von.members.last == vimpl(humanName))
+    val matches = functions.filter(_.fullName.parts.last == vimpl(humanName))
     vassert(matches.size == 1)
     matches.head
   }
@@ -104,13 +104,33 @@ case class PrototypeH(
   returnType: ReferenceH[ReferendH]
 )
 
-case class FullNameH(von: VonArray) {
+case class FullNameH(parts: List[IVonData]) {
   def addStep(s: String) = {
-    FullNameH(VonArray(von.id, von.members :+ VonStr(s)))
+    FullNameH(parts :+ VonStr(s))
+  }
+
+  def toVonArray(): VonArray = {
+    VonArray(None, parts.toVector)
   }
 
   override def toString: String = {
-    new VonPrinter(VonSyntax(false, true, false, false), Int.MaxValue).print(von)
+    val nameMap =
+      Map(
+        "Str" -> "s",
+        "Int" -> "i",
+        "Float" -> "f",
+        "Void" -> "v",
+        "Bool" -> "b",
+        "Function" -> "F",
+        "Ref" -> "R",
+        "Share" -> "*",
+        "Borrow" -> "&",
+        "Own" -> "^",
+        "CoordTemplata" -> "TR",
+        "KindTemplata" -> "TK",
+      )
+    val printer = new VonPrinter(VonSyntax(false, true, false, false), Int.MaxValue, nameMap, false);
+    parts.map(printer.print).mkString(":")
   }
 }
 

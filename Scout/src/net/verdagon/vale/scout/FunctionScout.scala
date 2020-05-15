@@ -72,6 +72,7 @@ object FunctionScout {
     val myStackFrameWithoutParams = StackFrame(name, functionEnv, None, noDeclarations)
     val (implicitRulesFromPatterns, explicitParamsPatterns1) =
       PatternScout.scoutPatterns(myStackFrameWithoutParams, rate, paramsP)
+
     val explicitParams1 = explicitParamsPatterns1.map(ParameterS)
     val captureDeclarations =
       explicitParams1
@@ -116,8 +117,34 @@ object FunctionScout {
 
     val localRunes = allRunes
     val unknowableRunes = allRunes -- knowableValueRunes
-    val identifyingRunes =
-      userSpecifiedIdentifyingRunes ++ (unknowableRunes -- userSpecifiedIdentifyingRunes)
+
+    // This cant be:
+    //   val identifyingRunes =
+    //     userSpecifiedIdentifyingRunes ++ (unknowableRunes -- userSpecifiedIdentifyingRunes)
+    // because for example if we had:
+    //   fn moo<T>(m &T) { m.hp }
+    // then userSpecifiedIdentifyingRunes would be
+    //   CodeRuneS("T")
+    // and unknowableRunes would be
+    //   Set(CodeRuneS("T"), ImplicitRuneS(0), ImplicitRuneS(1))
+    // and we'd end up with identifyingRunes as
+    //   List(CodeRuneS("T"), ImplicitRuneS(0), ImplicitRuneS(1))
+    // So, what we instead want is like... the original causes of unknowable runes.
+    // I think thats just user specified ones, and implicit template runes from params,
+    // and magic param runes.
+    val topLevelImplicitRunesS =
+      paramsP.zip(explicitParamsPatterns1).flatMap({
+        case (paramP, explicitParamPatternS) => {
+          if (paramP.templex.isEmpty) {
+            List(explicitParamPatternS.coordRune)
+          } else {
+            List()
+          }
+        }
+      })
+
+    val identifyingRunes = userSpecifiedIdentifyingRunes ++ topLevelImplicitRunesS
+
     val isTemplate = identifyingRunes.nonEmpty
 
     val maybePredictedType =
@@ -258,8 +285,34 @@ object FunctionScout {
 
     val localRunes = allRunes -- myStackFrame.parentEnv.allUserDeclaredRunes()
     val unknowableRunes = allRunes -- knowableValueRunes
-    val identifyingRunes =
-      userSpecifiedIdentifyingRunes ++ (unknowableRunes -- userSpecifiedIdentifyingRunes)
+
+
+    // This cant be:
+    //   val identifyingRunes =
+    //     userSpecifiedIdentifyingRunes ++ (unknowableRunes -- userSpecifiedIdentifyingRunes)
+    // because for example if we had:
+    //   fn moo<T>(m &T) { m.hp }
+    // then userSpecifiedIdentifyingRunes would be
+    //   CodeRuneS("T")
+    // and unknowableRunes would be
+    //   Set(CodeRuneS("T"), ImplicitRuneS(0), ImplicitRuneS(1))
+    // and we'd end up with identifyingRunes as
+    //   List(CodeRuneS("T"), ImplicitRuneS(0), ImplicitRuneS(1))
+    // So, what we instead want is like... the original causes of unknowable runes.
+    // I think thats just user specified ones, and implicit template runes from params,
+    // and magic param runes.
+    val topLevelImplicitRunesS =
+      paramsP.zip(explicitParams1.map(_.pattern)).flatMap({
+        case (paramP, explicitParamPatternS) => {
+          if (paramP.templex.isEmpty) {
+            List(explicitParamPatternS.coordRune)
+          } else {
+            List()
+          }
+        }
+      })
+    val identifyingRunes = userSpecifiedIdentifyingRunes ++ topLevelImplicitRunesS ++ magicParamsRules.map(_.rune)
+
     val isTemplate = identifyingRunes.nonEmpty
 
     val maybePredictedType =
@@ -391,7 +444,7 @@ object FunctionScout {
       None) = functionP;
     val codeLocation = CodeLocationS(functionP.pos.line, functionP.pos.column)
     val funcName = FunctionNameS(codeName, codeLocation)
-    val userSpecifiedIdentifyingRunes =
+    val userSpecifiedIdentifyingRunes: List[IRuneS] =
       userSpecifiedIdentifyingRuneNames
         .map(identifyingRuneName => CodeRuneS(identifyingRuneName))
 
@@ -430,8 +483,7 @@ object FunctionScout {
 
     val localRunes = allRunes -- interfaceEnv.allUserDeclaredRunes()
     val unknowableRunes = allRunes -- knowableValueRunes
-    val identifyingRunes =
-      userSpecifiedIdentifyingRunes ++ (unknowableRunes -- userSpecifiedIdentifyingRunes)
+    val identifyingRunes = userSpecifiedIdentifyingRunes
     val isTemplate = identifyingRunes.nonEmpty
     vassert(!isTemplate) // interface members cant be templates
 
