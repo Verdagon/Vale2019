@@ -267,6 +267,7 @@ object ExpressionVivem {
         val memberReferences =
           heap.takeReferencesFromRegistersInReverse(blockId, sourceLines)
 
+        vassert(memberReferences.size == structDefH.members.size)
         val reference = heap.newStruct(registerId, structDefH, structRefH, memberReferences)
         heap.setReferenceRegister(registerId, reference)
         NodeContinue(Some(registerId))

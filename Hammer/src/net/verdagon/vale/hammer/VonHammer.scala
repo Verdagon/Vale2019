@@ -749,13 +749,30 @@ object VonHammer {
           "CitizenName",
           None,
           Vector(
-            VonMember(None, Some(humanName), VonStr(humanName))))
+            VonMember(None, Some("humanName"), VonStr(humanName)),
+            VonMember(
+              None,
+              Some("templateArgs"),
+              VonArray(
+                None,
+                templateArgs
+                  .map(templateArg => vonifyTemplata(hinputs, hamuts, templateArg))
+                  .toVector))))
       }
       case TupleName2(members) => {
         VonObject(
           "TupleName",
           None,
-          Vector())
+          Vector(
+            VonMember(
+              None,
+              Some("members"),
+              VonArray(
+                None,
+                members
+                  .map(coord => TypeHammer.translateReference(hinputs, hamuts, coord))
+                  .map(vonifyCoord)
+                  .toVector))))
       }
       case LambdaCitizenName2(codeLocation) => {
         VonObject(

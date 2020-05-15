@@ -102,6 +102,8 @@ class Call(callId: CallId, in_args: Vector[ReferenceV]) {
       varAddr.local.height.blockHeight == blockId.blockHeight - callId.blockDepth
     })
     thisBlockLocals.foreach({ case (varAddr, variable) =>
+      // We trip this when we don't Unstackify something so its still alive on
+      // the stack.
       vassert(variable.reference == None)
       locals.remove(varAddr)
     })

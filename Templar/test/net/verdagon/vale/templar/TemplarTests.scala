@@ -192,6 +192,24 @@ class TemplarTests extends FunSuite with Matchers {
     temputs.functions.collect({ case x @ functionName("do") => x }).head.header.returnType shouldEqual Coord(Share, Int2())
   }
 
+  test("Calls destructor on local var") {
+    val compile = new Compilation(
+      """struct Muta { }
+        |
+        |fn destructor(m ^Muta) {
+        |  Muta() = m;
+        |}
+        |
+        |fn main() {
+        |  a = Muta();
+        |}
+      """.stripMargin)
+
+    val main = compile.getTemputs().lookupFunction("main")
+    main.only({ case FunctionCall2(functionName(CallTemplar.DESTRUCTOR_NAME), _) => })
+    main.all({ case FunctionCall2(_, _) => }).size shouldEqual 2
+  }
+
   test("Stamps an interface template via a function return") {
     val compile = new Compilation(TemplateSamples.stampingViaReturn)
     val temputs = compile.getTemputs()

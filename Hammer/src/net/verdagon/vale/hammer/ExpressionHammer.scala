@@ -136,6 +136,8 @@ object ExpressionHammer {
           TypeHammer.translateReference(hinputs, hamuts, resultType)
         vassert(resultReference.kind == underlyingStructRefH)
 
+        val structDefH = hamuts.structDefsByRef2(resultPackType.underlyingStruct)
+        vassert(resultLines.size == structDefH.members.size)
         val newStructNode =
           NewStructH(
             nodesByLine.nextId(),
@@ -174,6 +176,8 @@ object ExpressionHammer {
           TypeHammer.translateReference(hinputs, hamuts, resultType)
         vassert(resultReference.kind == underlyingStructRefH)
 
+        val structDefH = hamuts.structDefsByRef2(resultPackType.underlyingStruct)
+        vassert(resultLines.size == structDefH.members.size)
         val newStructNode =
           NewStructH(
             nodesByLine.nextId(),
@@ -213,7 +217,7 @@ object ExpressionHammer {
         (Some(access), List())
       }
 
-      case Construct2(_, resultType2, memberExprs) => {
+      case Construct2(structRef2, resultType2, memberExprs) => {
         val (memberResultLines, deferreds) =
           translateExpressions(hinputs, hamuts, locals, stackHeight, nodesByLine, memberExprs);
 
@@ -223,6 +227,8 @@ object ExpressionHammer {
 //        hinputs.program2.lookupStruct(resultStructType2)
 //        vassert(structDef2.getRef == resultTypeH.innerType)
 
+        val structDefH = hamuts.structDefsByRef2(structRef2)
+        vassert(memberResultLines.size == structDefH.members.size)
         val newStructNode =
           NewStructH(
             nodesByLine.nextId(),

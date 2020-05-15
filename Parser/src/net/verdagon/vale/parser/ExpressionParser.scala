@@ -20,10 +20,6 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
     (exprIdentifier ^^ (i => LookupPE(i, List())))
   }
 
-  private[parser] def magicParamLookup: Parser[MagicParamLookupPE] = positioned {
-    "_" ^^^ MagicParamLookupPE()
-  }
-
   private[parser] def templateSpecifiedLookup: Parser[LookupPE] = {
     (exprIdentifier <~ optWhite) ~ ("<" ~> optWhite ~> repsep(templex, optWhite ~> "," <~ optWhite) <~ optWhite <~ ">") ^^ {
       case name ~ templateArgs => LookupPE(name, templateArgs)
@@ -122,8 +118,10 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
       packExpr |
       tupleExpr |
       templateSpecifiedLookup |
-      magicParamLookup |
-      lookup
+      (lookup ^^ {
+        case LookupPE("_", List()) => MagicParamLookupPE()
+        case other => other
+      })
   }
 
   private[parser] def expressionLevel9: Parser[IExpressionPE] = {

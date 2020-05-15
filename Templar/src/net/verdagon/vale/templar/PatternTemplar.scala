@@ -169,9 +169,6 @@ object PatternTemplar {
     val let = LetNormal2(export, inputExpr);
 
     fate.addVariable(export)
-    val localLookupExpr =
-      ExpressionTemplar.softLoad(
-        fate, LocalLookup2(export, inputExpr.resultRegister.reference), false)
 
     val lets0 = List(let)
 
@@ -180,6 +177,11 @@ object PatternTemplar {
         (lets0)
       }
       case Some(listOfMaybeDestructureMemberPatterns) => {
+        // This will mark the variable as moved
+        val localLookupExpr =
+          ExpressionTemplar.softLoad(
+            fate, LocalLookup2(export, inputExpr.resultRegister.reference), false)
+
         expectedCoord.referend match {
           case StructRef2(_) => {
             // Example:

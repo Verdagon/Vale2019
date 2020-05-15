@@ -142,10 +142,9 @@ object BodyTemplar {
       // We don't want the user to accidentally just move it somewhere, they need to
       // promise it gets destroyed.
       val destructeeName = params2.head.name
-      vimpl()
-//      if (!funcOuterEnv.moveds.exists(_.last match { case f @ FunctionName2(_, _, _) => f.humanName == destructeeName })) {
-//        vfail("Destructee wasn't moved/destroyed!");
-//      }
+      if (!funcOuterEnv.moveds.exists(_.last == destructeeName)) {
+        vfail("Destructee wasn't moved/destroyed!");
+      }
     }
 
     val block2 = Block2(expressionsWithResult)

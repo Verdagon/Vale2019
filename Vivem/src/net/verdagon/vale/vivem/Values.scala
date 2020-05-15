@@ -114,6 +114,8 @@ case class StructInstanceV(
     structH: StructDefinitionH,
     private var members: Vector[ReferenceV]
 ) extends ReferendV {
+  vassert(members.size == structH.members.size)
+
   override def tyype = RRReferend(structH.getRef)
 
   def getReferenceMember(index: Int) = {
