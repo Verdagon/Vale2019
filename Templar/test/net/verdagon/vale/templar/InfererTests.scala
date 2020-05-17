@@ -494,24 +494,25 @@ class InfererTests extends FunSuite with Matchers {
           FakeState(),
           List(
             TemplexTR(RuneTT(CodeRune2("T"), CoordTemplataType)),
-            TemplexTR(RuneTT(CodeRune2("ZZ"), KindTemplataType)),
+            TemplexTR(RuneTT(CodeRune2("1337"), KindTemplataType)),
             EqualsTR(
               TemplexTR(RuneTT(CodeRune2("T"), CoordTemplataType)),
               ComponentsTR(
                 CoordTemplataType,
-                List(TemplexTR(OwnershipTT(OwnP)), TemplexTR(RuneTT(CodeRune2("ZZ"), KindTemplataType))))),
-            TemplexTR(RuneTT(CodeRune2("Z"), CoordTemplataType)),
+                List(TemplexTR(OwnershipTT(OwnP)), TemplexTR(RuneTT(CodeRune2("1337"), KindTemplataType))))),
+            TemplexTR(RuneTT(CodeRune2("0"), CoordTemplataType)),
             EqualsTR(
-              TemplexTR(RuneTT(CodeRune2("Z"), CoordTemplataType)),
+              TemplexTR(RuneTT(CodeRune2("0"), CoordTemplataType)),
               ComponentsTR(
                 CoordTemplataType,
-                List(TemplexTR(OwnershipTT(BorrowP)), TemplexTR(RuneTT(CodeRune2("ZZ"), KindTemplataType)))))),
+                List(TemplexTR(OwnershipTT(BorrowP)), TemplexTR(RuneTT(CodeRune2("1337"), KindTemplataType)))))),
           Map(
-            CodeRune2("ZZ") -> KindTemplataType,
-            CodeRune2("Z") -> CoordTemplataType),
-          Set(CodeRune2("ZZ"), CodeRune2("Z"), CodeRune2("T")),
+            CodeRune2("1337") -> KindTemplataType,
+            CodeRune2("0") -> CoordTemplataType,
+            CodeRune2("YT") -> CoordTemplataType),
+          Set(CodeRune2("1337"), CodeRune2("0"), CodeRune2("T")),
           Map(),
-          List(AtomAP(CaptureA(CodeVarNameA("m"),FinalP),None,CodeRuneA("YT"),None)),
+          List(AtomAP(CaptureA(CodeVarNameA("m"),FinalP),None,CodeRuneA("0"),None)),
           Some(List(ParamFilter(Coord(Borrow,InterfaceRef2(FullName2(List(), CitizenName2("MutInterface", List())))),None))),
           true)
 
@@ -788,9 +789,9 @@ class InfererTests extends FunSuite with Matchers {
   test("Matching a CoordTemplataType onto a CallAT") {
     val rules =
       List(
-        TemplexTR(RuneTT(CodeRune2("Z"), CoordTemplataType)),
+        TemplexTR(RuneTT(CodeRune2("0"), CoordTemplataType)),
         EqualsTR(
-          TemplexTR(RuneTT(CodeRune2("Z"), CoordTemplataType)),
+          TemplexTR(RuneTT(CodeRune2("0"), CoordTemplataType)),
           TemplexTR(
             CallTT(
               NameTT(CodeTypeNameA("MutTStruct"), TemplateTemplataType(List(CoordTemplataType), KindTemplataType)),
@@ -802,13 +803,13 @@ class InfererTests extends FunSuite with Matchers {
         makeCannedEnvironment(),
         FakeState(),
         rules,
-        Map(CodeRune2("Z") -> KindTemplataType, CodeRune2("T") -> CoordTemplataType, CodeRune2("Z") -> CoordTemplataType),
-        Set(CodeRune2("Z"), CodeRune2("T"), CodeRune2("YT")),
+        Map(CodeRune2("0") -> KindTemplataType, CodeRune2("T") -> CoordTemplataType),
+        Set(CodeRune2("0"), CodeRune2("T")),
         Map(),
-        List(AtomAP(CaptureA(CodeVarNameA("x"),FinalP),Some(AbstractAP),CodeRuneA("YT"),None)),
+        List(AtomAP(CaptureA(CodeVarNameA("x"),FinalP),Some(AbstractAP),CodeRuneA("0"),None)),
         Some(List(ParamFilter(Coord(Own,StructRef2(FullName2(List(), CitizenName2("MutTStruct",List(CoordTemplata(Coord(Share,Int2()))))))),None))),
         true)
-    inferencesD.templatasByRune(CodeRune2("Z")) shouldEqual
+    inferencesD.templatasByRune(CodeRune2("0")) shouldEqual
       CoordTemplata(Coord(Own,StructRef2(FullName2(List(), CitizenName2("MutTStruct",List(CoordTemplata(Coord(Share,Int2()))))))))
   }
 

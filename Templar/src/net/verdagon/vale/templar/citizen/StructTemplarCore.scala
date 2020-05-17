@@ -359,6 +359,11 @@ object StructTemplarCore {
     // (which is imm in this case).
     val mutability = temputs.lookupMutability(interfaceRef)
 
+    // Dont want any mutables in our immutable interface's substruct
+    if (mutability == Immutable) {
+      vassert(getCompoundTypeMutability(temputs, callables) != Mutable)
+    }
+
     val structRef = StructRef2(anonymousSubstructName)
 
     val forwarderFunctionHeaders =
