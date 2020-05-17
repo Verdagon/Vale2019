@@ -41,7 +41,12 @@ trait TypeDefinitionA {
 
 case class StructA(
     name: TopLevelCitizenDeclarationNameA,
-    mutability: MutabilityP,
+    mutabilityRune: IRuneA,
+
+    // This is needed for recursive structures like
+    //   struct ListNode<T> imm rules(T Ref) {
+    //     tail ListNode<T>;
+    //   }
     maybePredictedMutability: Option[MutabilityP],
     tyype: ITemplataType,
     knowableRunes: Set[IRuneA],
@@ -51,6 +56,9 @@ case class StructA(
     rules: List[IRulexAR],
     members: List[StructMemberA]
 ) extends TypeDefinitionA {
+  vassert((knowableRunes -- typeByRune.keySet).isEmpty)
+  vassert((localRunes -- typeByRune.keySet).isEmpty)
+
   def isTemplate: Boolean = tyype match {
     case KindTemplataType => false
     case TemplateTemplataType(_, _) => true
@@ -80,7 +88,11 @@ case class ImplA(
 
 case class InterfaceA(
     name: TopLevelCitizenDeclarationNameA,
-    mutability: MutabilityP,
+    mutabilityRune: IRuneA,
+    // This is needed for recursive structures like
+    //   struct ListNode<T> imm rules(T Ref) {
+    //     tail ListNode<T>;
+    //   }
     maybePredictedMutability: Option[MutabilityP],
     tyype: ITemplataType,
     knowableRunes: Set[IRuneA],
@@ -90,6 +102,9 @@ case class InterfaceA(
     rules: List[IRulexAR],
     // See IMRFDI
     internalMethods: List[FunctionA]) {
+  vassert((knowableRunes -- typeByRune.keySet).isEmpty)
+  vassert((localRunes -- typeByRune.keySet).isEmpty)
+
   internalMethods.foreach(internalMethod => {
     vassert(!internalMethod.isTemplate);
   })
@@ -155,7 +170,8 @@ case class FunctionA(
   // Make sure we have to solve all the identifying runes.
   vassert((identifyingRunes.toSet -- localRunes).isEmpty)
 
-  vassert(typeByRune.keySet == (knowableRunes ++ localRunes))
+  vassert((knowableRunes -- typeByRune.keySet).isEmpty)
+  vassert((localRunes -- typeByRune.keySet).isEmpty)
 
   def isLight(): Boolean = {
     body match {

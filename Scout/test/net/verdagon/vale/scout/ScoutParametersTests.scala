@@ -48,32 +48,32 @@ class ScoutParametersTests extends FunSuite with Matchers {
           AtomSP(
             CaptureS(CodeVarNameS("moo"),FinalP),
             None,
-            tcr @ ImplicitRuneS(1),
+            tcr @ ImplicitRuneS(_, 1),
             None)) => tcr
       }
 
     main.templateRules match {
       case List(
-        TypedSR(ImplicitRuneS(0),KindTypeSR),
+        TypedSR(ImplicitRuneS(_, 0),KindTypeSR),
         TypedSR(CodeRuneS("T"),CoordTypeSR),
-        TypedSR(ImplicitRuneS(1),CoordTypeSR),
+        TypedSR(ImplicitRuneS(_, 1),CoordTypeSR),
         ComponentsSR(
           TypedSR(CodeRuneS("T"),CoordTypeSR),
           List(
             TemplexSR(OwnershipST(OwnP)),
-            TemplexSR(RuneST(ImplicitRuneS(0))))),
+            TemplexSR(RuneST(ImplicitRuneS(_, 0))))),
         ComponentsSR(
-          TypedSR(ImplicitRuneS(1),CoordTypeSR),
+          TypedSR(ImplicitRuneS(_, 1),CoordTypeSR),
           List(
             TemplexSR(OwnershipST(BorrowP)),
-            TemplexSR(RuneST(ImplicitRuneS(0)))))) =>
+            TemplexSR(RuneST(ImplicitRuneS(_, 0)))))) =>
     }
 
     RuleSUtils.getDistinctOrderedRunesForRulexes(mainName, main.templateRules) match {
       case List(
-        ImplicitRuneS(0),
+        ImplicitRuneS(_, 0),
           CodeRuneS("T"),
-          ImplicitRuneS(1)) =>
+          ImplicitRuneS(_, 1)) =>
     }
   }
 
@@ -87,7 +87,7 @@ class ScoutParametersTests extends FunSuite with Matchers {
           AtomSP(
             CaptureS(UnnamedLocalNameS(_),FinalP),
             None,
-            pr @ ImplicitRuneS(0),
+            pr @ ImplicitRuneS(_, 0),
             None)) => pr
       }
 
@@ -114,7 +114,7 @@ class ScoutParametersTests extends FunSuite with Matchers {
          AtomSP(
           CaptureS(UnnamedLocalNameS(_),FinalP),
           None,
-          pr @ ImplicitRuneS(0),
+          pr @ ImplicitRuneS(_, 0),
           None)) => pr
       }
 
@@ -147,7 +147,7 @@ class ScoutParametersTests extends FunSuite with Matchers {
                   AtomSP(
                     CaptureS(CodeVarNameS("a"),FinalP),
                     None,
-                    ar @ ImplicitRuneS(0),
+                    ar @ ImplicitRuneS(_, 0),
                     None))))) => (ar, tr)
       }
 

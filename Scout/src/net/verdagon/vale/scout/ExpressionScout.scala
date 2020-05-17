@@ -102,8 +102,8 @@ object ExpressionScout {
         // Try again, with this new transformed expression.
         scoutExpression(stackFrame, newExprP)
       }
-      case mpl @ MagicParamLookupPE() => {
-        val name = MagicParamNameS(CodeLocationS(mpl.pos.line, mpl.pos.column))
+      case MagicParamLookupPE(pos) => {
+        val name = MagicParamNameS(CodeLocationS(pos.line, pos.column))
         val lookup = LocalLookupResult(name)
         // We dont declare it here, because then scoutBlock will think its a local and
         // hide it from those above.
@@ -114,8 +114,16 @@ object ExpressionScout {
       case LookupPE(name, List()) => {
         val (lookup, declarations) =
           stackFrame.findVariable(name) match {
-            case None => (FunctionLookupResult(GlobalFunctionFamilyNameS(name)), noDeclarations)
-            case Some(fullName) => (LocalLookupResult(fullName), noDeclarations)
+            case Some(fullName) => {
+              (LocalLookupResult(fullName), noDeclarations)
+            }
+            case None => {
+              if (stackFrame.parentEnv.allUserDeclaredRunes().contains(CodeRuneS(name))) {
+                (NormalResult(RuneLookupSE(CodeRuneS(name))), noDeclarations)
+              } else {
+                (FunctionLookupResult(GlobalFunctionFamilyNameS(name)), noDeclarations)
+              }
+            }
           }
         (declarations, lookup, noVariableUses, noVariableUses)
       }

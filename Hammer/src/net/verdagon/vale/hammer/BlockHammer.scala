@@ -38,7 +38,7 @@ object BlockHammer {
 //      vfail("Ununstackified local: " + (localIdsInThisBlock -- unstackifiedLocalIdsInThisBlock))
 //    }
 
-    val resultType = registerAccesses.last.map(_.expectedType).getOrElse(ReferenceH(m.Share, VoidH()))
+    val resultType = registerAccesses.last.map(_.expectedType).getOrElse(ReferenceH(m.ShareH, VoidH()))
 //    start here, we're returning locals and thats not optimal
     println("debt: put checking back in for unstackified things!")
     (BlockH(nodesByLine.inner, resultType), registerAccesses.last)

@@ -136,7 +136,9 @@ object OverloadTemplar {
         val ParamFilter(desiredTemplata, desiredMaybeVirtuality) = desiredParam
         val Parameter2(_, candidateMaybeVirtuality, candidateType) = candidateParam
         paramMatches(temputs, desiredTemplata, candidateType, exact) match {
-          case (Some(rejectionReason)) => return (Some("Param at index " + paramIndex + " doesn't match: " + rejectionReason))
+          case (Some(rejectionReason)) => {
+            return (Some("Param at index " + paramIndex + " doesn't match: " + rejectionReason))
+          }
           case (None) => temputs
         }
         ((desiredMaybeVirtuality, candidateMaybeVirtuality) match {

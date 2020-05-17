@@ -8,7 +8,7 @@ import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.function.FunctionTemplar
 import net.verdagon.vale.templar.infer.infer.{InferSolveFailure, InferSolveSuccess}
-import net.verdagon.vale.{vfail, vimpl}
+import net.verdagon.vale.{vfail, vimpl, vwat}
 
 import scala.collection.immutable.List
 
@@ -38,7 +38,7 @@ object StructTemplarTemplateArgsLayer {
         temputs.declareStruct(temporaryStructRef)
 
         structA.maybePredictedMutability match {
-          case None => temputs
+          case None =>
           case Some(predictedMutability) => temputs.declareStructMutability(temporaryStructRef, Conversions.evaluateMutability(predictedMutability))
         }
         val result =
@@ -62,8 +62,11 @@ object StructTemplarTemplateArgsLayer {
           }
 
         structA.maybePredictedMutability match {
-          case None => temputs.declareStructMutability(temporaryStructRef, Conversions.evaluateMutability(structA.mutability))
-          case Some(_) => temputs
+          case None => {
+            val MutabilityTemplata(mutability) = inferences.templatasByRune(NameTranslator.translateRune(structA.mutabilityRune))
+            temputs.declareStructMutability(temporaryStructRef, mutability)
+          }
+          case Some(_) =>
         }
 
         StructTemplarMiddle.getStructRef(env, temputs, structA, inferences.templatasByRune)
@@ -121,7 +124,10 @@ object StructTemplarTemplateArgsLayer {
 
 
         interfaceS.maybePredictedMutability match {
-          case None => temputs.declareInterfaceMutability(temporaryInterfaceRef, Conversions.evaluateMutability(interfaceS.mutability))
+          case None => {
+            val MutabilityTemplata(mutability) = inferences.templatasByRune(NameTranslator.translateRune(interfaceS.mutabilityRune))
+            temputs.declareInterfaceMutability(temporaryInterfaceRef, mutability)
+          }
           case Some(_) =>
         }
 
@@ -152,13 +158,13 @@ object StructTemplarTemplateArgsLayer {
     interfaceEnv: IEnvironment,
     temputs: TemputsBox,
     interfaceRef: InterfaceRef2,
-    lambdas: List[Coord]):
+    substructName: FullName2[AnonymousSubstructName2]):
   (StructRef2, Mutability) = {
     StructTemplarMiddle.makeAnonymousSubstruct(
       interfaceEnv,
       temputs,
       interfaceRef,
-      lambdas)
+      substructName)
   }
 
   // Makes an anonymous substruct of the given interface, which just forwards its method to the given prototype.

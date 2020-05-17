@@ -1,6 +1,6 @@
 package net.verdagon.vale.vivem
 
-import net.verdagon.vale.metal.Share
+import net.verdagon.vale.metal.ShareH
 import net.verdagon.vale.vassert
 
 object VivemExterns {
@@ -17,7 +17,7 @@ object VivemExterns {
       case (IntV(aValue), IntV(bValue)) => {
         memory.dropReferenceIfNonOwning(args(0))
         memory.dropReferenceIfNonOwning(args(1))
-        Some(memory.addAllocationForReturn(Share, IntV(aValue + bValue)))
+        Some(memory.addAllocationForReturn(ShareH, IntV(aValue + bValue)))
       }
     }
   }
@@ -30,7 +30,7 @@ object VivemExterns {
       case (FloatV(aValue), FloatV(bValue)) => {
         memory.dropReferenceIfNonOwning(args(0))
         memory.dropReferenceIfNonOwning(args(1))
-        Some(memory.addAllocationForReturn(Share, FloatV(aValue + bValue)))
+        Some(memory.addAllocationForReturn(ShareH, FloatV(aValue + bValue)))
       }
     }
   }
@@ -43,7 +43,7 @@ object VivemExterns {
       case (IntV(aValue), IntV(bValue)) => {
         memory.dropReferenceIfNonOwning(args(0))
         memory.dropReferenceIfNonOwning(args(1))
-        Some(memory.addAllocationForReturn(Share, IntV(aValue * bValue)))
+        Some(memory.addAllocationForReturn(ShareH, IntV(aValue * bValue)))
       }
     }
   }
@@ -56,7 +56,7 @@ object VivemExterns {
       case (FloatV(aValue), FloatV(bValue)) => {
         memory.dropReferenceIfNonOwning(args(0))
         memory.dropReferenceIfNonOwning(args(1))
-        Some(memory.addAllocationForReturn(Share, FloatV(aValue * bValue)))
+        Some(memory.addAllocationForReturn(ShareH, FloatV(aValue * bValue)))
       }
     }
   }
@@ -69,7 +69,7 @@ object VivemExterns {
       case (IntV(aValue), IntV(bValue)) => {
         memory.dropReferenceIfNonOwning(args(0))
         memory.dropReferenceIfNonOwning(args(1))
-        Some(memory.addAllocationForReturn(Share, IntV(aValue % bValue)))
+        Some(memory.addAllocationForReturn(ShareH, IntV(aValue % bValue)))
       }
     }
   }
@@ -82,7 +82,7 @@ object VivemExterns {
       case (IntV(aValue), IntV(bValue)) => {
         memory.dropReferenceIfNonOwning(args(0))
         memory.dropReferenceIfNonOwning(args(1))
-        Some(memory.addAllocationForReturn(Share, IntV(aValue - bValue)))
+        Some(memory.addAllocationForReturn(ShareH, IntV(aValue - bValue)))
       }
     }
   }
@@ -95,7 +95,7 @@ object VivemExterns {
       case (FloatV(aValue), FloatV(bValue)) => {
         memory.dropReferenceIfNonOwning(args(0))
         memory.dropReferenceIfNonOwning(args(1))
-        Some(memory.addAllocationForReturn(Share, FloatV(aValue - bValue)))
+        Some(memory.addAllocationForReturn(ShareH, FloatV(aValue - bValue)))
       }
     }
   }
@@ -108,7 +108,7 @@ object VivemExterns {
       case (StrV(aValue), StrV(bValue)) => {
         memory.dropReferenceIfNonOwning(args(0))
         memory.dropReferenceIfNonOwning(args(1))
-        Some(memory.addAllocationForReturn(Share, StrV(aValue + bValue)))
+        Some(memory.addAllocationForReturn(ShareH, StrV(aValue + bValue)))
       }
     }
   }
@@ -117,7 +117,7 @@ object VivemExterns {
     vassert(args.isEmpty)
     val next = memory.stdin()
     val code = if (next.isEmpty) { 0 } else { next.charAt(0).charValue().toInt }
-    Some(memory.addAllocationForReturn(Share, IntV(code)))
+    Some(memory.addAllocationForReturn(ShareH, IntV(code)))
   }
 
   def lessThanInt(memory: AdapterForExterns, args: Vector[ReferenceV]): Option[ReturnV] = {
@@ -128,7 +128,7 @@ object VivemExterns {
       case (IntV(aValue), IntV(bValue)) => {
         memory.dropReferenceIfNonOwning(args(0))
         memory.dropReferenceIfNonOwning(args(1))
-        Some(memory.addAllocationForReturn(Share, BoolV(aValue < bValue)))
+        Some(memory.addAllocationForReturn(ShareH, BoolV(aValue < bValue)))
       }
     }
   }
@@ -141,7 +141,7 @@ object VivemExterns {
       case (FloatV(aValue), FloatV(bValue)) => {
         memory.dropReferenceIfNonOwning(args(0))
         memory.dropReferenceIfNonOwning(args(1))
-        Some(memory.addAllocationForReturn(Share, BoolV(aValue < bValue)))
+        Some(memory.addAllocationForReturn(ShareH, BoolV(aValue < bValue)))
       }
     }
   }
@@ -154,7 +154,7 @@ object VivemExterns {
       case (FloatV(aValue), FloatV(bValue)) => {
         memory.dropReferenceIfNonOwning(args(0))
         memory.dropReferenceIfNonOwning(args(1))
-        Some(memory.addAllocationForReturn(Share, BoolV(aValue > bValue)))
+        Some(memory.addAllocationForReturn(ShareH, BoolV(aValue > bValue)))
       }
     }
   }
@@ -167,7 +167,7 @@ object VivemExterns {
       case (IntV(aValue), IntV(bValue)) => {
         memory.dropReferenceIfNonOwning(args(0))
         memory.dropReferenceIfNonOwning(args(1))
-        Some(memory.addAllocationForReturn(Share, BoolV(aValue <= bValue)))
+        Some(memory.addAllocationForReturn(ShareH, BoolV(aValue <= bValue)))
       }
     }
   }
@@ -180,7 +180,7 @@ object VivemExterns {
       case (IntV(aValue), IntV(bValue)) => {
         memory.dropReferenceIfNonOwning(args(0))
         memory.dropReferenceIfNonOwning(args(1))
-        Some(memory.addAllocationForReturn(Share, BoolV(aValue > bValue)))
+        Some(memory.addAllocationForReturn(ShareH, BoolV(aValue > bValue)))
       }
     }
   }
@@ -193,7 +193,7 @@ object VivemExterns {
       case (IntV(aValue), IntV(bValue)) => {
         memory.dropReferenceIfNonOwning(args(0))
         memory.dropReferenceIfNonOwning(args(1))
-        Some(memory.addAllocationForReturn(Share, BoolV(aValue >= bValue)))
+        Some(memory.addAllocationForReturn(ShareH, BoolV(aValue >= bValue)))
       }
     }
   }
@@ -206,7 +206,7 @@ object VivemExterns {
       case (IntV(aValue), IntV(bValue)) => {
         memory.dropReferenceIfNonOwning(args(0))
         memory.dropReferenceIfNonOwning(args(1))
-        Some(memory.addAllocationForReturn(Share, BoolV(aValue == bValue)))
+        Some(memory.addAllocationForReturn(ShareH, BoolV(aValue == bValue)))
       }
     }
   }
@@ -219,7 +219,7 @@ object VivemExterns {
       case (BoolV(aValue), BoolV(bValue)) => {
         memory.dropReferenceIfNonOwning(args(0))
         memory.dropReferenceIfNonOwning(args(1))
-        Some(memory.addAllocationForReturn(Share, BoolV(aValue == bValue)))
+        Some(memory.addAllocationForReturn(ShareH, BoolV(aValue == bValue)))
       }
     }
   }
@@ -232,7 +232,7 @@ object VivemExterns {
       case (BoolV(aValue), BoolV(bValue)) => {
         memory.dropReferenceIfNonOwning(args(0))
         memory.dropReferenceIfNonOwning(args(1))
-        Some(memory.addAllocationForReturn(Share, BoolV(aValue && bValue)))
+        Some(memory.addAllocationForReturn(ShareH, BoolV(aValue && bValue)))
       }
     }
   }
@@ -241,35 +241,35 @@ object VivemExterns {
     vassert(args.size == 1)
     val BoolV(value) = memory.dereference(args(0))
     memory.dropReferenceIfNonOwning(args(0))
-    Some(memory.addAllocationForReturn(Share, BoolV(!value)))
+    Some(memory.addAllocationForReturn(ShareH, BoolV(!value)))
   }
 
   def sqrt(memory: AdapterForExterns, args: Vector[ReferenceV]): Option[ReturnV] = {
     vassert(args.size == 1)
     val FloatV(value) = memory.dereference(args(0))
     memory.dropReferenceIfNonOwning(args(0))
-    Some(memory.addAllocationForReturn(Share, FloatV(Math.sqrt(value).toFloat)))
+    Some(memory.addAllocationForReturn(ShareH, FloatV(Math.sqrt(value).toFloat)))
   }
 
   def castIntStr(memory: AdapterForExterns, args: Vector[ReferenceV]): Option[ReturnV] = {
     vassert(args.size == 1)
     val IntV(value) = memory.dereference(args(0))
     memory.dropReferenceIfNonOwning(args(0))
-    Some(memory.addAllocationForReturn(Share, StrV(value.toString)))
+    Some(memory.addAllocationForReturn(ShareH, StrV(value.toString)))
   }
 
   def castFloatStr(memory: AdapterForExterns, args: Vector[ReferenceV]): Option[ReturnV] = {
     vassert(args.size == 1)
     val FloatV(value) = memory.dereference(args(0))
     memory.dropReferenceIfNonOwning(args(0))
-    Some(memory.addAllocationForReturn(Share, StrV(value.toString)))
+    Some(memory.addAllocationForReturn(ShareH, StrV(value.toString)))
   }
 
   def castIntFloat(memory: AdapterForExterns, args: Vector[ReferenceV]): Option[ReturnV] = {
     vassert(args.size == 1)
     val IntV(value) = memory.dereference(args(0))
     memory.dropReferenceIfNonOwning(args(0))
-    Some(memory.addAllocationForReturn(Share, FloatV(value.toFloat)))
+    Some(memory.addAllocationForReturn(ShareH, FloatV(value.toFloat)))
   }
 
   def print(memory: AdapterForExterns, args: Vector[ReferenceV]): Option[ReturnV] = {

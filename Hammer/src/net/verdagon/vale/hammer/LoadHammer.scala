@@ -1,8 +1,8 @@
 package net.verdagon.vale.hammer
 
-import net.verdagon.vale.hammer.ExpressionHammer.{ translate}
+import net.verdagon.vale.hammer.ExpressionHammer.translate
 import net.verdagon.vale.hinputs.Hinputs
-import net.verdagon.vale.metal.{Borrow => _, Ownership => _, Share => _, Variability => _, Varying => _, _}
+import net.verdagon.vale.metal.{BorrowH, ShareH, Variability => _, Varying => _, _}
 import net.verdagon.vale.{metal => m}
 import net.verdagon.vale.templar.{types => t}
 import net.verdagon.vale.templar._
@@ -71,7 +71,7 @@ object LoadHammer {
       translate(hinputs, hamuts, locals, stackHeight, nodesByLine, indexExpr2);
     val indexAccess = indexExprResultLine.expectIntAccess()
 
-    vassert(targetOwnership == Borrow || targetOwnership == Share)
+    vassert(targetOwnership == BorrowH || targetOwnership == ShareH)
 
     val borrowedElementType =
       ReferenceH(targetOwnership, arrayAccess.expectedType.kind.rawArray.elementType.kind)
@@ -111,7 +111,7 @@ object LoadHammer {
       translate(hinputs, hamuts, locals, stackHeight, nodesByLine, indexExpr2);
     val indexAccess = indexExprResultLine.expectIntAccess()
 
-    vassert(targetOwnership == m.Borrow || targetOwnership == m.Share)
+    vassert(targetOwnership == m.BorrowH || targetOwnership == m.ShareH)
 
     val borrowedElementType =
       ReferenceH(targetOwnership, arrayAccess.expectedType.kind.rawArray.elementType.kind)
@@ -169,8 +169,8 @@ object LoadHammer {
       StructHammer.makeBox(hinputs, hamuts, variability, boxedType2, boxedTypeH)
 
     // We expect a borrow because structs never own boxes, they only borrow them
-    val expectedStructBoxMemberType = ReferenceH(m.Borrow, boxStructRefH)
-    val expectedBorrowBoxResultType = ReferenceH(m.Borrow, boxStructRefH)
+    val expectedStructBoxMemberType = ReferenceH(m.BorrowH, boxStructRefH)
+    val expectedBorrowBoxResultType = ReferenceH(m.BorrowH, boxStructRefH)
 
     // We're storing into a struct's member that is a box. The stack is also
     // pointing at this box. First, get the box, then mutate what's inside.
@@ -181,7 +181,7 @@ object LoadHammer {
           nodesByLine.nextId(),
           structResultLine.expectStructAccess(),
           memberIndex,
-          m.Borrow,
+          m.BorrowH,
           expectedStructBoxMemberType,
           expectedBorrowBoxResultType,
           varFullNameH))
@@ -272,8 +272,8 @@ object LoadHammer {
       StructHammer.makeBox(hinputs, hamuts, variability, localReference2, localTypeH)
     vassert(local.typeH.kind == boxStructRefH)
 
-    val expectedStructBoxMemberType = ReferenceH(m.Own, boxStructRefH)
-    val expectedBorrowBoxResultType = ReferenceH(m.Borrow, boxStructRefH)
+    val expectedStructBoxMemberType = ReferenceH(m.OwnH, boxStructRefH)
+    val expectedBorrowBoxResultType = ReferenceH(m.BorrowH, boxStructRefH)
 
     // This means we're trying to load from a local variable that holds a box.
     // We need to load the box, then mutate its contents.
@@ -283,7 +283,7 @@ object LoadHammer {
         LocalLoadH(
           nodesByLine.nextId(),
           local,
-          m.Borrow,
+          m.BorrowH,
           expectedStructBoxMemberType,
           expectedBorrowBoxResultType,
           varNameH))
@@ -361,8 +361,8 @@ object LoadHammer {
     val (boxStructRefH) =
       StructHammer.makeBox(hinputs, hamuts, localVar.variability, localVar.reference, local.typeH)
 
-    val expectedStructBoxMemberType = ReferenceH(m.Own, boxStructRefH)
-    val expectedBorrowBoxResultType = ReferenceH(m.Borrow, boxStructRefH)
+    val expectedStructBoxMemberType = ReferenceH(m.OwnH, boxStructRefH)
+    val expectedBorrowBoxResultType = ReferenceH(m.BorrowH, boxStructRefH)
 
     // This means we're trying to load from a local variable that holds a box.
     // We need to load the box, then mutate its contents.
@@ -371,7 +371,7 @@ object LoadHammer {
       LocalLoadH(
         nodesByLine.nextId(),
         local,
-        m.Borrow,
+        m.BorrowH,
         expectedStructBoxMemberType,
         expectedBorrowBoxResultType,
         NameHammer.translateFullName(hinputs, hamuts, localVar.id)))
@@ -416,8 +416,8 @@ object LoadHammer {
       StructHammer.makeBox(hinputs, hamuts, variability, boxedType2, boxedTypeH)
 
     // We expect a borrow because structs never own boxes, they only borrow them
-    val expectedStructBoxMemberType = ReferenceH(m.Borrow, boxStructRefH)
-    val expectedBorrowBoxResultType = ReferenceH(m.Borrow, boxStructRefH)
+    val expectedStructBoxMemberType = ReferenceH(m.BorrowH, boxStructRefH)
+    val expectedBorrowBoxResultType = ReferenceH(m.BorrowH, boxStructRefH)
 
     // We're storing into a struct's member that is a box. The stack is also
     // pointing at this box. First, get the box, then mutate what's inside.
@@ -427,7 +427,7 @@ object LoadHammer {
         nodesByLine.nextId(),
         structResultLine.expectStructAccess(),
         memberIndex,
-        m.Borrow,
+        m.BorrowH,
         expectedStructBoxMemberType,
         expectedBorrowBoxResultType,
         NameHammer.translateFullName(hinputs, hamuts, memberName)))

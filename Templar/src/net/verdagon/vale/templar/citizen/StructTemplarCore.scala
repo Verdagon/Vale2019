@@ -56,12 +56,16 @@ object StructTemplarCore {
 
     val members = makeStructMembers(structInnerEnv, temputs, struct1.members)
 
-    val structDef2 =
-      StructDefinition2(
-        fullName,
-        Conversions.evaluateMutability(struct1.mutability),
-        members,
-        false)
+    val mutability =
+      structInnerEnv.getNearestTemplataWithAbsoluteName2(
+        NameTranslator.translateRune(struct1.mutabilityRune),
+        Set(TemplataLookupContext)) match {
+        case Some(MutabilityTemplata(m)) => m
+        case Some(_) => vwat()
+        case None => vwat()
+      }
+
+    val structDef2 = StructDefinition2(fullName, mutability, members, false)
 
     temputs.add(structDef2);
 
@@ -150,10 +154,19 @@ object StructTemplarCore {
             internalMethod))
       })
 
+    val mutability =
+      interfaceInnerEnv.getNearestTemplataWithAbsoluteName2(
+        NameTranslator.translateRune(interfaceA.mutabilityRune),
+        Set(TemplataLookupContext)) match {
+        case Some(MutabilityTemplata(m)) => m
+        case Some(_) => vwat()
+        case None => vwat()
+      }
+
     val interfaceDef2 =
       InterfaceDefinition2(
         fullName,
-        Conversions.evaluateMutability(interfaceA.mutability),
+        mutability,
         internalMethods2)
     temputs.add(interfaceDef2)
 
@@ -289,40 +302,39 @@ object StructTemplarCore {
     name: ICitizenName2):
   (StructRef2, Mutability) = {
     temputs.packTypes.get(memberCoords) match {
-      case Some(structRef2) => (structRef2, temputs.lookupStruct(structRef2).mutability)
-      case None => {
-        val packMutability = getCompoundTypeMutability(temputs, memberCoords)
-        val members =
-          memberCoords.zipWithIndex.map({
-            case (pointerType, index) => StructMember2(CodeVarName2(index.toString), Final, ReferenceMemberType2(pointerType))
-          })
-
-        val fullName = outerEnv.fullName.addStep(TupleName2(memberCoords))
-        val structInnerEnv =
-          NamespaceEnvironment(
-            Some(outerEnv),
-            fullName,
-            Map())
-
-        val newStructDef = StructDefinition2(structInnerEnv.fullName, packMutability, members, false);
-        if (memberCoords.isEmpty && packMutability != Immutable)
-          vfail("curiosity")
-
-        temputs.declareStruct(newStructDef.getRef);
-        temputs.declareStructMutability(newStructDef.getRef, packMutability)
-        temputs.declareStructEnv(newStructDef.getRef, structInnerEnv);
-        temputs.add(newStructDef)
-        temputs.declarePack(memberCoords, newStructDef.getRef);
-
-        (newStructDef.getRef, packMutability)
-      }
+      case Some(structRef2) => return (structRef2, temputs.lookupStruct(structRef2).mutability)
+      case None =>
     }
+    val packMutability = getCompoundTypeMutability(temputs, memberCoords)
+    val members =
+      memberCoords.zipWithIndex.map({
+        case (pointerType, index) => StructMember2(CodeVarName2(index.toString), Final, ReferenceMemberType2(pointerType))
+      })
+
+    val fullName = outerEnv.fullName.addStep(TupleName2(memberCoords))
+    val structInnerEnv =
+      NamespaceEnvironment(
+        Some(outerEnv),
+        fullName,
+        Map())
+
+    val newStructDef = StructDefinition2(structInnerEnv.fullName, packMutability, members, false);
+    if (memberCoords.isEmpty && packMutability != Immutable)
+      vfail("curiosity")
+
+    temputs.declareStruct(newStructDef.getRef);
+    temputs.declareStructMutability(newStructDef.getRef, packMutability)
+    temputs.declareStructEnv(newStructDef.getRef, structInnerEnv);
+    temputs.add(newStructDef)
+    temputs.declarePack(memberCoords, newStructDef.getRef);
+
+    (newStructDef.getRef, packMutability)
   }
 
   def getCompoundTypeMutability(temputs: TemputsBox, memberTypes2: List[Coord])
   : Mutability = {
     val membersOwnerships = memberTypes2.map(_.ownership)
-    val allMembersImmutable = membersOwnerships.toSet == Set(Share)
+    val allMembersImmutable = membersOwnerships.isEmpty || membersOwnerships.toSet == Set(Share)
     if (allMembersImmutable) Immutable else Mutable
   }
 
@@ -332,9 +344,10 @@ object StructTemplarCore {
       interfaceEnv: IEnvironment,
       temputs: TemputsBox,
       anonymousSubstructName: FullName2[AnonymousSubstructName2],
-      interfaceRef: InterfaceRef2,
-      callables: List[Coord]):
+      interfaceRef: InterfaceRef2):
   (StructRef2, Mutability) = {
+    val callables = anonymousSubstructName.last.callables
+
     val interfaceDef = temputs.lookupInterface(interfaceRef)
 
     val mutability = getCompoundTypeMutability(temputs, callables)
@@ -477,6 +490,7 @@ object StructTemplarCore {
     val mutability = Immutable
 
     val structRef = StructRef2(structFullName)
+
     temputs.declareStruct(structRef)
     temputs.declareStructMutability(structRef, mutability)
 

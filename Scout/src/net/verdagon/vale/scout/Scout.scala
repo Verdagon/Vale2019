@@ -153,9 +153,16 @@ object Scout {
       })
 
     val rate = RuleStateBox(RuleState(structEnv.name, 0))
-    val rulesS =
+    val rulesWithoutMutabilityS =
       RuleScout.translateRulexes(rate, structEnv.allUserDeclaredRunes(), rulesP) ++
       memberRules
+
+    val mutabilityRune = rate.newImplicitRune()
+    val rulesS =
+      rulesWithoutMutabilityS :+
+        EqualsSR(
+          TemplexSR(RuneST(mutabilityRune)),
+          TemplexSR(MutabilityST(mutability)))
 
     // We gather all the runes from the scouted rules to be consistent with the function scout.
     val allRunes = PredictorEvaluator.getAllRunes(structEnv.name, identifyingRunes, rulesS, List(), None)
@@ -179,12 +186,10 @@ object Scout {
         Some(KindTypeSR)
       }
 
-    val maybePredictedMutability = Some(mutability)
-
     StructS(
       structName,
-      mutability,
-      maybePredictedMutability,
+      mutabilityRune,
+      Some(mutability),
       knowableValueRunes,
       identifyingRunes,
       localRunes,
@@ -209,14 +214,22 @@ object Scout {
     val interfaceEnv = Environment(None, interfaceFullName, userDeclaredRunes.toSet)
 
     val ruleState = RuleStateBox(RuleState(interfaceEnv.name, 0))
-    val rulesS = RuleScout.translateRulexes(ruleState, interfaceEnv.allUserDeclaredRunes(), rulesP)
+
+    val rulesWithoutMutabilityS = RuleScout.translateRulexes(ruleState, interfaceEnv.allUserDeclaredRunes(), rulesP)
+
+    val mutabilityRune = ruleState.newImplicitRune()
+    val rulesS =
+      rulesWithoutMutabilityS :+
+      EqualsSR(
+        TemplexSR(RuneST(mutabilityRune)),
+        TemplexSR(MutabilityST(mutability)))
 
     // We gather all the runes from the scouted rules to be consistent with the function scout.
     val allRunes = PredictorEvaluator.getAllRunes(interfaceFullName, identifyingRunes, rulesS, List(), None)
     val Conclusions(knowableValueRunes, predictedTypeByRune) =
       PredictorEvaluator.solve(Set(), rulesS, List())
     val localRunes = allRunes
-    val isTemplate = knowableValueRunes != userDeclaredRunes.toSet
+    val isTemplate = knowableValueRunes != allRunes.toSet
 
     val maybePredictedType =
       if (isTemplate) {
@@ -229,15 +242,13 @@ object Scout {
         Some(KindTypeSR)
       }
 
-    val maybePredictedMutability = Some(mutability)
-
     val internalMethodsS = internalMethodsP.map(FunctionScout.scoutInterfaceMember(interfaceEnv, _))
 
     val interfaceS =
       InterfaceS(
         interfaceFullName,
-        mutability,
-        maybePredictedMutability,
+        mutabilityRune,
+        Some(mutability),
         knowableValueRunes,
         identifyingRunes,
         localRunes,

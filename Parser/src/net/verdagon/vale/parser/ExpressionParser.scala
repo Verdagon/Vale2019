@@ -15,7 +15,7 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
     ("<=>" | "<=" | "<" | ">=" | ">" | "==" | "!=")
   }
 
-  private[parser] def lookup: Parser[LookupPE] = {
+  private[parser] def lookup: Parser[LookupPE] = positioned {
 //    ("`" ~> "[^`]+".r <~ "`" ^^ (i => LookupPE(i, List()))) |
     (exprIdentifier ^^ (i => LookupPE(i, List())))
   }
@@ -119,7 +119,7 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
       tupleExpr |
       templateSpecifiedLookup |
       (lookup ^^ {
-        case LookupPE("_", List()) => MagicParamLookupPE()
+        case l @ LookupPE("_", List()) => MagicParamLookupPE(l.pos)
         case other => other
       })
   }

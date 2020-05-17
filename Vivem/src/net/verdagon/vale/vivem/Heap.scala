@@ -27,7 +27,7 @@ class AdapterForExterns(
     heap.dereference(reference)
   }
 
-  def addAllocationForReturn(ownership: Ownership, referend: ReferendV): ReturnV = {
+  def addAllocationForReturn(ownership: OwnershipH, referend: ReferendV): ReturnV = {
     val ref = heap.add(ownership, referend)
     heap.incrementReferenceRefCount(ResultToObjectReferrer(blockId.callId), ref) // incrementing because putting it in a return
     ReturnV(blockId, ref)
@@ -83,7 +83,7 @@ class AllocationMap(vivemDout: PrintStream) {
     }
   }
 
-  def add(ownership: Ownership, referend: ReferendV) = {
+  def add(ownership: OwnershipH, referend: ReferendV) = {
     val reference =
       ReferenceV(
         // These two are the same because when we allocate something,
@@ -118,7 +118,7 @@ class AllocationMap(vivemDout: PrintStream) {
 class Heap(in_vivemDout: PrintStream) {
   val vivemDout = in_vivemDout
 
-  private val objectsById = new AllocationMap(vivemDout)
+  /*private*/ val objectsById = new AllocationMap(vivemDout)
   
   private val callIdStack = mutable.Stack[CallId]();
   private val callsById = mutable.HashMap[CallId, Call]()
@@ -256,14 +256,19 @@ class Heap(in_vivemDout: PrintStream) {
     decrementObjectRefCount(referrer, reference.allocId)
   }
 
-  def destructure(reference: ReferenceV): Vector[ReferenceV] = {
+  def destructure(reference: ReferenceV, alsoDeallocate: Boolean): Vector[ReferenceV] = {
     val allocation = dereference(reference)
     allocation match {
       case StructInstanceV(structDefH, memberRefs) => {
         memberRefs.zipWithIndex.foreach({ case (memberRef, index) =>
           decrementReferenceRefCount(MemberToObjectReferrer(MemberAddressV(reference.allocId, index)), memberRef)
         })
-        deallocate(reference)
+        if (reference.ownership == OwnH) {
+          vassert(alsoDeallocate)
+        }
+        if (alsoDeallocate) {
+          deallocate(reference)
+        }
         memberRefs
       }
     }
@@ -324,13 +329,13 @@ class Heap(in_vivemDout: PrintStream) {
     allocation.ensureTotalRefCount(expectedNum)
   }
 
-  def add(ownership: Ownership, referend: ReferendV): ReferenceV = {
+  def add(ownership: OwnershipH, referend: ReferendV): ReferenceV = {
     objectsById.add(ownership, referend)
   }
 
-  def alias(reference: ReferenceV, expectedType: ReferenceH[ReferendH], targetOwnership: Ownership): ReferenceV = {
+  def alias(reference: ReferenceV, expectedType: ReferenceH[ReferendH], targetOwnership: OwnershipH): ReferenceV = {
     val ReferenceV(actualKind, oldSeenAsType, oldOwnership, objectId) = reference
-    vassert((oldOwnership == Share) == (targetOwnership == Share))
+    vassert((oldOwnership == ShareH) == (targetOwnership == ShareH))
     if (oldSeenAsType.hamut != expectedType.kind) {
       // not sure if the above .actualType is right
 
@@ -421,14 +426,14 @@ class Heap(in_vivemDout: PrintStream) {
   }
 
   // For example, for the integer we pass into the array generator
-  def allocateTransient(ownership: Ownership, referend: ReferendV) = {
+  def allocateTransient(ownership: OwnershipH, referend: ReferendV) = {
     val ref = add(ownership, referend)
     vivemDout.print(" o" + ref.allocId.num + "=")
     printReferend(referend)
     ref
   }
 
-  def aliasIntoRegister(registerId: RegisterId, reference: ReferenceV, expectedType: ReferenceH[ReferendH], targetOwnership: Ownership) = {
+  def aliasIntoRegister(registerId: RegisterId, reference: ReferenceV, expectedType: ReferenceH[ReferendH], targetOwnership: OwnershipH) = {
     val ref = alias(reference, expectedType, targetOwnership)
     setReferenceRegister(registerId, ref)
   }
@@ -549,7 +554,7 @@ class Heap(in_vivemDout: PrintStream) {
         .reverse
   }
 
-  def allocateIntoRegister(registerId: RegisterId, ownership: Ownership, referend: ReferendV): ReferenceV = {
+  def allocateIntoRegister(registerId: RegisterId, ownership: OwnershipH, referend: ReferendV): ReferenceV = {
     val ref = add(ownership, referend)
     vivemDout.print(" o" + ref.allocId.num + "=")
     printReferend(referend)

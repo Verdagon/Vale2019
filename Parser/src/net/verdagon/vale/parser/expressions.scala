@@ -2,7 +2,7 @@ package net.verdagon.vale.parser
 
 import net.verdagon.vale.vassert
 
-import scala.util.parsing.input.Positional
+import scala.util.parsing.input.{Position, Positional}
 
 trait IExpressionPE
 
@@ -54,8 +54,8 @@ case class FunctionCallPE(
 
 //case class MethodCall0(callableExpr: Expression0, objectExpr: Expression0, argsExpr: Pack0) extends Expression0
 
-case class LookupPE(name: String, templateArgs: List[ITemplexPT]) extends IExpressionPE
-case class MagicParamLookupPE() extends IExpressionPE with Positional
+case class LookupPE(name: String, templateArgs: List[ITemplexPT]) extends IExpressionPE with Positional
+case class MagicParamLookupPE(loc: Position) extends IExpressionPE
 
 case class LambdaPE(function: FunctionP) extends IExpressionPE
 

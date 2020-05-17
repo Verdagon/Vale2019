@@ -11,7 +11,7 @@ object EdgeCarpenter {
     impls: List[Impl2]):
   (Set[InterfaceEdgeBlueprint], Set[Edge2]) = {
 
-    val abstractFunctionsByInterfaceWithoutEmpties =
+    val abstractFunctionHeadersByInterfaceWithoutEmpties =
       functions.flatMap(function => {
         function.header.getAbstractInterface match {
           case None => List()
@@ -20,21 +20,34 @@ object EdgeCarpenter {
       })
       .groupBy(_._1)
       .mapValues(_.map(_._2))
+      .map({ case (interfaceRef, functions) =>
+        // Sort so that the interface's internal methods are first and in the same order
+        // they were declared in. It feels right, and vivem also depends on it
+        // when it calls array generators/consumers' first method.
+        val interfaceDef = interfaces.find(_.getRef == interfaceRef).get
+        // Make sure `functions` has everything that the interface def wanted.
+        vassert((interfaceDef.internalMethods.toSet -- functions.map(_.header).toSet).isEmpty)
+        // Move all the internal methods to the front.
+        val orderedMethods =
+          interfaceDef.internalMethods ++
+            functions.map(_.header).filter(!interfaceDef.internalMethods.contains(_))
+        (interfaceRef -> orderedMethods)
+      })
     // Some interfaces would be empty and they wouldn't be in
     // abstractFunctionsByInterfaceWithoutEmpties, so we add them here.
-    val abstractFunctionsByInterface =
-      abstractFunctionsByInterfaceWithoutEmpties ++
+    val abstractFunctionHeadersByInterface =
+      abstractFunctionHeadersByInterfaceWithoutEmpties ++
         interfaces.map(i => {
-          (i.getRef -> abstractFunctionsByInterfaceWithoutEmpties.getOrElse(i.getRef, Set()))
+          (i.getRef -> abstractFunctionHeadersByInterfaceWithoutEmpties.getOrElse(i.getRef, Set()))
         })
 
     val interfaceEdgeBlueprints =
-      abstractFunctionsByInterface
-        .map({ case (interfaceRef2, functions2) =>
+      abstractFunctionHeadersByInterface
+        .map({ case (interfaceRef2, functionHeaders2) =>
           InterfaceEdgeBlueprint(
             interfaceRef2,
             // This is where they're given order and get an implied index
-            functions2.map(_.header.toBanner).toList)
+            functionHeaders2.map(_.toBanner).toList)
         })
 
     val overrideFunctionsAndIndicesByStructAndInterface =

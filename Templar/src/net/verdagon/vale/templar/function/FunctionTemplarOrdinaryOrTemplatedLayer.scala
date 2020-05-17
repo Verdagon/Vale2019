@@ -32,11 +32,9 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
     val function = nearEnv.function
     checkClosureConcernsHandled(nearEnv)
 
-    val (rules, typeByRune) =
-      EnvironmentUtils.assembleRulesFromFunctionAndContainers(nearEnv.function)
     val inferences =
       InferTemplar.inferOrdinaryRules(
-        nearEnv, temputs, rules, typeByRune, function.localRunes)
+        nearEnv, temputs, function.templateRules, function.typeByRune, function.localRunes)
     val runedEnv = addRunedDataToNearEnv(nearEnv, List(), inferences)
 
     FunctionTemplarMiddleLayer.predictOrdinaryFunctionBanner(
@@ -52,11 +50,9 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
     checkClosureConcernsHandled(nearEnv)
     vassert(!function.isTemplate)
 
-    val (rules, typeByRune) =
-      EnvironmentUtils.assembleRulesFromFunctionAndContainers(nearEnv.function)
     val inferences =
       InferTemplar.inferOrdinaryRules(
-        nearEnv, temputs, rules, typeByRune, function.localRunes)
+        nearEnv, temputs, function.templateRules, function.typeByRune, function.localRunes)
     val runedEnv = addRunedDataToNearEnv(nearEnv, List(), inferences)
 
     FunctionTemplarMiddleLayer.getOrEvaluateFunctionForBanner(runedEnv, temputs, function)
@@ -76,15 +72,13 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
     checkClosureConcernsHandled(nearEnv)
     vassert(nearEnv.function.isTemplate)
 
-    val (rules, typeByRune) =
-      EnvironmentUtils.assembleRulesFromFunctionAndContainers(nearEnv.function)
     val maybeInferredTemplatas =
       InferTemplar.inferFromArgCoords(
         nearEnv,
         temputs,
         function.identifyingRunes,
-        rules,
-        typeByRune,
+        function.templateRules,
+        function.typeByRune,
         function.localRunes,
         function.params.map(_.pattern),
         function.maybeRetCoordRune,
@@ -119,15 +113,13 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
     checkClosureConcernsHandled(nearEnv)
     vassert(nearEnv.function.isTemplate)
 
-    val (rules, typeByRune) =
-      EnvironmentUtils.assembleRulesFromFunctionAndContainers(nearEnv.function)
     val inferredTemplatas =
       InferTemplar.inferFromArgCoords(
           nearEnv,
           temputs,
           function.identifyingRunes,
-          rules,
-          typeByRune,
+        function.templateRules,
+        function.typeByRune,
           function.localRunes,
           function.params.map(_.pattern),
           function.maybeRetCoordRune,
@@ -162,15 +154,13 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
     checkClosureConcernsHandled(nearEnv)
     vassert(nearEnv.function.isTemplate)
 
-    val (rules, typeByRune) =
-      EnvironmentUtils.assembleRulesFromFunctionAndContainers(nearEnv.function)
     val inferredTemplatas =
       InferTemplar.inferFromArgCoords(
         nearEnv,
         temputs,
         function.identifyingRunes,
-        rules,
-        typeByRune,
+        function.templateRules,
+        function.typeByRune,
         function.localRunes,
         function.params.map(_.pattern),
         function.maybeRetCoordRune,
@@ -207,16 +197,13 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
 
     vassert(nearEnv.function.identifyingRunes.size == List().size);
 
-    val (rules, typeByRune) =
-      EnvironmentUtils.assembleRulesFromFunctionAndContainers(nearEnv.function)
-
     val result =
       InferTemplar.inferFromExplicitTemplateArgs(
         nearEnv,
         temputs,
         function.identifyingRunes,
-        rules,
-        typeByRune,
+        function.templateRules,
+        function.typeByRune,
         function.localRunes,
         function.params.map(_.pattern),
         function.maybeRetCoordRune,
@@ -247,11 +234,9 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
     vassert(!function.isTemplate)
 
 
-    val (rules, typeByRune) =
-      EnvironmentUtils.assembleRulesFromFunctionAndContainers(nearEnv.function)
     val inferences =
       InferTemplar.inferOrdinaryRules(
-        nearEnv, temputs, rules, typeByRune, function.localRunes)
+        nearEnv, temputs, function.templateRules, function.typeByRune, function.localRunes)
     val runedEnv = addRunedDataToNearEnv(nearEnv, List(), inferences)
 
     FunctionTemplarMiddleLayer.getOrEvaluateFunctionForHeader(
@@ -271,11 +256,9 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
     checkClosureConcernsHandled(nearEnv)
     vassert(!function.isTemplate)
 
-    val (rules, typeByRune) =
-      EnvironmentUtils.assembleRulesFromFunctionAndContainers(nearEnv.function)
     val inferences =
       InferTemplar.inferOrdinaryRules(
-        nearEnv, temputs, rules, typeByRune, function.localRunes)
+        nearEnv, temputs, function.templateRules, function.typeByRune, function.localRunes)
     val runedEnv = addRunedDataToNearEnv(nearEnv, List(), inferences)
 
     FunctionTemplarMiddleLayer.getOrEvaluateFunctionForPrototype(
@@ -301,15 +284,13 @@ object FunctionTemplarOrdinaryOrTemplatedLayer {
     }
     vassert(nearEnv.function.isTemplate)
 
-    val (rules, typeByRune) =
-      EnvironmentUtils.assembleRulesFromFunctionAndContainers(nearEnv.function)
     val inferences =
       InferTemplar.inferFromArgCoords(
         nearEnv,
         temputs,
         function.identifyingRunes,
-        rules,
-        typeByRune,
+        function.templateRules,
+        function.typeByRune,
         function.localRunes,
         function.params.map(_.pattern),
         function.maybeRetCoordRune,

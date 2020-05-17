@@ -312,10 +312,16 @@ object FunctionTemplar {
     explicitTemplateArgs: List[ITemplata],
     args: List[ParamFilter]):
   IEvaluateFunctionResult[Prototype2] = {
-    val Some(KindTemplata(closureStructRef @ StructRef2(_))) =
-      env.getNearestTemplataWithName(
-        vimpl(),//FunctionScout.CLOSURE_STRUCT_ENV_ENTRY_NAME,
-        Set(TemplataLookupContext))
+    val lambdaCitizenName2 =
+      function.name match {
+        case LambdaNameA(codeLocation) => LambdaCitizenName2(NameTranslator.translateCodeLocation(codeLocation))
+        case _ => vwat()
+      }
+    val KindTemplata(closureStructRef @ StructRef2(_)) =
+      vassertSome(
+        env.getNearestTemplataWithAbsoluteName2(
+          lambdaCitizenName2,
+          Set(TemplataLookupContext)))
     FunctionTemplarClosureOrLightLayer.evaluateTemplatedClosureFunctionFromCallForPrototype(
       env, temputs, closureStructRef, function, explicitTemplateArgs, args)
   }

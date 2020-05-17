@@ -10,7 +10,7 @@ class VivemTests extends FunSuite with Matchers {
 
     val main =
       FunctionH(
-        PrototypeH(FullNameH(List(VonStr("F(\"main\")"))),List(),ReferenceH(m.Share,IntH())),
+        PrototypeH(FullNameH(List(VonStr("F(\"main\")"))),List(),ReferenceH(m.ShareH,IntH())),
         false,
         false,
         true,
@@ -18,14 +18,14 @@ class VivemTests extends FunSuite with Matchers {
           Vector(
             ConstantI64H("0",52),
             ConstantI64H("1",53),
-            CallH("2", PrototypeH(FullNameH(List(VonStr("__addIntInt"))),List(ReferenceH(m.Share,IntH()), ReferenceH(m.Share,IntH())),ReferenceH(m.Share,IntH())), List(RegisterAccessH("0",ReferenceH(m.Share,IntH())), RegisterAccessH("1",ReferenceH(m.Share,IntH())))),
+            CallH("2", PrototypeH(FullNameH(List(VonStr("__addIntInt"))),List(ReferenceH(m.ShareH,IntH()), ReferenceH(m.ShareH,IntH())),ReferenceH(m.ShareH,IntH())), List(RegisterAccessH("0",ReferenceH(m.ShareH,IntH())), RegisterAccessH("1",ReferenceH(m.ShareH,IntH())))),
             ConstantI64H("3",54),
-            CallH("4", PrototypeH(FullNameH(List(VonStr("__addIntInt"))),List(ReferenceH(m.Share,IntH()), ReferenceH(m.Share,IntH())),ReferenceH(m.Share,IntH())), List(RegisterAccessH("2",ReferenceH(m.Share,IntH())), RegisterAccessH("3",ReferenceH(m.Share,IntH())))),
+            CallH("4", PrototypeH(FullNameH(List(VonStr("__addIntInt"))),List(ReferenceH(m.ShareH,IntH()), ReferenceH(m.ShareH,IntH())),ReferenceH(m.ShareH,IntH())), List(RegisterAccessH("2",ReferenceH(m.ShareH,IntH())), RegisterAccessH("3",ReferenceH(m.ShareH,IntH())))),
             ConstantI64H("5",55),
-            CallH("6", PrototypeH(FullNameH(List(VonStr("__addIntInt"))),List(ReferenceH(m.Share,IntH()), ReferenceH(m.Share,IntH())),ReferenceH(m.Share,IntH())), List(RegisterAccessH("4",ReferenceH(m.Share,IntH())), RegisterAccessH("5",ReferenceH(m.Share,IntH())))),
+            CallH("6", PrototypeH(FullNameH(List(VonStr("__addIntInt"))),List(ReferenceH(m.ShareH,IntH()), ReferenceH(m.ShareH,IntH())),ReferenceH(m.ShareH,IntH())), List(RegisterAccessH("4",ReferenceH(m.ShareH,IntH())), RegisterAccessH("5",ReferenceH(m.ShareH,IntH())))),
             ConstantI64H("7",56),
-            CallH("8", PrototypeH(FullNameH(List(VonStr("__addIntInt"))),List(ReferenceH(m.Share,IntH()), ReferenceH(m.Share,IntH())),ReferenceH(m.Share,IntH())), List(RegisterAccessH("6",ReferenceH(m.Share,IntH())), RegisterAccessH("7",ReferenceH(m.Share,IntH()))))),
-          ReferenceH(m.Share,IntH())))
+            CallH("8", PrototypeH(FullNameH(List(VonStr("__addIntInt"))),List(ReferenceH(m.ShareH,IntH()), ReferenceH(m.ShareH,IntH())),ReferenceH(m.ShareH,IntH())), List(RegisterAccessH("6",ReferenceH(m.ShareH,IntH())), RegisterAccessH("7",ReferenceH(m.ShareH,IntH()))))),
+          ReferenceH(m.ShareH,IntH())))
     val programH =
       ProgramH(List(), List(), StructRefH(FullNameH(List(VonStr("__Pack"), VonArray(None, Vector())))), List(), List(main))
     val result =

@@ -45,9 +45,9 @@ object BuiltInFunctions {
             TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
             Set(CodeRuneA("V")),
             List(CodeRuneA("T")),
-            Set(CodeRuneA("T"), ImplicitRuneA(0), CodeRuneA("V")),
+            Set(CodeRuneA("T"), CodeRuneA("XX"), CodeRuneA("V")),
             Map(
-              ImplicitRuneA(0) -> KindTemplataType,
+              CodeRuneA("XX") -> KindTemplataType,
               CodeRuneA("T") -> CoordTemplataType,
               CodeRuneA("V") -> CoordTemplataType),
             List(
@@ -62,7 +62,7 @@ object BuiltInFunctions {
                     OrAR(List(TemplexAR(OwnershipAT(OwnP)), TemplexAR(OwnershipAT(ShareP)))),
                     CallAR(
                       "passThroughIfConcrete",
-                      List(TemplexAR(RuneAT(ImplicitRuneA(0), KindTemplataType))),
+                      List(TemplexAR(RuneAT(CodeRuneA("XX"), KindTemplataType))),
                       KindTemplataType)))),
               EqualsAR(
                 TemplexAR(RuneAT(CodeRuneA("V"), CoordTemplataType)),
@@ -128,11 +128,11 @@ object BuiltInFunctions {
           TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
           Set(CodeRuneA("V")),
           List(CodeRuneA("T")),
-          Set(CodeRuneA("T"), ImplicitRuneA(0), CodeRuneA("V")),
+          Set(CodeRuneA("T"), CodeRuneA("XX"), CodeRuneA("V")),
           Map(
             CodeRuneA("T") -> CoordTemplataType,
             CodeRuneA("V") -> CoordTemplataType,
-            ImplicitRuneA(0) -> KindTemplataType),
+            CodeRuneA("XX") -> KindTemplataType),
           List(
             ParameterA(AtomAP(CaptureA(CodeVarNameA("this"), FinalP), Some(AbstractAP), CodeRuneA("T"), None))),
           Some(CodeRuneA("V")),
@@ -145,7 +145,7 @@ object BuiltInFunctions {
                   OrAR(List(TemplexAR(OwnershipAT(OwnP)), TemplexAR(OwnershipAT(ShareP)))),
                   CallAR(
                     "passThroughIfInterface",
-                    List(TemplexAR(RuneAT(ImplicitRuneA(0), KindTemplataType))),
+                    List(TemplexAR(RuneAT(CodeRuneA("XX"), KindTemplataType))),
                     KindTemplataType)))),
             EqualsAR(
               TemplexAR(RuneAT(CodeRuneA("V"), CoordTemplataType)),
@@ -194,12 +194,12 @@ object BuiltInFunctions {
           TemplateTemplataType(List(CoordTemplataType, KindTemplataType), FunctionTemplataType),
           Set(CodeRuneA("V")),
           List(CodeRuneA("T"), CodeRuneA("I")),
-          Set(CodeRuneA("I"), CodeRuneA("T"), ImplicitRuneA(0), CodeRuneA("V")),
+          Set(CodeRuneA("I"), CodeRuneA("T"), CodeRuneA("XX"), CodeRuneA("V")),
           Map(
             CodeRuneA("T") -> CoordTemplataType,
             CodeRuneA("I") -> KindTemplataType,
             CodeRuneA("V") -> CoordTemplataType,
-            ImplicitRuneA(0) -> KindTemplataType),
+            CodeRuneA("XX") -> KindTemplataType),
           List(
             ParameterA(AtomAP(CaptureA(CodeVarNameA("this"), FinalP), Some(OverrideAP(CodeRuneA("I"))), CodeRuneA("T"), None))),
           Some(CodeRuneA("V")),
@@ -212,7 +212,7 @@ object BuiltInFunctions {
                   OrAR(List(TemplexAR(OwnershipAT(OwnP)), TemplexAR(OwnershipAT(ShareP)))),
                   CallAR(
                     "passThroughIfStruct",
-                    List(TemplexAR(RuneAT(ImplicitRuneA(0), KindTemplataType))),
+                    List(TemplexAR(RuneAT(CodeRuneA("XX"), KindTemplataType))),
                     KindTemplataType)))),
             CallAR("passThroughIfInterface", List(TemplexAR(RuneAT(CodeRuneA("I"), KindTemplataType))), KindTemplataType),
             EqualsAR(
@@ -315,10 +315,10 @@ object BuiltInFunctions {
           TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
           Set(CodeRuneA("I")),
           List(CodeRuneA("T")),
-          Set(CodeRuneA("T"), ImplicitRuneA(0), CodeRuneA("__1"), CodeRuneA("I")),
+          Set(CodeRuneA("T"), CodeRuneA("XX"), CodeRuneA("__1"), CodeRuneA("I")),
           Map(
             CodeRuneA("T") -> CoordTemplataType,
-            ImplicitRuneA(0) -> MutabilityTemplataType,
+            CodeRuneA("XX") -> MutabilityTemplataType,
             CodeRuneA("__1") -> CoordTemplataType,
             CodeRuneA("I") -> CoordTemplataType),
           List(
@@ -335,7 +335,7 @@ object BuiltInFunctions {
                     CallAT(
                       NameAT(CodeTypeNameA("Array"), TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), KindTemplataType)),
                       List(
-                        RuneAT(ImplicitRuneA(0), MutabilityTemplataType),
+                        RuneAT(CodeRuneA("XX"), MutabilityTemplataType),
                         RuneAT(CodeRuneA("__1"), CoordTemplataType)),
                       KindTemplataType))))),
             EqualsAR(

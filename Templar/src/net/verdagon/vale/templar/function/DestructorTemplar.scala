@@ -269,12 +269,12 @@ object DestructorTemplar {
 
     val elementDropFunctionPrototype = getDropFunction(env, temputs, sequence.array.memberType)
 
-    val (ifunction1InterfaceRef, elementDropFunctionAsIFunctionSubstructStructRef, constructorHeader) =
+    val (ifunction1InterfaceRef, elementDropFunctionAsIFunctionSubstructStructRef, constructorPrototype) =
       StructTemplar.prototypeToAnonymousIFunctionSubstruct(env, temputs, elementDropFunctionPrototype)
 
     val ifunctionExpression =
       StructToInterfaceUpcast2(
-        FunctionCall2(constructorHeader.toPrototype, List()),
+        FunctionCall2(constructorPrototype, List()),
         ifunction1InterfaceRef)
 
     val function2 =
@@ -310,12 +310,12 @@ object DestructorTemplar {
 
     val elementDropFunctionPrototype = getDropFunction(env, temputs, array.array.memberType)
 
-    val (ifunction1InterfaceRef, elementDropFunctionAsIFunctionSubstructStructRef, constructorHeader) =
+    val (ifunction1InterfaceRef, elementDropFunctionAsIFunctionSubstructStructRef, constructorPrototype) =
       StructTemplar.prototypeToAnonymousIFunctionSubstruct(env, temputs, elementDropFunctionPrototype)
 
     val ifunctionExpression =
       StructToInterfaceUpcast2(
-        FunctionCall2(constructorHeader.toPrototype, List()),
+        FunctionCall2(constructorPrototype, List()),
         ifunction1InterfaceRef)
 
     val function2 =

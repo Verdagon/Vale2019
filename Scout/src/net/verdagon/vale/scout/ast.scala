@@ -68,7 +68,11 @@ case class CodeLocationS(
 
 case class StructS(
     name: TopLevelCitizenDeclarationNameS,
-    mutability: MutabilityP,
+    mutabilityRune: IRuneS,
+    // This is needed for recursive structures like
+    //   struct ListNode<T> imm rules(T Ref) {
+    //     tail ListNode<T>;
+    //   }
     maybePredictedMutability: Option[MutabilityP],
     knowableRunes: Set[IRuneS],
     identifyingRunes: List[IRuneS],
@@ -76,7 +80,9 @@ case class StructS(
     maybePredictedType: Option[ITypeSR],
     isTemplate: Boolean,
     rules: List[IRulexSR],
-    members: List[StructMemberS])
+    members: List[StructMemberS]) {
+  vassert(isTemplate == identifyingRunes.nonEmpty)
+}
 
 case class StructMemberS(
     name: String,
@@ -94,7 +100,11 @@ case class ImplS(
 
 case class InterfaceS(
     name: TopLevelCitizenDeclarationNameS,
-    mutability: MutabilityP,
+    mutabilityRune: IRuneS,
+    // This is needed for recursive structures like
+    //   struct ListNode<T> imm rules(T Ref) {
+    //     tail ListNode<T>;
+    //   }
     maybePredictedMutability: Option[MutabilityP],
     knowableRunes: Set[IRuneS],
     identifyingRunes: List[IRuneS],
@@ -104,6 +114,8 @@ case class InterfaceS(
     rules: List[IRulexSR],
     // See IMRFDI
     internalMethods: List[FunctionS]) {
+  vassert(isTemplate == identifyingRunes.nonEmpty)
+
   internalMethods.foreach(internalMethod => {
     vassert(!internalMethod.isTemplate)
   })

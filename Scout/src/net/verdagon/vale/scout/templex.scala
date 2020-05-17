@@ -57,7 +57,7 @@ case class CodeVarNameS(name: String) extends IVarNameS
 // prefixes and names like __implicit_0, __paramRune_0, etc.
 sealed trait IRuneS
 case class CodeRuneS(name: String) extends IRuneS
-case class ImplicitRuneS(name: Int) extends IRuneS
+case class ImplicitRuneS(containerName: INameS, name: Int) extends IRuneS
 case class LetImplicitRuneS(codeLocationS: CodeLocationS, name: Int) extends IRuneS
 case class MagicParamRuneS(codeLocationS: CodeLocationS) extends IRuneS
 case class MemberRuneS(memberIndex: Int) extends IRuneS
@@ -69,7 +69,9 @@ sealed trait IImpreciseNameStepS
 case class CodeTypeNameS(name: String) extends IImpreciseNameStepS
 // When we're calling a function, we're addressing an overload set, not a specific function.
 // If we want a specific function, we use TopLevelDeclarationNameS.
-case class GlobalFunctionFamilyNameS(name: String) extends IImpreciseNameStepS
+case class GlobalFunctionFamilyNameS(name: String) extends IImpreciseNameStepS {
+  println("fsdaf")
+}
 case class ImpreciseCodeVarNameS(name: String) extends IImpreciseNameStepS
 
 

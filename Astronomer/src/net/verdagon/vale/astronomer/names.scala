@@ -45,7 +45,7 @@ sealed trait IRuneA extends INameA
 case class CodeRuneA(name: String) extends IRuneA {
   vassert(name != "Str")
 }
-case class ImplicitRuneA(name: Int) extends IRuneA
+case class ImplicitRuneA(containerName: INameA, name: Int) extends IRuneA
 case class LetImplicitRuneA(codeLocationS: CodeLocationS, name: Int) extends IRuneA
 case class MemberRuneA(memberIndex: Int) extends IRuneA
 case class MagicImplicitRuneA(codeLocationS: CodeLocationS) extends IRuneA

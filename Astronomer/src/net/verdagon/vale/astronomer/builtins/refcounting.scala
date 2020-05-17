@@ -13,12 +13,12 @@ object RefCounting {
       TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
       Set(CodeRuneA("V"), CodeRuneA("I")),
       List(CodeRuneA("T")),
-      Set(CodeRuneA("T"), ImplicitRuneA(0), CodeRuneA("V"), CodeRuneA("I")),
+      Set(CodeRuneA("T"), CodeRuneA("TK"), CodeRuneA("V"), CodeRuneA("I")),
       Map(
         CodeRuneA("I") -> CoordTemplataType,
         CodeRuneA("T") -> CoordTemplataType,
         CodeRuneA("V") -> CoordTemplataType,
-        ImplicitRuneA(0) -> KindTemplataType
+        CodeRuneA("TK") -> KindTemplataType
       ),
       List(
         ParameterA(AtomAP(CaptureA(CodeVarNameA("obj"), FinalP), None, CodeRuneA("T"), None)),
@@ -26,7 +26,7 @@ object RefCounting {
       Some(CodeRuneA("V")),
       List(
         EqualsAR(TemplexAR(RuneAT(CodeRuneA("I"), CoordTemplataType)), TemplexAR(NameAT(CodeTypeNameA("Int"), CoordTemplataType))),
-        EqualsAR(TemplexAR(RuneAT(CodeRuneA("T"), CoordTemplataType)), ComponentsAR(CoordTemplataType, List(TemplexAR(OwnershipAT(BorrowP)), TemplexAR(RuneAT(ImplicitRuneA(0), KindTemplataType))))),
+        EqualsAR(TemplexAR(RuneAT(CodeRuneA("T"), CoordTemplataType)), ComponentsAR(CoordTemplataType, List(TemplexAR(OwnershipAT(BorrowP)), TemplexAR(RuneAT(CodeRuneA("TK"), KindTemplataType))))),
         EqualsAR(TemplexAR(RuneAT(CodeRuneA("V"), CoordTemplataType)), ComponentsAR(CoordTemplataType, List(TemplexAR(OwnershipAT(ShareP)), TemplexAR(PackAT(List(), KindTemplataType)))))),
       CodeBodyA(
         BodyAE(
@@ -56,18 +56,19 @@ object RefCounting {
       TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
       Set(CodeRuneA("V"), CodeRuneA("I")),
       List(CodeRuneA("T")),
-      Set(CodeRuneA("T"), CodeRuneA("V"), CodeRuneA("I")),
+      Set(CodeRuneA("T"), CodeRuneA("V"), CodeRuneA("I"), CodeRuneA("TK")),
       Map(
         CodeRuneA("I") -> CoordTemplataType,
         CodeRuneA("T") -> CoordTemplataType,
-        CodeRuneA("V") -> CoordTemplataType),
+        CodeRuneA("V") -> CoordTemplataType,
+        CodeRuneA("TK") -> KindTemplataType),
       List(
         ParameterA(AtomAP(CaptureA(CodeVarNameA("obj"), FinalP), None, CodeRuneA("T"), None)),
         ParameterA(AtomAP(CaptureA(CodeVarNameA("num"), FinalP), None, CodeRuneA("I"), None))),
       Some(CodeRuneA("V")),
       List(
         EqualsAR(TemplexAR(RuneAT(CodeRuneA("I"), CoordTemplataType)), TemplexAR(NameAT(CodeTypeNameA("Int"), CoordTemplataType))),
-        EqualsAR(TemplexAR(RuneAT(CodeRuneA("T"), CoordTemplataType)), ComponentsAR(CoordTemplataType, List(TemplexAR(OwnershipAT(BorrowP)), TemplexAR(RuneAT(ImplicitRuneA(0), KindTemplataType))))),
+        EqualsAR(TemplexAR(RuneAT(CodeRuneA("T"), CoordTemplataType)), ComponentsAR(CoordTemplataType, List(TemplexAR(OwnershipAT(BorrowP)), TemplexAR(RuneAT(CodeRuneA("TK"), KindTemplataType))))),
         EqualsAR(TemplexAR(RuneAT(CodeRuneA("V"), CoordTemplataType)), ComponentsAR(CoordTemplataType, List(TemplexAR(OwnershipAT(ShareP)), TemplexAR(PackAT(List(), KindTemplataType)))))),
       CodeBodyA(
         BodyAE(

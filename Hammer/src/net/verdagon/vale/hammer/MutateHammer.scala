@@ -2,7 +2,7 @@ package net.verdagon.vale.hammer
 
 import net.verdagon.vale.hammer.ExpressionHammer.{ translate, translateDeferreds}
 import net.verdagon.vale.hinputs.Hinputs
-import net.verdagon.vale.metal.{Borrow => _, Variability => _, _}
+import net.verdagon.vale.metal.{BorrowH => _, Variability => _, _}
 import net.verdagon.vale.{metal => m}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.env.{AddressibleLocalVariable2, ReferenceLocalVariable2}
@@ -145,8 +145,8 @@ object MutateHammer {
       StructHammer.makeBox(hinputs, hamuts, variability, boxedType2, boxedTypeH)
 
     // Remember, structs can never own boxes, they only borrow them
-    val expectedStructBoxMemberType = ReferenceH(m.Borrow, boxStructRefH)
-    val expectedBorrowBoxResultType = ReferenceH(m.Borrow, boxStructRefH)
+    val expectedStructBoxMemberType = ReferenceH(m.BorrowH, boxStructRefH)
+    val expectedBorrowBoxResultType = ReferenceH(m.BorrowH, boxStructRefH)
 
     // We're storing into a struct's member that is a box. The stack is also
     // pointing at this box. First, get the box, then mutate what's inside.
@@ -157,7 +157,7 @@ object MutateHammer {
           nodesByLine.nextId(),
           destinationResultLine.expectStructAccess(),
           memberIndex,
-          m.Borrow,
+          m.BorrowH,
           expectedStructBoxMemberType,
           expectedBorrowBoxResultType,
           nameH))
@@ -226,8 +226,8 @@ object MutateHammer {
     val local = locals.get(varId).get
     val (boxStructRefH) =
       StructHammer.makeBox(hinputs, hamuts, variability, reference, sourceResultPointerTypeH)
-    val expectedLocalBoxType = ReferenceH(m.Own, boxStructRefH)
-    val expectedBorrowBoxResultType = ReferenceH(m.Borrow, boxStructRefH)
+    val expectedLocalBoxType = ReferenceH(m.OwnH, boxStructRefH)
+    val expectedBorrowBoxResultType = ReferenceH(m.BorrowH, boxStructRefH)
 
     // This means we're trying to mutate a local variable that holds a box.
     // We need to load the box, then mutate its contents.
@@ -237,7 +237,7 @@ object MutateHammer {
       LocalLoadH(
         nodesByLine.nextId(),
         local,
-        m.Borrow,
+        m.BorrowH,
         expectedLocalBoxType,
         expectedBorrowBoxResultType,
         nameH))

@@ -88,6 +88,20 @@ class TypeTests extends FunSuite with Matchers {
         None,
         None)
   }
+  test("15m") {
+    compile("_ &[<_> 3 * MutableStruct]") shouldEqual
+      PatternPP(
+        None,
+        Some(
+          OwnershippedPPT(
+            BorrowP,
+            RepeaterSequencePPT(
+              AnonymousRunePPT(),
+              IntPPT(3),
+              NameOrRunePPT("MutableStruct")))),
+        None,
+        None)
+  }
   test("15z") {
     compile("_ MyOption<MyList<Int>>") shouldEqual
       PatternPP(

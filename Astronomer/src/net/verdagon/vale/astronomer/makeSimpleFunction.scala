@@ -17,7 +17,7 @@ object makeSimpleFunction {
         .map(_._2)
         .distinct
         .zipWithIndex
-        .map({ case (tyype, index) => tyype -> ImplicitRuneA(index) })
+        .map({ case (tyype, index) => tyype -> ImplicitRuneA(name, index) })
         .toMap
 
     val paramsA =

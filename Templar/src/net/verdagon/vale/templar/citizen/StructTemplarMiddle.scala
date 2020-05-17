@@ -82,7 +82,7 @@ object StructTemplarMiddle {
     interfaceEnv: IEnvironment,
     temputs: TemputsBox,
     interfaceRef: InterfaceRef2,
-    lambdas: List[Coord]):
+    substructName: FullName2[AnonymousSubstructName2]):
   (StructRef2, Mutability) = {
 
 //    val anonymousSubstructName: FullName2[AnonymousSubCitizenName2] =
@@ -92,13 +92,11 @@ object StructTemplarMiddle {
     // actually thats probably fine. we would just reuse the existing one.
     // ...we best write a doc section on this.
 
-    val anonymousSubstructName = interfaceRef.fullName.addStep(AnonymousSubstructName2(lambdas))
     StructTemplarCore.makeAnonymousSubstruct(
       interfaceEnv,
       temputs,
-      anonymousSubstructName,
-      interfaceRef,
-      lambdas)
+      substructName,
+      interfaceRef)
   }
 
   // Makes an anonymous substruct of the given interface, which just forwards its method to the given prototype.

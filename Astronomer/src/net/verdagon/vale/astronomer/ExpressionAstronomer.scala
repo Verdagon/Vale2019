@@ -99,6 +99,11 @@ object ExpressionAstronomer {
         val exprA = translateExpression(env, astrouts, exprS)
         RepeaterPackIteratorAE(exprA)
       }
+      case RuneLookupSE(runeS) => {
+        val runeA = Astronomer.translateRune(runeS)
+        val tyype = env.lookupRune(runeA)
+        RuneLookupAE(runeA, tyype)
+      }
       case IntLiteralSE(value) => IntLiteralAE(value)
       case BoolLiteralSE(value) => BoolLiteralAE(value)
       case StrLiteralSE(value) => StrLiteralAE(value)

@@ -11,8 +11,8 @@ object IFunction1 {
   val interface =
     InterfaceA(
       TopLevelCitizenDeclarationNameA("IFunction1", CodeLocationS(0, 0)),
-      MutableP,
-      Some(MutableP),
+      CodeRuneA("M"),
+      None,
       TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType, CoordTemplataType), KindTemplataType),
       Set(),
       List(CodeRuneA("M"), CodeRuneA("P1"), CodeRuneA("R")),

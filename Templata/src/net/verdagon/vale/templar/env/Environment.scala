@@ -201,12 +201,6 @@ object EnvironmentUtils {
     }
   }
 
-  // See NTKPRR
-  def assembleRulesFromFunctionAndContainers(/*containers: List[IContainer], */function: FunctionA):
-  (List[IRulexAR], Map[IRuneA, ITemplataType]) = {
-    (function.templateRules, function.typeByRune)
-  }
-
   def impreciseNamesMatch(nameA: IImpreciseNameStepA, name2: IName2): Boolean = {
     // If something's in these two switch statements, then we've factored them into the main one below.
     // When you add something to the main list, make sure you handle all its cases and add it to one of
@@ -222,7 +216,7 @@ object EnvironmentUtils {
       case FunctionTemplateName2(_, _) =>
       case PrimitiveName2(_) =>
       case ReturnRune2() =>
-      case ImplicitRune2(_) =>
+      case ImplicitRune2(_, _) =>
       case CodeRune2(_) =>
       case LambdaCitizenName2(_) =>
       case ClosureParamName2() =>
@@ -234,6 +228,7 @@ object EnvironmentUtils {
       case LetImplicitRune2(_, _) =>
       case MemberRune2(_) =>
       case CitizenName2(_, _) =>
+      case MagicImplicitRune2(_) =>
       case _ => vimpl()
     }
     (nameA, name2) match {

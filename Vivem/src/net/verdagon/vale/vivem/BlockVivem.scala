@@ -66,7 +66,7 @@ object BlockVivem {
       if (currentLine == blockH.nodes.size) {
         val blockResult =
           (maybeResultRegisterId, blockH.resultType) match {
-            case (None, ReferenceH(m.Share, VoidH())) => {
+            case (None, ReferenceH(m.ShareH, VoidH())) => {
               BlockContinue(None)
             }
             case (Some(resultRegisterId), expectedType) => {

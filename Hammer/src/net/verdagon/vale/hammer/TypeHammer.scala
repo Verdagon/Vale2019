@@ -33,7 +33,7 @@ object TypeHammer {
           val (boxStructRefH) =
             StructHammer.makeBox(hinputs, hamuts, member2.variability, coord, referenceH)
           // The stack owns the box, closure structs just borrow it.
-          (ReferenceH(m.Borrow, boxStructRefH))
+          (ReferenceH(m.BorrowH, boxStructRefH))
         }
       }
     StructMemberH(

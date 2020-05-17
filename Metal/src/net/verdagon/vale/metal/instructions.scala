@@ -143,7 +143,7 @@ case class InterfaceToInterfaceUpcastH(
 }
 
 case class UnreachableH(registerId: String) extends NodeH {
-  def resultType = ReferenceH(Share, NeverH())
+  def resultType = ReferenceH(ShareH, NeverH())
 }
 
 // Takes a reference from the given "source" register, and puts it into an *existing*
@@ -164,20 +164,20 @@ case class LocalStoreH(
 // This can never move a reference, only alias it. The instruction which can move a
 // reference is UnstackifyH.
 case class LocalLoadH(
-  // The register ID to put the target interface reference into.
-  registerId: String,
-  // The existing local to load from.
-  local: Local,
-  // The ownership of the reference to put into the register. This doesn't have to
-  // match the ownership of the reference from the local. For example, we might want
-  // to load a constraint reference from an owning local.
-  targetOwnership: Ownership,
-  // TODO: Get rid of this, it's reduntant.
-  expectedLocalType: ReferenceH[ReferendH],
-  // TODO: Get rid of this, it's reduntant.
-  expectedResultType: ReferenceH[ReferendH],
-  // Name of the local variable, for debug purposes.
-  localName: FullNameH
+                       // The register ID to put the target interface reference into.
+                       registerId: String,
+                       // The existing local to load from.
+                       local: Local,
+                       // The ownership of the reference to put into the register. This doesn't have to
+                       // match the ownership of the reference from the local. For example, we might want
+                       // to load a constraint reference from an owning local.
+                       targetOwnership: OwnershipH,
+                       // TODO: Get rid of this, it's reduntant.
+                       expectedLocalType: ReferenceH[ReferendH],
+                       // TODO: Get rid of this, it's reduntant.
+                       expectedResultType: ReferenceH[ReferendH],
+                       // Name of the local variable, for debug purposes.
+                       localName: FullNameH
 ) extends NodeH {
   vassert(expectedLocalType.kind == expectedResultType.kind)
   vassert(expectedResultType.ownership == targetOwnership)
@@ -202,23 +202,23 @@ case class MemberStoreH(
 // Takes a reference from the given "struct" register, and copies it into a new
 // register. This can never move a reference, only alias it.
 case class MemberLoadH(
-  // The register ID to put the member's value into.
-  registerId: String,
-  // Register containing a reference to the struct whose member we will read.
-  // As with any read from a register, this will invalidate the register.
-  structRegister: RegisterAccessH[StructRefH],
-  // Which member to read from, starting at 0.
-  memberIndex: Int,
-  // The ownership to load as. For example, we might load a constraint reference from a
-  // owning Car reference member.
-  targetOwnership: Ownership,
-  // The type we expect the member to be. This can easily be looked up, but is provided
-  // here to be convenient for LLVM.
-  expectedMemberType: ReferenceH[ReferendH],
-  // The type of the resulting reference.
-  expectedResultType: ReferenceH[ReferendH],
-  // Member's name, for debug purposes.
-  memberName: FullNameH
+                        // The register ID to put the member's value into.
+                        registerId: String,
+                        // Register containing a reference to the struct whose member we will read.
+                        // As with any read from a register, this will invalidate the register.
+                        structRegister: RegisterAccessH[StructRefH],
+                        // Which member to read from, starting at 0.
+                        memberIndex: Int,
+                        // The ownership to load as. For example, we might load a constraint reference from a
+                        // owning Car reference member.
+                        targetOwnership: OwnershipH,
+                        // The type we expect the member to be. This can easily be looked up, but is provided
+                        // here to be convenient for LLVM.
+                        expectedMemberType: ReferenceH[ReferendH],
+                        // The type of the resulting reference.
+                        expectedResultType: ReferenceH[ReferendH],
+                        // Member's name, for debug purposes.
+                        memberName: FullNameH
 ) extends NodeH {
   vassert(expectedMemberType.kind == expectedResultType.kind)
   vassert(expectedResultType.ownership == targetOwnership)
@@ -296,7 +296,7 @@ case class UnknownSizeArrayLoadH(
   resultType: ReferenceH[ReferendH],
   // The ownership to load as. For example, we might load a constraint reference from a
   // owning Car reference element.
-  targetOwnership: Ownership
+  targetOwnership: OwnershipH
 ) extends NodeH
 
 // Loads from the array in arrayRegister at the index in indexRegister, and stores
@@ -318,7 +318,7 @@ case class KnownSizeArrayLoadH(
   resultType: ReferenceH[ReferendH],
   // The ownership to load as. For example, we might load a constraint reference from a
   // owning Car reference element.
-  targetOwnership: Ownership
+  targetOwnership: OwnershipH
 ) extends NodeH
 
 // Calls a function.
@@ -431,7 +431,9 @@ case class ConstructUnknownSizeArrayH(
   // only method's return type.
   arrayRefType: ReferenceH[UnknownSizeArrayTH]
 ) extends NodeH {
-  vassert(generatorRegister.expectedType.ownership == Borrow)
+  vassert(
+    generatorRegister.expectedType.ownership == BorrowH ||
+      generatorRegister.expectedType.ownership == ShareH)
 }
 
 // Destroys an array previously created with NewArrayFromValuesH.

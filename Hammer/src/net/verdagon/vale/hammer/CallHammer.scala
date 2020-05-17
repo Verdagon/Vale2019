@@ -2,7 +2,7 @@ package net.verdagon.vale.hammer
 
 import net.verdagon.vale.hinputs.Hinputs
 import net.verdagon.vale.{vassert, vassertSome, vcurious, vfail, metal => m}
-import net.verdagon.vale.metal.{Share => _, _}
+import net.verdagon.vale.metal.{ShareH => _, _}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.templata.{FunctionBanner2, FunctionHeader2, Prototype2}
 import net.verdagon.vale.templar.types._
@@ -230,7 +230,7 @@ object CallHammer {
     val stackHeightForCondition = StackHeightBox(stackHeight.snapshot.oneBlockHigher())
     val (conditionBlockH, maybeConditionResultAccess) =
       BlockHammer.translateBlock(hinputs, hamuts, locals.snapshot, stackHeightForCondition, condition2);
-    vassert(maybeConditionResultAccess.get.expectedType == ReferenceH(m.Share, BoolH()))
+    vassert(maybeConditionResultAccess.get.expectedType == ReferenceH(m.ShareH, BoolH()))
 
     val stackHeightForThen = StackHeightBox(stackHeight.snapshot.oneBlockHigher())
     val (thenBlockH, maybeThenResultAccess) =
@@ -253,11 +253,11 @@ object CallHammer {
     val maybeResultCoord =
       (maybeThenResultCoord, maybeElseResultCoord) match {
         case (None, None) => None
-        case (Some(ReferenceH(m.Share, NeverH())), Some(ReferenceH(m.Share, NeverH()))) => Some(ReferenceH(m.Share, NeverH()))
-        case (Some(ReferenceH(m.Share, NeverH())), None) => None
-        case (Some(ReferenceH(m.Share, NeverH())), Some(elseResultCoord)) => Some(elseResultCoord)
-        case (None, Some(ReferenceH(m.Share, NeverH()))) => None
-        case (Some(thenResultCoord), Some(ReferenceH(m.Share, NeverH()))) => Some(thenResultCoord)
+        case (Some(ReferenceH(m.ShareH, NeverH())), Some(ReferenceH(m.ShareH, NeverH()))) => Some(ReferenceH(m.ShareH, NeverH()))
+        case (Some(ReferenceH(m.ShareH, NeverH())), None) => None
+        case (Some(ReferenceH(m.ShareH, NeverH())), Some(elseResultCoord)) => Some(elseResultCoord)
+        case (None, Some(ReferenceH(m.ShareH, NeverH()))) => None
+        case (Some(thenResultCoord), Some(ReferenceH(m.ShareH, NeverH()))) => Some(thenResultCoord)
         case (Some(thenResultCoord), Some(elseResultCoord)) => {
           vassert(thenResultCoord == elseResultCoord, "what\n" + maybeThenResultCoord + "\n" + maybeElseResultCoord)
           // Arbitrarily choose the then

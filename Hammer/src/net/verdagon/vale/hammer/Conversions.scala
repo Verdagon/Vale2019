@@ -42,11 +42,11 @@ object Conversions {
     }
   }
 
-  def evaluateOwnership(ownership: t.Ownership): Ownership = {
+  def evaluateOwnership(ownership: t.Ownership): OwnershipH = {
     ownership match {
-      case t.Own => Own
-      case t.Borrow => Borrow
-      case t.Share => Share
+      case t.Own => OwnH
+      case t.Borrow => BorrowH
+      case t.Share => ShareH
     }
   }
 
@@ -58,11 +58,11 @@ object Conversions {
     }
   }
 
-  def unevaluateOwnership(ownership: Ownership): m.Ownership = {
+  def unevaluateOwnership(ownership: OwnershipH): m.OwnershipH = {
     ownership match {
-      case Own => m.Own
-      case Borrow => m.Borrow
-      case Share => m.Share
+      case OwnH => m.OwnH
+      case BorrowH => m.BorrowH
+      case ShareH => m.ShareH
     }
   }
 

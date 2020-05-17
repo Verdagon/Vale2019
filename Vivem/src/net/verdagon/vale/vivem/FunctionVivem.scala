@@ -52,12 +52,10 @@ object FunctionVivem {
       case """F("__addFloatFloat",[],[R(*,f),R(*,f)])""" => VivemExterns.addFloatFloat
 //      case PrototypeH(FullNameH(List(NamePartH("panic", Some(List()), Some(List()), None))), List(), ReferenceH(m.Share, NeverH())) =>
 //        VivemExterns.panic
-//      case PrototypeH(FullNameH(List(NamePartH("__multiplyIntInt", Some(List()), Some(List(ReferenceH(m.Share,IntH()), ReferenceH(m.Share,IntH()))), None))), List(ReferenceH(m.Share,IntH()), ReferenceH(m.Share,IntH())), ReferenceH(m.Share,IntH())) =>
-//        VivemExterns.multiplyIntInt
+      case """F("__multiplyIntInt",[],[R(*,i),R(*,i)])""" => VivemExterns.multiplyIntInt
 //      case PrototypeH(FullNameH(List(NamePartH("__multiplyFloatFloat", Some(List()), Some(List(ReferenceH(m.Share,FloatH()), ReferenceH(m.Share,FloatH()))), None))), List(ReferenceH(m.Share,FloatH()), ReferenceH(m.Share,FloatH())), ReferenceH(m.Share,FloatH())) =>
 //        VivemExterns.multiplyFloatFloat
-//      case PrototypeH(FullNameH(List(NamePartH("__subtractIntInt", Some(List()), Some(List(ReferenceH(m.Share,IntH()), ReferenceH(m.Share,IntH()))), None))), List(ReferenceH(m.Share,IntH()), ReferenceH(m.Share,IntH())), ReferenceH(m.Share,IntH())) =>
-//        VivemExterns.subtractIntInt
+      case """F("__subtractIntInt",[],[R(*,i),R(*,i)])""" => VivemExterns.subtractIntInt
 //      case PrototypeH(FullNameH(List(NamePartH("__subtractFloatFloat", Some(List()), Some(List(ReferenceH(m.Share,FloatH()), ReferenceH(m.Share,FloatH()))), None))), List(ReferenceH(m.Share,FloatH()), ReferenceH(m.Share,FloatH())), ReferenceH(m.Share,FloatH())) =>
 //        VivemExterns.subtractFloatFloat
       case """F("__addStrStr",[],[R(*,s),R(*,s)])""" => VivemExterns.addStrStr

@@ -25,11 +25,11 @@ import net.verdagon.vale.vfail
 //   isn't actually a pointer, it's just the value itself, like C's Car vs Car*.
 // In previous stages, this is referred to as a "coord", because these four things can be
 // thought of as dimensions of a coordinate.
-case class ReferenceH[+T <: ReferendH](ownership: Ownership, kind: T) {
+case class ReferenceH[+T <: ReferendH](ownership: OwnershipH, kind: T) {
   kind match {
     case IntH() | BoolH() | StrH() | FloatH() | VoidH() => {
       // Make sure that if we're pointing at a primitives, it's via a Share reference.
-      if (ownership != Share) {
+      if (ownership != ShareH) {
         vfail("wot")
       }
     }
@@ -134,10 +134,10 @@ case class CodeLocation(
 
 // Ownership is the way a reference relates to the referend's lifetime, see
 // ReferenceH for explanation.
-sealed trait Ownership
-case object Own extends Ownership
-case object Borrow extends Ownership
-case object Share extends Ownership
+sealed trait OwnershipH
+case object OwnH extends OwnershipH
+case object BorrowH extends OwnershipH
+case object ShareH extends OwnershipH
 
 // Permission says whether a reference can modify the referend it's pointing at.
 // See ReferenceH for explanation.

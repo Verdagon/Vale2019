@@ -273,7 +273,9 @@ object Astronomer {
   }
 
   def translateStruct(astrouts: AstroutsBox, env: Environment, structS: StructS): StructA = {
-    val StructS(nameS, mutability, maybePredictedMutability, knowableRunesS, identifyingRunesS, localRunesS, predictedTypeByRune, isTemplate, rules, members) = structS
+    val StructS(nameS, mutabilityRuneS, maybePredictedMutabilityS, knowableRunesS, identifyingRunesS, localRunesS, predictedTypeByRune, isTemplate, rules, members) = structS
+    val mutabilityRuneA = Astronomer.translateRune(mutabilityRuneS)
+    val maybePredictedMutabilityA = maybePredictedMutabilityS
     val nameA = Astronomer.translateTopLevelCitizenDeclarationName(nameS)
     val localRunesA = localRunesS.map(Astronomer.translateRune)
     val knowableRunesA = knowableRunesS.map(Astronomer.translateRune)
@@ -308,8 +310,8 @@ object Astronomer {
 
     StructA(
       nameA,
-      mutability,
-      maybePredictedMutability,
+      mutabilityRuneA,
+      maybePredictedMutabilityA,
       tyype,
       knowableRunesA,
       identifyingRunesA,
@@ -320,7 +322,8 @@ object Astronomer {
   }
 
   def translateInterface(astrouts: AstroutsBox, env: Environment, interfaceS: InterfaceS): InterfaceA = {
-    val InterfaceS(nameS, mutability, maybePredictedMutability, knowableRunesS, identifyingRunesS, localRunesS, predictedTypeByRune, isTemplate, rules, internalMethodsS) = interfaceS
+    val InterfaceS(nameS, mutabilityRuneS, maybePredictedMutability, knowableRunesS, identifyingRunesS, localRunesS, predictedTypeByRune, isTemplate, rules, internalMethodsS) = interfaceS
+    val mutabilityRuneA = Astronomer.translateRune(mutabilityRuneS)
     val localRunesA = localRunesS.map(Astronomer.translateRune)
     val knowableRunesA = knowableRunesS.map(Astronomer.translateRune)
     val identifyingRunesA = identifyingRunesS.map(Astronomer.translateRune)
@@ -353,7 +356,7 @@ object Astronomer {
     val interfaceA =
       InterfaceA(
         nameA,
-        mutability,
+        mutabilityRuneA,
         maybePredictedMutability,
         tyype,
         knowableRunesA,
@@ -430,7 +433,9 @@ object Astronomer {
 
     val tyype =
       if (isTemplate) {
-        TemplateTemplataType(identifyingRunesA.map(conclusions.typeByRune), FunctionTemplataType)
+        TemplateTemplataType(
+          identifyingRunesA.map(conclusions.typeByRune),
+          FunctionTemplataType)
       } else {
         FunctionTemplataType
       }
@@ -560,7 +565,7 @@ object Astronomer {
   def translateRune(rune: IRuneS): IRuneA = {
     rune match {
       case CodeRuneS(name) => CodeRuneA(name)
-      case ImplicitRuneS(name) => ImplicitRuneA(name)
+      case ImplicitRuneS(parentName, name) => ImplicitRuneA(translateName(parentName), name)
       case LetImplicitRuneS(codeLocation, name) => LetImplicitRuneA(codeLocation, name)
       case MagicParamRuneS(magicParamIndex) => MagicImplicitRuneA(magicParamIndex)
       case MemberRuneS(memberIndex) => MemberRuneA(memberIndex)

@@ -51,12 +51,12 @@ object StructTemplar {
                 case _ => vwat()
               }
 
-            val constructorFullName = env.fullName
-            val (structRef2, _) =
+            val structRef2 =
               StructTemplar.makeAnonymousSubstruct(
                 temputs, interfaceRef2, paramCoords.map(_.tyype))
-
             val structDef = temputs.lookupStruct(structRef2)
+
+            val constructorFullName = env.fullName
             val constructor =
               StructTemplar.makeStructConstructor(
                 temputs, originFunction, structDef, constructorFullName)
@@ -231,11 +231,21 @@ object StructTemplar {
   def makeAnonymousSubstruct(
     temputs: TemputsBox,
     interfaceRef2: InterfaceRef2,
-    lambdas: List[Coord]):
-  (StructRef2, Mutability) = {
+    members: List[Coord]):
+  StructRef2 = {
+    val anonymousSubstructName =
+      interfaceRef2.fullName.addStep(AnonymousSubstructName2(members))
+
+    temputs.structDeclared(anonymousSubstructName) match {
+      case Some(s) => return s
+      case None =>
+    }
+
     val interfaceEnv = vassertSome(temputs.envByInterfaceRef.get(interfaceRef2))
-    StructTemplarTemplateArgsLayer.makeAnonymousSubstruct(
-        interfaceEnv, temputs, interfaceRef2, lambdas)
+    val (s, _) =
+      StructTemplarTemplateArgsLayer.makeAnonymousSubstruct(
+          interfaceEnv, temputs, interfaceRef2, anonymousSubstructName)
+    s
   }
 
   // Makes an anonymous substruct of the given interface, which just forwards its method to the given prototype.
@@ -245,6 +255,12 @@ object StructTemplar {
     prototype: Prototype2):
   StructRef2 = {
     val structFullName = prototype.fullName.addStep(LambdaCitizenName2(CodeLocation2(0, 0)))
+
+    temputs.structDeclared(structFullName) match {
+      case Some(structRef2) => return structRef2
+      case None =>
+    }
+
     val outerEnv = temputs.envByFunctionSignature(prototype.toSignature)
     StructTemplarTemplateArgsLayer.prototypeToAnonymousStruct(
       outerEnv, temputs, prototype, structFullName)
@@ -255,21 +271,30 @@ object StructTemplar {
       temputs: TemputsBox,
       interfaceRef2: InterfaceRef2,
       prototype: Prototype2):
-  (StructRef2, FunctionHeader2) = {
+  (StructRef2, Prototype2) = {
     val functionStructRef = prototypeToAnonymousStruct(temputs, prototype)
     val functionStructType = Coord(Share, functionStructRef)
 
-    val (anonymousSubstructRef, _) =
-      makeAnonymousSubstruct(temputs, interfaceRef2, List(functionStructType))
+    val lambdas = List(functionStructType)
+
+    val anonymousSubstructRef =
+      makeAnonymousSubstruct(temputs, interfaceRef2, lambdas)
     val anonymousSubstructType = Coord(Share, anonymousSubstructRef)
+
+    val constructorName =
+      prototype.fullName
+        .addStep(AnonymousSubstructName2(List(functionStructType)))
+        .addStep(ConstructorName2(List()))
+    temputs.prototypeDeclared(constructorName) match {
+      case Some(func) => return (anonymousSubstructRef, func)
+      case None =>
+    }
 
     // Now we make a function which constructs a functionStruct, then constructs a substruct.
     val constructor2 =
       Function2(
         FunctionHeader2(
-          prototype.fullName
-            .addStep(AnonymousSubstructName2(List(functionStructType)))
-            .addStep(ConstructorName2(List())),
+          constructorName,
           false, false,
           List(),
           anonymousSubstructType,
@@ -291,7 +316,7 @@ object StructTemplar {
 
     vassert(temputs.exactDeclaredSignatureExists(constructor2.header.fullName, constructor2.header.toBanner.paramTypes))
 
-    (anonymousSubstructRef, constructor2.header)
+    (anonymousSubstructRef, constructor2.header.toPrototype)
   }
 
 //  // Makes a functor for the given prototype.
@@ -371,7 +396,7 @@ object StructTemplar {
       env: IEnvironment,
       temputs: TemputsBox,
       prototype: Prototype2):
-  (InterfaceRef2, StructRef2, FunctionHeader2) = {
+  (InterfaceRef2, StructRef2, Prototype2) = {
     val Prototype2(_, List(paramType), returnType) = prototype
 
     val Some(ifunction1Templata@InterfaceTemplata(_, _)) =
@@ -385,11 +410,11 @@ object StructTemplar {
           CoordTemplata(paramType),
           CoordTemplata(returnType)))
 
-    val (elementDropFunctionAsIFunctionSubstructStructRef, constructorHeader) =
+    val (elementDropFunctionAsIFunctionSubstructStructRef, constructorPrototype) =
       StructTemplar.prototypeToAnonymousSubstruct(
         temputs, ifunction1InterfaceRef, prototype)
 
-    (ifunction1InterfaceRef, elementDropFunctionAsIFunctionSubstructStructRef, constructorHeader)
+    (ifunction1InterfaceRef, elementDropFunctionAsIFunctionSubstructStructRef, constructorPrototype)
   }
 
   def makeStructConstructor(

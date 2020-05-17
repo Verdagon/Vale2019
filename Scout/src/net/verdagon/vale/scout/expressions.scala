@@ -46,9 +46,7 @@ case class LocalVariable1(
     selfMutated: IVariableUseCertainty,
     childBorrowed: IVariableUseCertainty,
     childMoved: IVariableUseCertainty,
-    childMutated: IVariableUseCertainty) {
-  println("hallo")
-}
+    childMutated: IVariableUseCertainty)
 
 case class BodySE(
     // These are all the variables we use from parent environments.
@@ -126,6 +124,7 @@ case class TemplateSpecifiedLookupSE(name: String, templateArgs: List[ITemplexS]
 
 case class LocalLoadSE(name: IVarNameS, borrow: Boolean) extends IExpressionSE
 case class FunctionLoadSE(name: GlobalFunctionFamilyNameS) extends IExpressionSE
+case class RuneLookupSE(rune: IRuneS) extends IExpressionSE
 
 case class UnletSE(name: String) extends IExpressionSE
 

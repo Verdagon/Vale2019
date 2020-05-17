@@ -31,6 +31,13 @@ case class ProgramH(
     vassert(matches.size == 1)
     matches.head
   }
+
+  // Must be at top level
+  def lookupStruct(humanName: String) = {
+    val matches = structs.filter(_.fullName.toString.startsWith(s"""C("${humanName}""""))
+    vassert(matches.size == 1)
+    matches.head
+  }
 }
 
 case class StructDefinitionH(

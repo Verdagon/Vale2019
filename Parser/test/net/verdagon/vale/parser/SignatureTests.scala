@@ -55,4 +55,5 @@ class SignatureTests extends FunSuite with Matchers with Collector {
           None,
           Some(BlockPE(List(VoidPE()))))
   }
+
 }

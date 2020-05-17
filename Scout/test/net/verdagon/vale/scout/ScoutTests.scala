@@ -42,8 +42,11 @@ class ScoutTests extends FunSuite with Matchers {
         TopLevelCitizenDeclarationNameS("Moo",CodeLocationS(1,1))
 
     val memberRune = MemberRuneS(0)
-    imoo.rules shouldEqual
-      List(EqualsSR(TypedSR(memberRune,CoordTypeSR),TemplexSR(NameST(CodeTypeNameS("Int")))))
+    imoo.rules match {
+      case List(
+        EqualsSR(TypedSR(memberRune, CoordTypeSR), TemplexSR(NameST(CodeTypeNameS("Int")))),
+        EqualsSR(TemplexSR(RuneST(ImplicitRuneS(_, _))), TemplexSR(MutabilityST(MutableP)))) =>
+    }
     imoo.members shouldEqual List(StructMemberS("x",FinalP,memberRune))
   }
 
@@ -63,7 +66,9 @@ class ScoutTests extends FunSuite with Matchers {
     val program1 = compile("interface IMoo { fn blork(a Bool)Void; }")
     val imoo = program1.lookupInterface("IMoo")
 
-    imoo.rules shouldEqual List()
+    imoo.rules match {
+      case List(EqualsSR(TemplexSR(RuneST(ImplicitRuneS(_, _))), TemplexSR(MutabilityST(MutableP)))) =>
+    }
 
     val blork = imoo.internalMethods.head
     blork.name match { case FunctionNameS("blork", _) => }
@@ -78,10 +83,10 @@ class ScoutTests extends FunSuite with Matchers {
             TypedSR(actualRetRune, CoordTypeSR),
             TemplexSR(NameST(CodeTypeNameS("Void"))))) => {
           actualParamRune match {
-            case ImplicitRuneS(0) =>
+            case ImplicitRuneS(_, 0) =>
           }
           actualRetRune match {
-            case ImplicitRuneS(1) =>
+            case ImplicitRuneS(_, 1) =>
           }
           (actualParamRune, actualRetRune)
         }
@@ -96,7 +101,7 @@ class ScoutTests extends FunSuite with Matchers {
           AtomSP(
             CaptureS(CodeVarNameS("a"),FinalP),
             None,
-            ImplicitRuneS(0),
+            ImplicitRuneS(_, 0),
             None))) =>
     }
 
@@ -109,11 +114,11 @@ class ScoutTests extends FunSuite with Matchers {
     val impl = program1.impls.head
     val structRune =
       impl.structKindRune match {
-        case ir0 @ ImplicitRuneS(0) => ir0
+        case ir0 @ ImplicitRuneS(_, 0) => ir0
       }
     val interfaceRune =
       impl.interfaceKindRune match {
-        case ir0 @ ImplicitRuneS(1) => ir0
+        case ir0 @ ImplicitRuneS(_, 1) => ir0
       }
     impl.rules match {
       case List(
@@ -167,7 +172,7 @@ class ScoutTests extends FunSuite with Matchers {
       case List(_, ParameterS(AtomSP(CaptureS(MagicParamNameS(_),FinalP),None,MagicParamRuneS(_),None))) =>
     }
     lambda2.params match {
-      case List(_, ParameterS(AtomSP(CaptureS(CodeVarNameS("a"),FinalP),None,ImplicitRuneS(_),None))) =>
+      case List(_, ParameterS(AtomSP(CaptureS(CodeVarNameS("a"),FinalP),None,ImplicitRuneS(_, _),None))) =>
     }
   }
 

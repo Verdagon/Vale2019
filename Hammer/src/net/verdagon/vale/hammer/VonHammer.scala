@@ -144,11 +144,11 @@ object VonHammer {
             })))))
   }
 
-  def vonifyOwnership(ownership: m.Ownership): IVonData = {
+  def vonifyOwnership(ownership: m.OwnershipH): IVonData = {
     ownership match {
-      case m.Own => VonObject("Own", None, Vector())
-      case m.Borrow => VonObject("Borrow", None, Vector())
-      case m.Share => VonObject("Share", None, Vector())
+      case m.OwnH => VonObject("Own", None, Vector())
+      case m.BorrowH => VonObject("Borrow", None, Vector())
+      case m.ShareH => VonObject("Share", None, Vector())
     }
   }
 
@@ -817,11 +817,12 @@ object VonHammer {
           Vector(
             VonMember(None, Some("name"), VonStr(name))))
       }
-      case ImplicitRune2(name) => {
+      case ImplicitRune2(parentName, name) => {
         VonObject(
           "ImplicitRune",
           None,
           Vector(
+            VonMember(None, Some("parentName"), translateName(hinputs, hamuts, parentName)),
             VonMember(None, Some("name"), VonInt(name))))
       }
       case LetImplicitRune2(codeLocation, name) => {

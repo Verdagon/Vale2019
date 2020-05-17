@@ -2,7 +2,7 @@ package net.verdagon.vale.hammer
 
 import net.verdagon.vale.hinputs.Hinputs
 import net.verdagon.vale.{metal => m}
-import net.verdagon.vale.metal.{Borrow => _, Immutable => _, Mutable => _, Own => _, Share => _, _}
+import net.verdagon.vale.metal.{BorrowH => _, Immutable => _, Mutable => _, OwnH => _, ShareH => _, _}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.env.AddressibleLocalVariable2
 import net.verdagon.vale.templar.types._
@@ -31,37 +31,37 @@ object ExpressionHammer {
       case IntLiteral2(value) => {
         val resultNode =
           nodesByLine.addNode(ConstantI64H(nodesByLine.nextId(), value));
-        val access = RegisterAccessH[ReferendH](resultNode.registerId, ReferenceH(m.Share, IntH()))
+        val access = RegisterAccessH[ReferendH](resultNode.registerId, ReferenceH(m.ShareH, IntH()))
         (Some(access), List())
       }
       case VoidLiteral2() => {
         val resultNode = nodesByLine.addNode(ConstantVoidH(nodesByLine.nextId()));
-        val access = RegisterAccessH[ReferendH](resultNode.registerId, ReferenceH(m.Share, VoidH()))
+        val access = RegisterAccessH[ReferendH](resultNode.registerId, ReferenceH(m.ShareH, VoidH()))
         (Some(access), List())
       }
       case StrLiteral2(value) => {
         val resultNode =
           nodesByLine.addNode(ConstantStrH(nodesByLine.nextId(), value));
-        val access = RegisterAccessH[ReferendH](resultNode.registerId, ReferenceH(m.Share, StrH()))
+        val access = RegisterAccessH[ReferendH](resultNode.registerId, ReferenceH(m.ShareH, StrH()))
         (Some(access), List())
       }
       case FloatLiteral2(value) => {
         val resultNode =
             nodesByLine.addNode(ConstantF64H(nodesByLine.nextId(), value));
-        val access = RegisterAccessH[ReferendH](resultNode.registerId, ReferenceH(m.Share, FloatH()))
+        val access = RegisterAccessH[ReferendH](resultNode.registerId, ReferenceH(m.ShareH, FloatH()))
         (Some(access), List())
       }
       case BoolLiteral2(value) => {
         val resultNode =
             nodesByLine.addNode(ConstantBoolH(nodesByLine.nextId(), value));
-        val access = RegisterAccessH[ReferendH](resultNode.registerId, ReferenceH(m.Share, BoolH()))
+        val access = RegisterAccessH[ReferendH](resultNode.registerId, ReferenceH(m.ShareH, BoolH()))
         (Some(access), List())
       }
       case let2 @ LetNormal2(_, _) => {
         LetHammer.translateLet(hinputs, hamuts, locals, stackHeight, nodesByLine, let2)
 
         val voidResultNode = nodesByLine.addNode(ConstantVoidH(nodesByLine.nextId()));
-        val voidAccess = RegisterAccessH[ReferendH](voidResultNode.registerId, ReferenceH(m.Share, VoidH()))
+        val voidAccess = RegisterAccessH[ReferendH](voidResultNode.registerId, ReferenceH(m.ShareH, VoidH()))
         (Some(voidAccess), List())
       }
       case let2 @ LetAndLend2(_, _) => {
@@ -76,7 +76,7 @@ object ExpressionHammer {
         // Since all the members landed in locals, we still need something to return, so we
         // return a void.
         val voidResultNode = nodesByLine.addNode(ConstantVoidH(nodesByLine.nextId()));
-        val voidAccess = RegisterAccessH[ReferendH](voidResultNode.registerId, ReferenceH(m.Share, VoidH()))
+        val voidAccess = RegisterAccessH[ReferendH](voidResultNode.registerId, ReferenceH(m.ShareH, VoidH()))
         (Some(voidAccess), List())
       }
       case unlet2 @ Unlet2(_) => {
@@ -163,7 +163,7 @@ object ExpressionHammer {
 
         translateDeferreds(hinputs, hamuts, locals, stackHeight, nodesByLine, deferreds)
 
-        val access = RegisterAccessH[ReferendH](lengthResultNode.registerId, ReferenceH(m.Share, IntH()))
+        val access = RegisterAccessH[ReferendH](lengthResultNode.registerId, ReferenceH(m.ShareH, IntH()))
         (Some(access), List())
       }
 
@@ -323,7 +323,7 @@ object ExpressionHammer {
         translateDeferreds(hinputs, hamuts, locals, stackHeight, nodesByLine, numExprDeferreds ++ refExprDeferreds)
 
         val voidResultNode = nodesByLine.addNode(ConstantVoidH(nodesByLine.nextId()));
-        val voidAccess = RegisterAccessH[ReferendH](voidResultNode.registerId, ReferenceH(m.Share, VoidH()))
+        val voidAccess = RegisterAccessH[ReferendH](voidResultNode.registerId, ReferenceH(m.ShareH, VoidH()))
         (Some(voidAccess), List())
       }
 
@@ -390,7 +390,7 @@ object ExpressionHammer {
         CallHammer.translateWhile(hinputs, hamuts, locals, stackHeight, nodesByLine, while2)
 
         val voidResultNode = nodesByLine.addNode(ConstantVoidH(nodesByLine.nextId()));
-        val voidAccess = RegisterAccessH[ReferendH](voidResultNode.registerId, ReferenceH(m.Share, VoidH()))
+        val voidAccess = RegisterAccessH[ReferendH](voidResultNode.registerId, ReferenceH(m.ShareH, VoidH()))
         (Some(voidAccess), List())
       }
 
@@ -407,8 +407,8 @@ object ExpressionHammer {
         vassert(innerDeferreds.isEmpty) // curiosity assert
 
         innerExprResultLine.expectedType.ownership match {
-          case m.Borrow | m.Share =>
-          case m.Own => {
+          case m.BorrowH | m.ShareH =>
+          case m.OwnH => {
             vfail("Owns can only be discarded via destructuring!")
           }
         }
@@ -454,7 +454,7 @@ object ExpressionHammer {
         CallHammer.translateDestroyArraySequence(hinputs, hamuts, locals, stackHeight, nodesByLine, das2)
 
         val voidResultNode = nodesByLine.addNode(ConstantVoidH(nodesByLine.nextId()));
-        val voidAccess = RegisterAccessH[ReferendH](voidResultNode.registerId, ReferenceH(m.Share, VoidH()))
+        val voidAccess = RegisterAccessH[ReferendH](voidResultNode.registerId, ReferenceH(m.ShareH, VoidH()))
         (Some(voidAccess), List())
       }
 
@@ -463,7 +463,7 @@ object ExpressionHammer {
           hinputs, hamuts, locals, stackHeight, nodesByLine, das2)
 
         val voidResultNode = nodesByLine.addNode(ConstantVoidH(nodesByLine.nextId()));
-        val voidAccess = RegisterAccessH[ReferendH](voidResultNode.registerId, ReferenceH(m.Share, VoidH()))
+        val voidAccess = RegisterAccessH[ReferendH](voidResultNode.registerId, ReferenceH(m.ShareH, VoidH()))
         (Some(voidAccess), List())
       }
 
@@ -545,8 +545,8 @@ object ExpressionHammer {
       StructHammer.translateStructRef(hinputs, hamuts, emptyPackType.underlyingStruct);
     val reference =
       hinputs.program2.lookupStruct(emptyPackType.underlyingStruct).mutability match {
-        case Mutable => ReferenceH(m.Own, underlyingStructRefH)
-        case Immutable => ReferenceH(m.Share, underlyingStructRefH)
+        case Mutable => ReferenceH(m.OwnH, underlyingStructRefH)
+        case Immutable => ReferenceH(m.ShareH, underlyingStructRefH)
       }
     val newEmptyStructNode = NewStructH(nodesByLine.nextId(), List(), reference)
     val _ = nodesByLine.addNode(newEmptyStructNode);

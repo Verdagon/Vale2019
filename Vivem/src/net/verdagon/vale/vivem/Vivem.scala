@@ -2,7 +2,7 @@ package net.verdagon.vale.vivem
 
 import java.io.PrintStream
 
-import net.verdagon.vale.metal.{ProgramH, Share, VoidH}
+import net.verdagon.vale.metal.{ProgramH, ShareH, VoidH}
 import net.verdagon.vale.{vassert, vfail}
 import net.verdagon.von.IVonData
 
@@ -18,7 +18,7 @@ object Vivem {
     val heap = new Heap(vivemDout)
     val argReferences =
       externalArgumentReferends.map(argReferend => {
-        heap.add(Share, argReferend);
+        heap.add(ShareH, argReferend);
       });
     innerExecute(programH, argReferences, heap, vivemDout, stdin, stdout)
   }

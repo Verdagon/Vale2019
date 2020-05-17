@@ -115,6 +115,7 @@ case class FunctionCallAE(callableExpr: IExpressionAE, argsPackExpr1: PackAE) ex
 //case class MethodCall0(callableExpr: Expression0, objectExpr: Expression0, argsExpr: Pack0) extends Expression0
 
 case class TemplateSpecifiedLookupAE(name: String, templateArgs: List[ITemplexS]) extends IExpressionAE
+case class RuneLookupAE(rune: IRuneA, tyype: ITemplataType) extends IExpressionAE
 
 case class LocalLoadAE(name: IVarNameA, borrow: Boolean) extends IExpressionAE
 case class FunctionLoadAE(name: GlobalFunctionFamilyNameA) extends IExpressionAE

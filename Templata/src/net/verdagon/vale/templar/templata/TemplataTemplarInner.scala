@@ -255,6 +255,10 @@ class TemplataTemplarInner[Env, State](delegate: ITemplataTemplarInnerDelegate[E
         case (Own, Borrow) => 1
         case (Borrow, Borrow) => 0
         case (Share, Share) => 0
+        case (Share, Borrow) => return None
+        case (Borrow, Share) => return None
+        case (Share, Own) => return None
+        case (Own, Share) => return None
       }
 
     (Some(TypeDistance(upcastDistance, ownershipDistance)))

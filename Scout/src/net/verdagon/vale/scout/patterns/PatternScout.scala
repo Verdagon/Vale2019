@@ -21,10 +21,11 @@ sealed trait IRuleState {
 
 // Sometimes referred to as a "rate"
 case class RuleState(
-    envFullName: INameS,
+    containerName: INameS,
     nextImplicitRune: Int) extends IRuleState {
   def newImplicitRune(): (RuleState, IRuneS) = {
-    (RuleState(envFullName, nextImplicitRune + 1), ImplicitRuneS(nextImplicitRune))
+    (RuleState(containerName, nextImplicitRune + 1),
+      ImplicitRuneS(containerName, nextImplicitRune))
   }
 }
 case class LetRuleState(

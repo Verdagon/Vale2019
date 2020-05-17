@@ -89,7 +89,7 @@ object LetHammer {
   Unit = {
     val (boxStructRefH) =
       StructHammer.makeBox(hinputs, hamuts, variability, reference, sourceResultPointerTypeH)
-    val expectedLocalBoxType = ReferenceH(m.Own, boxStructRefH)
+    val expectedLocalBoxType = ReferenceH(m.OwnH, boxStructRefH)
 
     val local =
       locals.addTemplarLocal(hinputs, hamuts, varId, stackHeight.snapshot, expectedLocalBoxType)
@@ -237,7 +237,7 @@ object LetHammer {
           TypeHammer.translateReference(hinputs, hamuts, innerType2)
         val (structRefH) =
           StructHammer.makeBox(hinputs, hamuts, variability, innerType2, innerTypeH)
-        val localTypeH = ReferenceH(m.Own, structRefH)
+        val localTypeH = ReferenceH(m.OwnH, structRefH)
 
         val unstackifyBoxNode =
           nodesByLine.addNode(
@@ -329,7 +329,7 @@ object LetHammer {
               val (boxStructRefH) =
                 StructHammer.makeBox(hinputs, hamuts, member2.variability, memberRefType2, memberRefTypeH)
               // Structs only ever borrow boxes, boxes are only ever owned by the stack.
-              val localBoxType = ReferenceH(m.Borrow, boxStructRefH)
+              val localBoxType = ReferenceH(m.BorrowH, boxStructRefH)
               val localIndex =
                 locals.addHammerLocal(stackHeight.snapshot, localBoxType)
               stackHeight.oneLocalHigher()

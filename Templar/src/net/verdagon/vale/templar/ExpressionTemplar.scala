@@ -5,13 +5,13 @@ import net.verdagon.vale.astronomer.ruletyper.{IRuleTyperEvaluatorDelegate, Rule
 import net.verdagon.vale.templar.types._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.parser._
-import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
+import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
 import net.verdagon.vale.templar.BlockTemplar.unletAll
 import net.verdagon.vale.templar.citizen.StructTemplar
 import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.function.{DestructorTemplar, FunctionTemplar}
 import net.verdagon.vale.templar.templata.TemplataTemplar
-import net.verdagon.vale.{vassert, vfail, vimpl, vwat}
+import net.verdagon.vale.{vassert, vassertSome, vfail, vimpl, vwat}
 
 import scala.collection.immutable.{List, Map, Nil, Set}
 
@@ -632,6 +632,12 @@ object ExpressionTemplar {
         val resultExprBlock2 = Consecutor2(lets2)
 
         (resultExprBlock2, returnsFromSource)
+      }
+      case RuneLookupAE(runeA,tyype) => {
+        val templata = vassertSome(fate.getNearestTemplataWithAbsoluteName2(NameTranslator.translateRune(runeA), Set(TemplataLookupContext)))
+        (tyype, templata) match {
+          case (IntegerTemplataType, IntegerTemplata(value)) => (IntLiteral2(value), Set())
+        }
       }
       case IfAE(condition1, thenBody1, elseBody1) => {
         val (conditionExpr2, returnsFromCondition) =

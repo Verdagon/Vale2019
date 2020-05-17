@@ -450,6 +450,18 @@ case class Temputs(
     }
   }
 
+  def prototypeDeclared(fullName: FullName2[IFunctionName2]): Option[Prototype2] = {
+    declaredSignatures.find(_.fullName == fullName) match {
+      case None => None
+      case Some(sig) => {
+        returnTypesBySignature.get(sig) match {
+          case None => None
+          case Some(ret) => Some(Prototype2(sig.fullName, sig.paramTypes, ret))
+        }
+      }
+    }
+  }
+
   def lookupMutability(citizenRef2: CitizenRef2): Mutability = {
     // If it has a structRef, then we've at least started to evaluate this citizen
     mutabilitiesByCitizenRef.get(citizenRef2) match {
@@ -597,6 +609,8 @@ case class TemputsBox(var temputs: Temputs) {
   }
 
   def structDeclared(fullName: FullName2[ICitizenName2]): Option[StructRef2] = temputs.structDeclared(fullName)
+
+  def prototypeDeclared(fullName: FullName2[IFunctionName2]): Option[Prototype2] = temputs.prototypeDeclared(fullName)
 
   def lookupMutability(citizenRef2: CitizenRef2): Mutability = temputs.lookupMutability(citizenRef2)
 

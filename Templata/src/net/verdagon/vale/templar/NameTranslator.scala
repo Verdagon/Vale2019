@@ -97,7 +97,7 @@ object NameTranslator {
       case ClosureParamNameA() => ClosureParamName2()
       case MagicParamNameA(codeLocation) => MagicParamName2(translateCodeLocation(codeLocation))
       case CodeVarNameA(name) => CodeVarName2(name)
-      case ImplicitRuneA(name) => ImplicitRune2(name)
+      case ImplicitRuneA(parentName, name) => ImplicitRune2(translateNameStep(parentName), name)
       case t @ TopLevelCitizenDeclarationNameA(_, _) => translateCitizenName(t)
       case CodeRuneA(name) => CodeRune2(name)
       case MagicImplicitRuneA(codeLocationS) => MagicImplicitRune2(NameTranslator.translateCodeLocation(codeLocationS))
@@ -107,6 +107,16 @@ object NameTranslator {
 //      case MagicImplicitRuneA(magicParamIndex) => MagicImplicitRune2(magicParamIndex)
       case MemberRuneA(memberIndex) => MemberRune2(memberIndex)
       case ReturnRuneA() => ReturnRune2()
+
+      case LambdaNameA(codeLocation) => {
+        LambdaTemplateName2(NameTranslator.translateCodeLocation(codeLocation))
+      }
+      case FunctionNameA(name, codeLocation) => {
+        FunctionTemplateName2(name, NameTranslator.translateCodeLocation(codeLocation))
+      }
+      case ConstructorNameA(TopLevelCitizenDeclarationNameA(name, codeLocation)) => {
+        FunctionTemplateName2(name, NameTranslator.translateCodeLocation(codeLocation))
+      }
       case _ => vimpl(name.toString)
     }
   }
@@ -129,7 +139,7 @@ object NameTranslator {
   def translateRune(rune: IRuneA): IRune2 = {
     rune match {
       case CodeRuneA(name) => CodeRune2(name)
-      case ImplicitRuneA(name) => ImplicitRune2(name)
+      case ImplicitRuneA(containerName, name) => ImplicitRune2(translateNameStep(containerName), name)
       case LetImplicitRuneA(codeLocation, name) => LetImplicitRune2(translateCodeLocation(codeLocation), name)
       case MagicImplicitRuneA(codeLocation) => MagicImplicitRune2(translateCodeLocation(codeLocation))
       case MemberRuneA(memberIndex) => MemberRune2(memberIndex)

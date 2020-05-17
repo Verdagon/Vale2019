@@ -116,6 +116,23 @@ object Templar {
         }
       })
 
+    // We already stamped the structs, this is just to get the constructors.
+    structsA.foreach({
+      case (structS @ StructA(_, _, _, _, _, _, _, _, _, _)) => {
+        if (structS.isTemplate) {
+          // Do nothing, it's a template
+        } else {
+          val structTemplata = StructTemplata(env11, structS)
+          val structRef2 = StructTemplar.getStructRef(temputs, structTemplata, List())
+          val structDef2 = temputs.lookupStruct(structRef2)
+          val memberCoords = structDef2.members.map(_.tyype).collect({ case ReferenceMemberType2(c) => c })
+          val TopLevelCitizenDeclarationNameA(name, _) = structS.name
+          OverloadTemplar.scoutExpectedFunctionForPrototype(
+            env11, temputs, GlobalFunctionFamilyNameA(name), List(), memberCoords.map(ParamFilter(_, None)), List(), true)
+        }
+      }
+    })
+
     stampNeededOverridesUntilSettled(env11, temputs)
 
     val result =

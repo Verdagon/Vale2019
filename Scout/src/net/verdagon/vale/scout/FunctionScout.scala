@@ -132,18 +132,23 @@ object FunctionScout {
     // So, what we instead want is like... the original causes of unknowable runes.
     // I think thats just user specified ones, and implicit template runes from params,
     // and magic param runes.
-    val topLevelImplicitRunesS =
-      paramsP.zip(explicitParamsPatterns1).flatMap({
-        case (paramP, explicitParamPatternS) => {
-          if (paramP.templex.isEmpty) {
-            List(explicitParamPatternS.coordRune)
-          } else {
-            List()
-          }
-        }
-      })
+//    val topLevelImplicitRunesS =
+//      paramsP.zip(explicitParamsPatterns1).flatMap({
+//        case (paramP, explicitParamPatternS) => {
+//          if (paramP.templex.isEmpty) {
+//            List(explicitParamPatternS.coordRune)
+//          } else {
+//            List()
+//          }
+//        }
+//      })
 
-    val identifyingRunes = userSpecifiedIdentifyingRunes ++ topLevelImplicitRunesS
+    val identifyingParamCoordRunes =
+      explicitParamsPatterns1
+        .map(_.coordRune)
+        .filter(!knowableValueRunes.contains(_))
+        .filter(!userSpecifiedIdentifyingRunes.contains(_))
+    val identifyingRunes = userSpecifiedIdentifyingRunes ++ identifyingParamCoordRunes
 
     val isTemplate = identifyingRunes.nonEmpty
 
@@ -301,17 +306,23 @@ object FunctionScout {
     // So, what we instead want is like... the original causes of unknowable runes.
     // I think thats just user specified ones, and implicit template runes from params,
     // and magic param runes.
-    val topLevelImplicitRunesS =
-      paramsP.zip(explicitParams1.map(_.pattern)).flatMap({
-        case (paramP, explicitParamPatternS) => {
-          if (paramP.templex.isEmpty) {
-            List(explicitParamPatternS.coordRune)
-          } else {
-            List()
-          }
-        }
-      })
-    val identifyingRunes = userSpecifiedIdentifyingRunes ++ topLevelImplicitRunesS ++ magicParamsRules.map(_.rune)
+//    val topLevelImplicitRunesS =
+//      paramsP.zip(explicitParams1.map(_.pattern)).flatMap({
+//        case (paramP, explicitParamPatternS) => {
+//          if (paramP.templex.isEmpty) {
+//            List(explicitParamPatternS.coordRune)
+//          } else {
+//            List()
+//          }
+//        }
+//      })
+
+    val identifyingParamCoordRunes =
+      explicitParamPatterns1
+        .map(_.coordRune)
+        .filter(!knowableValueRunes.contains(_))
+        .filter(!userSpecifiedIdentifyingRunes.contains(_))
+    val identifyingRunes = userSpecifiedIdentifyingRunes ++ magicParams.map(_.pattern.coordRune) ++ identifyingParamCoordRunes
 
     val isTemplate = identifyingRunes.nonEmpty
 
@@ -483,7 +494,13 @@ object FunctionScout {
 
     val localRunes = allRunes -- interfaceEnv.allUserDeclaredRunes()
     val unknowableRunes = allRunes -- knowableValueRunes
-    val identifyingRunes = userSpecifiedIdentifyingRunes
+
+    val identifyingParamCoordRunes =
+      patternsS
+        .map(_.coordRune)
+        .filter(!knowableValueRunes.contains(_))
+        .filter(!userSpecifiedIdentifyingRunes.contains(_))
+    val identifyingRunes = userSpecifiedIdentifyingRunes ++ identifyingParamCoordRunes
     val isTemplate = identifyingRunes.nonEmpty
     vassert(!isTemplate) // interface members cant be templates
 
