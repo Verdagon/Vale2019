@@ -70,11 +70,9 @@ object FunctionVivem {
 //        VivemExterns.lessThanOrEqInt
 //      case PrototypeH(FullNameH(List(NamePartH("__greaterThanInt", Some(List()), Some(List(ReferenceH(m.Share,IntH()), ReferenceH(m.Share,IntH()))), None))), List(ReferenceH(m.Share,IntH()), ReferenceH(m.Share,IntH())), ReferenceH(m.Share,BoolH())) =>
 //        VivemExterns.greaterThanInt
-//      case PrototypeH(FullNameH(List(NamePartH("__greaterThanOrEqInt", Some(List()), Some(List(ReferenceH(m.Share,IntH()), ReferenceH(m.Share,IntH()))), None))), List(ReferenceH(m.Share,IntH()), ReferenceH(m.Share,IntH())), ReferenceH(m.Share,BoolH())) =>
-//        VivemExterns.greaterThanOrEqInt
+      case """F("__greaterThanOrEqInt",[],[R(*,i),R(*,i)])""" => VivemExterns.greaterThanOrEqInt
       case """F("__eqIntInt",[],[R(*,i),R(*,i)])""" => VivemExterns.eqIntInt
-//      case PrototypeH(FullNameH(List(NamePartH("__eqBoolBool", Some(List()), Some(List(ReferenceH(m.Share,BoolH()), ReferenceH(m.Share,BoolH()))), None))), List(ReferenceH(m.Share,BoolH()), ReferenceH(m.Share,BoolH())), ReferenceH(m.Share,BoolH())) =>
-//        VivemExterns.eqBoolBool
+      case """F("__eqBoolBool",[],[R(*,b),R(*,b)])""" => VivemExterns.eqBoolBool
       case """F("__print",[],[R(*,s)])""" => VivemExterns.print
       case """F("__not",[],[R(*,b)])""" => VivemExterns.not
       case """F("__castIntStr",[],[R(*,i)])""" => VivemExterns.castIntStr
@@ -82,10 +80,8 @@ object FunctionVivem {
 //        VivemExterns.castFloatStr
 //      case PrototypeH(FullNameH(List(NamePartH("__castIntFloat", Some(List()), Some(List(ReferenceH(m.Share,IntH()))), None))),List(ReferenceH(m.Share,IntH())),ReferenceH(m.Share,FloatH())) =>
 //        VivemExterns.castIntFloat
-//      case PrototypeH(FullNameH(List(NamePartH("__and", Some(List()), Some(List(ReferenceH(m.Share,BoolH()), ReferenceH(m.Share,BoolH()))), None))),List(ReferenceH(m.Share,BoolH()), ReferenceH(m.Share,BoolH())),ReferenceH(m.Share,BoolH())) =>
-//        VivemExterns.and
-//      case PrototypeH(FullNameH(List(NamePartH("__mod", Some(List()), Some(List(ReferenceH(m.Share,IntH()), ReferenceH(m.Share,IntH()))), None))),List(ReferenceH(m.Share,IntH()), ReferenceH(m.Share,IntH())),ReferenceH(m.Share,IntH())) =>
-//        VivemExterns.mod
+      case """F("__and",[],[R(*,b),R(*,b)])""" => VivemExterns.and
+      case """F("__mod",[],[R(*,i),R(*,i)])""" => VivemExterns.mod
       case _ => vimpl(ref.fullName.toString)
     }
   }

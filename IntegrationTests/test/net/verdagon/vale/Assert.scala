@@ -13,11 +13,11 @@ object Assert {
       |  }
       |}
       |
-      |fn assertEq(a T, b T) Void {
+      |fn assertEq<T>(a T, b T) Void {
       |  assert(a == b, "Assertion failed, not equal!");
       |}
       |
-      |fn assertEq(a T, b T, msg Str) Void {
+      |fn assertEq<T>(a T, b T, msg Str) Void {
       |  assert(a == b, msg);
       |}
       |

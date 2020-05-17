@@ -357,7 +357,9 @@ object StructTemplar {
         fullName.last match {
           case CitizenName2(humanName, templateArgs) => humanName == structA.name.name
           case TupleName2(_) => false
-          case _ => vimpl()
+          case LambdaCitizenName2(codeLocation2) => false
+          case AnonymousSubstructName2(_) => false
+          case other => vimpl(other.toString)
         }
       }
       case _ => (false)

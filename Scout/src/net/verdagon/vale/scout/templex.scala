@@ -66,11 +66,12 @@ case class ReturnRuneS() extends IRuneS
 case class ExplicitTemplateArgRuneS(index: Int) extends IRuneS
 
 sealed trait IImpreciseNameStepS
-case class CodeTypeNameS(name: String) extends IImpreciseNameStepS
+case class CodeTypeNameS(name: String) extends IImpreciseNameStepS {
+  println("fsdaf")
+}
 // When we're calling a function, we're addressing an overload set, not a specific function.
 // If we want a specific function, we use TopLevelDeclarationNameS.
 case class GlobalFunctionFamilyNameS(name: String) extends IImpreciseNameStepS {
-  println("fsdaf")
 }
 case class ImpreciseCodeVarNameS(name: String) extends IImpreciseNameStepS
 

@@ -130,7 +130,7 @@ object BodyTemplar {
     vcurious(unresultifiedUndestructedExpressions.nonEmpty)
 
     val expressionsWithResult =
-      if (unresultifiedUndestructedExpressions.last.referend == Never2()) {
+      if (unresultifiedUndestructedExpressions.exists(_.referend == Never2())) {
         val expressions =
           BlockTemplar.unletUnmovedVariablesIntroducedSince(
             temputs, startingFuncOuterEnv, funcOuterEnv, None, unresultifiedUndestructedExpressions)

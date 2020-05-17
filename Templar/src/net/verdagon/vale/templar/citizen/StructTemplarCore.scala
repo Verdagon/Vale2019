@@ -350,7 +350,14 @@ object StructTemplarCore {
 
     val interfaceDef = temputs.lookupInterface(interfaceRef)
 
-    val mutability = getCompoundTypeMutability(temputs, callables)
+    // We don't do:
+    //   val mutability = getCompoundTypeMutability(temputs, callables)
+    // because we want the mutability of the receiving interface. For example,
+    // we want to be able to do something like:
+    //   f = IFunction1<mut, Int, Int>({_})
+    // which wouldnt work if we just did the compound mutability of the closureds
+    // (which is imm in this case).
+    val mutability = temputs.lookupMutability(interfaceRef)
 
     val structRef = StructRef2(anonymousSubstructName)
 

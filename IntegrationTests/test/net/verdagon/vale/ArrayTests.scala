@@ -334,7 +334,7 @@ class ArrayTests extends FunSuite with Matchers {
       ArrayUtils.code +
       """fn main() {
         |  sum = 0;
-        |  [6, 60, 103].each({ mut sum = sum + _; });
+        |  [6, 60, 103].each(&IFunction1<mut, Int, Void>({ mut sum = sum + _; }));
         |  = sum;
         |}
         |""".stripMargin)

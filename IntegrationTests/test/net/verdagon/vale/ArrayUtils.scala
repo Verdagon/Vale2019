@@ -8,7 +8,7 @@ object ArrayUtils {
       |}
       |
       |fn each<N, E, F, M>(seq &[<M> N * E], func F) Void {
-      |  Array<mut, Int>(N, (i){ func(seq.(i)); = 0; });
+      |  Array<mut, Int>(N, &IFunction1<mut, Int, Int>((i){ func(seq.(i)); = 0; }));
       |}
       |
       |//fn map<M>(seq &[<_> N * E], func F) rules(M Mutability) {
@@ -16,7 +16,7 @@ object ArrayUtils {
       |//}
       |
       |fn each<E, F>(arr &Array<_, E>, func F) Void {
-      |  Array<mut, Int>(arr.len(), (i){ func(arr.(i)); = 0; });
+      |  Array<mut, Int>(arr.len(), &IFunction1<mut, Int, Void>((i){ func(arr.(i)); = 0; }));
       |}
       |
       |//fn map<M>(arr &Array<_, E>, func F) rules(M Mutability) {

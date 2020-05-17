@@ -120,7 +120,7 @@ class HashMapTest extends FunSuite with Matchers {
         Assert.code +
         """
           |fn main() {
-          |  m = HashMap<Int, Int>({_}, ==);
+          |  m = HashMap<Int, Int>(IFunction1<mut, Int, Int>({_}), ==);
           |  m.add(0, 100);
           |  m.add(4, 101);
           |  m.add(8, 102);
@@ -147,7 +147,7 @@ class HashMapTest extends FunSuite with Matchers {
         Assert.code +
         """
           |fn main() {
-          |  m = HashMap<Int, Int>({_}, ==);
+          |  m = HashMap<Int, Int>(IFunction1<mut, Int, Int>({_}), ==);
           |  m.add(0, 100);
           |  m.add(4, 101);
           |  m.add(8, 102);

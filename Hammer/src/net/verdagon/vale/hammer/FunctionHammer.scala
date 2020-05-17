@@ -44,7 +44,7 @@ object FunctionHammer {
         val (bodyH, maybeResultAccess) =
           BlockHammer.translateBlock(hinputs, hamuts, locals.snapshot, stackHeight, body)
         val resultCoord = maybeResultAccess.map(_.expectedType).getOrElse(ReferenceH(m.ShareH, VoidH()))
-        if (resultCoord != prototypeH.returnType) {
+        if (resultCoord.kind != NeverH() && resultCoord != prototypeH.returnType) {
           vfail(
             "Result of body's instructions didnt match return type!\n" +
             "Return type:   " + prototypeH.returnType + "\n" +
@@ -77,8 +77,8 @@ object FunctionHammer {
       hinputs: Hinputs, hamuts: HamutsBox,
       prototype2: Prototype2):
   (PrototypeH) = {
-    val Prototype2(fullName2, params2, returnType2) = prototype2;
-    val (paramsTypesH) = TypeHammer.translateReferences(hinputs, hamuts, params2)
+    val Prototype2(fullName2, returnType2) = prototype2;
+    val (paramsTypesH) = TypeHammer.translateReferences(hinputs, hamuts, prototype2.paramTypes)
     val (returnTypeH) = TypeHammer.translateReference(hinputs, hamuts, returnType2)
     val (fullNameH) = NameHammer.translateFullName(hinputs, hamuts, fullName2)
     val prototypeH = PrototypeH(fullNameH, paramsTypesH, returnTypeH)

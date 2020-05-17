@@ -59,7 +59,7 @@ case class BlockAE(
   // Every element should have at least one expression, because a block will
   // return the last expression's result as its result.
   // Even empty blocks aren't empty, they have a void() at the end.
-  vassert(exprs.size >= 1)
+  vassert(exprs.nonEmpty)
 }
 
 //case class ConstructAE(

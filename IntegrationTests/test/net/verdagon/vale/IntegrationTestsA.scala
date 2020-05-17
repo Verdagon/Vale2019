@@ -390,6 +390,7 @@ class IntegrationTestsA extends FunSuite with Matchers {
         |  opt.value
         |}
         |
+        |abstract fn map<T, R>(virtual opt &Opt<T>, func &IFunction1<mut, T, R>) Opt<R>;
         |fn map<T, R>(opt &None<T> impl Opt<T>, func &IFunction1<mut, T, R>) Opt<R> {
         |  None<R>()
         |}

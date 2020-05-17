@@ -16,14 +16,14 @@ class ArrayListTest extends FunSuite with Matchers {
         |fn len<E>(list &List<E>) { len(list.array) }
         |fn add<E>(list &List<E>, newElement E) {
         |  newArray =
-        |      Array<mut, E>(len(list) + 1, (index){
+        |      Array<mut, E>(len(list) + 1, &IFunction1<mut, Int, Int>((index){
         |        = if (index == len(list)) {
         |            = newElement;
         |          } else {
         |            a = list.array;
         |            = a.(index);
         |          }
-        |      });
+        |      }));
         |  mut list.array = newArray;
         |}
         |// todo: make that return a &E
@@ -37,9 +37,9 @@ class ArrayListTest extends FunSuite with Matchers {
         |      List<Int>(
         |           Array<mut, Int>(
         |               0,
-        |               (index){
+        |               &IFunction1<mut, Int, Int>((index){
         |                 index
-        |               }));
+        |               })));
         |  add(&l, 5);
         |  add(&l, 9);
         |  add(&l, 7);
@@ -61,10 +61,10 @@ class ArrayListTest extends FunSuite with Matchers {
         |      List<Int>(
         |          Array<mut, Opt<Int>>(
         |              0,
-        |              (index){
+        |              &IFunction1<mut, Int, Opt<Int>>((index){
         |                result Opt<Int> = Some(index);
         |                = result;
-        |              }),
+        |              })),
         |          0);
         |  add(&l, 5);
         |  add(&l, 9);
@@ -143,10 +143,10 @@ class ArrayListTest extends FunSuite with Matchers {
           |      List<Marine>(
           |          Array<mut, Opt<Marine>>(
           |              0,
-          |              (index){
+          |              &IFunction1<mut, Int, Opt<Marine>>((index){
           |                result Opt<Marine> = Some(Marine(index));
           |                = result;
-          |              }),
+          |              })),
           |          0);
           |  add(&l, Marine(5));
           |  add(&l, Marine(9));

@@ -24,24 +24,24 @@ object HashMap {
       |  size Int;
       |}
       |
-      |fn HashMap<K, V>(hasher H, equator E) HashMap<K, V, H, E> {
+      |fn HashMap<K, V, H, E>(hasher H, equator E) HashMap<K, V, H, E> {
       |  HashMap<K, V, H, E>(hasher, equator, 0)
       |}
       |
-      |fn HashMap<K, V>(hasher H, equator E, capacity Int) HashMap<K, V, H, E> {
+      |fn HashMap<K, V, H, E>(hasher H, equator E, capacity Int) HashMap<K, V, H, E> {
       |  HashMap<K, V>(
       |      hasher,
       |      equator,
       |      Array<mut, Opt<HashNode<K, V>>>(
       |        capacity,
-      |        (index){
+      |        &IFunction1<mut, Int, Opt<HashNode<K, V>>>((index){
       |          opt Opt<HashNode<K, V>> = None<HashNode<K, V>>();
       |          = opt;
-      |        }),
+      |        })),
       |      0)
       |}
       |
-      |fn add(map &HashMap<K, V, H, E>, key K, value V) Void {
+      |fn add<K, V, H, E>(map &HashMap<K, V, H, E>, key K, value V) Void {
       |  if (map.has(key)) {
       |    panic("Map already has given key!");
       |  }
@@ -52,10 +52,10 @@ object HashMap {
       |    newTable =
       |        Array<mut, Opt<HashNode<K, V>>>(
       |            newSize,
-      |            (index){
+      |            &IFunction1<mut, Int, Opt<HashNode<K, V>>>((index){
       |              opt Opt<HashNode<K, V>> = None<HashNode<K, V>>();
       |              = opt;
-      |            });
+      |            }));
       |    i = 0;
       |    while (i < map.table.len()) {
       |      if (map.table.(i).empty?()) {
@@ -74,7 +74,7 @@ object HashMap {
       |  mut map.size = map.size + 1;
       |}
       |
-      |fn addNodeToTable(table &Array<mut, Opt<HashNode<K, V>>>, hasher H, node HashNode<K, V>) {
+      |fn addNodeToTable<K, V, H>(table &Array<mut, Opt<HashNode<K, V>>>, hasher H, node HashNode<K, V>) {
       |  hash = (hasher)(node.key);
       |  startIndex = abs(hash mod table.len());
       |  index = findEmptyIndexForKey(table, startIndex, node.key);
@@ -83,7 +83,7 @@ object HashMap {
       |  mut table.(index) = opt;
       |}
       |
-      |fn findEmptyIndexForKey(table &Array<mut, Opt<HashNode<K, V>>>, startIndex Int, key K) Int {
+      |fn findEmptyIndexForKey<K, V>(table &Array<mut, Opt<HashNode<K, V>>>, startIndex Int, key K) Int {
       |  i = 0;
       |  while (i < table.len()) {
       |    index = (startIndex + i) mod table.len();
@@ -97,7 +97,7 @@ object HashMap {
       |  = panic("findEmptyIndexForKey went past end of table!");
       |}
       |
-      |fn findIndexOfKey(table &Array<mut, Opt<HashNode<K, V>>>, equator E, startIndex Int, key K) Opt<Int> {
+      |fn findIndexOfKey<K, V, E>(table &Array<mut, Opt<HashNode<K, V>>>, equator E, startIndex Int, key K) Opt<Int> {
       |  i = 0;
       |  while (i < table.len()) {
       |    index = (startIndex + i) mod table.len();
@@ -115,7 +115,7 @@ object HashMap {
       |  = panic("findIndexOfKey went past end of table! len " + Str(table.len()) + " and i " + Str(i));
       |}
       |
-      |fn get(this &HashMap<K, V, H, E>, key K) Opt<&V> {
+      |fn get<K, V, H, E>(this &HashMap<K, V, H, E>, key K) Opt<&V> {
       |  if (this.table.len() == 0) {
       |    ret None<&V>();
       |  }
@@ -131,11 +131,11 @@ object HashMap {
       |  ret opt;
       |}
       |
-      |fn has(this &HashMap<K, V, H, E>, key K) Bool {
+      |fn has<K, V, H, E>(this &HashMap<K, V, H, E>, key K) Bool {
       |  not(this.get(key).empty?())
       |}
       |
-      |fn keys(this &HashMap<K, V, H, E>) Array<imm, K> {
+      |fn keys<K, V, H, E>(this &HashMap<K, V, H, E>) Array<imm, K> {
       |  list = List<K>();
       |  index = 0;
       |  while (index < this.table.len()) {

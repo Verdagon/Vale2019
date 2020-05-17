@@ -30,7 +30,7 @@ object BlockTemplar {
       evaluateBlockStatements(temputs, fate, block1.exprs);
 
     val expressionsWithResult =
-      if (unresultifiedUndestructedExpressions.last.referend == Never2()) {
+      if (unresultifiedUndestructedExpressions.exists(_.referend == Never2())) {
         val expressions =
           BlockTemplar.unletUnmovedVariablesIntroducedSince(
             temputs, startingFate, fate, None, unresultifiedUndestructedExpressions)
