@@ -256,6 +256,26 @@ class Heap(in_vivemDout: PrintStream) {
     decrementObjectRefCount(referrer, reference.allocId)
   }
 
+  def destructureArray(reference: ReferenceV, alsoDeallocate: Boolean): Vector[ReferenceV] = {
+    val allocation = dereference(reference)
+    allocation match {
+      case ArrayInstanceV(typeH, elementTypeH, size, elements) => {
+        val elementRefs =
+          elements.indices.toVector
+            .reverse
+            .map(index => deinitializeArrayElement(reference, index))
+            .reverse
+        if (reference.ownership == OwnH) {
+          vassert(alsoDeallocate)
+        }
+        if (alsoDeallocate) {
+          deallocate(reference)
+        }
+        elementRefs
+      }
+    }
+  }
+
   def destructure(reference: ReferenceV, alsoDeallocate: Boolean): Vector[ReferenceV] = {
     val allocation = dereference(reference)
     allocation match {

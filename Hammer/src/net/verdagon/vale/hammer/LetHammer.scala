@@ -2,7 +2,7 @@ package net.verdagon.vale.hammer
 
 import net.verdagon.vale.hammer.ExpressionHammer.translate
 import net.verdagon.vale.hinputs.Hinputs
-import net.verdagon.vale.{vassertSome, vfail, metal => m}
+import net.verdagon.vale.{vassert, vassertSome, vfail, metal => m}
 import net.verdagon.vale.metal.{Variability => _, _}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.env.{AddressibleLocalVariable2, ReferenceLocalVariable2}
@@ -276,6 +276,56 @@ object LetHammer {
     }
   }
 
+  def translateDestructureArraySequence(
+    hinputs: Hinputs,
+    hamuts: HamutsBox,
+    locals: LocalsBox,
+    stackHeight: StackHeightBox,
+    nodesByLine: NodesBox,
+    des2: DestructureArraySequence2
+  ): Unit = {
+    val DestructureArraySequence2(sourceExpr2, arrSeqT, destinationReferenceLocalVariables) = des2
+
+    val (Some(sourceExprResultLine), sourceExprDeferreds) =
+      translate(hinputs, hamuts, locals, stackHeight, nodesByLine, sourceExpr2);
+
+    vassert(destinationReferenceLocalVariables.size == arrSeqT.size)
+
+    // Destructure2 will immediately destroy any addressible references inside it
+    // (see Destructure2 comments).
+    // In the post-addressible world with all our boxes and stuff, an addressible
+    // reference member is actually a borrow reference to a box.
+    // Destructure2's destroying of addressible references translates to hammer
+    // unborrowing the references to boxes.
+    // However, the templar only supplied variables for the reference members,
+    // so we need to introduce our own local variables here.
+
+    val (localTypes, localIndices) =
+      destinationReferenceLocalVariables
+        .map(destinationReferenceLocalVariable => {
+          val (memberRefTypeH) =
+            TypeHammer.translateReference(hinputs, hamuts, arrSeqT.array.memberType)
+          val localIndex =
+            locals.addTemplarLocal(
+              hinputs, hamuts, destinationReferenceLocalVariable.id, stackHeight.snapshot, memberRefTypeH)
+          stackHeight.oneLocalHigher()
+          (memberRefTypeH, localIndex)
+        })
+        .unzip
+
+    val stackNode =
+      nodesByLine.addNode(
+        DestructureArraySequenceH(
+          nodesByLine.nextId(),
+          sourceExprResultLine.expectKnownSizeArrayAccess(),
+          localTypes,
+          localIndices.toVector))
+    val _ = stackNode // Don't need it
+
+    ExpressionHammer.translateDeferreds(
+      hinputs, hamuts, locals, stackHeight, nodesByLine, sourceExprDeferreds)
+  }
+
   def translateDestructure(
       hinputs: Hinputs,
       hamuts: HamutsBox,
@@ -349,35 +399,35 @@ object LetHammer {
           localIndices.toVector))
     val _ = stackNode // Don't need it
 
-      structDef2.members.zip(localTypes.zip(localIndices)).foreach({
-        case (structMember2, (localType, local)) => {
-          structMember2.tyype match {
-            case ReferenceMemberType2(_) => (locals, nodesByLine)
-            case AddressMemberType2(_) => {
-              // localType is the box type.
-              // First, unlet it, then discard it.
-              val unstackifyNode =
-                nodesByLine.addNode(
-                  UnstackifyH(
-                    nodesByLine.nextId(),
-                    local,
-                    localType))
-              val unstackifiedAccess =
-                RegisterAccessH(unstackifyNode.registerId, localType)
-              locals.markUnstackified(local.id)
+    structDef2.members.zip(localTypes.zip(localIndices)).foreach({
+      case (structMember2, (localType, local)) => {
+        structMember2.tyype match {
+          case ReferenceMemberType2(_) => (locals, nodesByLine)
+          case AddressMemberType2(_) => {
+            // localType is the box type.
+            // First, unlet it, then discard it.
+            val unstackifyNode =
+              nodesByLine.addNode(
+                UnstackifyH(
+                  nodesByLine.nextId(),
+                  local,
+                  localType))
+            val unstackifiedAccess =
+              RegisterAccessH(unstackifyNode.registerId, localType)
+            locals.markUnstackified(local.id)
 
-              val discardNode =
-                nodesByLine.addNode(
-                  DiscardH(
-                    nodesByLine.nextId(),
-                    unstackifiedAccess))
-              val _ = discardNode
-            }
+            val discardNode =
+              nodesByLine.addNode(
+                DiscardH(
+                  nodesByLine.nextId(),
+                  unstackifiedAccess))
+            val _ = discardNode
           }
         }
-      })
+      }
+    })
 
-      ExpressionHammer.translateDeferreds(
-        hinputs, hamuts, locals, stackHeight, nodesByLine, sourceExprDeferreds)
+    ExpressionHammer.translateDeferreds(
+      hinputs, hamuts, locals, stackHeight, nodesByLine, sourceExprDeferreds)
   }
 }

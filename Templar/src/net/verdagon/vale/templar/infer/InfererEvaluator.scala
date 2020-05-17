@@ -237,36 +237,73 @@ class InfererEvaluator[Env, State](
       maybePatternDestructure match {
         case None => List()
         case Some(patternDestructures) => {
-          val members =
-            getMemberCoords(state, inferences, paramFilterInstance.tyype.referend, patternDestructures.size) match {
-              case iec @ InferEvaluateConflict(_, _, _) => return (InferEvaluateConflict(inferences.inferences, "Failed getting members for destructure", List(iec)), Map())
-              case InferEvaluateSuccess(m, true) => (m)
-            }
-          // Should have already been checked in getMemberCoords
-          vassert(members.size == patternDestructures.size)
-
-          val rules40 =
-            patternDestructures.zip(members).zipWithIndex.flatMap({
-              // debt: rename this patternDestructure to something. we need a term for an atom
-              // that comes from a destructure.
-              // debt: rename atom. probably just to pattern again?
-              case (((patternDestructure, member), destructureIndex)) => {
-                addParameterRules(state, inferences, patternDestructure, ParamFilter(member, None), paramLocation :+ destructureIndex) match {
-                  case (iec @ InferEvaluateConflict(_, _, _), _) => {
-                    return (InferEvaluateConflict(inferences.inferences, "Failed to add parameter " + paramLocation.mkString("/"), List(iec)), Map())
-                  }
-                  case (InferEvaluateSuccess(rules36, true), addedRunesTypeByRune) => {
-                    // We shouldnt have to add any solving for stuff in destructures
-                    vassert(addedRunesTypeByRune.isEmpty)
-                    rules36
-                  }
-                }
-              }
-            })
-          rules40
+          addDestructureRules(state, inferences, paramFilterInstance.tyype, patternDestructures, paramLocation) match {
+            case iec @ InferEvaluateConflict(_, _, _) => return (iec, Map())
+            case InferEvaluateSuccess(r, _) => r
+          }
         }
       }
     (InferEvaluateSuccess(rulesFromType ++ rulesFromVirtuality ++ rulesFromPatternDestructure, true), runesAddedForType)
+  }
+
+  private def addDestructureRules(
+    state: State,
+    inferences: InferencesBox,
+    incomingContainerCoord: Coord,
+    patternDestructures: List[AtomAP],
+    paramLocation: List[Int]
+  ): IInferEvaluateResult[List[IRulexTR]] = {
+    val incomingMembers =
+      getMemberCoords(state, inferences, incomingContainerCoord.referend, patternDestructures.size) match {
+        case iec@InferEvaluateConflict(_, _, _) => return InferEvaluateConflict(inferences.inferences, "Failed getting incomingMembers for destructure", List(iec))
+        case InferEvaluateSuccess(m, true) => m
+      }
+    // Should have already been checked in getMemberCoords
+    vassert(incomingMembers.size == patternDestructures.size)
+
+    val rules40 =
+      patternDestructures.zip(incomingMembers).zipWithIndex.flatMap({
+        // debt: rename this patternDestructure to something. we need a term for an atom
+        // that comes from a destructure.
+        // debt: rename atom. probably just to pattern again?
+        case (((patternDestructure, incomingMemberCoord), memberIndex)) => {
+          val AtomAP(_, patternVirtuality, patternCoordRuneA, maybePatternDestructure) = patternDestructure
+          vassert(patternVirtuality.isEmpty) // We dont yet have virtuals in patterns... BUT OUR DAY WILL COME
+          val patternCoordRune2 = NameTranslator.translateRune(patternCoordRuneA)
+
+          val memberCoord =
+            inferences.templatasByRune.get(patternCoordRune2) match {
+              case Some(CoordTemplata(r)) if r != incomingMemberCoord => {
+                return InferEvaluateConflict(
+                  inferences.inferences,
+                  "Incoming argument type doesnt match already known rune " + patternDestructure.coordRune + " value. Had value " + r + " but incoming arg was " + incomingMemberCoord,
+                  Nil)
+              }
+              case Some(CoordTemplata(r)) => r
+              case Some(_) => vwat()
+              case None => {
+                inferences.addConclusion(patternCoordRune2, CoordTemplata(incomingMemberCoord))
+                incomingMemberCoord
+              }
+            }
+
+          val rulesFromPatternDestructure =
+            maybePatternDestructure match {
+              case None => List()
+              case Some(patternDestructures) => {
+                val memberLocation = paramLocation :+ memberIndex
+                addDestructureRules(state, inferences, incomingContainerCoord = memberCoord, patternDestructures, memberLocation) match {
+                  case iec @ InferEvaluateConflict(_, _, _) => {
+                    return InferEvaluateConflict(inferences.inferences, "Failed to add parameter " + memberLocation.mkString("/"), List(iec))
+                  }
+                  case InferEvaluateSuccess(r, _) => r
+                }
+              }
+            }
+          rulesFromPatternDestructure
+        }
+      })
+    InferEvaluateSuccess(rules40, true)
   }
 
   private def solveUntilSettled(

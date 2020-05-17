@@ -126,6 +126,26 @@ object ExpressionVivem {
         })
         NodeContinue(None)
       }
+      case DestructureArraySequenceH(_, arrRegister, localTypes, locals) => {
+        val arrReference = heap.takeReferenceFromRegister(RegisterId(blockId, arrRegister.registerId), arrRegister.expectedType)
+        if (arrRegister.expectedType.ownership == OwnH) {
+          heap.ensureTotalRefCount(arrReference, 0)
+        } else {
+          // Not doing
+          //   heap.ensureTotalRefCount(arrReference, 0)
+          // for share because we might be taking in a shared reference and not be destroying it.
+        }
+
+        val oldMemberReferences = heap.destructureArray(arrReference, arrReference.ownership == OwnH)
+
+        vassert(oldMemberReferences.size == locals.size)
+        oldMemberReferences.zip(localTypes).zip(locals).foreach({ case ((memberRef, localType), localIndex) =>
+          val varAddr = heap.getVarAddress(blockId.callId, localIndex)
+          heap.addLocal(varAddr, memberRef, localType)
+          heap.vivemDout.print(" v" + varAddr + "<-o" + memberRef.num)
+        })
+        NodeContinue(None)
+      }
       case ArrayLengthH(_, arrayRegister) => {
         val arrayReference = heap.takeReferenceFromRegister(RegisterId(blockId, arrayRegister.registerId), arrayRegister.expectedType)
         val arr @ ArrayInstanceV(_, _, _, _) = heap.dereference(arrayReference)

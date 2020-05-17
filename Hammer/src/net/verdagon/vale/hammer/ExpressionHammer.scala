@@ -36,6 +36,11 @@ object ExpressionHammer {
         val access = RegisterAccessH[ReferendH](resultNode.registerId, ReferenceH(m.ShareH, VoidH()))
         (Some(access), List())
       }
+      case NeverLiteral2() => {
+        val resultNode = nodesByLine.addNode(UnreachableH(nodesByLine.nextId()));
+        val access = RegisterAccessH[ReferendH](resultNode.registerId, ReferenceH(m.ShareH, NeverH()))
+        (Some(access), List())
+      }
       case StrLiteral2(value) => {
         val resultNode =
           nodesByLine.addNode(ConstantStrH(nodesByLine.nextId(), value));
@@ -68,6 +73,16 @@ object ExpressionHammer {
       }
       case des2 @ Destructure2(_, _, _) => {
         LetHammer.translateDestructure(hinputs, hamuts, locals, stackHeight, nodesByLine, des2)
+        // Templar destructures put things in local variables (even though hammer itself
+        // uses registers internally to make that happen).
+        // Since all the members landed in locals, we still need something to return, so we
+        // return a void.
+        val voidResultNode = nodesByLine.addNode(ConstantVoidH(nodesByLine.nextId()));
+        val voidAccess = RegisterAccessH[ReferendH](voidResultNode.registerId, ReferenceH(m.ShareH, VoidH()))
+        (Some(voidAccess), List())
+      }
+      case des2 @ DestructureArraySequence2(_, _, _) => {
+        LetHammer.translateDestructureArraySequence(hinputs, hamuts, locals, stackHeight, nodesByLine, des2)
         // Templar destructures put things in local variables (even though hammer itself
         // uses registers internally to make that happen).
         // Since all the members landed in locals, we still need something to return, so we

@@ -126,14 +126,33 @@ object BodyTemplar {
 
     val unresultifiedUndestructedExpressions = letExprs2 ++ postLetUnresultifiedUndestructedExpressions
 
-    val (undestructedExpressions, maybeResultLocalVariable) =
-      BlockTemplar.resultifyExpressions(funcOuterEnv, unresultifiedUndestructedExpressions)
-
-    val expressions =
-      BlockTemplar.unletUnmovedVariablesIntroducedSince(temputs, startingFuncOuterEnv, funcOuterEnv, maybeResultLocalVariable, undestructedExpressions)
+    // If we trip this, we probably just want to make it a List(VoidLiteral2()) and proceed.
+    vcurious(unresultifiedUndestructedExpressions.nonEmpty)
 
     val expressionsWithResult =
-      BlockTemplar.maybeAddUnlet(funcOuterEnv, expressions, maybeResultLocalVariable)
+      if (unresultifiedUndestructedExpressions.last.referend == Never2()) {
+        val expressions =
+          BlockTemplar.unletUnmovedVariablesIntroducedSince(
+            temputs, startingFuncOuterEnv, funcOuterEnv, None, unresultifiedUndestructedExpressions)
+        expressions :+ NeverLiteral2()
+      } else if (unresultifiedUndestructedExpressions.last.referend == Void2()) {
+        val expressions =
+          BlockTemplar.unletUnmovedVariablesIntroducedSince(
+            temputs, startingFuncOuterEnv, funcOuterEnv, None, unresultifiedUndestructedExpressions)
+        expressions :+ VoidLiteral2()
+      } else {
+        val (undestructedExpressions, resultLocalVariable) =
+          BlockTemplar.resultifyExpressions(funcOuterEnv, unresultifiedUndestructedExpressions)
+        val expressions =
+          BlockTemplar.unletUnmovedVariablesIntroducedSince(
+            temputs, startingFuncOuterEnv, funcOuterEnv, Some(resultLocalVariable), undestructedExpressions)
+        val exprsWithResult =
+          BlockTemplar.addUnlet(
+            funcOuterEnv,
+            expressions,
+            resultLocalVariable)
+        exprsWithResult
+      }
 
     if (isDestructor) {
       // If it's a destructor, make sure that we've actually destroyed/moved/unlet'd

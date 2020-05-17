@@ -29,14 +29,27 @@ object BlockTemplar {
     val (unresultifiedUndestructedExpressions, returnsFromExprs) =
       evaluateBlockStatements(temputs, fate, block1.exprs);
 
-    val (undestructedExpressions, maybeResultLocalVariable) =
-      resultifyExpressions(fate, unresultifiedUndestructedExpressions)
-
-    val expressions =
-      unletUnmovedVariablesIntroducedSince(temputs, startingFate, fate, maybeResultLocalVariable, undestructedExpressions)
-
     val expressionsWithResult =
-      maybeAddUnlet(fate, expressions, maybeResultLocalVariable)
+      if (unresultifiedUndestructedExpressions.last.referend == Never2()) {
+        val expressions =
+          BlockTemplar.unletUnmovedVariablesIntroducedSince(
+            temputs, startingFate, fate, None, unresultifiedUndestructedExpressions)
+        expressions :+ NeverLiteral2()
+      } else if (unresultifiedUndestructedExpressions.last.referend == Void2()) {
+        val expressions =
+          BlockTemplar.unletUnmovedVariablesIntroducedSince(
+            temputs, startingFate, fate, None, unresultifiedUndestructedExpressions)
+        expressions :+ VoidLiteral2()
+      } else {
+        val (undestructedExpressions, resultLocalVariable) =
+          BlockTemplar.resultifyExpressions(fate, unresultifiedUndestructedExpressions)
+        val expressions =
+          BlockTemplar.unletUnmovedVariablesIntroducedSince(
+            temputs, startingFate, fate, Some(resultLocalVariable), undestructedExpressions)
+        val exprsWithResult =
+          BlockTemplar.addUnlet(fate, expressions, resultLocalVariable)
+        exprsWithResult
+      }
 
     val block2 = Block2(expressionsWithResult)
 
@@ -47,19 +60,14 @@ object BlockTemplar {
     (block2, returnsFromExprs)
   }
 
-  def maybeAddUnlet(
+  def addUnlet(
     fate: FunctionEnvironmentBox,
     exprs: List[ReferenceExpression2],
-    maybeVar: Option[ILocalVariable2]):
+    resultLocalVariable: ILocalVariable2):
   (List[ReferenceExpression2]) = {
-    maybeVar match {
-      case None => (exprs)
-      case Some(resultLocalVariable) => {
-        val getResultExpr =
-          ExpressionTemplar.unletLocal(fate, resultLocalVariable)
-        (exprs :+ getResultExpr)
-      }
-    }
+    val getResultExpr =
+      ExpressionTemplar.unletLocal(fate, resultLocalVariable)
+    (exprs :+ getResultExpr)
   }
 
   def unletUnmovedVariablesIntroducedSince(
@@ -100,25 +108,23 @@ object BlockTemplar {
     exprs ++ destructExprs
   }
 
-  // Makes the last expression stored in a variable, unless there are none, or it returns void.
-  def resultifyExpressions(fate: FunctionEnvironmentBox, undecayedExprs2: List[ReferenceExpression2]):
-  (List[ReferenceExpression2], Option[ReferenceLocalVariable2]) = {
-    undecayedExprs2.lastOption match {
-      case None => (undecayedExprs2, None)
-      case Some(lastExpr) => {
-        lastExpr.resultRegister.referend match {
-          case Void2() | Never2() => (undecayedExprs2, None)
-          case _ => {
-            val resultVarNum = fate.nextVarCounter()
-            val resultVarId = fate.fullName.addStep(TemplarBlockResultVarName2(resultVarNum))
-            val resultVariable = ReferenceLocalVariable2(resultVarId, Final, lastExpr.resultRegister.reference)
-            val resultLet = LetNormal2(resultVariable, lastExpr)
-            fate.addVariable(resultVariable)
-            (undecayedExprs2.init :+ resultLet, Some(resultVariable))
-          }
-        }
-      }
-    }
+  // Makes the last expression stored in a variable.
+  // Dont call this for void or never or no expressions.
+  // Maybe someday we can do this even for Never and Void, for consistency and so
+  // we dont have any special casing.
+  def resultifyExpressions(fate: FunctionEnvironmentBox, exprs: List[ReferenceExpression2]):
+  (List[ReferenceExpression2], ReferenceLocalVariable2) = {
+    vassert(exprs.nonEmpty)
+    val lastExpr = exprs.last
+    vassert(lastExpr.referend != Never2())
+    vassert(lastExpr.referend != Void2())
+
+    val resultVarNum = fate.nextVarCounter()
+    val resultVarId = fate.fullName.addStep(TemplarBlockResultVarName2(resultVarNum))
+    val resultVariable = ReferenceLocalVariable2(resultVarId, Final, lastExpr.resultRegister.reference)
+    val resultLet = LetNormal2(resultVariable, lastExpr)
+    fate.addVariable(resultVariable)
+    (exprs.init :+ resultLet, resultVariable)
   }
 
   def evaluateBlockStatements(

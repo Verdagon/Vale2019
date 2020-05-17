@@ -3,11 +3,11 @@ package net.verdagon.vale
 object ArrayUtils {
   val code =
     """
-      |fn toArray<M, N, E>(seq &[<_> N * E]) rules(M Mutability) {
-      |  Array<M, E>(N, (i){ seq.(i)})
+      |fn toArray<M, N, E, SM>(seq &[<SM> N * E]) rules(M Mutability) {
+      |  Array<M, E>(N, &IFunction1<SM, Int, E>((i){ seq.(i)}))
       |}
       |
-      |fn each<N, E, F>(seq &[<_> N * E], func F) Void {
+      |fn each<N, E, F, M>(seq &[<M> N * E], func F) Void {
       |  Array<mut, Int>(N, (i){ func(seq.(i)); = 0; });
       |}
       |

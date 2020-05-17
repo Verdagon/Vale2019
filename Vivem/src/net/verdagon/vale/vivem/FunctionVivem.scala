@@ -50,8 +50,7 @@ object FunctionVivem {
     ref.fullName.toString match {
       case """F("__addIntInt",[],[R(*,i),R(*,i)])""" => VivemExterns.addIntInt
       case """F("__addFloatFloat",[],[R(*,f),R(*,f)])""" => VivemExterns.addFloatFloat
-//      case PrototypeH(FullNameH(List(NamePartH("panic", Some(List()), Some(List()), None))), List(), ReferenceH(m.Share, NeverH())) =>
-//        VivemExterns.panic
+      case """F("panic")""" => VivemExterns.panic
       case """F("__multiplyIntInt",[],[R(*,i),R(*,i)])""" => VivemExterns.multiplyIntInt
 //      case PrototypeH(FullNameH(List(NamePartH("__multiplyFloatFloat", Some(List()), Some(List(ReferenceH(m.Share,FloatH()), ReferenceH(m.Share,FloatH()))), None))), List(ReferenceH(m.Share,FloatH()), ReferenceH(m.Share,FloatH())), ReferenceH(m.Share,FloatH())) =>
 //        VivemExterns.multiplyFloatFloat

@@ -216,8 +216,18 @@ case class Return2(
 // later we can optimize it to only have the things we use
 
 // Block2 is required to unlet all the variables it introduces.
-case class Block2(exprs: List[ReferenceExpression2]) extends ReferenceExpression2 {
+case class Block2(
+    exprs: List[ReferenceExpression2]
+) extends ReferenceExpression2 {
+
   vassert(exprs.last.isInstanceOf[ReferenceExpression2])
+
+  // If there's a Never2() anywhere, then the entire block should end in an unreachable
+  // or panic or something.
+  if (exprs.exists(_.referend == Never2())) {
+    vassert(exprs.last.referend == Never2())
+  }
+
   def lastReferenceExpr = exprs.last
   override def resultRegister = lastReferenceExpr.resultRegister
 
@@ -278,6 +288,14 @@ case class ArraySize2(array: ReferenceExpression2) extends ReferenceExpression2 
 
 case class VoidLiteral2() extends ReferenceExpression2 {
   override def resultRegister = ReferenceRegister2(Coord(Share, Void2()))
+
+  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
+    List(this).collect(func)
+  }
+}
+
+case class NeverLiteral2() extends ReferenceExpression2 {
+  override def resultRegister = ReferenceRegister2(Coord(Share, Never2()))
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func)

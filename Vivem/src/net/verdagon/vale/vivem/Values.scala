@@ -183,18 +183,18 @@ case class ArrayInstanceV(
 case class AllocationId(tyype: RRReferend, num: Int)
 
 case class ReferenceV(
-                       // actualType and seenAsType will be different in the case of interface reference.
-                       // Otherwise they'll be the same.
+  // actualType and seenAsType will be different in the case of interface reference.
+  // Otherwise they'll be the same.
 
-                       // What is the actual type of what we're pointing to (as opposed to an interface).
-                       // If we have a Car reference to a Civic, then this will be Civic.
-                       actualKind: RRReferend,
-                       // What do we see the type as. If we have a Car reference to a Civic, then this will be Car.
-                       seenAsKind: RRReferend,
+  // What is the actual type of what we're pointing to (as opposed to an interface).
+  // If we have a Car reference to a Civic, then this will be Civic.
+  actualKind: RRReferend,
+  // What do we see the type as. If we have a Car reference to a Civic, then this will be Car.
+  seenAsKind: RRReferend,
 
-                       ownership: OwnershipH,
+  ownership: OwnershipH,
 
-                       num: Int
+  num: Int
 ) {
   def allocId = AllocationId(RRReferend(actualKind.hamut), num)
   def actualCoord: RRReference = RRReference(ReferenceH(ownership, actualKind.hamut))

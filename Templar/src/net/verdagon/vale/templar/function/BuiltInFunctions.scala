@@ -388,7 +388,7 @@ object BuiltInFunctions {
               BlockAE(
                 List(LocalVariableA(CodeVarNameA("arr"), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
                 List(
-                  LocalLoadAE(CodeVarNameA("N"), false)))))))
+                  RuneLookupAE(CodeRuneA("N"), IntegerTemplataType)))))))
   }
 
   private def addPanic(currentlyConstructingEnv: NamespaceEnvironment[IName2]): NamespaceEnvironment[IName2] = {
