@@ -1,7 +1,7 @@
 package net.verdagon.vale.hammer
 
 import net.verdagon.vale.hinputs.Hinputs
-import net.verdagon.vale.{vassert, vassertSome, vcurious, vfail, metal => m}
+import net.verdagon.vale.{vassert, vassertSome, vcurious, vfail, vwat, metal => m}
 import net.verdagon.vale.metal.{ShareH => _, _}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.templata.{FunctionBanner2, FunctionHeader2, Prototype2}
@@ -60,7 +60,8 @@ object CallHammer {
       args: List[Expression2],
       resultType2: Coord):
   RegisterAccessH[ReferendH] = {
-    val Prototype2(_, paramTypes, returnType2) = function
+    val returnType2 = function.returnType
+    val paramTypes = function.paramTypes
     val (argLines, argsDeferreds) =
       ExpressionHammer.translateExpressions(
         hinputs, hamuts, locals, stackHeight, nodesByLine, args);
@@ -263,6 +264,7 @@ object CallHammer {
           // Arbitrarily choose the then
           Some(thenResultCoord)
         }
+        case _ => vwat()
       }
     val maybeResultAccess = maybeResultCoord.map(coord => RegisterAccessH(ifCallNode.registerId, coord))
 

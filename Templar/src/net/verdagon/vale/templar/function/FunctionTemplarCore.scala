@@ -107,7 +107,7 @@ object FunctionTemplarCore {
         (header)
       }
       case GeneratedBodyA(generatorId) => {
-        val signature2 = Signature2(fullEnv.fullName, params2.map(_.tyype));
+        val signature2 = Signature2(fullEnv.fullName);
         val maybeRetTemplata =
           startingFullEnv.function.maybeRetCoordRune match {
             case None => (None)
@@ -207,7 +207,7 @@ object FunctionTemplarCore {
       temputs
         .declareFunctionReturnType(header.toSignature, returnReferenceType2)
       temputs.addFunction(function2)
-    vassert(temputs.exactDeclaredSignatureExists(env.fullName, header.paramTypes))
+    vassert(temputs.exactDeclaredSignatureExists(env.fullName))
     (header)
   }
 

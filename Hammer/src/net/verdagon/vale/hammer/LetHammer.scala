@@ -1,13 +1,12 @@
 package net.verdagon.vale.hammer
 
-import net.verdagon.vale.hammer.ExpressionHammer.{translate}
+import net.verdagon.vale.hammer.ExpressionHammer.translate
 import net.verdagon.vale.hinputs.Hinputs
-import net.verdagon.vale.{metal => m}
+import net.verdagon.vale.{vassertSome, vfail, metal => m}
 import net.verdagon.vale.metal.{Variability => _, _}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.env.{AddressibleLocalVariable2, ReferenceLocalVariable2}
 import net.verdagon.vale.templar.types._
-import net.verdagon.vale.vfail
 
 object LetHammer {
 
@@ -21,8 +20,9 @@ object LetHammer {
   Unit = {
     val LetNormal2(localVariable, sourceExpr2) = let2
 
-    val (Some(sourceExprResultLine), deferreds) =
+    val (maybeSourceExprResultLine, deferreds) =
       translate(hinputs, hamuts, locals, stackHeight, nodesByLine, sourceExpr2);
+    val sourceExprResultLine = vassertSome(maybeSourceExprResultLine)
     val (sourceResultPointerTypeH) =
       TypeHammer.translateReference(hinputs, hamuts, sourceExpr2.resultRegister.reference)
 

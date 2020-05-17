@@ -2,7 +2,7 @@ package net.verdagon.vale.hammer
 
 import net.verdagon.vale.hinputs.Hinputs
 import net.verdagon.vale.{metal => m}
-import net.verdagon.vale.metal.{BorrowH => _, Immutable => _, Mutable => _, OwnH => _, ShareH => _, _}
+import net.verdagon.vale.metal.{ShareH, BorrowH => _, Immutable => _, Mutable => _, OwnH => _, _}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.env.AddressibleLocalVariable2
 import net.verdagon.vale.templar.types._
@@ -14,9 +14,6 @@ object ExpressionHammer {
   // blocks and previously in this block. It's used to figure out the index of
   // a newly declared local.
   // Returns:
-  // - Hamuts, containing structs and stuff
-  // - locals
-  // - nodesByLine
   // - result register id
   // - deferred expressions, to move to after the enclosing call. head is put first after call.
   def translate(
@@ -25,8 +22,8 @@ object ExpressionHammer {
       locals: LocalsBox,
       stackHeight: StackHeightBox,
       nodesByLine: NodesBox,
-      expr2: Expression2):
-      (Option[RegisterAccessH[ReferendH]], List[Expression2]) = {
+      expr2: Expression2
+  ): (Option[RegisterAccessH[ReferendH]], List[Expression2]) = {
     expr2 match {
       case IntLiteral2(value) => {
         val resultNode =
@@ -122,7 +119,10 @@ object ExpressionHammer {
       case Consecutor2(exprs) => {
         val (resultLines, deferreds) =
           translateMaybeReturningExpressions(hinputs, hamuts, locals, stackHeight, nodesByLine, exprs);
-        resultLines.init.foreach(nonLastResultLine => vassert(vassertSome(nonLastResultLine).expectedType.kind == VoidH()))
+        resultLines.init.foreach({
+          case None =>
+          case Some(nonLastResultLine) => vassert(nonLastResultLine.expectedType.kind == VoidH())
+        })
         vassert(deferreds.isEmpty) // curiosity, would we have any here?
         (resultLines.last, List())
       }
@@ -288,16 +288,28 @@ object ExpressionHammer {
         val (innerExprResultLine, deferreds) =
           translate(hinputs, hamuts, locals, stackHeight, nodesByLine, innerExpr);
 
-        vcurious(innerExprResultTypeH.kind == NeverH() || resultTypeH.kind == NeverH())
-//        vcurious(innerExprResultTypeH == resultTypeH)
+        // Not always the case:
+        //   vcurious(innerExprResultTypeH.kind == NeverH() || resultTypeH.kind == NeverH())
+        // for example when we're destructuring a TupleT2 or PackT2, we interpret from that
+        // to its understruct.
 
-        val resultNode =
-          nodesByLine.addNode(
-            UnreachableH(
-              nodesByLine.nextId()))
-        val access = RegisterAccessH(resultNode.registerId, resultTypeH)
+        // These both trip:
+        //   vcurious(innerExprResultTypeH == resultTypeH)
+        //   vcurious(innerExprResultTypeH != resultTypeH)
+        // Because sometimes theyre actually the same, because we might interpret a tuple to
+        // its understruct, and sometimes theyre different, when we're making a Never into
+        // an Int for example when one branch of an If panics or returns.
 
-        (Some(access), deferreds)
+        if (innerExprResultTypeH.kind == NeverH() || resultTypeH.kind == NeverH()) {
+          val resultNode =
+            nodesByLine.addNode(
+              UnreachableH(
+                nodesByLine.nextId()))
+          val access = RegisterAccessH(resultNode.registerId, resultTypeH)
+          (Some(access), deferreds)
+        } else {
+          (innerExprResultLine, deferreds)
+        }
       }
 
       case CheckRefCount2(refExpr2, category, numExpr2) => {
@@ -437,8 +449,12 @@ object ExpressionHammer {
 
         translateDeferreds(hinputs, hamuts, locals, stackHeight, nodesByLine, innerDeferreds)
 
-        // See VDND.
-        (None, List())
+        val resultNode =
+          nodesByLine.addNode(
+            UnreachableH(
+              nodesByLine.nextId()))
+        val access = RegisterAccessH(resultNode.registerId, ReferenceH(ShareH, NeverH()))
+        (Some(access), List())
       }
       case ArgLookup2(paramIndex, type2) => {
         val (typeH) =

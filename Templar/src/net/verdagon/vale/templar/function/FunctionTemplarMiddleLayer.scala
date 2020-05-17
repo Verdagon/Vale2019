@@ -129,7 +129,7 @@ object FunctionTemplarMiddleLayer {
 
     val paramTypes2 = evaluateFunctionParamTypes(runedEnv, function1.params);
     val functionFullName = assembleName(runedEnv.fullName, paramTypes2)
-    val needleSignature = Signature2(functionFullName, paramTypes2)
+    val needleSignature = Signature2(functionFullName)
     temputs.lookupFunction(needleSignature) match {
       case Some(Function2(header, _, _)) => {
         (header)
@@ -190,10 +190,10 @@ object FunctionTemplarMiddleLayer {
     val paramTypes2 = evaluateFunctionParamTypes(runedEnv, function1.params)
     val maybeReturnType = getMaybeReturnType(runedEnv, function1.maybeRetCoordRune)
     val namedEnv = makeNamedEnv(runedEnv, paramTypes2, maybeReturnType)
-    val needleSignature = Signature2(namedEnv.fullName, paramTypes2)
+    val needleSignature = Signature2(namedEnv.fullName)
     temputs.returnTypesBySignature.get(needleSignature) match {
       case Some(returnType2) => {
-        (Prototype2(namedEnv.fullName, paramTypes2, returnType2))
+        (Prototype2(namedEnv.fullName, returnType2))
       }
       case None => {
         if (temputs.exactDeclaredSignatureExists(needleSignature)) {

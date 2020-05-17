@@ -646,7 +646,7 @@ object VonHammer {
           Vector(
             VonMember(None, Some("num"), VonInt(num))))
       }
-      case TemplarPatternPackName2(num) => {
+      case TemplarPatternDestructureeName2(num) => {
         VonObject(
           "TemplarPatternPackName",
           None,

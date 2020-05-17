@@ -106,15 +106,16 @@ object BlockTemplar {
     undecayedExprs2.lastOption match {
       case None => (undecayedExprs2, None)
       case Some(lastExpr) => {
-        if (lastExpr.resultRegister.referend == Void2()) {
-          (undecayedExprs2, None)
-        } else {
-          val resultVarNum = fate.nextVarCounter()
-          val resultVarId = fate.fullName.addStep(TemplarBlockResultVarName2(resultVarNum))
-          val resultVariable = ReferenceLocalVariable2(resultVarId, Final, lastExpr.resultRegister.reference)
-          val resultLet = LetNormal2(resultVariable, lastExpr)
-          fate.addVariable(resultVariable)
-          (undecayedExprs2.init :+ resultLet, Some(resultVariable))
+        lastExpr.resultRegister.referend match {
+          case Void2() | Never2() => (undecayedExprs2, None)
+          case _ => {
+            val resultVarNum = fate.nextVarCounter()
+            val resultVarId = fate.fullName.addStep(TemplarBlockResultVarName2(resultVarNum))
+            val resultVariable = ReferenceLocalVariable2(resultVarId, Final, lastExpr.resultRegister.reference)
+            val resultLet = LetNormal2(resultVariable, lastExpr)
+            fate.addVariable(resultVariable)
+            (undecayedExprs2.init :+ resultLet, Some(resultVariable))
+          }
         }
       }
     }
@@ -128,7 +129,7 @@ object BlockTemplar {
     expr1 match {
       case Nil => (List(), Set())
       case first1 :: rest1 => {
-        val (undestructedFirstExpr2, returnsFromFirst) =
+        val (perhapsUndestructedFirstExpr2, returnsFromFirst) =
           ExpressionTemplar.evaluateAndCoerceToReferenceExpression(
             temputs, fate, first1);
 
@@ -136,11 +137,13 @@ object BlockTemplar {
           if (rest1.isEmpty) {
             // This is the last expression, which means it's getting returned,
             // so don't destruct it.
-            (undestructedFirstExpr2) // Do nothing
+            (perhapsUndestructedFirstExpr2) // Do nothing
           } else {
-            val destructedFirstExpr2 =
-              DestructorTemplar.drop(fate, temputs, undestructedFirstExpr2)
-            (destructedFirstExpr2)
+            // This isn't the last expression
+            perhapsUndestructedFirstExpr2.resultRegister.referend match {
+              case Void2() => perhapsUndestructedFirstExpr2
+              case _ => DestructorTemplar.drop(fate, temputs, perhapsUndestructedFirstExpr2)
+            }
           }
 
         val (restExprs2, returnsFromRest) =

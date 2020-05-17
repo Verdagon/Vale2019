@@ -576,7 +576,7 @@ object StructTemplarCore {
     temputs.declareFunctionReturnType(constructor2.header.toSignature, constructor2.header.returnType)
     temputs.addFunction(constructor2);
 
-    vassert(temputs.exactDeclaredSignatureExists(constructor2.header.fullName, constructor2.header.toBanner.paramTypes))
+    vassert(temputs.exactDeclaredSignatureExists(constructor2.header.fullName))
 
     (constructor2.header)
   }

@@ -143,7 +143,7 @@ class RuleTyperTests extends FunSuite with Matchers {
           List(),
           None)
 
-    conclusions.typeByRune(CodeRuneA("XX")) shouldEqual CoordTemplataType
+    conclusions.typeByRune(CodeRuneA("Z")) shouldEqual CoordTemplataType
   }
 
   test("Can match KindTemplataType against StructEnvEntry / StructTemplata") {
@@ -172,7 +172,7 @@ class RuleTyperTests extends FunSuite with Matchers {
           List(),
           None)
 
-    vassert(conclusions.typeByRune(CodeRuneA("XX")) == CoordTemplataType)
+    vassert(conclusions.typeByRune(CodeRuneA("Z")) == CoordTemplataType)
   }
 
   test("Can infer type from interface template param") {
@@ -334,7 +334,7 @@ class RuleTyperTests extends FunSuite with Matchers {
     val (conclusions, RuleTyperSolveSuccess(_)) =
       makeCannedRuleTyper().solve(FakeState(), makeCannedEnvironment(), rules, atoms, None)
 
-    conclusions.typeByRune(CodeRuneA("XX")) shouldEqual CoordTemplataType
+    conclusions.typeByRune(CodeRuneA("Z")) shouldEqual CoordTemplataType
   }
 
   test("Test ownershipped") {
@@ -353,7 +353,7 @@ class RuleTyperTests extends FunSuite with Matchers {
 
     val (conclusions, RuleTyperSolveSuccess(_)) =
       makeCannedRuleTyper().solve(FakeState(), makeCannedEnvironment(), rules, atoms, None)
-    conclusions.typeByRune(CodeRuneA("XX")) shouldEqual CoordTemplataType
+    conclusions.typeByRune(CodeRuneA("Z")) shouldEqual CoordTemplataType
   }
 
 
@@ -384,7 +384,7 @@ class RuleTyperTests extends FunSuite with Matchers {
         rules,
         List(AtomSP(CaptureS(CodeVarNameS("x"),FinalP),Some(AbstractSP),CodeRuneS("Z"),None)),
         None)
-    conclusions.typeByRune(CodeRuneA("XX")) shouldEqual CoordTemplataType
+    conclusions.typeByRune(CodeRuneA("Z")) shouldEqual CoordTemplataType
   }
 
   test("Test destructuring") {
@@ -423,7 +423,7 @@ class RuleTyperTests extends FunSuite with Matchers {
             TemplexSR(RepeaterSequenceST(MutabilityST(MutableP), IntST(5),OwnershippedST(ShareP,NameST(CodeTypeNameS("Int"))))))),
         List(),
         None)
-    conclusions.typeByRune(CodeRuneA("XX")) shouldEqual CoordTemplataType
+    conclusions.typeByRune(CodeRuneA("Z")) shouldEqual CoordTemplataType
   }
 
   test("Test array") {

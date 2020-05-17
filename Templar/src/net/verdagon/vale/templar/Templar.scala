@@ -254,6 +254,7 @@ object Templar {
       case sr @ StructRef2(_) => temputs.lookupMutability(sr)
       case ir @ InterfaceRef2(_) => temputs.lookupMutability(ir)
       case PackT2(_, sr) => temputs.lookupMutability(sr)
+      case TupleT2(_, sr) => temputs.lookupMutability(sr)
       case OverloadSet(_, _, _) => {
         // Just like FunctionT2
         Immutable

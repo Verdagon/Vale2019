@@ -1112,13 +1112,19 @@ class InfererEvaluator[Env, State](
         }
         InferEvaluateSuccess(members, true)
       }
+      case TupleT2(members, _) => {
+        if (members.size != expectedNumMembers) {
+          return InferEvaluateConflict(inferences.inferences, "Expected something with " + expectedNumMembers + " members but received " + kind, List())
+        }
+        InferEvaluateSuccess(members, true)
+      }
       case ArraySequenceT2(size, RawArrayT2(memberType, _)) => {
         // We need to do this check right here because right after this we're making an array of size `size`
         // which we just received as an integer from the user.
         if (size != expectedNumMembers) {
           return InferEvaluateConflict(inferences.inferences, "Expected something with " + expectedNumMembers + " members but received " + kind, List())
         }
-        InferEvaluateSuccess(List(0 until size).map(_ => memberType), true)
+        InferEvaluateSuccess((0 until size).toList.map(_ => memberType), true)
       }
       case _ => {
         return InferEvaluateConflict(inferences.inferences, "Expected something destructurable but received " + kind, List())

@@ -75,6 +75,11 @@ case class LetNormal2(
 ) extends ReferenceExpression2 {
   override def resultRegister = ReferenceRegister2(Coord(Share, Void2()))
 
+  expr match {
+    case Return2(_) => vwat()
+    case _ =>
+  }
+
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func) ++ expr.all(func)
   }
@@ -99,6 +104,16 @@ case class Discard2(
   expr: ReferenceExpression2
 ) extends ReferenceExpression2 {
   override def resultRegister = ReferenceRegister2(Coord(Share, Void2()))
+
+  expr match {
+    case Consecutor2(exprs) => {
+      exprs.last match {
+        case Discard2(_) => vwat()
+        case _ =>
+      }
+    }
+    case _ =>
+  }
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func) ++ expr.all(func)
@@ -641,6 +656,26 @@ case class Destructure2(
 ) extends ReferenceExpression2 {
   override def resultRegister: ReferenceRegister2 = ReferenceRegister2(Coord(Share, Void2()))
 
+  if (expr.resultRegister.reference.ownership == Borrow) {
+    vfail("wot")
+  }
+
+  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
+    List(this).collect(func) ++ expr.all(func)
+  }
+}
+
+// We destroy both Share and Own things
+// If the struct contains any addressibles, those die immediately and aren't stored
+// in the destination variables, which is why it's a list of ReferenceLocalVariable2.
+case class DestructureArraySequence2(
+  expr: ReferenceExpression2,
+  arraySeq: ArraySequenceT2,
+  destinationReferenceVariables: List[ReferenceLocalVariable2]
+) extends ReferenceExpression2 {
+  override def resultRegister: ReferenceRegister2 = ReferenceRegister2(Coord(Share, Void2()))
+
+  vassert(expr.referend == arraySeq)
   if (expr.resultRegister.reference.ownership == Borrow) {
     vfail("wot")
   }

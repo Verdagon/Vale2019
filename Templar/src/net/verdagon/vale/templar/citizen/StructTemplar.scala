@@ -314,7 +314,7 @@ object StructTemplar {
     temputs.declareFunctionReturnType(constructor2.header.toSignature, constructor2.header.returnType)
     temputs.addFunction(constructor2);
 
-    vassert(temputs.exactDeclaredSignatureExists(constructor2.header.fullName, constructor2.header.toBanner.paramTypes))
+    vassert(temputs.exactDeclaredSignatureExists(constructor2.header.fullName))
 
     (anonymousSubstructRef, constructor2.header.toPrototype)
   }
@@ -397,7 +397,8 @@ object StructTemplar {
       temputs: TemputsBox,
       prototype: Prototype2):
   (InterfaceRef2, StructRef2, Prototype2) = {
-    val Prototype2(_, List(paramType), returnType) = prototype
+    val returnType = prototype.returnType
+    val List(paramType) = prototype.fullName.last.parameters
 
     val Some(ifunction1Templata@InterfaceTemplata(_, _)) =
       env.getNearestTemplataWithName(CodeTypeNameA("IFunction1"), Set(TemplataLookupContext))

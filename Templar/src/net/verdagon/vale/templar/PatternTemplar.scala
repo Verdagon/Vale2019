@@ -21,41 +21,41 @@ import scala.collection.immutable.List
 
 object PatternTemplar {
 
-  // Note: This will unlet/drop the input expressions. Be warned.
-  // patternInputExprs2 is a list of reference expression because they're coming in from
-  // god knows where... arguments, the right side of a let, a variable, don't know!
-  // If a pattern needs to send it to multiple places, the pattern is free to put it into
-  // a local variable.
-  // PatternTemplar must be sure to NOT USE IT TWICE! That would mean copying the entire
-  // expression subtree that it contains!
-  // Has "InferAnd" because we evaluate the template rules too.
-  // Returns:
-  // - Temputs
-  // - Function state
-  // - Exports, to toss into the environment
-  // - Local variables
-  def nonCheckingInferAndTranslateList(
-    temputs: TemputsBox,
-    fate: FunctionEnvironmentBox,
-    rules: List[IRulexAR],
-    typeByRune: Map[IRuneA, ITemplataType],
-    localRunes: Set[IRuneA],
-    patterns1: List[AtomAP],
-    patternInputExprs2: List[ReferenceExpression2]):
-  List[ReferenceExpression2] = {
-
-    val patternInputCoords = patternInputExprs2.map(_.resultRegister.reference)
-
-    val templatasByRune =
-      InferTemplar.inferFromArgCoords(fate.snapshot, temputs, List(), rules, typeByRune, localRunes, patterns1, None, List(), patternInputCoords.map(arg => ParamFilter(arg, None))) match {
-        case (InferSolveFailure(_, _, _, _, _, _)) => vfail("Couldn't figure out runes for pattern!")
-        case (InferSolveSuccess(tbr)) => (tbr.templatasByRune.mapValues(v => List(TemplataEnvEntry(v))))
-      }
-
-    fate.addEntries(templatasByRune.map({ case (key, value) => (key, value) }).toMap)
-
-    nonCheckingTranslateList(temputs, fate, patterns1, patternInputExprs2)
-  }
+//  // Note: This will unlet/drop the input expressions. Be warned.
+//  // patternInputExprs2 is a list of reference expression because they're coming in from
+//  // god knows where... arguments, the right side of a let, a variable, don't know!
+//  // If a pattern needs to send it to multiple places, the pattern is free to put it into
+//  // a local variable.
+//  // PatternTemplar must be sure to NOT USE IT TWICE! That would mean copying the entire
+//  // expression subtree that it contains!
+//  // Has "InferAnd" because we evaluate the template rules too.
+//  // Returns:
+//  // - Temputs
+//  // - Function state
+//  // - Exports, to toss into the environment
+//  // - Local variables
+//  def nonCheckingInferAndTranslateList(
+//    temputs: TemputsBox,
+//    fate: FunctionEnvironmentBox,
+//    rules: List[IRulexAR],
+//    typeByRune: Map[IRuneA, ITemplataType],
+//    localRunes: Set[IRuneA],
+//    patterns1: List[AtomAP],
+//    patternInputExprs2: List[ReferenceExpression2]):
+//  List[ReferenceExpression2] = {
+//
+//    val patternInputCoords = patternInputExprs2.map(_.resultRegister.reference)
+//
+//    val templatasByRune =
+//      InferTemplar.inferFromArgCoords(fate.snapshot, temputs, List(), rules, typeByRune, localRunes, patterns1, None, List(), patternInputCoords.map(arg => ParamFilter(arg, None))) match {
+//        case (InferSolveFailure(_, _, _, _, _, _)) => vfail("Couldn't figure out runes for pattern!")
+//        case (InferSolveSuccess(tbr)) => (tbr.templatasByRune.mapValues(v => List(TemplataEnvEntry(v))))
+//      }
+//
+//    fate.addEntries(templatasByRune.map({ case (key, value) => (key, value) }).toMap)
+//
+//    nonCheckingTranslateList(temputs, fate, patterns1, patternInputExprs2)
+//  }
 
   // Note: This will unlet/drop the input expressions. Be warned.
   // patternInputExprs2 is a list of reference expression because they're coming in from
@@ -197,10 +197,29 @@ object PatternTemplar {
                 temputs, fate, listOfMaybeDestructureMemberPatterns, expectedCoord, localLookupExpr)
             (lets0 ++ innerLets)
           }
-          case PackT2(_, _) => {
+          case PackT2(_, underlyingStruct @ StructRef2(_)) => {
+            val structType2 = Coord(expectedCoord.ownership, underlyingStruct)
+            val reinterpretExpr2 = TemplarReinterpret2(localLookupExpr, structType2)
             val innerLets =
-            nonCheckingTranslatePack(
-              temputs, fate, listOfMaybeDestructureMemberPatterns, inputExpr)
+              nonCheckingTranslateStructInner(
+                temputs, fate, listOfMaybeDestructureMemberPatterns, structType2, reinterpretExpr2)
+            (lets0 ++ innerLets)
+          }
+          case TupleT2(_, underlyingStruct @ StructRef2(_)) => {
+            val structType2 = Coord(expectedCoord.ownership, underlyingStruct)
+            val reinterpretExpr2 = TemplarReinterpret2(localLookupExpr, structType2)
+            val innerLets =
+              nonCheckingTranslateStructInner(
+                temputs, fate, listOfMaybeDestructureMemberPatterns, structType2, reinterpretExpr2)
+            (lets0 ++ innerLets)
+          }
+          case ArraySequenceT2(size, RawArrayT2(memberType, mutability)) => {
+            if (size != listOfMaybeDestructureMemberPatterns.size) {
+              vfail("Wrong num exprs!")
+            }
+            val innerLets =
+              nonCheckingTranslateArraySeq(
+                temputs, fate, listOfMaybeDestructureMemberPatterns, localLookupExpr)
             (lets0 ++ innerLets)
           }
           case _ => vfail("impl!")
@@ -325,26 +344,65 @@ object PatternTemplar {
 //    }
   }
 
-  private def nonCheckingTranslatePack(
+  private def nonCheckingTranslateArraySeq(
     temputs: TemputsBox,
     fate: FunctionEnvironmentBox,
     innerPatternMaybes: List[AtomAP],
-    inputPackExpr: ReferenceExpression2):
+    inputArraySeqExpr: ReferenceExpression2):
   (List[ReferenceExpression2]) = {
     // we gotta:
     // destructure the incoming pack expression into a bunch of locals.
     // for each member, unlet its local and pass it to the subpattern.
 
-    val packRef2 = inputPackExpr.resultRegister.reference
-    val Coord(packOwnership, PackT2(_, underlyingStruct @ StructRef2(_))) = packRef2
+    val arrSeqRef2 = inputArraySeqExpr.resultRegister.reference
+    val Coord(arrSeqRefOwnership, arraySeqT @ ArraySequenceT2(numElements, RawArrayT2(elementType, arrayMutability))) = arrSeqRef2
 
-    val structType2 = Coord(packOwnership, underlyingStruct)
+    val memberTypes = (0 until numElements).toList.map(_ => elementType)
 
-    val reinterpretExpr2 =
-      TemplarReinterpret2(inputPackExpr, structType2)
+    val counter = fate.nextVarCounter()
 
-    nonCheckingTranslateStructInner(
-      temputs, fate, innerPatternMaybes, structType2, reinterpretExpr2)
+    arrSeqRefOwnership match {
+      case Own => {
+        val memberLocalVariables = makeLocals(fate, counter, memberTypes)
+        val destructure =
+          DestructureArraySequence2(
+            inputArraySeqExpr, arraySeqT, memberLocalVariables)
+        val lets = makeLetsForOwn(temputs, fate, innerPatternMaybes, memberLocalVariables)
+        (destructure :: lets)
+      }
+      case Share => {
+        // This is different from the Own case because we're not destructuring the incoming thing, we're just
+        // loading from it.
+
+        val arrSeqLocalVariableId = fate.fullName.addStep(TemplarPatternDestructureeName2(counter))
+        val arrSeqLocalVariable = ReferenceLocalVariable2(arrSeqLocalVariableId, Final, arrSeqRef2)
+        val arrSeqLet = LetNormal2(arrSeqLocalVariable, inputArraySeqExpr);
+        fate.addVariable(arrSeqLocalVariable)
+
+        val innerLets =
+          innerPatternMaybes.zip(memberTypes).zipWithIndex
+            .flatMap({
+              case (((innerPattern, memberType), index)) => {
+                val loadExpr =
+                  SoftLoad2(
+                    ArraySequenceLookup2(inputArraySeqExpr, arraySeqT, IntLiteral2(index)),
+                    Share)
+                innerNonCheckingTranslate(temputs, fate, innerPattern, loadExpr)
+              }
+            })
+
+        val packUnlet = ExpressionTemplar.unletLocal(fate, arrSeqLocalVariable)
+        val dropExpr =
+          DestructorTemplar.drop(fate, temputs, packUnlet)
+
+        ((arrSeqLet :: innerLets) :+ dropExpr)
+      }
+      case Borrow => {
+        // here, instead of doing a destructure, we'd just put this in a variable
+        // and do a bunch of lookups on it.
+        vfail("implement!")
+      }
+    }
   }
 
   private def nonCheckingTranslateStructInner(
@@ -363,33 +421,18 @@ object PatternTemplar {
 
     structOwnership match {
       case Own => {
-        val memberLocalVariables =
-          memberTypes.zipWithIndex.map({
-            case ((memberType, index)) => {
-              val variableId = fate.fullName.addStep(TemplarPatternMemberName2(counter, index))
-              val localVariable = ReferenceLocalVariable2(variableId, Final, memberType)
-              fate.addVariable(localVariable)
-              localVariable
-            }
-          })
+        val memberLocalVariables = makeLocals(fate, counter, memberTypes)
 
         val destructure = Destructure2(inputStructExpr, structRef2, memberLocalVariables)
 
-        val lets =
-          innerPatternMaybes.zip(memberLocalVariables).flatMap({
-            case ((innerPattern, localVariable)) => {
-              val unletExpr =
-                ExpressionTemplar.unletLocal(fate, localVariable)
-              innerNonCheckingTranslate(temputs, fate, innerPattern, unletExpr)
-            }
-          })
+        val lets = makeLetsForOwn(temputs, fate, innerPatternMaybes, memberLocalVariables)
         (destructure :: lets)
       }
       case Share => {
         // This is different from the Own case because we're not destructuring the incoming thing, we're just
         // loading from it.
 
-        val packLocalVariableId = fate.fullName.addStep(TemplarPatternPackName2(counter))
+        val packLocalVariableId = fate.fullName.addStep(TemplarPatternDestructureeName2(counter))
         val packLocalVariable = ReferenceLocalVariable2(packLocalVariableId, Final, structType2)
         val packLet = LetNormal2(packLocalVariable, inputStructExpr);
         fate.addVariable(packLocalVariable)
@@ -474,10 +517,39 @@ object PatternTemplar {
 //    }
 //  }
 
-//  private def getPatternsCaptureDeclarations(patterns: List[AtomAP]):
+  private def makeLocals(
+    fate: FunctionEnvironmentBox,
+    counter: Int,
+    memberTypes: List[Coord]
+  ): List[ReferenceLocalVariable2] = {
+    memberTypes.zipWithIndex.map({
+      case ((memberType, index)) => {
+        val variableId = fate.fullName.addStep(TemplarPatternMemberName2(counter, index))
+        val localVariable = ReferenceLocalVariable2(variableId, Final, memberType)
+        fate.addVariable(localVariable)
+        localVariable
+      }
+    })
+  }
+
+  //  private def getPatternsCaptureDeclarations(patterns: List[AtomAP]):
 //      VariableDeclarations = {
 //    patterns.foldLeft(VariableDeclarations(Set()))({ case (previousDeclarations, pattern) =>
 //      previousDeclarations ++ getPatternCaptureDeclarations(pattern)
 //    })
 //  }
+  private def makeLetsForOwn(
+    temputs: TemputsBox,
+    fate: FunctionEnvironmentBox,
+    innerPatternMaybes: List[AtomAP],
+    memberLocalVariables: List[ReferenceLocalVariable2]
+  ): List[ReferenceExpression2] = {
+    innerPatternMaybes.zip(memberLocalVariables).flatMap({
+      case ((innerPattern, localVariable)) => {
+        val unletExpr =
+          ExpressionTemplar.unletLocal(fate, localVariable)
+        innerNonCheckingTranslate(temputs, fate, innerPattern, unletExpr)
+      }
+    })
+  }
 }

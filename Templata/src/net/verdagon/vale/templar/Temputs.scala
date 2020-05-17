@@ -456,7 +456,7 @@ case class Temputs(
       case Some(sig) => {
         returnTypesBySignature.get(sig) match {
           case None => None
-          case Some(ret) => Some(Prototype2(sig.fullName, sig.paramTypes, ret))
+          case Some(ret) => Some(Prototype2(sig.fullName, ret))
         }
       }
     }
@@ -501,15 +501,11 @@ case class Temputs(
     interfaceDefsByRef(interfaceRef)
   }
 
-  def exactDeclaredSignatureExists(
-      fullName: FullName2[IFunctionName2],
-      paramTypes: List[Coord]):
-  Boolean = {
-    declaredSignatures.contains(Signature2(fullName, paramTypes))
+  def exactDeclaredSignatureExists(fullName: FullName2[IFunctionName2]): Boolean = {
+    declaredSignatures.contains(Signature2(fullName))
   }
 
-  def exactDeclaredSignatureExists(signature: Signature2):
-  Boolean = {
+  def exactDeclaredSignatureExists(signature: Signature2): Boolean = {
     declaredSignatures.contains(signature)
   }
 
@@ -622,8 +618,8 @@ case class TemputsBox(var temputs: Temputs) {
 
   def lookupInterface(interfaceRef: InterfaceRef2): InterfaceDefinition2 = temputs.lookupInterface(interfaceRef)
 
-  def exactDeclaredSignatureExists(fullName: FullName2[IFunctionName2], paramTypes: List[Coord]): Boolean = {
-    temputs.exactDeclaredSignatureExists(fullName, paramTypes)
+  def exactDeclaredSignatureExists(fullName: FullName2[IFunctionName2]): Boolean = {
+    temputs.exactDeclaredSignatureExists(fullName)
   }
 
   def exactDeclaredSignatureExists(signature: Signature2): Boolean = {

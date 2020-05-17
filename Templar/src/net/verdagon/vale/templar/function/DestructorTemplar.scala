@@ -111,7 +111,7 @@ object DestructorTemplar {
     val function2 = Function2(header, List(), Block2(List(dropExpr2)))
     temputs.declareFunctionReturnType(header.toSignature, Coord(Share, Void2()))
     temputs.addFunction(function2)
-    vassert(temputs.exactDeclaredSignatureExists(bodyEnv.fullName, header.paramTypes))
+    vassert(temputs.exactDeclaredSignatureExists(bodyEnv.fullName))
     header
   }
 
@@ -178,6 +178,10 @@ object DestructorTemplar {
                 destroySharedCitizen(temputs, understructReference2)
               }
               case PackT2(_, understruct2) => {
+                val understructReference2 = undestructedExpr2.resultRegister.reference.copy(referend = understruct2)
+                destroySharedCitizen(temputs, understructReference2)
+              }
+              case TupleT2(_, understruct2) => {
                 val understructReference2 = undestructedExpr2.resultRegister.reference.copy(referend = understruct2)
                 destroySharedCitizen(temputs, understructReference2)
               }

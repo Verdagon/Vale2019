@@ -58,7 +58,7 @@ case class TemplarBlockResultVarName2(num: Int) extends IVarName2 { def order = 
 case class TemplarFunctionResultVarName2() extends IVarName2 { def order = 19; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
 case class TemplarTemporaryVarName2(num: Int) extends IVarName2 { def order = 20; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
 case class TemplarPatternMemberName2(num: Int, memberIndex: Int) extends IVarName2 { def order = 23; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
-case class TemplarPatternPackName2(num: Int) extends IVarName2 { def order = 23; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
+case class TemplarPatternDestructureeName2(num: Int) extends IVarName2 { def order = 23; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
 case class UnnamedLocalName2(codeLocation: CodeLocation2) extends IVarName2 { def order = 3; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) ++ codeLocation.all(func) } }
 case class ClosureParamName2() extends IVarName2 { def order = 4; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
 case class MagicParamName2(codeLocation2: CodeLocation2) extends IVarName2 { def order = 5; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
@@ -236,7 +236,9 @@ case class LetImplicitRune2(codeLocation: CodeLocation2, name: Int) extends IRun
 case class MemberRune2(memberIndex: Int) extends IRune2 { def order = 9; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
 case class MagicImplicitRune2(codeLocation: CodeLocation2) extends IRune2 { def order = 10; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
 case class ReturnRune2() extends IRune2 { def order = 11; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
-case class SolverKindRune2(paramRune: IRune2) extends IRune2 { def order = 12; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) ++ paramRune.all(func) } }
+case class SolverKindRune2(paramRune: IRune2) extends IRune2 { def order = 12; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) ++ paramRune.all(func) }
+  println("gorp")
+}
 case class ExplicitTemplateArgRune2(index: Int) extends IRune2 { def order = 34; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
 
 case class AnonymousSubstructParentInterfaceRune2() extends IRune2 {

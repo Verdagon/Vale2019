@@ -94,10 +94,8 @@ case class PotentialBannerFromExternFunction(
 // function headers, because functions don't have to specify their return types and
 // it takes a complete templar evaluate to deduce a function's return type.
 
-case class Signature2(
-    fullName: FullName2[IFunctionName2],
-    paramTypes: List[Coord]) {
-  vassert(fullName.last.parameters == paramTypes)
+case class Signature2(fullName: FullName2[IFunctionName2]) {
+  def paramTypes: List[Coord] = fullName.last.parameters
 }
 
 case class FunctionBanner2(
@@ -107,7 +105,7 @@ case class FunctionBanner2(
 
   vassert(fullName.last.parameters == params.map(_.tyype))
 
-  def toSignature: Signature2 = Signature2(fullName, paramTypes)
+  def toSignature: Signature2 = Signature2(fullName)
   def paramTypes: List[Coord] = params.map(_.tyype)
 
   def getAbstractInterface: Option[InterfaceRef2] = {
@@ -176,7 +174,7 @@ case class FunctionHeader2(
   })
 
   def toBanner: FunctionBanner2 = FunctionBanner2(maybeOriginFunction, fullName, params)
-  def toPrototype: Prototype2 = Prototype2(fullName, params.map(_.tyype), returnType)
+  def toPrototype: Prototype2 = Prototype2(fullName, returnType)
   def toSignature: Signature2 = toPrototype.toSignature
 
   def paramTypes: List[Coord] = params.map(_.tyype)
@@ -191,9 +189,9 @@ case class FunctionHeader2(
 
 case class Prototype2(
     fullName: FullName2[IFunctionName2],
-    paramTypes: List[Coord],
     returnType: Coord) extends Queriable2 {
-  def toSignature: Signature2 = Signature2(fullName, paramTypes)
+  def paramTypes: List[Coord] = fullName.last.parameters
+  def toSignature: Signature2 = Signature2(fullName)
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func) ++ paramTypes.flatMap(_.all(func)) ++ returnType.all(func)
