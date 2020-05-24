@@ -55,7 +55,6 @@ object Forwarders {
             List(
               FunctionCallAE(
                 FunctionLoadAE(GlobalFunctionFamilyNameA(callee)),
-                PackAE(
-                    params.map(param => LocalLoadAE(CodeVarNameA(param._1), false)))))))))
+                params.map(param => LocalLoadAE(CodeVarNameA(param._1), false))))))))
   }
 }

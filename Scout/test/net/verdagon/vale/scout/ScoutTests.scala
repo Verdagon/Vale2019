@@ -136,7 +136,7 @@ class ScoutTests extends FunSuite with Matchers {
 
     val CodeBody1(BodySE(_, block)) = main.body
     block match {
-      case BlockSE(_, List(_, FunctionCallSE(FunctionLoadSE(GlobalFunctionFamilyNameS("shout")), PackSE(List(ExpressionLendSE(LocalLoadSE(name, true))))))) => {
+      case BlockSE(_, List(_, FunctionCallSE(FunctionLoadSE(GlobalFunctionFamilyNameS("shout")), List(ExpressionLendSE(LocalLoadSE(name, true)))))) => {
         name match {
           case CodeVarNameS("x") =>
         }
@@ -150,7 +150,7 @@ class ScoutTests extends FunSuite with Matchers {
 
     val CodeBody1(BodySE(_, block)) = main.body
     block match {
-      case BlockSE(_, List(_, FunctionCallSE(FunctionLoadSE(GlobalFunctionFamilyNameS("shout")), PackSE(List(LocalLoadSE(_, false)))))) =>
+      case BlockSE(_, List(_, FunctionCallSE(FunctionLoadSE(GlobalFunctionFamilyNameS("shout")), List(LocalLoadSE(_, false))))) =>
     }
   }
 

@@ -276,21 +276,12 @@ object CallTemplar {
       fate: FunctionEnvironmentBox,
       callableExpr2: Expression2,
       explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
-      argsExpr2: Expression2):
+      argsExprs2: List[ReferenceExpression2]):
   (FunctionCall2) = {
     val callableReferenceExpr2 =
       ExpressionTemplar.coerceToReferenceExpression(fate, callableExpr2)
-    val argsRefExpr2 =
-      ExpressionTemplar.coerceToReferenceExpression(fate, argsExpr2);
-//    val flattenedArgsExprs =
-//      PackTemplar.flatten(temputs, List(argsReferenceExprs2));
-    val unpackedArgsExprs =
-      argsRefExpr2 match {
-        case PackE2(exprs, _, _) => exprs
-        case other => List(other)
-      }
     val callExpr =
-      evaluateCall(temputs, fate, callableReferenceExpr2, explicitlySpecifiedTemplateArgTemplexesS, unpackedArgsExprs)
+      evaluateCall(temputs, fate, callableReferenceExpr2, explicitlySpecifiedTemplateArgTemplexesS, argsExprs2)
     (callExpr)
   }
 
@@ -299,15 +290,8 @@ object CallTemplar {
     fate: FunctionEnvironmentBox,
     functionName: GlobalFunctionFamilyNameA,
     explicitlySpecifiedTemplateArgTemplexesS: List[ITemplexS],
-    argsExpr2: Expression2):
+    argsExprs2: List[ReferenceExpression2]):
   (FunctionCall2) = {
-    val argsRefExpr2 =
-      ExpressionTemplar.coerceToReferenceExpression(fate, argsExpr2);
-    val unpackedArgsExprs =
-    argsRefExpr2 match {
-      case PackE2(exprs, _, _) => exprs
-      case other => List(other)
-    }
-    evaluateNamedCall(temputs, fate.snapshot, functionName, explicitlySpecifiedTemplateArgTemplexesS, unpackedArgsExprs)
+    evaluateNamedCall(temputs, fate.snapshot, functionName, explicitlySpecifiedTemplateArgTemplexesS, argsExprs2)
   }
 }

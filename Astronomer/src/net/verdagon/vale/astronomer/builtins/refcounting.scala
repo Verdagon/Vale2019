@@ -42,10 +42,9 @@ object RefCounting {
                 FunctionCallAE(
                   // We add 1 because that "obj" is also a borrow ref
                   FunctionLoadAE(GlobalFunctionFamilyNameA("+")),
-                  PackAE(
-                    List(
-                      LocalLoadAE(CodeVarNameA("num"), false),
-                      IntLiteralAE(1))))),
+                  List(
+                    LocalLoadAE(CodeVarNameA("num"), false),
+                    IntLiteralAE(1)))),
               PackAE(List()))))))
 
   val checkMemberRcName = FunctionNameA("__checkmemberrc", CodeLocationS(0, 0))

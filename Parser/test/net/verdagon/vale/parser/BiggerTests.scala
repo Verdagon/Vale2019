@@ -77,7 +77,7 @@ class BiggerTests extends FunSuite with Matchers with Collector {
 
   test("Function call") {
     val program = compile(VParser.program, "fn main(){call(sum)}")
-    program shouldHave FunctionCallPE(LookupPE("call", List()),PackPE(List(LookupPE("sum", List()))),true)
+    program shouldHave FunctionCallPE(LookupPE("call", List()),List(LookupPE("sum", List())),true)
   }
 
   test("Mutating as statement") {
@@ -91,9 +91,9 @@ class BiggerTests extends FunSuite with Matchers with Collector {
 
   test("Test templated lambda param") {
     val program = compile(VParser.program, "fn main(){(a){ a + a}(3)}")
-    program shouldHaveMatch { case FunctionCallPE(LambdaPE(_), PackPE(List(IntLiteralPE(3))),true) => }
+    program shouldHaveMatch { case FunctionCallPE(LambdaPE(_), List(IntLiteralPE(3)),true) => }
     program shouldHave PatternPP(Some(CaptureP("a",FinalP)),None,None,None)
-    program shouldHave FunctionCallPE(LookupPE("+", List()),PackPE(List(LookupPE("a", List()), LookupPE("a", List()))),true)
+    program shouldHave FunctionCallPE(LookupPE("+", List()),List(LookupPE("a", List()), LookupPE("a", List())),true)
   }
 
   test("Simple struct") {
@@ -103,17 +103,17 @@ class BiggerTests extends FunSuite with Matchers with Collector {
 
   test("Test block's trailing void presence") {
     compile(VParser.filledBody, "{ moo() }") shouldEqual
-        Some(BlockPE(List(FunctionCallPE(LookupPE("moo", List()),PackPE(List()),true))))
+        Some(BlockPE(List(FunctionCallPE(LookupPE("moo", List()),List(),true))))
 
     compile(VParser.filledBody, "{ moo(); }") shouldEqual
-        Some(BlockPE(List(FunctionCallPE(LookupPE("moo", List()),PackPE(List()),true), VoidPE())))
+        Some(BlockPE(List(FunctionCallPE(LookupPE("moo", List()),List(),true), VoidPE())))
   }
 
   test("ifs") {
     compile(VParser.ifLadder, "if (true) { doBlarks(&x) } else { }") shouldEqual
         IfPE(
           BlockPE(List(BoolLiteralPE(true))),
-          BlockPE(List(FunctionCallPE(LookupPE("doBlarks", List()),PackPE(List(LendPE(LookupPE("x", List())))),true))),
+          BlockPE(List(FunctionCallPE(LookupPE("doBlarks", List()),List(LendPE(LookupPE("x", List()))),true))),
           BlockPE(List(VoidPE())))
   }
 
@@ -121,7 +121,7 @@ class BiggerTests extends FunSuite with Matchers with Collector {
     compile(
       VParser.block,
       "= doThings(a);") shouldEqual
-        BlockPE(List(FunctionCallPE(LookupPE("doThings", List()),PackPE(List(LookupPE("a", List()))),true)))
+        BlockPE(List(FunctionCallPE(LookupPE("doThings", List()),List(LookupPE("a", List())),true)))
   }
 
 
@@ -148,7 +148,7 @@ class BiggerTests extends FunSuite with Matchers with Collector {
         BlockPE(
           List(
             LetPE(List(),PatternPP(Some(CaptureP("a",FinalP)),None,None,None),IntLiteralPE(2)),
-            FunctionCallPE(LookupPE("doThings", List()),PackPE(List(LookupPE("a", List()))),true)))
+            FunctionCallPE(LookupPE("doThings", List()),List(LookupPE("a", List())),true)))
   }
 
   test("Templated impl") {
@@ -212,7 +212,7 @@ class BiggerTests extends FunSuite with Matchers with Collector {
         List(),
         PatternPP(Some(CaptureP("newLen",FinalP)),None,None,None),
         IfPE(
-          BlockPE(List(FunctionCallPE(LookupPE("==", List()),PackPE(List(LookupPE("num", List()), IntLiteralPE(0))),true))),
+          BlockPE(List(FunctionCallPE(LookupPE("==", List()),List(LookupPE("num", List()), IntLiteralPE(0)),true))),
           BlockPE(List(IntLiteralPE(1))),
           BlockPE(List(IntLiteralPE(2)))))
   }
@@ -225,12 +225,12 @@ class BiggerTests extends FunSuite with Matchers with Collector {
           DotPE(LookupPE("weapon",List()),LookupPE("owner",List()),true),
           LookupPE("map",List()),
           true),
-        PackPE(List()),
+        List(),
         true)
   }
 
   test("!=") {
     compile(VParser.expression,"3 != 4") shouldEqual
-      FunctionCallPE(LookupPE("!=",List()),PackPE(List(IntLiteralPE(3), IntLiteralPE(4))),true)
+      FunctionCallPE(LookupPE("!=",List()),List(IntLiteralPE(3), IntLiteralPE(4)),true)
   }
 }

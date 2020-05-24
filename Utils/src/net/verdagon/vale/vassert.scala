@@ -1,14 +1,13 @@
 package net.verdagon.vale
 
-// A condition that reflects a user error. These should all
-// eventually be replaced by legit exceptions.
+// A condition that reflects a user error.
 object vcheck {
-  def apply(condition: Boolean): Unit = {
-    vassert(condition, "Assertion failed!")
+  def apply[T <: Throwable](condition: Boolean, exceptionMaker: (String) => T): Unit = {
+    vcheck(condition, "Check failed!", exceptionMaker)
   }
-  def apply(condition: Boolean, message: String): Unit = {
+  def apply[T <: Throwable](condition: Boolean, message: String, exceptionMaker: (String) => T): Unit = {
     if (!condition) {
-      vfail(message)
+      throw exceptionMaker(message)
     }
   }
 }

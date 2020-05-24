@@ -32,12 +32,10 @@ object NotEquals {
               LocalVariableA(CodeVarNameA("right"), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
             List(FunctionCallAE(
               FunctionLoadAE(GlobalFunctionFamilyNameA("not")),
-              PackAE(
-                List(
-                  FunctionCallAE(
-                    FunctionLoadAE(GlobalFunctionFamilyNameA("==")),
-                    PackAE(
-                      List(
-                        LocalLoadAE(CodeVarNameA("left"), false),
-                        LocalLoadAE(CodeVarNameA("right"), false))))))))))))
+              List(
+                FunctionCallAE(
+                  FunctionLoadAE(GlobalFunctionFamilyNameA("==")),
+                  List(
+                    LocalLoadAE(CodeVarNameA("left"), false),
+                    LocalLoadAE(CodeVarNameA("right"), false))))))))))
 }

@@ -149,12 +149,7 @@ class TemplarTests extends FunSuite with Matchers {
   }
 
   test("Test overloads") {
-    val compile = new Compilation(
-      """
-        |fn ~(a Int, b Int){+(a, b)}
-        |fn ~(a Str, b Str){+(a, b)}
-        |fn main(){3 ~ 3}
-      """.stripMargin)
+    val compile = new Compilation(OverloadSamples.overloads)
     val temputs = compile.getTemputs()
 
     // Tests that we use the right overload, and both the overloads made it into temputs
@@ -644,5 +639,26 @@ class TemplarTests extends FunSuite with Matchers {
         |}
         |""".stripMargin)
     val temputs = compile.getTemputs()
+  }
+
+  test("Test shaking") {
+    // Make sure that functions that cant be called by main will not be included.
+
+    val compile = new Compilation(
+      """
+        |fn bork(x Str) { print(x); }
+        |fn helperFunc(x Int) { print(x); }
+        |fn helperFunc(x Str) { print(x); }
+        |fn main() {
+        |  helperFunc(4);
+        |}
+        |""".stripMargin)
+    val temputs = compile.getTemputs()
+
+    vassertSome(temputs.lookupFunction(Signature2(FullName2(List(), FunctionName2("helperFunc", List(), List(Coord(Share, Int2())))))))
+
+    vassert(None == temputs.lookupFunction(Signature2(FullName2(List(), FunctionName2("bork", List(), List(Coord(Share, Str2())))))))
+
+    vassert(None == temputs.lookupFunction(Signature2(FullName2(List(), FunctionName2("helperFunc", List(), List(Coord(Share, Str2())))))))
   }
 }

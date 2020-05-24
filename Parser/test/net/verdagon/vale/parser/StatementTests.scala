@@ -68,7 +68,7 @@ class StatementTests extends FunSuite with Matchers {
         DotPE(
           FunctionCallPE(
             LookupPE("Wizard", List()),
-            PackPE(List(IntLiteralPE(8))),
+            List(IntLiteralPE(8)),
             true),
           LookupPE("charges", List()),
           true)

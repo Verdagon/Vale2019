@@ -80,60 +80,83 @@ object Templar {
 
     val emptyPackStructRef = StructTemplar.addBuiltInStructs(env11, temputs)
 
-      structsA.foreach({
-        case (structS @ StructA(_, _, _, _, _, _, _, _, _, _)) => {
-          if (structS.isTemplate) {
-            // Do nothing, it's a template
-          } else {
-            val structTemplata = StructTemplata(env11, structS)
-            val _ = StructTemplar.getStructRef(temputs, structTemplata, List())
-          }
-        }
-      })
+//    structsA.foreach({
+//      case (structS @ StructA(_, _, _, _, _, _, _, _, _, _)) => {
+//        if (structS.isTemplate) {
+//          // Do nothing, it's a template
+//        } else {
+//          val structTemplata = StructTemplata(env11, structS)
+//          val _ = StructTemplar.getStructRef(temputs, structTemplata, List())
+//        }
+//      }
+//    })
+//
+//    interfacesA.foreach({
+//      case (interfaceS @ InterfaceA(_, _, _, _, _, _, _, _, _, _)) => {
+//        if (interfaceS.isTemplate) {
+//          // Do nothing, it's a template
+//        } else {
+//          val _ =
+//            StructTemplar.getInterfaceRef(
+//              temputs, InterfaceTemplata(env11, interfaceS), List())
+//        }
+//      }
+//    })
 
-      interfacesA.foreach({
-        case (interfaceS @ InterfaceA(_, _, _, _, _, _, _, _, _, _)) => {
-          if (interfaceS.isTemplate) {
-            // Do nothing, it's a template
-          } else {
-            val _ =
-              StructTemplar.getInterfaceRef(
-                temputs, InterfaceTemplata(env11, interfaceS), List())
-          }
-        }
-      })
-
-      functions1.foreach({
-        case (functionS) => {
-          if (functionS.isTemplate) {
-            // Do nothing, it's a template
-          } else {
-            println("fill in these containers!")
-            val _ =
-              FunctionTemplar.evaluateOrdinaryFunctionFromNonCallForPrototype(
-                temputs, FunctionTemplata(env11, functionS))
-          }
-        }
-      })
-
-    // We already stamped the structs, this is just to get the constructors.
-    structsA.foreach({
-      case (structS @ StructA(_, _, _, _, _, _, _, _, _, _)) => {
-        if (structS.isTemplate) {
+    functions1.foreach({
+      case (functionS) => {
+        if (functionS.isTemplate) {
           // Do nothing, it's a template
         } else {
-          val structTemplata = StructTemplata(env11, structS)
-          val structRef2 = StructTemplar.getStructRef(temputs, structTemplata, List())
-          val structDef2 = temputs.lookupStruct(structRef2)
-          val memberCoords = structDef2.members.map(_.tyype).collect({ case ReferenceMemberType2(c) => c })
-          val TopLevelCitizenDeclarationNameA(name, _) = structS.name
-          OverloadTemplar.scoutExpectedFunctionForPrototype(
-            env11, temputs, GlobalFunctionFamilyNameA(name), List(), memberCoords.map(ParamFilter(_, None)), List(), true)
+          functionS.name match {
+            case FunctionNameA("main", _) => {
+              val _ =
+                FunctionTemplar.evaluateOrdinaryFunctionFromNonCallForPrototype(
+                  temputs, FunctionTemplata(env11, functionS))
+            }
+            case _ => {
+              // Do nothing. We only eagerly create main.
+            }
+          }
         }
       }
     })
 
+//    // We already stamped the structs, this is just to get the constructors.
+//    structsA.foreach({
+//      case (structS @ StructA(_, _, _, _, _, _, _, _, _, _)) => {
+//        if (structS.isTemplate) {
+//          // Do nothing, it's a template
+//        } else {
+//          val structTemplata = StructTemplata(env11, structS)
+//          val structRef2 = StructTemplar.getStructRef(temputs, structTemplata, List())
+//          val structDef2 = temputs.lookupStruct(structRef2)
+//          val memberCoords = structDef2.members.map(_.tyype).collect({ case ReferenceMemberType2(c) => c })
+//          val TopLevelCitizenDeclarationNameA(name, _) = structS.name
+//          OverloadTemplar.scoutExpectedFunctionForPrototype(
+//            env11, temputs, GlobalFunctionFamilyNameA(name), List(), memberCoords.map(ParamFilter(_, None)), List(), true)
+//        }
+//      }
+//    })
+
     stampNeededOverridesUntilSettled(env11, temputs)
+
+    val reachables =
+      Reachability.findReachables(temputs.temputs)
+
+    val reachableFunctions =
+      temputs.getAllFunctions().filter(f => {
+        if (reachables.functions.contains(f.header.toSignature)) {
+//          println("Including reachable: " + f.header.fullName)
+          true
+        } else {
+          println("Shaking out unreachable: " + f.header.fullName)
+          false
+        }
+      })
+    reachableFunctions.foreach(f => {
+      println("Including: " + f.header.fullName)
+    })
 
     val result =
       CompleteProgram2(
@@ -141,7 +164,7 @@ object Templar {
         temputs.getAllStructs().toList,
         temputs.impls,
         emptyPackStructRef,
-        temputs.getAllFunctions())
+        reachableFunctions)
 
     result
   }

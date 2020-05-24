@@ -1,4 +1,4 @@
-package net.verdagon.vale
+package net.verdagon.vale.driver
 
 import net.verdagon.vale.astronomer.{Astronomer, ProgramA}
 import net.verdagon.vale.carpenter.Carpenter
@@ -7,7 +7,8 @@ import net.verdagon.vale.hinputs.Hinputs
 import net.verdagon.vale.metal.ProgramH
 import net.verdagon.vale.parser.{Program0, VParser}
 import net.verdagon.vale.scout.{ProgramS, Scout}
-import net.verdagon.vale.templar.{CompleteProgram2, Program2, Templar}
+import net.verdagon.vale.templar.{CompleteProgram2, Templar}
+import net.verdagon.vale.vassert
 import net.verdagon.vale.vivem.{Heap, PrimitiveReferendV, ReferenceV, Vivem}
 import net.verdagon.von.IVonData
 
@@ -87,7 +88,7 @@ class Compilation(code: String, useCommonEnv: Boolean = true) {
   }
 
   def evalForReferend(heap: Heap, args: Vector[ReferenceV]): IVonData = {
-    Vivem.executeWithHeap(getHamuts(), heap, args, System.out, Vivem.emptyStdin, Vivem.regularStdout).get
+    Vivem.executeWithHeap(getHamuts(), heap, args, System.out, Vivem.emptyStdin, Vivem.regularStdout)
   }
   def run(heap: Heap, args: Vector[ReferenceV]): Unit = {
     Vivem.executeWithHeap(getHamuts(), heap, args, System.out, Vivem.emptyStdin, Vivem.regularStdout)
@@ -96,13 +97,13 @@ class Compilation(code: String, useCommonEnv: Boolean = true) {
     Vivem.executeWithPrimitiveArgs(getHamuts(), args, System.out, Vivem.emptyStdin, Vivem.regularStdout)
   }
   def evalForReferend(args: Vector[PrimitiveReferendV]): IVonData = {
-    Vivem.executeWithPrimitiveArgs(getHamuts(), args, System.out, Vivem.emptyStdin, Vivem.regularStdout).get
+    Vivem.executeWithPrimitiveArgs(getHamuts(), args, System.out, Vivem.emptyStdin, Vivem.regularStdout)
   }
   def evalForReferend(
       args: Vector[PrimitiveReferendV],
       stdin: List[String]):
   IVonData = {
-    Vivem.executeWithPrimitiveArgs(getHamuts(), args, System.out, Vivem.stdinFromList(stdin), Vivem.regularStdout).get
+    Vivem.executeWithPrimitiveArgs(getHamuts(), args, System.out, Vivem.stdinFromList(stdin), Vivem.regularStdout)
   }
   def evalForStdout(args: Vector[PrimitiveReferendV]): String = {
     val (stdoutStringBuilder, stdoutFunc) = Vivem.stdoutCollector()
@@ -112,6 +113,6 @@ class Compilation(code: String, useCommonEnv: Boolean = true) {
   def evalForReferendAndStdout(args: Vector[PrimitiveReferendV]): (IVonData, String) = {
     val (stdoutStringBuilder, stdoutFunc) = Vivem.stdoutCollector()
     val referend = Vivem.executeWithPrimitiveArgs(getHamuts(), args, System.out, Vivem.emptyStdin, stdoutFunc)
-    (referend.get, stdoutStringBuilder.mkString)
+    (referend, stdoutStringBuilder.mkString)
   }
 }

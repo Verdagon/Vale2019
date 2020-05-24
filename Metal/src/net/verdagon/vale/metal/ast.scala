@@ -8,7 +8,7 @@ import scala.collection.immutable.ListMap
 object ProgramH {
   val emptyTupleStructRef =
     // If the templar ever decides to change this things name, update this to match templar's.
-    StructRefH(FullNameH(List(VonObject("TupleName",None,Vector(VonMember(None,Some("members"),VonArray(None,Vector())))))))
+    StructRefH(FullNameH(List(VonObject("Tup",None,Vector(VonMember(None,Some("members"),VonArray(None,Vector())))))))
   val emptyTupleStructType = ReferenceH(ShareH, emptyTupleStructRef)
 }
 

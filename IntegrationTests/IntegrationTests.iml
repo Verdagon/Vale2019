@@ -23,5 +23,6 @@
     <orderEntry type="library" name="org.scalatest:scalatest_2.12:3.0.8" level="project" />
     <orderEntry type="library" name="org.scala-lang.modules:scala-parser-combinators_2.12:1.1.1" level="project" />
     <orderEntry type="module" module-name="Samples" />
+    <orderEntry type="module" module-name="Driver" />
   </component>
 </module>

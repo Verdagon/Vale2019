@@ -122,10 +122,10 @@ object ExpressionAstronomer {
         val indexExprA = translateExpression(env, astrouts, indexExprS)
         DotCallAE(leftA, indexExprA)
       }
-      case FunctionCallSE(callableExprS, argsPackExprS) => {
+      case FunctionCallSE(callableExprS, argsExprsS) => {
         val callableExprA = translateExpression(env, astrouts, callableExprS)
-        val argsPackExprA = translatePack(astrouts, env, argsPackExprS)
-        FunctionCallAE(callableExprA, argsPackExprA)
+        val argsExprsA = argsExprsS.map(translateExpression(env, astrouts, _))
+        FunctionCallAE(callableExprA, argsExprsA)
       }
       case TemplateSpecifiedLookupSE(name, templateArgsS) => {
         // We don't translate the templexes, we can't until we know what the template expects.

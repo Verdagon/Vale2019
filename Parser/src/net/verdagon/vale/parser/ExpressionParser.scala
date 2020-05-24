@@ -43,7 +43,7 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
 
   private[parser] def not: Parser[IExpressionPE] = {
     "not" ~> optWhite ~> postfixableExpressions ^^ {
-      case expr => FunctionCallPE(LookupPE("not", List()), PackPE(List(expr)), true)
+      case expr => FunctionCallPE(LookupPE("not", List()), List(expr), true)
     }
   }
 
@@ -135,9 +135,9 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
           // anExpr^.4
           case (prev, (Some("^") ~ Some(".") ~ (i @ IntLiteralPE(_)))) => DotCallPE(prev, PackPE(List(i)), borrowContainer = false)
           // anExpr(4)
-          case (prev, (None ~ None ~ (pack @ PackPE(_)))) => FunctionCallPE(prev, pack, borrowCallable = true)
+          case (prev, (None ~ None ~ (pack @ PackPE(_)))) => FunctionCallPE(prev, pack.elements, borrowCallable = true)
           // anExpr^(4)
-          case (prev, (Some("^") ~ None ~ (pack @ PackPE(_)))) => FunctionCallPE(prev, pack, borrowCallable = false)
+          case (prev, (Some("^") ~ None ~ (pack @ PackPE(_)))) => FunctionCallPE(prev, pack.elements, borrowCallable = false)
           // anExpr.(4)
           case (prev, (None ~ Some(".") ~ (pack @ PackPE(_)))) => DotCallPE(prev, pack, borrowContainer = true)
           // anExpr^.(4)
@@ -181,19 +181,19 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
       binariableExpression(
         postfixableExpressions,
         white ~> ("*" | "/") <~ white,
-        (op: String, left, right) => FunctionCallPE(LookupPE(op, List()), PackPE(List(left, right)), true))
+        (op: String, left, right) => FunctionCallPE(LookupPE(op, List()), List(left, right), true))
 
     val withAddSubtract =
       binariableExpression(
         withMultDiv,
         white ~> ("+" | "-") <~ white,
-        (op: String, left, right) => FunctionCallPE(LookupPE(op, List()), PackPE(List(left, right)), true))
+        (op: String, left, right) => FunctionCallPE(LookupPE(op, List()), List(left, right), true))
 
     val withComparisons =
       binariableExpression(
         withAddSubtract,
         white ~> specialOperators <~ white,
-        (op: String, left, right) => FunctionCallPE(LookupPE(op, List()), PackPE(List(left, right)), true))
+        (op: String, left, right) => FunctionCallPE(LookupPE(op, List()), List(left, right), true))
 
 //    val withAnd =
 //      binariableExpression(
@@ -211,7 +211,7 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
       binariableExpression(
         withComparisons,
         not(white ~> "=" <~ white) ~> (white ~> infixFunctionIdentifier <~ white),
-        (funcName: String, left, right) => FunctionCallPE(LookupPE(funcName, List()), PackPE(List(left, right)), true))
+        (funcName: String, left, right) => FunctionCallPE(LookupPE(funcName, List()), List(left, right), true))
 
     withCustomBinaries |
     (specialOperators ^^ (op => LookupPE(op, List())))

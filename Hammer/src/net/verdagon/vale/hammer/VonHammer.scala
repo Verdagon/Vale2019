@@ -261,6 +261,17 @@ object VonHammer {
             VonMember(None, Some("resultType"), vonifyCoord(resultReference)),
             VonMember(None, Some("argumentIndex"), VonInt(argumentIndex))))
       }
+      case NewStructH(sourceRegisters, resultType) => {
+        VonObject(
+          "NewStruct",
+          None,
+          Vector(
+            VonMember(
+              None,
+              Some("sourceRegisters"),
+              VonArray(None, sourceRegisters.map(vonifyNode).toVector)),
+            VonMember(None, Some("local"), vonifyCoord(resultType))))
+      }
       case StackifyH(sourceRegister, local, name) => {
         VonObject(
           "Stackify",
@@ -711,7 +722,7 @@ object VonHammer {
       }
       case TupleName2(members) => {
         VonObject(
-          "TupleName",
+          "Tup",
           None,
           Vector(
             VonMember(

@@ -14,7 +14,7 @@ object Vivem {
       externalArgumentReferends: Vector[PrimitiveReferendV],
       vivemDout: PrintStream,
       stdin: () => String,
-      stdout: String => Unit): Option[IVonData] = {
+      stdout: String => Unit): IVonData = {
     val heap = new Heap(vivemDout)
     val argReferences =
       externalArgumentReferends.map(argReferend => {
@@ -30,7 +30,7 @@ object Vivem {
       vivemDout: PrintStream,
       stdin: () => String,
       stdout: String => Unit):
-  Option[IVonData] = {
+  IVonData = {
     vassert(inputHeap.countUnreachableAllocations(inputArgumentReferences) == 0)
     innerExecute(programH, inputArgumentReferences, inputHeap, vivemDout, stdin, stdout)
   }
@@ -68,7 +68,7 @@ object Vivem {
       heap: Heap,
       vivemDout: PrintStream,
       stdin: () => String,
-      stdout: String => Unit): Option[IVonData] = {
+      stdout: String => Unit): IVonData = {
     val main = programH.main
 
     val callId = CallId(0, main.prototype)
@@ -88,6 +88,6 @@ object Vivem {
     println("Checking for leaks")
     heap.checkForLeaks()
     vivemDout.println()
-    Some(von)
+    von
   }
 }

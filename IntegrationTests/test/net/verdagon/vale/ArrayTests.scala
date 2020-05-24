@@ -3,7 +3,7 @@ package net.verdagon.vale
 import com.sun.tools.javac.util.ArrayUtils
 import net.verdagon.vale.parser.ImmutableP
 import net.verdagon.vale.templar._
-import net.verdagon.vale.templar.env.{ReferenceLocalVariable2}
+import net.verdagon.vale.templar.env.ReferenceLocalVariable2
 import net.verdagon.vale.templar.types._
 import net.verdagon.von.{VonBool, VonInt}
 import org.scalatest.{FunSuite, Matchers}

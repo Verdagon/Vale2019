@@ -88,17 +88,17 @@ object ExpressionScout {
       case StrLiteralPE(value) => (noDeclarations, NormalResult(StrLiteralSE(value)), noVariableUses, noVariableUses)
       case FloatLiteralPE(value) => (noDeclarations, NormalResult(FloatLiteralSE(value)), noVariableUses, noVariableUses)
 
-      case FunctionCallPE(DotPE(container, memberLookup, true), PackPE(methodArgs), borrowCallable) => {
+      case FunctionCallPE(DotPE(container, memberLookup, true), methodArgs, borrowCallable) => {
         // Correct method calls like anExpr.bork(4) from FunctionCall(Dot(anExpr, bork), List(4))
         // to FunctionCall(bork, List(anExpr, 4))
-        val newExprP = FunctionCallPE(memberLookup, PackPE(LendPE(container) :: methodArgs), borrowCallable)
+        val newExprP = FunctionCallPE(memberLookup, LendPE(container) :: methodArgs, borrowCallable)
         // Try again, with this new transformed expression.
         scoutExpression(stackFrame, newExprP)
       }
-      case FunctionCallPE(DotPE(container, memberLookup, false), PackPE(methodArgs), borrowCallable) => {
+      case FunctionCallPE(DotPE(container, memberLookup, false), methodArgs, borrowCallable) => {
         // Correct method calls like anExpr.bork(4) from FunctionCall(Dot(anExpr, bork), List(4))
         // to FunctionCall(bork, List(anExpr, 4))
-        val newExprP = FunctionCallPE(memberLookup, PackPE(container :: methodArgs), borrowCallable)
+        val newExprP = FunctionCallPE(memberLookup, container :: methodArgs, borrowCallable)
         // Try again, with this new transformed expression.
         scoutExpression(stackFrame, newExprP)
       }
@@ -135,7 +135,7 @@ object ExpressionScout {
               templateArgs.map(TemplexScout.translateTemplex(stackFrame.parentEnv.allUserDeclaredRunes(), _))))
         (noDeclarations, result, noVariableUses, noVariableUses)
       }
-      case FunctionCallPE(callablePE, argsPackPE, borrowCallable) => {
+      case FunctionCallPE(callablePE, args, borrowCallable) => {
         if (borrowCallable != true) {
           // Havent yet implemented something like myFunctor^(4), should be easy piping though
           vimpl("Havent implemented moving callable yet")
@@ -143,8 +143,8 @@ object ExpressionScout {
         val (callableDeclareds, callable1, callableSelfUses, callableChildUses) =
           scoutExpressionAndCoerce(stackFrame, callablePE, true)
         val (argsDeclareds, args1, argsSelfUses, argsChildUses) =
-          scoutElementsAsExpressions(stackFrame, argsPackPE.elements)
-        val result = NormalResult(FunctionCallSE(callable1, PackSE(args1)))
+          scoutElementsAsExpressions(stackFrame, args)
+        val result = NormalResult(FunctionCallSE(callable1, args1))
         (callableDeclareds ++ argsDeclareds, result, callableSelfUses.thenMerge(argsSelfUses), callableChildUses.thenMerge(argsChildUses))
       }
       case SequencePE(elementsPE) => {

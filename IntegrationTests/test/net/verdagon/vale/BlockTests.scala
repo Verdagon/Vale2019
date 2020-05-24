@@ -1,7 +1,7 @@
 package net.verdagon.vale
 
 import net.verdagon.vale.parser.{FinalP, VariabilityP}
-import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Environment => _, _}
+import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _, _}
 import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.types.{Bool2, Coord, Int2, Share}
 import net.verdagon.von.VonInt

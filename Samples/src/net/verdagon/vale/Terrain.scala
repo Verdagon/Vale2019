@@ -2,9 +2,6 @@ package net.verdagon.vale
 
 import java.io.{OutputStream, PrintStream}
 
-import net.verdagon.vale.vivem.Vivem
-import net.verdagon.von.{JsonSyntax, VonPrinter, VonSyntax}
-
 object Terrain {
   val code =
     """
@@ -36,9 +33,8 @@ object Terrain {
       |
     """.stripMargin
 
-  def main(args: Array[String]): Unit = {
-    val compile = new Compilation(
-      Opt.code +
+  val generatorCode =
+    Opt.code +
       OptingArrayList.code +
       HashMap.code +
       Vec.code +
@@ -315,23 +311,26 @@ object Terrain {
         |
         |  = terrain.tiles.keys();
         |}
-        |""".stripMargin)
+        |""".stripMargin
 
-    val data =
-      Vivem.executeWithPrimitiveArgs(
-        compile.getHamuts(),
-        Vector(),
-        new PrintStream(new OutputStream() {
-          override def write(b: Int): Unit = {
-            // System.out.write(b)
-          }
-        }),
-        () => {
-          scala.io.StdIn.readLine()
-        },
-        (str: String) => {
-          print(str)
-        })
-    println(new VonPrinter(JsonSyntax, 120).print(data.get))
+  def main(args: Array[String]): Unit = {
+//    val compile = new Compilation(generatorCode)
+//
+//    val data =
+//      Vivem.executeWithPrimitiveArgs(
+//        compile.getHamuts(),
+//        Vector(),
+//        new PrintStream(new OutputStream() {
+//          override def write(b: Int): Unit = {
+//            // System.out.write(b)
+//          }
+//        }),
+//        () => {
+//          scala.io.StdIn.readLine()
+//        },
+//        (str: String) => {
+//          print(str)
+//        })
+//    println(new VonPrinter(JsonSyntax, 120).print(data.get))
   }
 }

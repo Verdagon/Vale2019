@@ -61,12 +61,7 @@ class IntegrationTestsA extends FunSuite with Matchers {
   }
 
   test("Test overloads") {
-    val compile = new Compilation(
-      """
-        |fn ~(a Int, b Int){+(a, b)}
-        |fn ~(a Str, b Str){+(a, b)}
-        |fn main(){3 ~ 3}
-      """.stripMargin)
+    val compile = new Compilation(OverloadSamples.overloads))
     compile.evalForReferend(Vector()) shouldEqual VonInt(6)
   }
 

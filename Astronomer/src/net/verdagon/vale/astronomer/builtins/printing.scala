@@ -31,14 +31,12 @@ object Printing {
             List(LocalVariableA(CodeVarNameA("line"), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
             List(FunctionCallAE(
               FunctionLoadAE(GlobalFunctionFamilyNameA("print")),
-              PackAE(
-                List(
-                  FunctionCallAE(
-                    FunctionLoadAE(GlobalFunctionFamilyNameA("+")),
-                    PackAE(
-                      List(
-                        LocalLoadAE(CodeVarNameA("line"), false),
-                        StrLiteralAE("\n"))))))))))))
+              List(
+                FunctionCallAE(
+                  FunctionLoadAE(GlobalFunctionFamilyNameA("+")),
+                  List(
+                    LocalLoadAE(CodeVarNameA("line"), false),
+                    StrLiteralAE("\n"))))))))))
 
   val printlnIntName = FunctionNameA("println", CodeLocationS(0, 0))
   val printlnInt =
@@ -65,13 +63,11 @@ object Printing {
             List(LocalVariableA(CodeVarNameA("line"), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
             List(FunctionCallAE(
               FunctionLoadAE(GlobalFunctionFamilyNameA("println")),
-              PackAE(
-                List(
-                  FunctionCallAE(
-                    FunctionLoadAE(GlobalFunctionFamilyNameA("Str")),
-                    PackAE(
-                      List(
-                        LocalLoadAE(CodeVarNameA("line"), false))))))))))))
+              List(
+                FunctionCallAE(
+                  FunctionLoadAE(GlobalFunctionFamilyNameA("Str")),
+                  List(
+                    LocalLoadAE(CodeVarNameA("line"), false))))))))))
 
   val printIntName = FunctionNameA("print", CodeLocationS(0, 0))
   val printInt =
@@ -99,11 +95,9 @@ object Printing {
             List(LocalVariableA(CodeVarNameA("line"), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
             List(FunctionCallAE(
               FunctionLoadAE(GlobalFunctionFamilyNameA("print")),
-              PackAE(
-                List(
-                  FunctionCallAE(
-                    FunctionLoadAE(GlobalFunctionFamilyNameA("Str")),
-                    PackAE(
-                      List(
-                        LocalLoadAE(CodeVarNameA("line"), false))))))))))))
+              List(
+                FunctionCallAE(
+                  FunctionLoadAE(GlobalFunctionFamilyNameA("Str")),
+                  List(
+                    LocalLoadAE(CodeVarNameA("line"), false))))))))))
 }
