@@ -89,9 +89,8 @@ object TemplataNamer {
   }
 
   def getIdentifierName(prototype: Prototype2): String = {
-    val Prototype2(fullName, paramsTypes2, returnType2) = prototype;
+    val Prototype2(fullName, returnType2) = prototype;
     "𝔽" + getFullNameIdentifierName(fullName) +
-        "(" + paramsTypes2.map(p => getReferenceIdentifierName(p)).mkString(",") + ")" +
         getReferenceIdentifierName(returnType2)
   }
 

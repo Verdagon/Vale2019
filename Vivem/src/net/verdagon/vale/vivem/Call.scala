@@ -1,7 +1,7 @@
 package net.verdagon.vale.vivem
 
 import net.verdagon.vale.metal.{ReferenceH, ReferendH}
-import net.verdagon.vale.{vassert, vfail}
+import net.verdagon.vale.{vassert, vassertSome, vfail}
 
 import scala.collection.mutable
 
@@ -9,27 +9,25 @@ class Call(callId: CallId, in_args: Vector[ReferenceV]) {
   private val args = mutable.HashMap[Int, Option[ReferenceV]]() ++ in_args.indices.zip(in_args.map(arg => Some(arg))).toMap
 
   private val locals = mutable.HashMap[VariableAddressV, VariableV]()
-  private val localAddrStack = mutable.Stack[VariableAddressV]()
-
-  private val blockIdStack = mutable.Stack[BlockId]();
-
-  private val registersById = mutable.HashMap[RegisterId, Option[RegisterV]]()
-  private val registerIdStack = mutable.Stack[RegisterId]()
 
   def addLocal(varAddr: VariableAddressV, reference: ReferenceV, tyype: ReferenceH[ReferendH]): Unit = {
     vassert(varAddr.callId == callId)
-    vassert(varAddr.local.height.localsHeight == localAddrStack.size)
     vassert(!locals.contains(varAddr))
-    localAddrStack.push(varAddr)
-    locals.put(varAddr, VariableV(varAddr, Some(reference), tyype))
+    locals.put(varAddr, VariableV(varAddr, reference, tyype))
+  }
+
+  def removeLocal(varAddr: VariableAddressV): Unit = {
+    vassert(varAddr.callId == callId)
+    vassert(locals.contains(varAddr))
+    locals.remove(varAddr)
   }
 
   def getLocal(addr: VariableAddressV) = {
-    locals(addr)
+    vassertSome(locals.get(addr))
   }
 
   def mutateLocal(varAddr: VariableAddressV, reference: ReferenceV, expectedType: ReferenceH[ReferendH]): Unit = {
-    locals(varAddr).reference = Some(reference)
+    locals(varAddr).reference = reference
   }
 
   def takeArgument(index: Int): ReferenceV = {
@@ -44,80 +42,22 @@ class Call(callId: CallId, in_args: Vector[ReferenceV]) {
     }
   }
 
-  def setRegister(registerId: RegisterId, register: RegisterV) {
-    vassert(registerId.blockId == blockIdStack.top)
-    vassert(!registersById.contains(registerId))
-    registersById.put(registerId, Some(register))
-    registerIdStack.push(registerId)
-  }
-
-  def takeRegister(registerId: RegisterId) = {
-    vassert(registerId.blockId == blockIdStack.top)
-    if (!registersById.contains(registerId)) {
-      vfail("wot")
-    }
-    if (registerIdStack.isEmpty) {
-      vfail("wot")
-    }
-    if (registerIdStack.top != registerId) {
-      vfail("wot")
-    }
-    registersById(registerId) match {
-      case None => {
-        vfail("Already took from register " + registerId)
-      }
-      case Some(reg) => {
-        registerIdStack.pop()
-        registersById.put(registerId, None)
-        reg
-      }
-    }
-  }
-
-  def pushNewBlock() = {
-    val newBlockId =
-      if (blockIdStack.isEmpty) {
-        BlockId(callId, callId.blockDepth)
-      } else {
-        BlockId(callId, blockIdStack.top.blockHeight + 1)
-      }
-    blockIdStack.push(newBlockId)
-    newBlockId
-  }
-
-  def popBlock(blockId: BlockId) = {
-    if (registerIdStack.nonEmpty) {
-      vassert(registerIdStack.top.blockId != blockId)
-    }
-    // Make sure all registers were taken
-    val thisBlockRegisters = registersById.filter(_._1.blockId == blockId)
-    thisBlockRegisters.foreach({ case (registerId, register) =>
-      vassert(register == None)
-      registersById.remove(registerId)
-    })
-    vassert(!registersById.exists(_._1.blockId == blockId))
-
-    // Make sure all locals were unletted
-    val thisBlockLocals = locals.filter({ case (varAddr, variable) =>
-      varAddr.local.height.blockHeight == blockId.blockHeight - callId.blockDepth
-    })
-    thisBlockLocals.foreach({ case (varAddr, variable) =>
-      // We trip this when we don't Unstackify something so its still alive on
-      // the stack.
-      vassert(variable.reference == None)
-      locals.remove(varAddr)
-    })
-    vassert(!locals.exists(_._1.local.height.blockHeight == blockId.blockHeight))
-    while (localAddrStack.nonEmpty && localAddrStack.top.local.height.blockHeight == blockId.blockHeight - callId.blockDepth) {
-      localAddrStack.pop()
-    }
-
-    vassert(localAddrStack.size == locals.size)
-    vassert(blockIdStack.top == blockId)
-    blockIdStack.pop()
-  }
-
   def prepareToDie() = {
+    vassert(locals.isEmpty)
+
+//    // Make sure all locals were unletted
+//    locals.foreach({ case (varAddr, variable) =>
+//      // We trip this when we don't Unstackify something so its still alive on
+//      // the stack.
+//      vassert(variable.reference == None)
+//      locals.remove(varAddr)
+//    })
+//    while (localAddrStack.nonEmpty) {
+//      localAddrStack.pop()
+//    }
+//
+//    vassert(localAddrStack.size == locals.size)
+
     val undeadArgs =
       args.collect({
         case (index, Some(value)) => (index, value)
@@ -126,12 +66,12 @@ class Call(callId: CallId, in_args: Vector[ReferenceV]) {
       vfail("Undead arguments:\n" + undeadArgs.mkString("\n"))
     }
 
-    val undeadRegisters =
-      registersById.collect({
-        case (registerId, Some(register)) => (registerId, register)
-      })
-    if (undeadRegisters.nonEmpty) {
-      vfail("Undead registers:\n" + undeadRegisters.mkString("\n"))
-    }
+//    val undeadRegisters =
+//      registersById.collect({
+//        case (registerId, Some(register)) => (registerId, register)
+//      })
+//    if (undeadRegisters.nonEmpty) {
+//      vfail("Undead registers:\n" + undeadRegisters.mkString("\n"))
+//    }
   }
 }

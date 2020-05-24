@@ -2,8 +2,8 @@ package net.verdagon.vale.vivem
 
 import java.io.PrintStream
 
-import net.verdagon.vale.metal.{ProgramH, ShareH, VoidH}
-import net.verdagon.vale.{vassert, vfail}
+import net.verdagon.vale.metal.{ProgramH, ShareH}
+import net.verdagon.vale.{vassert, vfail, vimpl}
 import net.verdagon.von.IVonData
 
 case class PanicException() extends Throwable
@@ -71,37 +71,23 @@ object Vivem {
       stdout: String => Unit): Option[IVonData] = {
     val main = programH.main
 
-    val callId = CallId(0, main)
-    val blockId = BlockId(callId, 0)
+    val callId = CallId(0, main.prototype)
 
     vivemDout.print("Making stack frame")
     vivemDout.println()
 
-    val maybeReturnRef =
+    val (calleeCallId, retuurn) =
       FunctionVivem.executeFunction(programH, stdin, stdout, heap, argumentReferences, main)
+    val returnRef = retuurn.returnRef
 
     vivemDout.print("Ending program")
-    (main.prototype.returnType.kind, maybeReturnRef) match {
-      case (VoidH(), None) => {
-        vivemDout.println()
-        println("Checking for leaks")
-        heap.checkForLeaks()
-        vivemDout.println()
-        None
-      }
-      case (_, Some(returnRef)) => {
-        heap.decrementReferenceRefCount(
-          ResultToObjectReferrer(blockId.callId),
-          returnRef.reference)
-        val von = heap.toVon(returnRef.reference)
-        ExpressionVivem.dropReferenceIfNonOwning(
-          programH, heap, stdout, stdin, blockId, returnRef.reference)
-        vivemDout.println()
-        println("Checking for leaks")
-        heap.checkForLeaks()
-        vivemDout.println()
-        Some(von)
-      }
-    }
+
+    val von = heap.toVon(returnRef)
+    ExpressionVivem.dropReferenceIfNonOwning(programH, heap, stdout, stdin, calleeCallId, returnRef)
+    vivemDout.println()
+    println("Checking for leaks")
+    heap.checkForLeaks()
+    vivemDout.println()
+    Some(von)
   }
 }

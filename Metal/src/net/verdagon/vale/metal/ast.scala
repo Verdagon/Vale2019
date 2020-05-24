@@ -1,16 +1,20 @@
 package net.verdagon.vale.metal
 
-import net.verdagon.vale.{vassert, vcurious, vfail, vimpl}
-import net.verdagon.von.{IVonData, JsonSyntax, VonArray, VonPrinter, VonStr, VonSyntax}
+import net.verdagon.vale.{vassert, vassertSome, vcurious, vfail, vimpl}
+import net.verdagon.von.{IVonData, JsonSyntax, VonArray, VonMember, VonObject, VonPrinter, VonStr, VonSyntax}
 
 import scala.collection.immutable.ListMap
+
+object ProgramH {
+  val emptyTupleStructRef =
+    // If the templar ever decides to change this things name, update this to match templar's.
+    StructRefH(FullNameH(List(VonObject("TupleName",None,Vector(VonMember(None,Some("members"),VonArray(None,Vector())))))))
+  val emptyTupleStructType = ReferenceH(ShareH, emptyTupleStructRef)
+}
 
 case class ProgramH(
   interfaces: List[InterfaceDefinitionH],
   structs: List[StructDefinitionH],
-  // TODO: Get rid of this; since there's no IDs anymore we can have a stable
-  // hardcoded FullNameH("__Pack", Some(List()), None, None).
-  emptyPackStructRef: StructRefH,
   externs: List[PrototypeH],
   functions: List[FunctionH]) {
   def externFunctions = functions.filter(_.isExtern)

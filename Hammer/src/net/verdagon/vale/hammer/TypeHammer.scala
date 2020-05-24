@@ -68,8 +68,8 @@ object TypeHammer {
       case Bool2() => BoolH()
       case Float2() => FloatH()
       case Str2() => StrH()
-      case Void2() => VoidH()
-      case s@ StructRef2(_) => StructHammer.translateStructRef(hinputs, hamuts, s)
+      case Void2() => ProgramH.emptyTupleStructRef
+      case s @ StructRef2(_) => StructHammer.translateStructRef(hinputs, hamuts, s)
 
       case i @ InterfaceRef2(_) => StructHammer.translateInterfaceRef(hinputs, hamuts, i)
 

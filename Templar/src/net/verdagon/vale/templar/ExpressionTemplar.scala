@@ -647,22 +647,33 @@ object ExpressionTemplar {
         val FunctionEnvironment(parentEnv, function, functionFullName, entries, maybeReturnType, scoutedLocals, counterBeforeBranch, variablesBeforeBranch, _) = fateAfterBranch
 
         val fateForThen = FunctionEnvironmentBox(fateAfterBranch)
-        val (thenExpr2, returnsFromThen) = BlockTemplar.evaluateBlock(fateForThen, temputs, thenBody1)
+        val (uncoercedThenExpr2, returnsFromThen) = BlockTemplar.evaluateBlock(fateForThen, temputs, thenBody1)
         val fateAfterThen = fateForThen.functionEnvironment
 
-        val thenContinues = thenExpr2.resultRegister.reference.referend != Never2()
+        val thenContinues = uncoercedThenExpr2.resultRegister.reference.referend != Never2()
         val FunctionEnvironment(_, _, _, _, _, _, counterAfterThen, variablesAfterThen, movedsAfterThen) = fateAfterThen
 
         // Give the else branch the same fate the then branch got, except let the counter
         // remain higher.
         val fateForElse = FunctionEnvironmentBox(fateAfterBranch)
         val _ = fateForElse.nextCounters(counterAfterThen - counterBeforeBranch)
-        val (elseExpr2, returnsFromElse) =
+        val (uncoercedElseExpr2, returnsFromElse) =
           BlockTemplar.evaluateBlock(fateForElse, temputs, elseBody1)
         val fateAfterElse = fateForElse.functionEnvironment
 
-        val elseContinues = elseExpr2.resultRegister.reference.referend != Never2()
+        val elseContinues = uncoercedElseExpr2.resultRegister.reference.referend != Never2()
         val FunctionEnvironment(_, _, _, _, _, _, counterAfterElse, variablesAfterElse, movedsAfterElse) = fateAfterElse
+
+        val commonType =
+          (uncoercedThenExpr2.referend, uncoercedElseExpr2.referend) match {
+            case (Never2(), Never2()) => uncoercedThenExpr2.resultRegister.reference
+            case (Never2(), _) => uncoercedElseExpr2.resultRegister.reference
+            case (_, Never2()) => uncoercedThenExpr2.resultRegister.reference
+            case (a, b) if a == b => uncoercedThenExpr2.resultRegister.reference
+            case _ => vimpl()
+          }
+        val thenExpr2 = TypeTemplar.convert(fate.snapshot, temputs, uncoercedThenExpr2, commonType)
+        val elseExpr2 = TypeTemplar.convert(fate.snapshot, temputs, uncoercedElseExpr2, commonType)
 
         val ifExpr2 = If2(conditionExpr2, thenExpr2, elseExpr2)
 
@@ -829,7 +840,9 @@ object ExpressionTemplar {
       DestructorTemplar.drop(fate, temputs, unlet)
     vassert(destructExpr2.referend == Void2())
 
-    (Defer2(letExpr2, Discard2(destructExpr2)))
+    // No Discard here because the destructor already returns void.
+
+    (Defer2(letExpr2, destructExpr2))
   }
 
   // Given a function1, this will give a closure (an OrdinaryClosure2 or a TemplatedClosure2)

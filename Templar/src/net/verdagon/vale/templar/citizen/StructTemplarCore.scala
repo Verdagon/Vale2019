@@ -361,7 +361,9 @@ object StructTemplarCore {
 
     // Dont want any mutables in our immutable interface's substruct
     if (mutability == Immutable) {
-      vassert(getCompoundTypeMutability(temputs, callables) != Mutable)
+      if (getCompoundTypeMutability(temputs, callables) == Mutable) {
+        vfail()
+      }
     }
 
     val structRef = StructRef2(anonymousSubstructName)

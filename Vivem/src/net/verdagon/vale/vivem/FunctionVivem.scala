@@ -1,7 +1,8 @@
 package net.verdagon.vale.vivem
 
 import net.verdagon.vale.metal._
-import net.verdagon.vale.{vimpl, metal => m}
+import net.verdagon.vale.vivem.ExpressionVivem.{NodeContinue, NodeReturn}
+import net.verdagon.vale.{vimpl, vwat, metal => m}
 
 object FunctionVivem {
   def executeFunction(
@@ -11,14 +12,14 @@ object FunctionVivem {
       heap: Heap,
       args: Vector[ReferenceV],
       functionH: FunctionH
-  ): Option[ReturnV] = {
-    val callId = heap.pushNewStackFrame(functionH, args)
+  ): (CallId, NodeReturn) = {
+    val callId = heap.pushNewStackFrame(functionH.prototype, args)
 
 //    heap.vivemDout.println("About to execute:")
 //    functionH.nodes.foreach(heap.vivemDout.println)
 //    heap.vivemDout.println("/Function")
 
-    heap.vivemDout.print("  " * callId.blockDepth + "Entering function " + callId)
+    heap.vivemDout.print("  " * callId.callDepth + "Entering function " + callId)
 
     // Increment all the args to show that they have arguments referring to them.
     // These will be decremented at some point in the callee function.
@@ -30,23 +31,24 @@ object FunctionVivem {
 
     heap.vivemDout.println()
 
-    val maybeReturn =
-      BlockVivem.executeBlock(programH, stdin, stdout, heap, callId, functionH.block) match {
-        case BlockContinue(maybeRet) => maybeRet
-        case BlockReturn(maybeRet) => maybeRet
+    val rootExpressionId = ExpressionId(callId, List())
+    val returnRef =
+      ExpressionVivem.executeNode(programH, stdin, stdout, heap, rootExpressionId, functionH.block) match {
+        case NodeReturn(r) => NodeReturn(r)
+        case NodeContinue(r) => NodeReturn(r)
       }
 
     heap.vivemDout.println()
-    heap.vivemDout.print("  " * callId.blockDepth + "Returning")
+    heap.vivemDout.print("  " * callId.callDepth + "Returning")
 
     heap.popStackFrame(callId)
 
     heap.vivemDout.println()
 
-    maybeReturn
+    (callId, returnRef)
   }
 
-  def getExternFunction(programH: ProgramH, ref: PrototypeH): (AdapterForExterns, Vector[ReferenceV]) => Option[ReturnV] = {
+  def getExternFunction(programH: ProgramH, ref: PrototypeH): (AdapterForExterns, Vector[ReferenceV]) => ReferenceV = {
     ref.fullName.toString match {
       case """F("__addIntInt",[],[R(*,i),R(*,i)])""" => VivemExterns.addIntInt
       case """F("__addFloatFloat",[],[R(*,f),R(*,f)])""" => VivemExterns.addFloatFloat

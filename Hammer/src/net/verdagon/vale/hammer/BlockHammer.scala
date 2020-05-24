@@ -11,26 +11,18 @@ object BlockHammer {
     hinputs: Hinputs,
     hamuts: HamutsBox,
     initialLocals: Locals,
-    stackHeight: StackHeightBox,
     block2: Block2):
-  (BlockH, Option[RegisterAccessH[ReferendH]]) = {
+  (BlockH) = {
     val locals = LocalsBox(initialLocals)
 
-    // This means the caller didn't make us a new stack height.
-    vassert(stackHeight.localsHeight == stackHeight.blockStartLocalsHeight)
-
-    val nodesByLine = NodesBox(Vector[NodeH]());
-
     val (registerAccesses, deferreds) =
-      ExpressionHammer.translateMaybeReturningExpressions(
-        hinputs, hamuts, locals, stackHeight, nodesByLine, block2.exprs);
+      ExpressionHammer.translateExpressions(
+        hinputs, hamuts, locals, block2.exprs);
 
     vassert(deferreds.isEmpty) // curious, do we have to do any here
 
     val localIdsInThisBlock = locals.locals.keys.toSet.diff(initialLocals.locals.keys.toSet)
-    vassert(stackHeight.localsHeight - stackHeight.blockStartLocalsHeight == localIdsInThisBlock.size)
     val localsInThisBlock = localIdsInThisBlock.map(locals.locals)
-    vassert(localsInThisBlock.map(_.height).size == localsInThisBlock.size)
     val unstackifiedLocalIdsInThisBlock = locals.unstackifiedVars.intersect(localIdsInThisBlock)
 
 //    if (localIdsInThisBlock != unstackifiedLocalIdsInThisBlock) {
@@ -38,9 +30,9 @@ object BlockHammer {
 //      vfail("Ununstackified local: " + (localIdsInThisBlock -- unstackifiedLocalIdsInThisBlock))
 //    }
 
-    val resultType = registerAccesses.last.map(_.expectedType).getOrElse(ReferenceH(m.ShareH, VoidH()))
+    val resultType = registerAccesses.last.resultType
 //    start here, we're returning locals and thats not optimal
     println("debt: put checking back in for unstackified things!")
-    (BlockH(nodesByLine.inner, resultType), registerAccesses.last)
+    ExpressionHammer.flattenAndMakeBlock(registerAccesses)
   }
 }

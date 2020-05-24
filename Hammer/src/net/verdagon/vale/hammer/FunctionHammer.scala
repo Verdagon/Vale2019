@@ -40,10 +40,9 @@ object FunctionHammer {
               Map[FullName2[IVarName2], VariableIdH](),
               Set[VariableIdH](),
               Map[VariableIdH,Local]()));
-        val stackHeight = StackHeightBox(StackHeight(0, 0, 0))
-        val (bodyH, maybeResultAccess) =
-          BlockHammer.translateBlock(hinputs, hamuts, locals.snapshot, stackHeight, body)
-        val resultCoord = maybeResultAccess.map(_.expectedType).getOrElse(ReferenceH(m.ShareH, VoidH()))
+        val bodyH =
+          BlockHammer.translateBlock(hinputs, hamuts, locals.snapshot, body)
+        val resultCoord = bodyH.resultType
         if (resultCoord.kind != NeverH() && resultCoord != prototypeH.returnType) {
           vfail(
             "Result of body's instructions didnt match return type!\n" +

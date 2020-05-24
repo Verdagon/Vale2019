@@ -13,58 +13,40 @@ object CallHammer {
     hinputs: Hinputs,
     hamuts: HamutsBox,
     locals: LocalsBox,
-    stackHeight: StackHeightBox,
-    nodesByLine: NodesBox,
     prototype2: Prototype2,
     argsExprs2: List[ReferenceExpression2]):
-  (Option[RegisterAccessH[ReferendH]]) = {
+  (NodeH[ReferendH]) = {
     val (argsResultLines, argsDeferreds) =
       ExpressionHammer.translateExpressions(
-        hinputs, hamuts, locals, stackHeight, nodesByLine, argsExprs2);
+        hinputs, hamuts, locals, argsExprs2);
 
     // Doublecheck the types
     val (paramTypes) =
       TypeHammer.translateReferences(hinputs, hamuts, prototype2.paramTypes);
-    vassert(argsResultLines.map(_.expectedType) == paramTypes)
+    vassert(argsResultLines.map(_.resultType) == paramTypes)
 
     val (functionRefH) =
       FunctionHammer.translateFunctionRef(hinputs, hamuts, prototype2);
 
-    val callResultNode =
-      nodesByLine.addNode(
-        CallH(
-          nodesByLine.nextId(),
-          functionRefH.prototype,
-          argsResultLines))
-
+    val callResultNode = CallH(functionRefH.prototype, argsResultLines)
 
       ExpressionHammer.translateDeferreds(
-        hinputs, hamuts, locals, stackHeight, nodesByLine, argsDeferreds)
-
-    val access =
-      if (prototype2.returnType == Coord(Share, Void2())) {
-        None
-      } else {
-        Some(RegisterAccessH(callResultNode.registerId, functionRefH.prototype.returnType))
-      }
-    access
+        hinputs, hamuts, locals, callResultNode, argsDeferreds)
   }
 
   def translateFunctionPointerCall(
       hinputs: Hinputs,
       hamuts: HamutsBox,
       locals: LocalsBox,
-      stackHeight: StackHeightBox,
-      nodesByLine: NodesBox,
       function: Prototype2,
       args: List[Expression2],
       resultType2: Coord):
-  RegisterAccessH[ReferendH] = {
+  NodeH[ReferendH] = {
     val returnType2 = function.returnType
     val paramTypes = function.paramTypes
     val (argLines, argsDeferreds) =
       ExpressionHammer.translateExpressions(
-        hinputs, hamuts, locals, stackHeight, nodesByLine, args);
+        hinputs, hamuts, locals, args);
 
     val prototypeH =
       FunctionHammer.translatePrototype(hinputs, hamuts, function)
@@ -72,42 +54,33 @@ object CallHammer {
     // Doublecheck the types
     val (paramTypesH) =
       TypeHammer.translateReferences(hinputs, hamuts, paramTypes)
-    vassert(argLines.map(_.expectedType) == paramTypesH)
+    vassert(argLines.map(_.resultType) == paramTypesH)
 
     // Doublecheck return
     val (returnTypeH) = TypeHammer.translateReference(hinputs, hamuts, returnType2)
     val (resultTypeH) = TypeHammer.translateReference(hinputs, hamuts, resultType2);
     vassert(returnTypeH == resultTypeH)
 
-    val callResultNode =
-      nodesByLine.addNode(
-        CallH(
-          nodesByLine.nextId(),
-          prototypeH,
-          argLines));
+    val callResultNode = CallH(prototypeH, argLines)
 
-      ExpressionHammer.translateDeferreds(
-        hinputs, hamuts, locals, stackHeight, nodesByLine, argsDeferreds)
-
-    RegisterAccessH(callResultNode.registerId, resultTypeH)
+    ExpressionHammer.translateDeferreds(
+      hinputs, hamuts, locals, callResultNode, argsDeferreds)
   }
 
   def translateConstructArray(
       hinputs: Hinputs, hamuts: HamutsBox,
       locals: LocalsBox,
-      stackHeight: StackHeightBox,
-      nodesByLine: NodesBox,
       constructArray2: ConstructArray2):
-  (RegisterAccessH[UnknownSizeArrayTH]) = {
+  (NodeH[ReferendH]) = {
     val ConstructArray2(arrayType2, sizeExpr2, generatorExpr2) = constructArray2;
 
-    val (Some(sizeRegisterId), sizeDeferreds) =
+    val (sizeRegisterId, sizeDeferreds) =
       ExpressionHammer.translate(
-        hinputs, hamuts, locals, stackHeight, nodesByLine, sizeExpr2);
+        hinputs, hamuts, locals, sizeExpr2);
 
-    val (Some(generatorRegisterId), generatorDeferreds) =
+    val (generatorRegisterId, generatorDeferreds) =
       ExpressionHammer.translate(
-        hinputs, hamuts, locals, stackHeight, nodesByLine, generatorExpr2);
+        hinputs, hamuts, locals, generatorExpr2);
 
     val (arrayRefTypeH) =
       TypeHammer.translateReference(
@@ -118,32 +91,21 @@ object CallHammer {
     vassert(arrayRefTypeH.expectUnknownSizeArrayReference().kind == arrayTypeH)
 
     val constructArrayCallNode =
-      nodesByLine.addNode(
         ConstructUnknownSizeArrayH(
-          nodesByLine.nextId(),
           sizeRegisterId.expectIntAccess(),
           generatorRegisterId.expectInterfaceAccess(),
-          arrayRefTypeH.expectUnknownSizeArrayReference()))
+          arrayRefTypeH.expectUnknownSizeArrayReference())
 
-
-      ExpressionHammer.translateDeferreds(
-        hinputs, hamuts, locals, stackHeight, nodesByLine, generatorDeferreds ++ sizeDeferreds)
-
-    val access =
-      RegisterAccessH(
-        constructArrayCallNode.registerId,
-        arrayRefTypeH.expectUnknownSizeArrayReference())
-    access
+    ExpressionHammer.translateDeferreds(
+      hinputs, hamuts, locals, constructArrayCallNode, generatorDeferreds ++ sizeDeferreds)
   }
 
   def translateDestroyArraySequence(
       hinputs: Hinputs,
       hamuts: HamutsBox,
       locals: LocalsBox,
-      stackHeight: StackHeightBox,
-      nodesByLine: NodesBox,
       das2: DestroyArraySequence2):
-  Unit = {
+  NodeH[ReferendH] = {
     val DestroyArraySequence2(arrayExpr2, arraySequenceType, consumerExpr2) = das2;
 
     val ArraySequenceT2(size, rawArrayType2 @ RawArrayT2(memberType2, mutability)) = arraySequenceType
@@ -154,40 +116,35 @@ object CallHammer {
       TypeHammer.translateReference(hinputs, hamuts, arrayExpr2.resultRegister.reference)
     vassert(arrayRefTypeH.expectKnownSizeArrayReference().kind == arrayTypeH)
 
-    val (Some(arrayExprResultLine), arrayExprDeferreds) =
+    val (arrayExprResultLine, arrayExprDeferreds) =
       ExpressionHammer.translate(
-        hinputs, hamuts, locals, stackHeight, nodesByLine, arrayExpr2);
+        hinputs, hamuts, locals, arrayExpr2);
 
-    val (Some(consumerCallableResultLine), consumerCallableDeferreds) =
+    val (consumerCallableResultLine, consumerCallableDeferreds) =
       ExpressionHammer.translate(
-        hinputs, hamuts, locals, stackHeight, nodesByLine, consumerExpr2);
+        hinputs, hamuts, locals, consumerExpr2);
 
-    val consumerInterfaceRef = consumerCallableResultLine.expectInterfaceAccess().expectedType.kind;
+    val consumerInterfaceRef = consumerCallableResultLine.expectInterfaceAccess().resultType.kind;
     val consumerInterfaceDef = vassertSome(hamuts.interfaceDefs.values.find(_.getRef == consumerInterfaceRef))
     vassert(consumerInterfaceDef.prototypes.head.params.size == 2)
     vassert(consumerInterfaceDef.prototypes.head.params(0).kind == consumerInterfaceRef)
     vassert(consumerInterfaceDef.prototypes.head.params(1) == arrayTypeH.rawArray.elementType)
 
     val destroyArraySequenceCallNode =
-      nodesByLine.addNode(
         DestroyKnownSizeArrayH(
-          nodesByLine.nextId(),
           arrayExprResultLine.expectKnownSizeArrayAccess(),
-          consumerCallableResultLine.expectInterfaceAccess()))
+          consumerCallableResultLine.expectInterfaceAccess())
 
-
-      ExpressionHammer.translateDeferreds(
-        hinputs, hamuts, locals, stackHeight, nodesByLine, consumerCallableDeferreds ++ arrayExprDeferreds)
+    ExpressionHammer.translateDeferreds(
+      hinputs, hamuts, locals, destroyArraySequenceCallNode, consumerCallableDeferreds ++ arrayExprDeferreds)
   }
 
   def translateDestroyUnknownSizeArray(
     hinputs: Hinputs,
     hamuts: HamutsBox,
     locals: LocalsBox,
-    stackHeight: StackHeightBox,
-    nodesByLine: NodesBox,
     das2: DestroyUnknownSizeArray2):
-  Unit = {
+  NodeH[ReferendH] = {
     val DestroyUnknownSizeArray2(arrayExpr2, unknownSizeArrayType2, consumerExpr2) = das2;
 
     val UnknownSizeArrayT2(RawArrayT2(memberType2, mutability)) = unknownSizeArrayType2
@@ -198,114 +155,86 @@ object CallHammer {
       TypeHammer.translateReference(hinputs, hamuts, arrayExpr2.resultRegister.reference)
     vassert(arrayRefTypeH.expectUnknownSizeArrayReference().kind == arrayTypeH)
 
-    val (Some(arrayExprResultLine), arrayExprDeferreds) =
+    val (arrayExprResultLine, arrayExprDeferreds) =
       ExpressionHammer.translate(
-        hinputs, hamuts, locals, stackHeight, nodesByLine, arrayExpr2);
+        hinputs, hamuts, locals, arrayExpr2);
 
-    val (Some(consumerCallableResultLine), consumerCallableDeferreds) =
+    val (consumerCallableResultLine, consumerCallableDeferreds) =
       ExpressionHammer.translate(
-        hinputs, hamuts, locals, stackHeight, nodesByLine, consumerExpr2);
+        hinputs, hamuts, locals, consumerExpr2);
 
     val destroyArraySequenceCallNode =
-      nodesByLine.addNode(
         DestroyUnknownSizeArrayH(
-          nodesByLine.nextId(),
           arrayExprResultLine.expectUnknownSizeArrayAccess(),
-          consumerCallableResultLine.expectInterfaceAccess()))
+          consumerCallableResultLine.expectInterfaceAccess())
 
-
-      ExpressionHammer.translateDeferreds(
-        hinputs, hamuts, locals, stackHeight, nodesByLine, consumerCallableDeferreds ++ arrayExprDeferreds)
+    ExpressionHammer.translateDeferreds(
+      hinputs, hamuts, locals, destroyArraySequenceCallNode, consumerCallableDeferreds ++ arrayExprDeferreds)
   }
 
   def translateIf(
       hinputs: Hinputs, hamuts: HamutsBox,
       locals: LocalsBox,
-      stackHeight: StackHeightBox,
-      nodesByLine: NodesBox,
       if2: If2):
-  Option[RegisterAccessH[ReferendH]] = {
-
+  NodeH[ReferendH] = {
     val If2(condition2, thenBlock2, elseBlock2) = if2
 
-    val stackHeightForCondition = StackHeightBox(stackHeight.snapshot.oneBlockHigher())
-    val (conditionBlockH, maybeConditionResultAccess) =
-      BlockHammer.translateBlock(hinputs, hamuts, locals.snapshot, stackHeightForCondition, condition2);
-    vassert(maybeConditionResultAccess.get.expectedType == ReferenceH(m.ShareH, BoolH()))
+    val (conditionBlockH, List()) =
+      ExpressionHammer.translate(hinputs, hamuts, locals, condition2);
+    vassert(conditionBlockH.resultType == ReferenceH(m.ShareH, BoolH()))
 
-    val stackHeightForThen = StackHeightBox(stackHeight.snapshot.oneBlockHigher())
-    val (thenBlockH, maybeThenResultAccess) =
-      BlockHammer.translateBlock(hinputs, hamuts, locals.snapshot, stackHeightForThen, thenBlock2);
-    val maybeThenResultCoord = maybeThenResultAccess.map(_.expectedType)
+    val (thenBlockH, List()) =
+      ExpressionHammer.translate(hinputs, hamuts, locals, thenBlock2);
+    val thenResultCoord = thenBlockH.resultType
 
-    val stackHeightForElse = StackHeightBox(stackHeight.snapshot.oneBlockHigher())
-    val (elseBlockH, maybeElseResultAccess) =
-      BlockHammer.translateBlock(hinputs, hamuts, locals.snapshot, stackHeightForElse, elseBlock2);
-    val maybeElseResultCoord = maybeElseResultAccess.map(_.expectedType)
+    val (elseBlockH, List()) =
+      ExpressionHammer.translate(hinputs, hamuts, locals, elseBlock2);
+    val elseResultCoord = elseBlockH.resultType
 
-    val ifCallNode =
-      nodesByLine.addNode(
-        IfH(
-          nodesByLine.nextId(),
-          conditionBlockH,
-          thenBlockH,
-          elseBlockH))
+//    val resultCoord =
+//      (thenResultCoord, elseResultCoord) match {
+//        case (ReferenceH(m.ShareH, NeverH()), ReferenceH(m.ShareH, NeverH())) => ReferenceH(m.ShareH, NeverH()))
+//        case (ReferenceH(m.ShareH, NeverH()), elseResultCoord) => elseResultCoord)
+//        case (thenResultCoord, ReferenceH(m.ShareH, NeverH())) => thenResultCoord)
+//        case (thenResultCoord, elseResultCoord) => {
+//          vassert(thenResultCoord == elseResultCoord, "what\n" + thenResultCoord + "\n" + elseResultCoord)
+//          // Arbitrarily choose the then
+//          Some(thenResultCoord)
+//        }
+//        case _ => vwat()
+//      }
+    val ifCallNode = IfH(conditionBlockH.expectBoolAccess(), thenBlockH, elseBlockH)
 
-    val maybeResultCoord =
-      (maybeThenResultCoord, maybeElseResultCoord) match {
-        case (None, None) => None
-        case (Some(ReferenceH(m.ShareH, NeverH())), Some(ReferenceH(m.ShareH, NeverH()))) => Some(ReferenceH(m.ShareH, NeverH()))
-        case (Some(ReferenceH(m.ShareH, NeverH())), None) => None
-        case (Some(ReferenceH(m.ShareH, NeverH())), Some(elseResultCoord)) => Some(elseResultCoord)
-        case (None, Some(ReferenceH(m.ShareH, NeverH()))) => None
-        case (Some(thenResultCoord), Some(ReferenceH(m.ShareH, NeverH()))) => Some(thenResultCoord)
-        case (Some(thenResultCoord), Some(elseResultCoord)) => {
-          vassert(thenResultCoord == elseResultCoord, "what\n" + maybeThenResultCoord + "\n" + maybeElseResultCoord)
-          // Arbitrarily choose the then
-          Some(thenResultCoord)
-        }
-        case _ => vwat()
-      }
-    val maybeResultAccess = maybeResultCoord.map(coord => RegisterAccessH(ifCallNode.registerId, coord))
-
-    (maybeResultAccess)
+    ifCallNode
   }
 
   def translateWhile(
       hinputs: Hinputs, hamuts: HamutsBox,
       locals: LocalsBox,
-      stackHeight: StackHeightBox,
-      nodesByLine: NodesBox,
       while2: While2):
-  Unit = {
+  WhileH = {
 
     val While2(bodyExpr2) = while2
 
-    val stackHeightForBody = StackHeightBox(stackHeight.snapshot.oneBlockHigher())
-    val (bodyBlockH, maybeBodyResultAccess) =
+    val bodyBlockH =
       BlockHammer.translateBlock(
-        hinputs, hamuts, locals.snapshot, stackHeightForBody, bodyExpr2);
+        hinputs, hamuts, locals.snapshot, bodyExpr2);
 
-    val whileCallNode =
-      nodesByLine.addNode(
-        WhileH(
-          nodesByLine.nextId(),
-          bodyBlockH))
+    val whileCallNode = WhileH(bodyBlockH)
+    whileCallNode
   }
 
   def translateInterfaceFunctionCall(
       hinputs: Hinputs,
       hamuts: HamutsBox,
       locals: LocalsBox,
-      stackHeight: StackHeightBox,
-      nodesByLine: NodesBox,
       superFunctionHeader: FunctionHeader2,
       resultType2: Coord,
       argsExprs2: List[Expression2]):
-  RegisterAccessH[ReferendH] = {
+  NodeH[ReferendH] = {
     val (argLines, argsDeferreds) =
       ExpressionHammer.translateExpressions(
-        hinputs, hamuts, locals, stackHeight, nodesByLine, argsExprs2);
+        hinputs, hamuts, locals, argsExprs2);
 
     val virtualParamIndex = superFunctionHeader.getVirtualIndex.get
     val Coord(_, interfaceRef2 @ InterfaceRef2(_)) =
@@ -320,20 +249,16 @@ object CallHammer {
     val (prototypeH) = FunctionHammer.translatePrototype(hinputs, hamuts, superFunctionHeader.toPrototype)
 
     val callNode =
-      nodesByLine.addNode(
         InterfaceCallH(
-          nodesByLine.nextId(),
           argLines,
           virtualParamIndex,
           interfaceRefH,
           indexInEdge,
-          prototypeH));
-    val access = RegisterAccessH(callNode.registerId, prototypeH.returnType)
+          prototypeH)
 
     ExpressionHammer.translateDeferreds(
-      hinputs, hamuts, locals, stackHeight, nodesByLine, argsDeferreds)
+      hinputs, hamuts, locals, callNode, argsDeferreds)
 
-    (access)
     //
 //    val (callResultLine) =
 //      superFamilyRootBanner.params.zipWithIndex.collectFirst({
@@ -351,7 +276,7 @@ object CallHammer {
 //              interfaceRefH,
 //              functionTypeH,
 //              argLines)
-//          (nodesByLine, functionNodeLine)
+//          (functionNodeLine)
 //        }
 //        case (Parameter2(_, Some(_), Coord(_, structRef2@ StructRef2(_))), _) => {
 //          val (functionRegister) =
@@ -374,15 +299,15 @@ object CallHammer {
 //            if (returnType2 == ReferenceH(m.Share, VoidH())) {
 //              None
 //            } else {
-//              Some(RegisterAccessH(callResultNode.registerId, returnType2))
+//              Some(NodeH(callResultNode.registerId, returnType2))
 //            }
-//          (nodesByLine, access)
+//          (access)
 //        }
 //      }).get
 //
 //
 //      ExpressionHammer.translateDeferreds(
-//        hinputs, hamuts, locals, stackHeight, nodesByLine, argsDeferreds)
+//        hinputs, hamuts, locals, argsDeferreds)
 //    (callResultLine)
   }
 //
@@ -392,7 +317,7 @@ object CallHammer {
 //      nodesByLine: NodesBox,
 //      structRef2: StructRef2,
 //      superFamilyRootBanner: FunctionBanner2):
-//  (Vector[NodeH], RegisterAccessH[FunctionTH]) = {
+//  (Vector[NodeH], NodeH[FunctionTH]) = {
 //    val prototype2 =
 //      getPrototypeForStructInterfaceCall(hinputs, structRef2, superFamilyRootBanner)
 //
@@ -402,8 +327,8 @@ object CallHammer {
 //      addNode(
 //        nodesByLine,
 //        LoadFunctionH(nodesByLine.nextId(), functionRefH));
-//    val access = RegisterAccessH(functionNode.registerId, ReferenceH(m.Raw, functionRefH.functionType))
-//    (nodesByLine, access)
+//    val access = NodeH(functionNode.registerId, ReferenceH(m.Raw, functionRefH.functionType))
+//    (access)
 //  }
 //
 //  private def translateInterfaceFunctionCallWithInterface(
@@ -414,8 +339,8 @@ object CallHammer {
 //      firstVirtualParamIndex: Int,
 //      firstVirtualParamInterface: InterfaceRefH,
 //      functionTypeH: FunctionTH,
-//      argLines: List[RegisterAccessH[ReferendH]]):
-//  (Vector[NodeH], Option[RegisterAccessH[ReferendH]]) = {
+//      argLines: List[NodeH[ReferendH]]):
+//  (Vector[NodeH], Option[NodeH[ReferendH]]) = {
 //    val interfaceId = firstVirtualParamInterface.interfaceId
 //
 //    val edgeBlueprint =
@@ -442,9 +367,9 @@ object CallHammer {
 //      if (functionTypeH.returnType == ReferenceH(m.Share, VoidH())) {
 //        None
 //      } else {
-//        Some(RegisterAccessH(methodNode.registerId, functionTypeH.returnType))
+//        Some(NodeH(methodNode.registerId, functionTypeH.returnType))
 //      }
-//    (nodesByLine, access)
+//    (access)
 //  }
 
   private def getPrototypeForStructInterfaceCall(

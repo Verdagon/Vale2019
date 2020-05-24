@@ -351,6 +351,28 @@ class ArrayTests extends FunSuite with Matchers {
     compile.evalForReferend(Vector()) shouldEqual VonBool(true)
   }
 
+//  test("Destroy lambda with mutable captures") {
+//    val compile = new Compilation(
+//      ArrayUtils.code +
+//        """
+//          |fn main() {
+//          |  list = Array<mut, Int>(3, &IFunction1<mut, Int, Int>({_}));
+//          |  n = 7;
+//          |  newArray =
+//          |      Array<mut, Int>(3, &IFunction1<mut, Int, Int>((index){
+//          |        = if (index == 1) {
+//          |            = n;
+//          |          } else {
+//          |            a = list.(index);
+//          |            = a * 2;
+//          |          }
+//          |      }));
+//          |  = newArray.0;
+//          |}
+//          |""".stripMargin)
+//    compile.evalForReferend(Vector()) shouldEqual VonInt(0)
+//  }
+
 
 
 //  test("Map using map()") {

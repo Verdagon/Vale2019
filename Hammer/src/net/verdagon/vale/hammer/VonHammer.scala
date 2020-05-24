@@ -12,7 +12,7 @@ import net.verdagon.von._
 
 object VonHammer {
   def vonifyProgram(program: ProgramH): IVonData = {
-    val ProgramH(interfaces, structs, emptyPackStructRef, externs, functions) = program
+    val ProgramH(interfaces, structs, externs, functions) = program
 
     VonObject(
       "Program",
@@ -20,7 +20,6 @@ object VonHammer {
       Vector(
         VonMember(None, Some("interfaces"), VonArray(None, interfaces.map(vonfiyInterface).toVector)),
         VonMember(None, Some("structs"), VonArray(None, structs.map(vonfiyStruct).toVector)),
-        VonMember(None, Some("emptyPackStructRef"), vonifyStructRef(emptyPackStructRef)),
         VonMember(None, Some("externs"), VonArray(None, externs.map(vonifyPrototype).toVector)),
         VonMember(None, Some("functions"), VonArray(None, functions.map(vonifyFunction).toVector))))
   }
@@ -169,7 +168,6 @@ object VonHammer {
       case IntH() => VonObject("Int", None, Vector())
       case BoolH() => VonObject("Bool", None, Vector())
       case StrH() => VonObject("Str", None, Vector())
-      case VoidH() => VonObject("Void", None, Vector())
       case FloatH() => VonObject("Float", None, Vector())
       case ir @ InterfaceRefH(_) => vonifyInterfaceRef(ir)
       case sr @ StructRefH(_) => vonifyStructRef(sr)
@@ -213,95 +211,78 @@ object VonHammer {
   }
 
   def vonifyBlock(block: BlockH): IVonData = {
-    val BlockH(nodes, resultType) = block
+    val BlockH(nodes) = block
 
     VonObject(
       "Function",
       None,
       Vector(
-        VonMember(None, Some("nodes"), VonArray(None, nodes.map(node => vonifyNode(node)).toVector)),
-        VonMember(None, Some("resultType"), vonifyCoord(resultType))))
+        VonMember(None, Some("nodes"), VonArray(None, nodes.map(node => vonifyNode(node)).toVector))))
   }
 
-  def vonifyNode(node: NodeH): IVonData = {
+  def vonifyNode(node: NodeH[ReferendH]): IVonData = {
     node match {
-      case ConstantVoidH(registerId) => {
-        VonObject(
-          "ConstantI64",
-          None,
-          Vector(
-            VonMember(None, Some("registerId"), VonStr(registerId))))
-      }
-      case ConstantBoolH(registerId, value) => {
+      case ConstantBoolH(value) => {
         VonObject(
           "ConstantBool",
           None,
           Vector(
-            VonMember(None, Some("registerId"), VonStr(registerId)),
             VonMember(None, Some("value"), VonBool(value))))
       }
-      case ConstantI64H(registerId, value) => {
+      case ConstantI64H(value) => {
         VonObject(
           "ConstantI64",
           None,
           Vector(
-            VonMember(None, Some("registerId"), VonStr(registerId)),
             VonMember(None, Some("value"), VonInt(value))))
       }
-      case ConstantStrH(registerId, value) => {
+      case ConstantStrH(value) => {
         VonObject(
           "ConstantStr",
           None,
           Vector(
-            VonMember(None, Some("registerId"), VonStr(registerId)),
             VonMember(None, Some("value"), VonStr(value))))
       }
-      case ConstantF64H(registerId, value) => {
+      case ConstantF64H(value) => {
         vimpl()
       }
-      case DiscardH(registerId, sourceRegister) => {
+      case DiscardH(sourceRegister) => {
         VonObject(
           "Discard",
           None,
           Vector(
-            VonMember(None, Some("registerId"), VonStr(registerId)),
-            VonMember(None, Some("sourceRegister"), vonifyRegisterAccess(sourceRegister))))
+            VonMember(None, Some("sourceRegister"), vonifyNode(sourceRegister))))
       }
-      case ArgumentH(registerId, resultReference, argumentIndex) => {
+      case ArgumentH(resultReference, argumentIndex) => {
         VonObject(
           "Argument",
           None,
           Vector(
-            VonMember(None, Some("registerId"), VonStr(registerId)),
             VonMember(None, Some("resultType"), vonifyCoord(resultReference)),
             VonMember(None, Some("argumentIndex"), VonInt(argumentIndex))))
       }
-      case StackifyH(registerId, sourceRegister, local, name) => {
+      case StackifyH(sourceRegister, local, name) => {
         VonObject(
           "Stackify",
           None,
           Vector(
-            VonMember(None, Some("registerId"), VonStr(registerId)),
-            VonMember(None, Some("sourceRegister"), vonifyRegisterAccess(sourceRegister)),
+            VonMember(None, Some("sourceRegister"), vonifyNode(sourceRegister)),
             VonMember(None, Some("local"), vonifyLocal(local)),
-            VonMember(None, Some("name"), name.toVonArray())))
+            VonMember(None, Some("name"), vonifyOptional[FullNameH](name, n => n.toVonArray()))))
       }
-      case UnstackifyH(registerId, local, expectedType) => {
+      case UnstackifyH(local) => {
         VonObject(
           "Unstackify",
           None,
           Vector(
-            VonMember(None, Some("registerId"), VonStr(registerId)),
-            VonMember(None, Some("local"), vonifyLocal(local)),
-            VonMember(None, Some("expectedType"), vonifyCoord(expectedType))))
+            VonMember(None, Some("local"), vonifyLocal(local))))
       }
-      case DestructureH(registerId, structRegister, localTypes, locals) => {
+      case DestructureH(structRegister, localTypes, locals) => {
         VonObject(
           "Destructure",
           None,
           Vector(
-            VonMember(None, Some("registerId"), VonStr(registerId)),
-            VonMember(None, Some("structRegister"), vonifyRegisterAccess(structRegister)),
+            VonMember(None, Some("structRegister"), vonifyNode(structRegister)),
             VonMember(
               None,
               Some("localTypes"),
@@ -311,70 +292,63 @@ object VonHammer {
               Some("localIndices"),
               VonArray(None, locals.map(local => vonifyLocal(local))))))
       }
-      case StructToInterfaceUpcastH(registerId, sourceRegister, targetInterfaceRef) => {
+      case StructToInterfaceUpcastH(sourceRegister, targetInterfaceRef) => {
         vimpl()
       }
-      case InterfaceToInterfaceUpcastH(registerId, sourceRegister, targetInterfaceRef) => {
+      case InterfaceToInterfaceUpcastH(sourceRegister, targetInterfaceRef) => {
         vimpl()
       }
-      case LocalStoreH(registerId, local, sourceRegister,localName) => {
+      case LocalStoreH(local, sourceRegister,localName) => {
         vimpl()
       }
-      case LocalLoadH(registerId, local, targetOwnership, expectedLocalType, expectedResultType, localName) => {
+      case LocalLoadH(local, targetOwnership, expectedLocalType, expectedResultType, localName) => {
         VonObject(
           "LocalLoad",
           None,
           Vector(
-            VonMember(None, Some("registerId"), VonStr(registerId)),
             VonMember(None, Some("local"), vonifyLocal(local)),
             VonMember(None, Some("targetOwnership"), vonifyOwnership(targetOwnership)),
             VonMember(None, Some("expectedLocalType"), vonifyCoord(expectedLocalType)),
             VonMember(None, Some("expectedResultType"), vonifyCoord(expectedResultType)),
             VonMember(None, Some("localName"), localName.toVonArray())))
       }
-      case MemberStoreH(registerId, structRegister, memberIndex, sourceRegister, memberName) => {
+      case MemberStoreH(resultType, structRegister, memberIndex, sourceRegister, memberName) => {
         vimpl()
       }
-      case MemberLoadH(registerId, structRegister, memberIndex, targetOwnership, expectedMemberType, expectedResultType, memberName) => {
+      case MemberLoadH(structRegister, memberIndex, targetOwnership, expectedMemberType, expectedResultType, memberName) => {
         vimpl()
       }
-      case KnownSizeArrayStoreH(registerId, arrayRegister, indexRegister, sourceRegister) => {
+      case KnownSizeArrayStoreH(arrayRegister, indexRegister, sourceRegister) => {
         vimpl()
       }
-      case UnknownSizeArrayStoreH(registerId, arrayRegister, indexRegister, sourceRegister) => {
+      case UnknownSizeArrayStoreH(arrayRegister, indexRegister, sourceRegister) => {
         vimpl()
       }
-      case UnknownSizeArrayLoadH(registerId, arrayRegister, indexRegister, resultType, targetOwnership) => {
+      case UnknownSizeArrayLoadH(arrayRegister, indexRegister, resultType, targetOwnership) => {
         vimpl()
       }
-      case KnownSizeArrayLoadH(registerId, arrayRegister, indexRegister, resultType, targetOwnership) => {
+      case KnownSizeArrayLoadH(arrayRegister, indexRegister, resultType, targetOwnership) => {
         vimpl()
       }
-      case CallH(registerId, functionRegister, argsRegisters) => {
+      case CallH(functionRegister, argsRegisters) => {
         VonObject(
           "ExternCall",
           None,
           Vector(
-            VonMember(None, Some("registerId"), VonStr(registerId)),
             VonMember(None, Some("function"), vonifyPrototype(functionRegister)),
-            VonMember(None, Some("argRegisters"), VonArray(None, argsRegisters.toVector.map(vonifyRegisterAccess)))))
+            VonMember(None, Some("argRegisters"), VonArray(None, argsRegisters.toVector.map(vonifyNode)))))
       }
-      case InterfaceCallH(registerId, argsRegisters, virtualParamIndex, interfaceRefH, indexInEdge, functionType) => {
+      case InterfaceCallH(argsRegisters, virtualParamIndex, interfaceRefH, indexInEdge, functionType) => {
         vimpl()
       }
-      case IfH(registerId, conditionBlock, thenBlock, elseBlock) => {
+      case IfH(conditionBlock, thenBlock, elseBlock) => {
         vimpl()
       }
-      case WhileH(registerId, bodyBlock) => {
+      case WhileH(bodyBlock) => {
         vimpl()
       }
-      case InlineBlockH(registerId, block) => {
-        VonObject(
-          "InlineBlock",
-          None,
-          Vector(
-            VonMember(None, Some("registerId"), VonStr(registerId)),
-            VonMember(None, Some("block"), vonifyBlock(block))))
+      case blockH @ BlockH(_) => {
+        vonifyBlock(blockH)
       }
     }
   }
@@ -389,26 +363,14 @@ object VonHammer {
         VonMember(None, Some("prototype"), vonifyPrototype(prototype))))
   }
 
-  def vonifyRegisterAccess(access: RegisterAccessH[ReferendH]): IVonData = {
-    val RegisterAccessH(registerId, expectedType) = access
-
-    VonObject(
-      "RegisterAccess",
-      None,
-      Vector(
-        VonMember(None, Some("registerId"), VonStr(registerId)),
-        VonMember(None, Some("expectedType"), vonifyCoord(expectedType))))
-  }
-
   def vonifyLocal(local: Local): IVonData = {
-    val Local(id, height, tyype) = local
+    val Local(id, tyype) = local
 
     VonObject(
       "RegisterAccess",
       None,
       Vector(
         VonMember(None, Some("id"), vonifyVariableId(id)),
-        VonMember(None, Some("height"), vonifyStackHeight(height)),
         VonMember(None, Some("type"), vonifyCoord(tyype))))
   }
 
@@ -431,18 +393,6 @@ object VonHammer {
       case None => VonObject("None", None, Vector())
       case Some(value) => VonObject("Some", None, Vector(VonMember(None, Some("value"), func(value))))
     }
-  }
-
-  def vonifyStackHeight(height: StackHeight): IVonData = {
-    val StackHeight(blockHeight, blockStartLocalsHeight, localsHeight) = height
-
-    VonObject(
-      "StackHeight",
-      None,
-      Vector(
-        VonMember(None, Some("blockHeight"), VonInt(blockHeight)),
-        VonMember(None, Some("blockStartLocalsHeight"), VonInt(blockStartLocalsHeight)),
-        VonMember(None, Some("localsHeight"), VonInt(localsHeight))))
   }
 
 //  def translateTemplata(hinputs: Hinputs, hamuts: HamutsBox, templata: ITemplata): ITemplataH = {

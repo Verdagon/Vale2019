@@ -5,6 +5,18 @@ import net.verdagon.von.VonInt
 import org.scalatest.{FunSuite, Matchers}
 
 class StructTests extends FunSuite with Matchers {
+  test("Make empty mut struct") {
+    val compile = new Compilation(
+      """
+        |struct Marine {}
+        |fn main() {
+        |  Marine();
+        |}
+      """.stripMargin)
+
+    compile.run(Vector())
+  }
+
   test("Make struct") {
     val compile = new Compilation(
       """

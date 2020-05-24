@@ -15,22 +15,33 @@ class Allocation(
     val reference: ReferenceV, // note that this cannot change
     val referend: ReferendV // note that this cannot change
 ) {
-  private var referrers = Set[IObjectReferrer]()
+  private var referrers = Map[IObjectReferrer, Int]()
 
   def id = reference.allocId
 
   def incrementRefCount(referrer: IObjectReferrer) = {
-    if (referrers.contains(referrer)) {
-      vfail("nooo")
+    referrer match {
+      case RegisterToObjectReferrer(_) => {
+        // We can have multiple of these, thats fine
+      }
+      case _ => {
+        if (referrers.contains(referrer)) {
+          vfail("nooo")
+        }
+      }
     }
-    referrers = referrers + referrer
+    referrers = referrers + (referrer -> (referrers.getOrElse(referrer, 0) + 1))
   }
 
   def decrementRefCount(referrer: IObjectReferrer) = {
     if (!referrers.contains(referrer)) {
       vfail("nooooo\n" + referrer + "\nnot in:\n" + referrers)
     }
-    referrers = referrers - referrer
+    referrers = referrers + (referrer -> (referrers(referrer) - 1))
+    if (referrers(referrer) == 0) {
+      referrers = referrers - referrer
+      vassert(!referrers.contains(referrer))
+    }
   }
 
   private def getCategory(referrer: IObjectReferrer) = {
@@ -38,19 +49,23 @@ class Allocation(
       case VariableToObjectReferrer(_) => VariableRefCount
       case MemberToObjectReferrer(_) => MemberRefCount
       case RegisterToObjectReferrer(_) => RegisterRefCount
-      case ArgumentToObjectReferrer(_) => RegisterRefCount
+      case ArgumentToObjectReferrer(_) => ArgumentRefCount
     }
   }
 
   def getRefCount(category: RefCountCategory) = {
-    referrers.map(getCategory).count(_ == category)
+    referrers
+      .toList
+      .filter({ case (key, _) => getCategory(key) == category })
+      .map(_._2)
+      .sum
   }
 
   def ensureRefCount(category: RefCountCategory, expectedNum: Int) = {
     val matchingReferrers =
       referrers
-        .map(referrer => (getCategory(referrer), referrer))
-        .filter(_._1 == category)
+        .toList
+        .filter({ case (key, _) => getCategory(key) == category })
         .map(_._2)
     if (matchingReferrers.size != expectedNum) {
       vfail(
@@ -96,9 +111,6 @@ sealed trait ReferendV {
 sealed trait PrimitiveReferendV extends ReferendV
 case class IntV(value: Int) extends PrimitiveReferendV {
   override def tyype = RRReferend(IntH())
-}
-case class VoidV() extends PrimitiveReferendV {
-  override def tyype = RRReferend(VoidH())
 }
 case class BoolV(value: Boolean) extends PrimitiveReferendV {
   override def tyype = RRReferend(BoolH())
@@ -194,6 +206,7 @@ case class ReferenceV(
 
   ownership: OwnershipH,
 
+  // Negative number means it's an empty struct (like void).
   num: Int
 ) {
   def allocId = AllocationId(RRReferend(actualKind.hamut), num)
@@ -205,10 +218,10 @@ sealed trait IObjectReferrer
 case class VariableToObjectReferrer(varAddr: VariableAddressV) extends IObjectReferrer
 case class MemberToObjectReferrer(memberAddr: MemberAddressV) extends IObjectReferrer
 case class ElementToObjectReferrer(elementAddr: ElementAddressV) extends IObjectReferrer
-case class RegisterToObjectReferrer(registerId: RegisterId) extends IObjectReferrer
+case class RegisterToObjectReferrer(callId: CallId) extends IObjectReferrer
 // This is us holding onto something during a while loop or array generator call, so the called functions dont eat them and deallocate them
-case class RegisterHoldToObjectReferrer(registerId: RegisterId) extends IObjectReferrer
-case class ResultToObjectReferrer(callId: CallId) extends IObjectReferrer
+case class RegisterHoldToObjectReferrer(expressionId: ExpressionId) extends IObjectReferrer
+//case class ResultToObjectReferrer(callId: CallId) extends IObjectReferrer
 case class ArgumentToObjectReferrer(argumentId: ArgumentId) extends IObjectReferrer
 
 case class VariableAddressV(callId: CallId, local: Local) {
@@ -222,19 +235,24 @@ case class ElementAddressV(arrayId: AllocationId, elementIndex: Int) {
 }
 
 // Used in tracking reference counts/maps.
-case class CallId(blockDepth: Int, function: FunctionH) {
-  override def toString: String = "ƒ" + blockDepth + "/" + function.prototype.fullName.toString
+case class CallId(callDepth: Int, function: PrototypeH) {
+  override def toString: String = "ƒ" + callDepth + "/" + function.fullName.toString
 }
-case class RegisterId(blockId: BlockId, line: String)
+//case class RegisterId(blockId: BlockId, lineInBlock: Int)
 case class ArgumentId(callId: CallId, index: Int)
 case class VariableV(
     id: VariableAddressV,
-    var reference: Option[ReferenceV],
+    var reference: ReferenceV,
     expectedType: ReferenceH[ReferendH]) {
   vassert(reference != None)
 }
 
-case class BlockId(callId: CallId, blockHeight: Int)
+case class ExpressionId(
+  callId: CallId,
+  path: List[Int]
+) {
+  def addStep(i: Int): ExpressionId = ExpressionId(callId, path :+ i)
+}
 
 sealed trait RegisterV {
   def expectReferenceRegister() = {

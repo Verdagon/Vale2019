@@ -1,114 +1,176 @@
 package net.verdagon.vale.vivem
 
 import net.verdagon.vale.metal._
-import net.verdagon.vale.{vassert, vassertSome, vfail, vimpl, vwat, metal => m}
+import net.verdagon.vale.{vassert, vassertSome, vcurious, vfail, vimpl, vwat, metal => m}
 
 object ExpressionVivem {
+  // The contained reference has a ResultToObjectReferrer pointing at it.
+  // This is so if we do something like [4, 5].0, and that 4 is being
+  // returned to the parent node, it's not deallocated from its ref count
+  // going to 0.
   sealed trait INodeExecuteResult
-  case class NodeContinue(resultRegister: Option[RegisterId]) extends INodeExecuteResult
-  // None means VoidH
-  case class NodeReturn(returnRef: Option[ReturnV]) extends INodeExecuteResult
+  case class NodeContinue(resultRef: ReferenceV) extends INodeExecuteResult
+  case class NodeReturn(returnRef: ReferenceV) extends INodeExecuteResult
+
+  def makeVoid(programH: ProgramH, heap: Heap, callId: CallId) = {
+    val emptyPackStructRefH = ProgramH.emptyTupleStructRef
+    val emptyPackStructDefH = vassertSome(programH.structs.find(_.getRef == emptyPackStructRefH))
+    val void = heap.newStruct(emptyPackStructDefH, ReferenceH(ShareH, emptyPackStructRefH), List())
+    heap.incrementReferenceRefCount(RegisterToObjectReferrer(callId), void)
+    void
+  }
+
+  def makeInstance(heap: Heap, callId: CallId, referend: ReferendV) = {
+    val ref = heap.allocateTransient(ShareH, referend)
+    heap.incrementReferenceRefCount(RegisterToObjectReferrer(callId), ref)
+    ref
+  }
+
+  def takeArgument(heap: Heap, callId: CallId, argumentIndex: Int, resultType: ReferenceH[ReferendH]) = {
+    val ref = heap.takeArgument(callId, argumentIndex, resultType)
+    heap.incrementReferenceRefCount(RegisterToObjectReferrer(callId), ref)
+    ref
+  }
+
+  def possessCalleeReturn(heap: Heap, callId: CallId, calleeCallId: CallId, result: NodeReturn) = {
+    heap.decrementReferenceRefCount(RegisterToObjectReferrer(calleeCallId), result.returnRef)
+    heap.incrementReferenceRefCount(RegisterToObjectReferrer(callId), result.returnRef)
+    result.returnRef
+  }
 
   def executeNode(
       programH: ProgramH,
       stdin: (() => String),
       stdout: (String => Unit),
       heap: Heap,
-      blockId: BlockId,
-      node: NodeH):
-  INodeExecuteResult = {
-    val registerId = RegisterId(blockId, node.registerId)
+      expressionId: ExpressionId,
+      node: NodeH[ReferendH] // rename to expression
+  ): INodeExecuteResult = {
+    val callId = expressionId.callId
     node match {
-      case DiscardH(_, sourceRegister) => {
-        sourceRegister.expectedType.ownership match {
+      case DiscardH(sourceExpr) => {
+        sourceExpr.resultType.ownership match {
           case BorrowH | ShareH =>
         }
-        val ref =
-          heap.takeReferenceFromRegister(
-            RegisterId(blockId, sourceRegister.registerId),
-            sourceRegister.expectedType)
-        dropReference(programH, heap, stdout, stdin, blockId, ref)
-        NodeContinue(None)
+        val sourceRef =
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(0), sourceExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, sourceRef)
+
+        NodeContinue(makeVoid(programH, heap, callId))
       }
-      case ConstantVoidH(_) => {
-        // Do nothing, a void can never exist
-        NodeContinue(None)
-      }
-      case UnreachableH(_) => {
-        vfail()
-        NodeContinue(Some(registerId))
-      }
-      case ConstantI64H(_, value) => {
-        heap.allocateIntoRegister(registerId, ShareH, IntV(value))
-        NodeContinue(Some(registerId))
-      }
-      case ConstantF64H(_, value) => {
-        heap.allocateIntoRegister(registerId, ShareH, FloatV(value))
-        NodeContinue(Some(registerId))
-      }
-      case ConstantStrH(_, value) => {
-        heap.allocateIntoRegister(registerId, ShareH, StrV(value))
-        NodeContinue(Some(registerId))
-      }
-      case ConstantBoolH(_, value) => {
-        heap.allocateIntoRegister(registerId, ShareH, BoolV(value))
-        NodeContinue(Some(registerId))
-      }
-      case ArgumentH(_, resultType, argumentIndex) => {
-        heap.moveArgumentIntoRegister(registerId, argumentIndex, resultType)
-        NodeContinue(Some(registerId))
-      }
-      case ReturnH(_, sourceRegister) => {
-        heap.vivemDout.print("flort")
-        if (sourceRegister.expectedType.kind == VoidH()) {
-          return NodeReturn(None)
-        } else {
-          return NodeReturn(Some(heap.returnFromRegister(RegisterId(blockId, sourceRegister.registerId), sourceRegister.expectedType)))
+      case ReinterpretH(sourceExpr, resultType) => {
+        executeNode(programH, stdin, stdout, heap, expressionId.addStep(0), sourceExpr) match {
+          case r @ NodeReturn(_) => return r
+          case NodeContinue(r) => vfail()
         }
       }
-      case CheckRefCountH(_, refRegister, category, numRegister) => {
-        val numReference = heap.takeReferenceFromRegister(RegisterId(blockId, numRegister.registerId), numRegister.expectedType)
-        val refReference = heap.takeReferenceFromRegister(RegisterId(blockId, refRegister.registerId), refRegister.expectedType)
+      case UnreachableH() => {
+        vfail()
+      }
+      case ConstantI64H(value) => {
+        val ref = makeInstance(heap, callId, IntV(value))
+        NodeContinue(ref)
+      }
+      case ConstantF64H(value) => {
+        val ref = makeInstance(heap, callId, FloatV(value))
+        NodeContinue(ref)
+      }
+      case ConstantStrH(value) => {
+        val ref = makeInstance(heap, callId, StrV(value))
+        NodeContinue(ref)
+      }
+      case ConstantBoolH(value) => {
+        val ref = makeInstance(heap, callId, BoolV(value))
+        NodeContinue(ref)
+      }
+      case ArgumentH(resultType, argumentIndex) => {
+        val ref = takeArgument(heap, callId, argumentIndex, resultType)
+        NodeContinue(ref)
+      }
+      case ReturnH(sourceExpr) => {
+        val sourceRef =
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(0), sourceExpr) match {
+            case r @ NodeReturn(_) => {
+              vcurious()
+              return r
+            }
+            case NodeContinue(r) => r
+          }
+        return NodeReturn(sourceRef)
+      }
+      case CheckRefCountH(objExpr, category, numExpr) => {
+
+        val objRef =
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(0), objExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
+
+        val numRef =
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(1), numExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
+
         val num =
-          heap.dereference(numReference) match {
+          heap.dereference(numRef) match {
             case IntV(n) => n
           }
-        heap.ensureRefCount(refReference, category, num)
+        heap.ensureRefCount(objRef, category, num)
 
-        dropReferenceIfNonOwning(programH, heap, stdout, stdin, blockId, numReference)
-        NodeContinue(None)
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, objRef)
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, numRef)
+        NodeContinue(makeVoid(programH, heap, callId))
       }
-//      case SoftLoadH(_, sourceRegister, targetOwnership) => {
-//        val sourceRegisterId = RegisterId(blockId, sourceRegister.registerId)
-//        val address = heap.takeAddressFromRegister(sourceRegisterId, sourceRegister.expectedType)
+//      case SoftLoadH(_, sourceExpr, targetOwnership) => {
+//        val sourceExprId = ExprId(blockId, sourceExpr.exprId)
+//        val address = heap.takeAddressFromExpr(sourceExprId, sourceExpr.resultType)
 //        heap.vivemDout.print(" *")
 //        printAddress(heap.vivemDout, address)
-//        val source = heap.dereferenceAddress(address, sourceRegister.expectedType)
+//        val source = heap.dereferenceAddress(address, sourceExpr.resultType)
 //        if (targetOwnership == Own) {
-//          heap.setReferenceRegister(registerId, source)
-//          heap.blacklistAddress(address, sourceRegister.expectedType)
+//          heap.setReferenceExpr(exprId, source)
+//          heap.blacklistAddress(address, sourceExpr.resultType)
 //        } else {
-//          heap.aliasIntoRegister(
-//            registerId,
+//          heap.aliasIntoExpr(
+//            exprId,
 //            source,
-//            sourceRegister.expectedType,
+//            sourceExpr.resultType,
 //            targetOwnership)
 //        }
-//        heap.maybeDeallocateAddressRegister(sourceRegisterId, address)
+//        heap.maybeDeallocateAddressExpr(sourceExprId, address)
 //      }
-      case InlineBlockH(_, blockH) => {
-        BlockVivem.executeBlock(programH, stdin, stdout, heap, blockId.callId, blockH) match {
-          case BlockReturn(returnRef) => NodeReturn(returnRef)
-          case BlockContinue(None) => NodeContinue(None)
-          case BlockContinue(Some(resultRef)) => {
-            heap.setReferenceRegisterFromReturn(registerId, resultRef)
-            NodeContinue(Some(registerId))
+      case BlockH(innerExprs) => {
+        var lastInnerExprResultRef: Option[ReferenceV] = None
+
+        for (i <- innerExprs.indices) {
+          val innerExpr = innerExprs(i)
+
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(i), innerExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(innerExprResultRef) => {
+              if (i == innerExprs.size - 1) {
+                lastInnerExprResultRef = Some(innerExprResultRef)
+              }
+            }
           }
         }
+
+        NodeContinue(vassertSome(lastInnerExprResultRef))
       }
-      case DestructureH(_, structRegister, localTypes, locals) => {
-        val structReference = heap.takeReferenceFromRegister(RegisterId(blockId, structRegister.registerId), structRegister.expectedType)
-        if (structRegister.expectedType.ownership == OwnH) {
+      case DestructureH(structExpr, localTypes, locals) => {
+        val structReference =
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(0), structExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
+
+        heap.decrementReferenceRefCount(RegisterToObjectReferrer(callId), structReference)
+
+        if (structExpr.resultType.ownership == OwnH) {
           heap.ensureTotalRefCount(structReference, 0)
         } else {
           // Not doing
@@ -120,15 +182,22 @@ object ExpressionVivem {
 
         vassert(oldMemberReferences.size == locals.size)
         oldMemberReferences.zip(localTypes).zip(locals).foreach({ case ((memberRef, localType), localIndex) =>
-          val varAddr = heap.getVarAddress(blockId.callId, localIndex)
+          val varAddr = heap.getVarAddress(expressionId.callId, localIndex)
           heap.addLocal(varAddr, memberRef, localType)
           heap.vivemDout.print(" v" + varAddr + "<-o" + memberRef.num)
         })
-        NodeContinue(None)
+        NodeContinue(makeVoid(programH, heap, callId))
       }
-      case DestructureArraySequenceH(_, arrRegister, localTypes, locals) => {
-        val arrReference = heap.takeReferenceFromRegister(RegisterId(blockId, arrRegister.registerId), arrRegister.expectedType)
-        if (arrRegister.expectedType.ownership == OwnH) {
+      case DestructureArraySequenceH(arrExpr, localTypes, locals) => {
+        val arrReference =
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(0), arrExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
+
+        heap.decrementReferenceRefCount(RegisterToObjectReferrer(callId), arrReference)
+
+        if (arrExpr.resultType.ownership == OwnH) {
           heap.ensureTotalRefCount(arrReference, 0)
         } else {
           // Not doing
@@ -140,200 +209,307 @@ object ExpressionVivem {
 
         vassert(oldMemberReferences.size == locals.size)
         oldMemberReferences.zip(localTypes).zip(locals).foreach({ case ((memberRef, localType), localIndex) =>
-          val varAddr = heap.getVarAddress(blockId.callId, localIndex)
+          val varAddr = heap.getVarAddress(expressionId.callId, localIndex)
           heap.addLocal(varAddr, memberRef, localType)
           heap.vivemDout.print(" v" + varAddr + "<-o" + memberRef.num)
         })
-        NodeContinue(None)
+        NodeContinue(makeVoid(programH, heap, callId))
       }
-      case ArrayLengthH(_, arrayRegister) => {
-        val arrayReference = heap.takeReferenceFromRegister(RegisterId(blockId, arrayRegister.registerId), arrayRegister.expectedType)
+      case ArrayLengthH(arrExpr) => {
+        val arrayReference =
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(0), arrExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
+
         val arr @ ArrayInstanceV(_, _, _, _) = heap.dereference(arrayReference)
 
-        heap.allocateIntoRegister(registerId, ShareH, IntV(arr.getSize()))
-        NodeContinue(Some(registerId))
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, arrayReference)
+
+        val lenRef = makeInstance(heap, callId, IntV(arr.getSize()))
+        NodeContinue(lenRef)
       }
-      case StackifyH(_, sourceRegister, localIndex, name) => {
-        val reference = heap.takeReferenceFromRegister(RegisterId(blockId, sourceRegister.registerId), sourceRegister.expectedType)
-        val varAddr = heap.getVarAddress(blockId.callId, localIndex)
-        heap.addLocal(varAddr, reference, sourceRegister.expectedType)
+      case StackifyH(sourceExpr, localIndex, name) => {
+        val reference =
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(0), sourceExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
+
+        val varAddr = heap.getVarAddress(expressionId.callId, localIndex)
+        heap.addLocal(varAddr, reference, sourceExpr.resultType)
         heap.vivemDout.print(" v" + varAddr + "<-o" + reference.num)
-        NodeContinue(None)
+
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, reference)
+
+        NodeContinue(makeVoid(programH, heap, callId))
       }
-//      case LocalLookupH(_, localIndex, expectedType, name) => {
+//      case LocalLookupH(_, localIndex, resultType, name) => {
 //        // Check that its there
-//        heap.getReferenceFromLocal(VariableAddressV(callId, localIndex), expectedType)
+//        heap.getReferenceFromLocal(VariableAddressV(callId, localIndex), resultType)
 //
-//        heap.setVariableAddressRegister(registerId, VariableAddressV(callId, localIndex))
+//        heap.setVariableAddressExpr(exprId, VariableAddressV(callId, localIndex))
 //      }
 
-      case LocalStoreH(_, localIndex, sourceRegister, name) => {
-        val varAddress = heap.getVarAddress(blockId.callId, localIndex)
-        val reference = heap.takeReferenceFromRegister(RegisterId(blockId, sourceRegister.registerId), sourceRegister.expectedType)
+      case LocalStoreH(localIndex, sourceExpr, name) => {
+        val reference =
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(0), sourceExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
+
+        val varAddress = heap.getVarAddress(expressionId.callId, localIndex)
         heap.vivemDout.print(" " + varAddress + "(\"" + name + "\")")
         heap.vivemDout.print("<-" + reference.num)
-        val oldRef = heap.mutateVariable(varAddress, reference, sourceRegister.expectedType)
-        heap.setReferenceRegister(registerId, oldRef)
-        NodeContinue(Some(registerId))
+        val oldRef = heap.mutateVariable(varAddress, reference, sourceExpr.resultType)
+
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, reference)
+
+        heap.incrementReferenceRefCount(RegisterToObjectReferrer(callId), oldRef)
+        NodeContinue(oldRef)
       }
 
-      case MemberStoreH(_, structRegister, memberIndex, sourceRegister, memberName) => {
-        val structReference = heap.takeReferenceFromRegister(RegisterId(blockId, structRegister.registerId), structRegister.expectedType)
+      case MemberStoreH(resultType, structExpr, memberIndex, sourceExpr, memberName) => {
+        val structReference =
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(0), structExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
+        val sourceReference =
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(1), sourceExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
+
         val address = MemberAddressV(structReference.allocId, memberIndex)
-        val reference = heap.takeReferenceFromRegister(RegisterId(blockId, sourceRegister.registerId), sourceRegister.expectedType)
         heap.vivemDout.print(" " + address + "(\"" + memberName + "\")")
-        heap.vivemDout.print("<-" + reference.num)
-        val oldMemberReference = heap.mutateStruct(address, reference, sourceRegister.expectedType)
-        heap.setReferenceRegister(registerId, oldMemberReference)
-        NodeContinue(Some(registerId))
+        heap.vivemDout.print("<-" + sourceReference.num)
+        val oldMemberReference = heap.mutateStruct(address, sourceReference, sourceExpr.resultType)
+        heap.incrementReferenceRefCount(RegisterToObjectReferrer(callId), oldMemberReference)
+
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, structReference)
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, sourceReference)
+
+        NodeContinue(oldMemberReference)
       }
 
-      case UnknownSizeArrayStoreH(_, structRegister, indexRegister, sourceRegister) => {
-        val indexReference = heap.takeReferenceFromRegister(RegisterId(blockId, indexRegister.registerId), indexRegister.expectedType)
-        val arrayReference = heap.takeReferenceFromRegister(RegisterId(blockId, structRegister.registerId), structRegister.expectedType)
+      case UnknownSizeArrayStoreH(arrayExpr, indexExpr, sourceExpr) => {
+        val arrayReference =
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(0), arrayExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
+        val indexReference =
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(1), indexExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
+        val sourceReference =
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(2), sourceExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
         val IntV(elementIndex) = heap.dereference(indexReference)
 
         val address = ElementAddressV(arrayReference.allocId, elementIndex)
-        val reference = heap.takeReferenceFromRegister(RegisterId(blockId, sourceRegister.registerId), sourceRegister.expectedType)
         heap.vivemDout.print(" " + address)
-        heap.vivemDout.print("<-" + reference.num)
-        val oldMemberReference = heap.mutateArray(address, reference, sourceRegister.expectedType)
-        heap.setReferenceRegister(registerId, oldMemberReference)
+        heap.vivemDout.print("<-" + sourceReference.num)
+        val oldMemberReference = heap.mutateArray(address, sourceReference, sourceExpr.resultType)
+        heap.incrementReferenceRefCount(RegisterToObjectReferrer(callId), oldMemberReference)
 
-        dropReferenceIfNonOwning(programH, heap, stdout, stdin, blockId, indexReference)
-        NodeContinue(Some(registerId))
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, sourceReference)
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, indexReference)
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, arrayReference)
+        NodeContinue(oldMemberReference)
       }
 
-      case KnownSizeArrayStoreH(_, structRegister, indexRegister, sourceRegister) => {
-        val indexReference = heap.takeReferenceFromRegister(RegisterId(blockId, indexRegister.registerId), indexRegister.expectedType)
-        val arrayReference = heap.takeReferenceFromRegister(RegisterId(blockId, structRegister.registerId), structRegister.expectedType)
-        val IntV(elementIndex) = heap.dereference(indexReference)
-
-        val address = ElementAddressV(arrayReference.allocId, elementIndex)
-        val reference = heap.takeReferenceFromRegister(RegisterId(blockId, sourceRegister.registerId), sourceRegister.expectedType)
-        heap.vivemDout.print(" " + address)
-        heap.vivemDout.print("<-" + reference.num)
-        val oldMemberReference = heap.mutateArray(address, reference, sourceRegister.expectedType)
-        heap.setReferenceRegister(registerId, oldMemberReference)
-        NodeContinue(Some(registerId))
+      case KnownSizeArrayStoreH(structExpr, indexExpr, sourceExpr) => {
+        vimpl()
+//        val indexReference = heap.takeReferenceFromExpr(ExprId(blockId, indexExpr.exprId), indexExpr.resultType)
+//        val arrayReference = heap.takeReferenceFromExpr(ExprId(blockId, structExpr.exprId), structExpr.resultType)
+//        val IntV(elementIndex) = heap.dereference(indexReference)
+//
+//        val address = ElementAddressV(arrayReference.allocId, elementIndex)
+//        val reference = heap.takeReferenceFromExpr(ExprId(blockId, sourceExpr.exprId), sourceExpr.resultType)
+//        heap.vivemDout.print(" " + address)
+//        heap.vivemDout.print("<-" + reference.num)
+//        val oldMemberReference = heap.mutateArray(address, reference, sourceExpr.resultType)
+//        heap.setReferenceExpr(exprId, oldMemberReference)
+//        NodeContinue(exprId))
       }
 
-      case LocalLoadH(_, localIndex, targetOwnership, expectedLocalType, expectedResultType, name) => {
+      case LocalLoadH(localIndex, targetOwnership, expectedLocalType, expectedResultType, name) => {
         vassert(targetOwnership != OwnH) // should have been Unstackified instead
-        val varAddress = heap.getVarAddress(blockId.callId, localIndex)
-        val reference = heap.getReferenceFromLocal(varAddress, expectedLocalType)
+        val varAddress = heap.getVarAddress(expressionId.callId, localIndex)
+        val reference = heap.getReferenceFromLocal(varAddress, expectedLocalType, targetOwnership)
+        heap.incrementReferenceRefCount(RegisterToObjectReferrer(callId), reference)
         heap.vivemDout.print(" *" + varAddress)
-        heap.aliasIntoRegister(
-          registerId,
-          reference,
-          expectedLocalType,
-          targetOwnership)
-        NodeContinue(Some(registerId))
+        NodeContinue(reference)
       }
 
-      case UnstackifyH(_, localIndex, expectedType) => {
-        val varAddress = heap.getVarAddress(blockId.callId, localIndex)
-        val reference = heap.getReferenceFromLocal(varAddress, expectedType)
+      case UnstackifyH(local) => {
+        val varAddress = heap.getVarAddress(expressionId.callId, local)
+        val reference = heap.getReferenceFromLocal(varAddress, local.typeH, local.typeH.ownership)
+        heap.incrementReferenceRefCount(RegisterToObjectReferrer(callId), reference)
         heap.vivemDout.print(" ^" + varAddress)
-        heap.setReferenceRegister(registerId, reference)
-        heap.removeLocal(varAddress, expectedType)
-        NodeContinue(Some(registerId))
+        heap.removeLocal(varAddress, local.typeH)
+        NodeContinue(reference)
       }
-      case CallH(_, functionRef, argsRegisters) => {
+      case CallH(functionRef, argsExprs) => {
+        val argRefs =
+          argsExprs.zipWithIndex.map({ case (argExpr, i) =>
+            executeNode(programH, stdin, stdout, heap, expressionId.addStep(i), argExpr) match {
+              case r @ NodeReturn(_) => {
+                vimpl() // do we have to, like, discard the previously made arguments?
+                // what happens with those?
+                return r
+              }
+              case NodeContinue(r) => r
+            }
+          })
+
         if (programH.functions.find(_.prototype == functionRef).get.isExtern) {
-
           val externFunction = FunctionVivem.getExternFunction(programH, functionRef)
-          val argReferences =
-            heap.takeReferencesFromRegistersInReverse(blockId, argsRegisters)
 
-          val maybeResultReference =
+          val resultRef =
             externFunction(
               new AdapterForExterns(
-                programH, heap, blockId, stdin, stdout,
-                (reference) => {
-                  dropReferenceIfNonOwning(programH, heap, stdout, stdin, blockId, reference)
-                }),
-              argReferences.toVector)
+                programH,
+                heap,
+                CallId(expressionId.callId.callDepth + 1, functionRef),
+                stdin,
+                stdout),
+              argRefs.toVector)
+          heap.incrementReferenceRefCount(RegisterToObjectReferrer(callId), resultRef)
 
-          // Special case for externs; externs arent allowed to change ref counts at all
-          //        argReferences.foreach(heap.maybeDeallocate)
+          // Special case for externs; externs arent allowed to change ref counts at all.
+          // So, we just drop these normally.
+          argRefs.foreach(r => dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, r))
 
-          (functionRef.returnType.kind, maybeResultReference) match {
-            case (VoidH(), None) => NodeContinue(None)
-            case (_, Some(resultReference)) => {
-              heap.setReferenceRegisterFromReturn(registerId, resultReference)
-              NodeContinue(Some(registerId))
-            }
-          }
+          NodeContinue(resultRef)
         } else {
-          val argReferences = heap.takeReferencesFromRegistersInReverse(blockId, argsRegisters)
           heap.vivemDout.println()
-          heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (call)")
+          heap.vivemDout.println("  " * expressionId.callId.callDepth + "Making new stack frame (call)")
 
           val function =
             programH.functions.find(_.prototype == functionRef).get
 
-          val maybeReturnReference =
+          // The receiver should increment with their own arg referrers.
+          argRefs.foreach(r => heap.decrementReferenceRefCount(RegisterToObjectReferrer(callId), r))
+
+          val (calleeCallId, retuurn) =
             FunctionVivem.executeFunction(
-              programH, stdin, stdout, heap, argReferences.toVector, function)
-          heap.vivemDout.print("  " * blockId.blockHeight + "Getting return reference")
-          (functionRef.returnType.kind, maybeReturnReference) match {
-            case (VoidH(), None) => NodeContinue(None)
-            case (_, Some(returnReference)) => {
-              heap.setReferenceRegisterFromReturn(registerId, returnReference)
-              NodeContinue(Some(registerId))
-            }
-          }
+              programH, stdin, stdout, heap, argRefs.toVector, function)
+          heap.vivemDout.print("  " * expressionId.callId.callDepth + "Getting return reference")
+
+          val returnRef = possessCalleeReturn(heap, callId, calleeCallId, retuurn)
+          NodeContinue(returnRef)
         }
       }
-      case NewStructH(_, sourceLines, structRefH) => {
+      case InterfaceCallH(argsExprs, virtualParamIndex, interfaceRefH, indexInEdge, functionType) => {
+        // undeviewed = not deviewed = the virtual param is still a view and we want it to
+        // be a struct.
+        val undeviewedArgReferences =
+          argsExprs.zipWithIndex.map({ case (argExpr, i) =>
+            executeNode(programH, stdin, stdout, heap, expressionId.addStep(i), argExpr) match {
+              case r @ NodeReturn(_) => {
+                vimpl() // do we have to, like, discard the previously made arguments?
+                // what happens with those?
+                return r
+              }
+              case NodeContinue(r) => r
+            }
+          })
+
+        heap.vivemDout.println()
+        heap.vivemDout.println("  " * callId.callDepth + "Making new stack frame (icall)")
+
+        // The receiver should increment with their own arg referrers.
+        undeviewedArgReferences.foreach(r => heap.decrementReferenceRefCount(RegisterToObjectReferrer(callId), r))
+
+        val (functionH, (calleeCallId, retuurn)) =
+          executeInterfaceFunction(programH, stdin, stdout, heap, undeviewedArgReferences, virtualParamIndex, interfaceRefH, indexInEdge, functionType)
+
+        val returnRef = possessCalleeReturn(heap, callId, calleeCallId, retuurn)
+        NodeContinue(returnRef)
+      }
+      case NewStructH(argsExprs, structRefH) => {
         val structDefH = vassertSome(programH.structs.find(_.getRef == structRefH.kind))
 
         val memberReferences =
-          heap.takeReferencesFromRegistersInReverse(blockId, sourceLines)
+          argsExprs.zipWithIndex.map({ case (argExpr, i) =>
+            executeNode(programH, stdin, stdout, heap, expressionId.addStep(i), argExpr) match {
+              case r @ NodeReturn(_) => {
+                vimpl() // do we have to, like, discard the previously made arguments?
+                // what happens with those?
+                return r
+              }
+              case NodeContinue(r) => r
+            }
+          })
+
+        memberReferences.foreach(r => heap.decrementReferenceRefCount(RegisterToObjectReferrer(callId), r))
 
         vassert(memberReferences.size == structDefH.members.size)
-        val reference = heap.newStruct(registerId, structDefH, structRefH, memberReferences)
-        heap.setReferenceRegister(registerId, reference)
-        NodeContinue(Some(registerId))
+        val reference = heap.newStruct(structDefH, structRefH, memberReferences)
+        heap.incrementReferenceRefCount(RegisterToObjectReferrer(callId), reference)
+
+        NodeContinue(reference)
       }
-      case NewArrayFromValuesH(_, sourceRegisters, arrayRefType) => {
-        val refs = heap.takeReferencesFromRegistersInReverse(blockId, sourceRegisters)
+      case NewArrayFromValuesH(arrayRefType, elementExprs) => {
+        val elementRefs =
+          elementExprs.zipWithIndex.map({ case (argExpr, i) =>
+            executeNode(programH, stdin, stdout, heap, expressionId.addStep(i), argExpr) match {
+              case r @ NodeReturn(_) => {
+                vimpl() // do we have to, like, discard the previously made arguments?
+                // what happens with those?
+                return r
+              }
+              case NodeContinue(r) => r
+            }
+          })
+
+        elementRefs.foreach(r => heap.decrementReferenceRefCount(RegisterToObjectReferrer(callId), r))
 
         val (arrayReference, arrayInstance) =
-          heap.addArray(arrayRefType, refs)
+          heap.addArray(arrayRefType, elementRefs)
+        heap.incrementReferenceRefCount(RegisterToObjectReferrer(callId), arrayReference)
 
         heap.vivemDout.print(" o" + arrayReference.num + "=")
         heap.printReferend(arrayInstance)
-        heap.setReferenceRegister(registerId, arrayReference)
-        NodeContinue(Some(registerId))
+        NodeContinue(arrayReference)
       }
 
-      case MemberLoadH(_, structRegister, memberIndex, targetOwnership, expectedMemberType, expectedResultType, memberName) => {
-        val structReference = heap.takeReferenceFromRegister(RegisterId(blockId, structRegister.registerId), structRegister.expectedType)
+      case MemberLoadH(structExpr, memberIndex, targetOwnership, expectedMemberType, expectedResultType, memberName) => {
+        val structReference =
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(0), structExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
 
         val address = MemberAddressV(structReference.allocId, memberIndex)
 
         heap.vivemDout.print(" *" + address)
-        val source = heap.getReferenceFromStruct(address, expectedMemberType)
+        val memberReference = heap.getReferenceFromStruct(address, expectedMemberType, targetOwnership)
         vassert(targetOwnership != OwnH)
-        heap.aliasIntoRegister(
-          registerId,
-          source,
-          expectedMemberType,
-          targetOwnership)
+        heap.incrementReferenceRefCount(RegisterToObjectReferrer(callId), memberReference)
 
-        dropReferenceIfNonOwning(programH, heap, stdout, stdin, blockId, structReference)
-        NodeContinue(Some(registerId))
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, structReference)
+        NodeContinue(memberReference)
       }
 
-      case UnknownSizeArrayLoadH(_, arrayRegister, indexRegister, resultType, targetOwnership) => {
-        val indexIntReference =
-          heap.takeReferenceFromRegister(
-            RegisterId(blockId, indexRegister.registerId), ReferenceH(m.ShareH, IntH()))
+      case UnknownSizeArrayLoadH(arrayExpr, indexExpr, resultType, targetOwnership) => {
         val arrayReference =
-          heap.takeReferenceFromRegister(
-            RegisterId(blockId, arrayRegister.registerId), arrayRegister.expectedType)
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(0), arrayExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
+        val indexIntReference =
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(1), indexExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
+
         val index =
           heap.dereference(indexIntReference) match {
             case IntV(value) => value
@@ -342,54 +518,54 @@ object ExpressionVivem {
         val address = ElementAddressV(arrayReference.allocId, index)
 
         heap.vivemDout.print(" *" + address)
-        val source = heap.getReferenceFromArray(address, arrayRegister.expectedType.kind.rawArray.elementType)
+        val source = heap.getReferenceFromArray(address, arrayExpr.resultType.kind.rawArray.elementType, targetOwnership)
         if (targetOwnership == OwnH) {
           vfail("impl me?")
         } else {
-          heap.aliasIntoRegister(
-            registerId,
-            source,
-            arrayRegister.expectedType.kind.rawArray.elementType,
-            targetOwnership)
         }
+        heap.incrementReferenceRefCount(RegisterToObjectReferrer(callId), source)
 
-        dropReferenceIfNonOwning(programH, heap, stdout, stdin, blockId, indexIntReference)
-        dropReferenceIfNonOwning(programH, heap, stdout, stdin, blockId, arrayReference)
-        NodeContinue(Some(registerId))
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, indexIntReference)
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, arrayReference)
+        NodeContinue(source)
       }
 
-      case KnownSizeArrayLoadH(_, arrayRegister, indexRegister, resultType, targetOwnership) => {
-        val indexIntReference =
-          heap.takeReferenceFromRegister(
-            RegisterId(blockId, indexRegister.registerId), ReferenceH(m.ShareH, IntH()))
+      case KnownSizeArrayLoadH(arrayExpr, indexExpr, resultType, targetOwnership) => {
         val arrayReference =
-          heap.takeReferenceFromRegister(
-            RegisterId(blockId, arrayRegister.registerId), arrayRegister.expectedType)
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(0), arrayExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
+        val indexReference =
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(1), indexExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
         val index =
-          heap.dereference(indexIntReference) match {
+          heap.dereference(indexReference) match {
             case IntV(value) => value
           }
 
         val address = ElementAddressV(arrayReference.allocId, index)
 
         heap.vivemDout.print(" *" + address)
-        val source = heap.getReferenceFromArray(address, arrayRegister.expectedType.kind.rawArray.elementType)
+        val source = heap.getReferenceFromArray(address, arrayExpr.resultType.kind.rawArray.elementType, targetOwnership)
         if (targetOwnership == OwnH) {
           vfail("impl me?")
         } else {
-          heap.aliasIntoRegister(
-            registerId,
-            source,
-            arrayRegister.expectedType.kind.rawArray.elementType,
-            targetOwnership)
         }
+        heap.incrementReferenceRefCount(RegisterToObjectReferrer(callId), source)
 
-        dropReferenceIfNonOwning(programH, heap, stdout, stdin, blockId, indexIntReference)
-        dropReferenceIfNonOwning(programH, heap, stdout, stdin, blockId, arrayReference)
-        NodeContinue(Some(registerId))
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, indexReference)
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, arrayReference)
+        NodeContinue(source)
       }
-      case siu @ StructToInterfaceUpcastH(_, sourceRegister, targetInterfaceRef) => {
-        val sourceReference = heap.takeReferenceFromRegister(RegisterId(blockId, sourceRegister.registerId), sourceRegister.expectedType);
+      case siu @ StructToInterfaceUpcastH(sourceExpr, targetInterfaceRef) => {
+        val sourceReference =
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(0), sourceExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
         val ownership = sourceReference.ownership
 
         val targetReference =
@@ -398,89 +574,69 @@ object ExpressionVivem {
             RRReferend(targetInterfaceRef),
             sourceReference.ownership,
             sourceReference.num)
-
-        heap.aliasIntoRegister(registerId, targetReference, siu.resultRef, ownership)
-        NodeContinue(Some(registerId))
+        NodeContinue(targetReference)
       }
-      case icH @ InterfaceCallH(_, argsRegisters, virtualParamIndex, interfaceRefH, indexInEdge, functionType) => {
-
-        // undeviewed = not deviewed = the virtual param is still a view and we want it to
-        // be a struct.
-        val undeviewedArgReferences = heap.takeReferencesFromRegistersInReverse(blockId, argsRegisters)
-
-        heap.vivemDout.println()
-        heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (icall)")
-
-        val (functionH, maybeReturnReference) =
-          executeInterfaceFunction(programH, stdin, stdout, heap, undeviewedArgReferences, virtualParamIndex, interfaceRefH, indexInEdge, functionType)
-
-        (functionH.prototype.returnType.kind, maybeReturnReference) match {
-          case (VoidH(), None) => NodeContinue(None)
-          case (_, Some(returnReference)) => {
-            heap.setReferenceRegisterFromReturn(registerId, returnReference)
-            NodeContinue(Some(registerId))
+      case IfH(conditionBlock, thenBlock, elseBlock) => {
+        val conditionReference =
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(0), conditionBlock) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
           }
-        }
-      }
-      case IfH(_, conditionBlock, thenBlock, elseBlock) => {
-        val conditionBlockResult = BlockVivem.executeBlock(programH, stdin, stdout, heap, blockId.callId, conditionBlock)
-        val BlockContinue(Some(returnV)) = conditionBlockResult
-        val conditionReference = heap.getReferenceFromReturn(returnV)
         val conditionReferend = heap.dereference(conditionReference)
         val BoolV(conditionValue) = conditionReferend;
 
-        dropReferenceIfNonOwning(programH, heap, stdout, stdin, blockId, conditionReference)
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, conditionReference)
 
         val blockResult =
           if (conditionValue == true) {
-            BlockVivem.executeBlock(programH, stdin, stdout, heap, blockId.callId, thenBlock)
+            executeNode(programH, stdin, stdout, heap, expressionId.addStep(1), thenBlock) match {
+              case r @ NodeReturn(_) => return r
+              case NodeContinue(r) => r
+            }
           } else {
-            BlockVivem.executeBlock(programH, stdin, stdout, heap, blockId.callId, elseBlock)
+            executeNode(programH, stdin, stdout, heap, expressionId.addStep(2), elseBlock) match {
+              case r @ NodeReturn(_) => return r
+              case NodeContinue(r) => r
+            }
           }
-        blockResult match {
-          case BlockReturn(returnRef) => NodeReturn(returnRef)
-          case BlockContinue(None) => NodeContinue(None)
-          case BlockContinue(Some(resultRef)) => {
-            heap.setReferenceRegisterFromReturn(registerId, resultRef)
-            NodeContinue(Some(registerId))
-          }
-        }
+        NodeContinue(blockResult)
       }
-      case WhileH(_, bodyBlock) => {
+      case WhileH(bodyBlock) => {
         var continue = true
         while (continue) {
-          val conditionBlockResult =
-            BlockVivem.executeBlock(programH, stdin, stdout, heap, blockId.callId, bodyBlock)
-
-          conditionBlockResult match {
-            case BlockReturn(maybeReturnRef) => {
-              return NodeReturn(maybeReturnRef)
+          val conditionReference =
+            executeNode(programH, stdin, stdout, heap, expressionId.addStep(0), bodyBlock) match {
+              case r @ NodeReturn(_) => return r
+              case NodeContinue(r) => r
             }
-            case BlockContinue(Some(returnV)) => {
-              val conditionReference = heap.getReferenceFromReturn(returnV)
-              val conditionReferend = heap.dereference(conditionReference)
-              val BoolV(conditionValue) = conditionReferend;
-              continue = conditionValue
-              dropReference(programH, heap, stdout, stdin, blockId, conditionReference)
-            }
-          }
+          val conditionReferend = heap.dereference(conditionReference)
+          val BoolV(conditionValue) = conditionReferend;
+          dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, conditionReference)
+          continue = conditionValue
         }
-        NodeContinue(None)
+        NodeContinue(makeVoid(programH, heap, callId))
       }
-      case cac @ ConstructUnknownSizeArrayH(_, sizeRegister, generatorInterfaceRegister, arrayRefType) => {
-        val generatorInterfaceRef =
-          heap.takeReferenceFromRegister(
-            RegisterId(blockId, generatorInterfaceRegister.registerId), generatorInterfaceRegister.expectedType)
-
-        val sizeReference = heap.takeReferenceFromRegister(RegisterId(blockId, sizeRegister.registerId), ReferenceH(m.ShareH, IntH()))
+      case cac @ ConstructUnknownSizeArrayH(sizeExpr, generatorInterfaceExpr, arrayRefType) => {
+        val sizeReference =
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(0), sizeExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
         val sizeReferend = heap.dereference(sizeReference)
         val IntV(size) = sizeReferend;
         val (arrayReference, arrayInstance) =
           heap.addUninitializedArray(arrayRefType, size)
+        heap.incrementReferenceRefCount(RegisterToObjectReferrer(callId), arrayReference)
+
+        val generatorInterfaceRef =
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(0), generatorInterfaceExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
 
         (0 until size).foreach(i => {
           heap.vivemDout.println()
-          heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (generator)")
+          heap.vivemDout.println("  " * callId.callDepth + "Making new stack frame (generator)")
 
           val indexReference = heap.allocateTransient(ShareH, IntV(i))
 
@@ -490,15 +646,15 @@ object ExpressionVivem {
           val virtualParamIndex = 0
 
           val interfaceDefH =
-            programH.interfaces.find(_.getRef == generatorInterfaceRegister.expectedType.kind).get
+            programH.interfaces.find(_.getRef == generatorInterfaceExpr.resultType.kind).get
           val interfaceMethodPrototype = interfaceDefH.prototypes.head
 
           heap.vivemDout.println()
 
           heap.vivemDout.println()
-          heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (icall)")
+          heap.vivemDout.println("  " * callId.callDepth + "Making new stack frame (icall)")
 
-          val (functionH, maybeReturnReference) =
+          val (functionH, (calleeCallId, retuurn)) =
             executeInterfaceFunction(
               programH,
               stdin,
@@ -506,59 +662,61 @@ object ExpressionVivem {
               heap,
               List(generatorInterfaceRef, indexReference),
               virtualParamIndex,
-              generatorInterfaceRegister.expectedType.kind,
+              generatorInterfaceExpr.resultType.kind,
               indexInEdge,
               interfaceMethodPrototype)
 
-          heap.vivemDout.print("  " * blockId.blockHeight + "Getting return reference")
+          heap.vivemDout.print("  " * callId.callDepth + "Getting return reference")
 
-          vassert(maybeReturnReference.nonEmpty)
-          val returnReference = maybeReturnReference.get
+          val returnRef = possessCalleeReturn(heap, callId, calleeCallId, retuurn)
 
           // No need to increment or decrement, we're conceptually moving the return value
           // from the return slot to the array slot
-          heap.initializeArrayElementFromReturn(arrayReference, i, returnReference)
+          heap.initializeArrayElement(arrayReference, i, returnRef)
+          dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, returnRef)
         });
 
-
-        //        heap.allocateIntoRegister(registerId, arrayRefType.ownership, arrayInstance)
-        //        val arrayReference = heap.takeReferenceFromRegister(registerId, arrayRefType)
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, generatorInterfaceRef)
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, sizeReference)
 
         heap.vivemDout.print(" o" + arrayReference.num + "=")
         heap.printReferend(arrayInstance)
-        heap.setReferenceRegister(registerId, arrayReference)
 
-        //        heap.maybeDeallocate(thrownAwayGeneratorIndexArgReference)
-        //        heap.maybeDeallocate(sizeReference)
-        //        heap.maybeDeallocate(arrayReference)
-        //        heap.maybeDeallocate(generatorFunctionRef)
-
-        NodeContinue(Some(registerId))
+        NodeContinue(arrayReference)
       }
 
-      case DestroyKnownSizeArrayH(_, arrayRegister, consumerInterfaceRegister) => {
-        val consumerInterfaceRef =
-          heap.takeReferenceFromRegister(
-            RegisterId(blockId, consumerInterfaceRegister.registerId), consumerInterfaceRegister.expectedType)
-        heap.checkReference(consumerInterfaceRegister.expectedType, consumerInterfaceRef)
-
-        val tempHoldRegister = RegisterId(blockId, "tempHold")
-        heap.incrementReferenceHoldCount(tempHoldRegister, consumerInterfaceRef)
-
+      case DestroyKnownSizeArrayH(arrayExpr, consumerInterfaceExpr) => {
         val arrayReference =
-          heap.takeReferenceFromRegister(RegisterId(blockId, arrayRegister.registerId), arrayRegister.expectedType)
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(0), arrayExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
+
+        val consumerInterfaceRef =
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(1), consumerInterfaceExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
+        heap.checkReference(consumerInterfaceExpr.resultType, consumerInterfaceRef)
+
+//        heap.incrementReferenceHoldCount(expressionId, consumerInterfaceRef)
+
+        // Temporarily reduce to 0. We do this instead of ensure(1) to better detect a bug
+        // where there might be one different kind of referrer.
+        heap.decrementReferenceRefCount(RegisterToObjectReferrer(callId), arrayReference)
         heap.ensureTotalRefCount(arrayReference, 0)
+        heap.incrementReferenceRefCount(RegisterToObjectReferrer(callId), arrayReference)
 
         val consumerInterfaceDefH =
-          programH.interfaces.find(_.getRef == consumerInterfaceRegister.expectedType.kind).get
+          programH.interfaces.find(_.getRef == consumerInterfaceExpr.resultType.kind).get
         val consumerInterfaceMethodPrototype = consumerInterfaceDefH.prototypes.head
 
-        val size = arrayRegister.expectedType.kind.size
+        val size = arrayExpr.resultType.kind.size
         (0 until size).foreach(ascendingI => {
           val i = size - ascendingI - 1
 
           heap.vivemDout.println()
-          heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (consumer)")
+          heap.vivemDout.println("  " * callId.callDepth + "Making new stack frame (consumer)")
 
           // We're assuming here that theres only 1 method in the interface.
           val indexInEdge = 0
@@ -568,14 +726,14 @@ object ExpressionVivem {
           heap.vivemDout.println()
 
           heap.vivemDout.println()
-          heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (icall)")
+          heap.vivemDout.println("  " * callId.callDepth + "Making new stack frame (icall)")
 
           val elementReference = heap.deinitializeArrayElement(arrayReference, i)
 
           val consumerInterfaceRefAlias =
-            heap.alias(consumerInterfaceRef, consumerInterfaceRegister.expectedType, consumerInterfaceRegister.expectedType.ownership)
+            heap.alias(consumerInterfaceRef, consumerInterfaceExpr.resultType, consumerInterfaceExpr.resultType.ownership)
 
-          val (functionH, maybeReturnReference) =
+          val (functionH, (calleeCallId, retuurn)) =
             executeInterfaceFunction(
               programH,
               stdin,
@@ -583,48 +741,57 @@ object ExpressionVivem {
               heap,
               List(consumerInterfaceRefAlias, elementReference),
               virtualParamIndex,
-              consumerInterfaceRegister.expectedType.kind,
+              consumerInterfaceExpr.resultType.kind,
               indexInEdge,
               consumerInterfaceMethodPrototype)
 
-          // This instruction is specifically about NOT producing a new array. The return
-          // better be empty.
-          vassert(maybeReturnReference.isEmpty)
+          val returnRef = possessCalleeReturn(heap, callId, calleeCallId, retuurn)
+          dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, returnRef)
         });
 
+        heap.decrementReferenceRefCount(RegisterToObjectReferrer(callId), arrayReference)
         heap.deallocate(arrayReference)
 
-        heap.decrementReferenceHoldCount(tempHoldRegister, consumerInterfaceRef)
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, consumerInterfaceRef)
 
-        dropReference(programH, heap, stdout, stdin, blockId, consumerInterfaceRef)
-
-        NodeContinue(None)
+        NodeContinue(makeVoid(programH, heap, callId))
       }
 
-      case cac @ DestroyUnknownSizeArrayH(_, arrayRegister, consumerInterfaceRegister) => {
-        val consumerInterfaceRef =
-          heap.takeReferenceFromRegister(
-            RegisterId(blockId, consumerInterfaceRegister.registerId),
-            consumerInterfaceRegister.expectedType)
-
-        val tempHoldRegister = RegisterId(blockId, "tempHold")
-        heap.incrementReferenceHoldCount(tempHoldRegister, consumerInterfaceRef)
-
+      case cac @ DestroyUnknownSizeArrayH(arrayExpr, consumerInterfaceExpr) => {
         val arrayReference =
-          heap.takeReferenceFromRegister(RegisterId(blockId, arrayRegister.registerId), arrayRegister.expectedType)
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(0), arrayExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
+
+        val consumerInterfaceRef =
+          executeNode(programH, stdin, stdout, heap, expressionId.addStep(1), consumerInterfaceExpr) match {
+            case r @ NodeReturn(_) => return r
+            case NodeContinue(r) => r
+          }
+        heap.checkReference(consumerInterfaceExpr.resultType, consumerInterfaceRef)
+
+        //        heap.incrementReferenceHoldCount(expressionId, consumerInterfaceRef)
+
+        // Temporarily reduce to 0. We do this instead of ensure(1) to better detect a bug
+        // where there might be one different kind of referrer.
+        heap.decrementReferenceRefCount(RegisterToObjectReferrer(callId), arrayReference)
         heap.ensureTotalRefCount(arrayReference, 0)
+        heap.incrementReferenceRefCount(RegisterToObjectReferrer(callId), arrayReference)
 
         val consumerInterfaceDefH =
-          programH.interfaces.find(_.getRef == consumerInterfaceRegister.expectedType.kind).get
+          programH.interfaces.find(_.getRef == consumerInterfaceExpr.resultType.kind).get
         val consumerInterfaceMethodPrototype = consumerInterfaceDefH.prototypes.head
 
-        val ArrayInstanceV(_, _, size, _) = heap.dereference(arrayReference)
-
+        val size =
+          heap.dereference(arrayReference) match {
+            case ArrayInstanceV(_, _, s, _) => s
+          }
         (0 until size).foreach(ascendingI => {
           val i = size - ascendingI - 1
 
           heap.vivemDout.println()
-          heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (consumer)")
+          heap.vivemDout.println("  " * callId.callDepth + "Making new stack frame (consumer)")
 
           // We're assuming here that theres only 1 method in the interface.
           val indexInEdge = 0
@@ -633,35 +800,36 @@ object ExpressionVivem {
 
           heap.vivemDout.println()
 
+          heap.vivemDout.println()
+          heap.vivemDout.println("  " * callId.callDepth + "Making new stack frame (icall)")
+
           val elementReference = heap.deinitializeArrayElement(arrayReference, i)
 
-          heap.vivemDout.println()
-          heap.vivemDout.println("  " * blockId.blockHeight + "Making new stack frame (icall)")
+          val consumerInterfaceRefAlias =
+            heap.alias(consumerInterfaceRef, consumerInterfaceExpr.resultType, consumerInterfaceExpr.resultType.ownership)
 
-          val (functionH, maybeReturnReference) =
+          val (functionH, (calleeCallId, retuurn)) =
             executeInterfaceFunction(
               programH,
               stdin,
               stdout,
               heap,
-              List(consumerInterfaceRef, elementReference),
+              List(consumerInterfaceRefAlias, elementReference),
               virtualParamIndex,
-              consumerInterfaceRegister.expectedType.kind,
+              consumerInterfaceExpr.resultType.kind,
               indexInEdge,
               consumerInterfaceMethodPrototype)
 
-          // This instruction is specifically about NOT producing a new array. The return
-          // better be empty.
-          vassert(maybeReturnReference.isEmpty)
+          val returnRef = possessCalleeReturn(heap, callId, calleeCallId, retuurn)
+          dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, returnRef)
         });
 
+        heap.decrementReferenceRefCount(RegisterToObjectReferrer(callId), arrayReference)
         heap.deallocate(arrayReference)
 
-        heap.decrementReferenceHoldCount(tempHoldRegister, consumerInterfaceRef)
+        dropReferenceIfNonOwning(programH, heap, stdout, stdin, callId, consumerInterfaceRef)
 
-        dropReference(programH, heap, stdout, stdin, blockId, consumerInterfaceRef)
-
-        NodeContinue(None)
+        NodeContinue(makeVoid(programH, heap, callId))
       }
     }
   }
@@ -729,24 +897,25 @@ object ExpressionVivem {
       heap: Heap,
       stdout: String => Unit,
       stdin: () => String,
-      blockId: BlockId,
+      callId: CallId,
       reference: ReferenceV) = {
-    reference.ownership match {
-      case OwnH =>
-      case BorrowH | ShareH => {
-        dropReference(programH, heap, stdout, stdin, blockId, reference)
-      }
-    }
+    heap.decrementReferenceRefCount(RegisterToObjectReferrer(callId), reference)
+    dropReference(programH, heap, stdout, stdin, callId, reference)
+//    reference.ownership match {
+//      case OwnH =>
+//      case BorrowH | ShareH => {
+//      }
+//    }
   }
 
-  private def dropReference(
+  def dropReference(
       programH: ProgramH,
       heap: Heap,
       stdout: String => Unit,
       stdin: () => String,
-      blockId: BlockId,
-      reference: ReferenceV):
-  Unit = {
+      callId: CallId,
+      reference: ReferenceV
+  ): Unit = {
     if (heap.getTotalRefCount(reference) == 0) {
       // If it's a share ref, then use runtime information to crawl through and decrement
       // ref counts.
@@ -763,25 +932,25 @@ object ExpressionVivem {
             case StructRefH(_) => {
               // Deallocates the thing.
               val references = heap.destructure(reference, true)
-              references.foreach(dropReference(programH, heap, stdout, stdin, blockId, _))
+              references.foreach(dropReference(programH, heap, stdout, stdin, callId, _))
             }
             case UnknownSizeArrayTH(_) => {
               val ArrayInstanceV(_, _, _, elements) = heap.dereference(reference)
               val references = elements.indices.map(i => heap.deinitializeArrayElement(reference, elements.size - 1 - i))
               heap.deallocate(reference)
-              references.foreach(dropReference(programH, heap, stdout, stdin, blockId, _))
+              references.foreach(dropReference(programH, heap, stdout, stdin, callId, _))
             }
             case KnownSizeArrayTH(_, _) => {
               val ArrayInstanceV(_, _, _, elements) = heap.dereference(reference)
               val references = elements.indices.map(i => heap.deinitializeArrayElement(reference, elements.size - 1 - i))
               heap.deallocate(reference)
-              references.foreach(dropReference(programH, heap, stdout, stdin, blockId, _))
+              references.foreach(dropReference(programH, heap, stdout, stdin, callId, _))
             }
           }
         }
-        case OwnH => {
-          vimpl()
-        }
+//        case OwnH => {
+//          vimpl()
+//        }
       }
     }
   }

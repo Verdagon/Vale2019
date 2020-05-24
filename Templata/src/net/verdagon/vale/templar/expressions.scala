@@ -105,6 +105,8 @@ case class Discard2(
 ) extends ReferenceExpression2 {
   override def resultRegister = ReferenceRegister2(Coord(Share, Void2()))
 
+  vassert(expr.referend != Void2())
+
   expr match {
     case Consecutor2(exprs) => {
       exprs.last match {
@@ -123,7 +125,7 @@ case class Discard2(
 case class Defer2(
   innerExpr: ReferenceExpression2,
   // Every deferred expression should discard its result, IOW, return Void.
-  deferredExpr: Discard2
+  deferredExpr: ReferenceExpression2
 ) extends ReferenceExpression2 {
 
   override def resultRegister = ReferenceRegister2(innerExpr.resultRegister.reference)
@@ -139,12 +141,12 @@ case class Defer2(
 // entirely. See comment below If2.
 // These are blocks because we don't want inner locals to escape.
 case class If2(
-    condition: Block2,
-    thenCall: Block2,
-    elseCall: Block2) extends ReferenceExpression2 {
-  private val conditionResultCoord = condition.lastReferenceExpr.resultRegister.reference
-  private val thenResultCoord = thenCall.lastReferenceExpr.resultRegister.reference
-  private val elseResultCoord = elseCall.lastReferenceExpr.resultRegister.reference
+    condition: ReferenceExpression2,
+    thenCall: ReferenceExpression2,
+    elseCall: ReferenceExpression2) extends ReferenceExpression2 {
+  private val conditionResultCoord = condition.resultRegister.reference
+  private val thenResultCoord = thenCall.resultRegister.reference
+  private val elseResultCoord = elseCall.resultRegister.reference
 
   vassert(conditionResultCoord == Coord(Share, Bool2()))
   vassert(

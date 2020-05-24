@@ -29,10 +29,9 @@ case class LocalsBox(var inner: Locals) {
   }
 
   def addHammerLocal(
-    height: StackHeight,
     tyype: ReferenceH[ReferendH]):
   Local = {
-    val (newInner, local) = inner.addHammerLocal(height, tyype)
+    val (newInner, local) = inner.addHammerLocal(tyype)
     inner = newInner
     local
   }
@@ -41,10 +40,9 @@ case class LocalsBox(var inner: Locals) {
     hinputs: Hinputs,
     hamuts: HamutsBox,
     varId2: FullName2[IVarName2],
-    height: StackHeight,
     tyype: ReferenceH[ReferendH]):
   Local = {
-    val (newInner, local) = inner.addTemplarLocal(hinputs, hamuts, varId2, height, tyype)
+    val (newInner, local) = inner.addTemplarLocal(hinputs, hamuts, varId2, tyype)
     inner = newInner
     local
   }
@@ -68,7 +66,6 @@ case class Locals(
     hinputs: Hinputs,
     hamuts: HamutsBox,
     varId2: FullName2[IVarName2],
-    height: StackHeight,
     tyype: ReferenceH[ReferendH]):
   (Locals, Local) = {
     if (templarLocals.contains(varId2)) {
@@ -77,7 +74,7 @@ case class Locals(
     val newLocalIdNumber = locals.size
     val varIdNameH = NameHammer.translateFullName(hinputs, hamuts, varId2)
     val newLocalId = VariableIdH(newLocalIdNumber, Some(varIdNameH))
-    val newLocal = Local(newLocalId, height, tyype)
+    val newLocal = Local(newLocalId, tyype)
     val newLocals =
       Locals(
         templarLocals + (varId2 -> newLocalId),
@@ -87,12 +84,11 @@ case class Locals(
   }
 
   def addHammerLocal(
-    height: StackHeight,
     tyype: ReferenceH[ReferendH]):
   (Locals, Local) = {
     val newLocalIdNumber = locals.size
     val newLocalId = VariableIdH(newLocalIdNumber, None)
-    val newLocal = Local(newLocalId, height, tyype)
+    val newLocal = Local(newLocalId, tyype)
     val newLocals =
       Locals(
         templarLocals,
@@ -130,6 +126,7 @@ object Hammer {
   def translate(hinputs: Hinputs): ProgramH = {
     val hamuts = HamutsBox(Hamuts(Map(), Map(), List(), Map(), Map(), Map(), Map()))
     val emptyPackStructRefH = StructHammer.translateStructRef(hinputs, hamuts, hinputs.program2.emptyPackStructRef)
+    vassert(emptyPackStructRefH == ProgramH.emptyTupleStructRef)
     StructHammer.translateInterfaces(hinputs, hamuts);
     StructHammer.translateStructs(hinputs, hamuts)
     val userFunctions = hinputs.program2.functions.filter(_.header.isUserFunction).toList
@@ -140,19 +137,7 @@ object Hammer {
     ProgramH(
       hamuts.interfaceDefs.values.toList,
       hamuts.structDefs,
-      emptyPackStructRefH,
       List() /* externs */,
       hamuts.functionDefs.values.toList)
-  }
-}
-
-case class NodesBox(var inner: Vector[NodeH]) {
-  def addNode(node: NodeH): NodeH = {
-    inner = inner :+ node
-    node
-  }
-
-  def nextId(): String = {
-    "" + inner.size
   }
 }

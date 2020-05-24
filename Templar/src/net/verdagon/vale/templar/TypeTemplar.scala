@@ -63,6 +63,10 @@ object TypeTemplar {
     val Coord(targetOwnership, targetType) = targetPointerType;
     val Coord(sourceOwnership, sourceType) = sourcePointerType;
 
+    if (sourceExpr.resultRegister.reference == targetPointerType) {
+      return sourceExpr
+    }
+
     if (sourceType == Never2()) {
       return (TemplarReinterpret2(sourceExpr, targetPointerType))
     }

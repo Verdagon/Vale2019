@@ -54,7 +54,7 @@ object Conversions {
     refCountCategory match {
       case t.MemberRefCount => m.MemberRefCount
       case t.VariableRefCount => m.VariableRefCount
-      case t.RegisterRefCount => m.RegisterRefCount
+      case t.RegisterRefCount => m.ArgumentRefCount
     }
   }
 

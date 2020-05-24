@@ -4,6 +4,8 @@ import java.io.PrintStream
 
 import net.verdagon.vale.hammer.NameHammer
 import net.verdagon.vale.metal._
+import net.verdagon.vale.vassertSome
+import net.verdagon.vale.vivem.ExpressionVivem
 
 //import net.verdagon.vale.hammer._
 //import net.verdagon.vale.scout.RefCountCategory
@@ -12,30 +14,35 @@ import net.verdagon.vale.{vassert, vcurious, vfail, vimpl}
 import net.verdagon.von._
 
 import scala.collection.mutable
-// A wrapper that represents us holding a reference count +1 to this reference.
-case class ReturnV(blockId: BlockId, reference: ReferenceV)
 
 class AdapterForExterns(
     val programH: ProgramH,
     private val heap: Heap,
-    blockId: BlockId,
+    callId: CallId,
     val stdin: (() => String),
-    val stdout: (String => Unit),
-    val dropReferenceIfNonOwning: (ReferenceV => Unit)
+    val stdout: (String => Unit)
 ) {
   def dereference(reference: ReferenceV) = {
     heap.dereference(reference)
   }
 
-  def addAllocationForReturn(ownership: OwnershipH, referend: ReferendV): ReturnV = {
+  def addAllocationForReturn(ownership: OwnershipH, referend: ReferendV): ReferenceV = {
     val ref = heap.add(ownership, referend)
-    heap.incrementReferenceRefCount(ResultToObjectReferrer(blockId.callId), ref) // incrementing because putting it in a return
-    ReturnV(blockId, ref)
+//    heap.incrementReferenceRefCount(ResultToObjectReferrer(callId), ref) // incrementing because putting it in a return
+//    ReturnV(callId, ref)
+    ref
+  }
+
+  def makeVoid(): ReferenceV = {
+    val emptyPackStructRefH = ProgramH.emptyTupleStructRef
+    val emptyPackStructDefH = vassertSome(programH.structs.find(_.getRef == emptyPackStructRefH))
+    heap.newStruct(emptyPackStructDefH, ReferenceH(ShareH, emptyPackStructRefH), List())
   }
 }
 
 class AllocationMap(vivemDout: PrintStream) {
   private val objectsById = mutable.HashMap[AllocationId, Allocation]()
+  private val voidishIds = mutable.HashMap[ReferendH, AllocationId]()
 
   private var nextId = 501;
   private def newId() = {
@@ -52,25 +59,18 @@ class AllocationMap(vivemDout: PrintStream) {
     objectsById.size
   }
 
-  def get(reference: ReferenceV) = {
-    val allocation = objectsById(reference.allocId)
-    vassert(allocation.referend.tyype.hamut == reference.actualKind.hamut)
-    allocation
-  }
-
   def get(allocId: AllocationId) = {
-    val allocation = objectsById(allocId)
+    val allocation = vassertSome(objectsById.get(allocId))
     vassert(allocation.referend.tyype == allocId.tyype)
     allocation
   }
 
-  def remove(allocId: AllocationId) = {
+  def remove(allocId: AllocationId): Unit = {
+    if (voidishIds.contains(allocId.tyype.hamut)) {
+      return;
+    }
     vassert(contains(allocId))
     objectsById.remove(allocId)
-  }
-
-  def contains(reference: ReferenceV): Boolean = {
-    contains(reference.allocId)
   }
 
   def contains(allocId: AllocationId): Boolean = {
@@ -84,6 +84,18 @@ class AllocationMap(vivemDout: PrintStream) {
   }
 
   def add(ownership: OwnershipH, referend: ReferendV) = {
+    val shouldIntern =
+      referend match {
+        case StructInstanceV(structH, members) if structH.mutability == Immutable && members.isEmpty => true
+        case _ => false
+      }
+    if (shouldIntern) {
+      voidishIds.get(referend.tyype.hamut) match {
+        case Some(allocId) => get(allocId)
+        case None => // continue
+      }
+    }
+
     val reference =
       ReferenceV(
         // These two are the same because when we allocate something,
@@ -95,6 +107,9 @@ class AllocationMap(vivemDout: PrintStream) {
         newId())
     val allocation = new Allocation(reference, referend)
     objectsById.put(reference.allocId, allocation)
+    if (shouldIntern) {
+      voidishIds.put(referend.tyype.hamut, reference.allocId)
+    }
     reference
   }
 
@@ -105,10 +120,18 @@ class AllocationMap(vivemDout: PrintStream) {
   }
 
   def checkForLeaks(): Unit = {
-    if (objectsById.nonEmpty) {
-      objectsById.values.map(_.reference.allocId.num).toArray.sorted.foreach(objId => print("o" + objId + " "))
+    val nonInternedObjects =
+      objectsById
+        .values
+        .filter(value => !voidishIds.contains(value.referend.tyype.hamut))
+    if (nonInternedObjects.nonEmpty) {
+      nonInternedObjects
+        .map(_.reference.allocId.num)
+        .toArray
+        .sorted
+        .foreach(objId => print("o" + objId + " "))
       println()
-      objectsById.values.toArray.sortWith(_.reference.allocId.num < _.reference.allocId.num).foreach(_.printRefs())
+      nonInternedObjects.toArray.sortWith(_.reference.allocId.num < _.reference.allocId.num).foreach(_.printRefs())
       vfail("Memory leaks! See above for ")
     }
   }
@@ -123,6 +146,12 @@ class Heap(in_vivemDout: PrintStream) {
   private val callIdStack = mutable.Stack[CallId]();
   private val callsById = mutable.HashMap[CallId, Call]()
 
+//  def get(reference: ReferenceV) = {
+//    val allocation = objectsById(reference.allocId)
+//    vassert(allocation.referend.tyype.hamut == reference.actualKind.hamut)
+//    allocation
+//  }
+
   def addLocal(varAddr: VariableAddressV, reference: ReferenceV, expectedType: ReferenceH[ReferendH]) = {
     val call = getCurrentCall(varAddr.callId)
     call.addLocal(varAddr, reference, expectedType)
@@ -130,27 +159,29 @@ class Heap(in_vivemDout: PrintStream) {
   }
 
   def getReference(varAddr: VariableAddressV, expectedType: ReferenceH[ReferendH]) = {
-    callsById(varAddr.callId).getLocal(varAddr).reference.get
+    callsById(varAddr.callId).getLocal(varAddr).reference
   }
 
   def removeLocal(varAddr: VariableAddressV, expectedType: ReferenceH[ReferendH]) = {
+    val call = getCurrentCall(varAddr.callId)
     val variable = getLocal(varAddr)
-    val actualReference = variable.reference.get
+    val actualReference = variable.reference
     checkReference(expectedType, actualReference)
     decrementReferenceRefCount(VariableToObjectReferrer(varAddr), actualReference)
-    variable.reference = None
+    call.removeLocal(varAddr)
   }
 
-  def getReferenceFromLocal(varAddr: VariableAddressV, expectedType: ReferenceH[ReferendH]): ReferenceV = {
+  def getReferenceFromLocal(
+      varAddr: VariableAddressV,
+      expectedType: ReferenceH[ReferendH],
+      targetOwnership: OwnershipH
+  ): ReferenceV = {
     val variable = getLocal(varAddr)
     if (variable.expectedType != expectedType) {
       vfail("blort")
     }
-    if (variable.reference.isEmpty) {
-      vfail("Can't get from variable, it's already empty!")
-    }
-    checkReference(expectedType, variable.reference.get)
-    variable.reference.get
+    checkReference(expectedType, variable.reference)
+    alias(variable.reference, expectedType, targetOwnership)
   }
 
   private def getLocal(varAddr: VariableAddressV): VariableV = {
@@ -161,7 +192,7 @@ class Heap(in_vivemDout: PrintStream) {
     val variable = callsById(varAddress.callId).getLocal(varAddress)
     checkReference(expectedType, reference)
     checkReference(variable.expectedType, reference)
-    val oldReference = variable.reference.get
+    val oldReference = variable.reference
     decrementReferenceRefCount(VariableToObjectReferrer(varAddress), oldReference)
 
     incrementReferenceRefCount(VariableToObjectReferrer(varAddress), reference)
@@ -212,38 +243,46 @@ class Heap(in_vivemDout: PrintStream) {
 //    }
 //  }
 
-  def getReferenceFromStruct(address: MemberAddressV, expectedType: ReferenceH[ReferendH]): ReferenceV = {
+  def getReferenceFromStruct(
+    address: MemberAddressV,
+    expectedType: ReferenceH[ReferendH],
+    targetOwnership: OwnershipH
+  ): ReferenceV = {
     val MemberAddressV(objectId, fieldIndex) = address
     objectsById.get(objectId).referend match {
       case StructInstanceV(_, members) => {
         val actualReference = members(fieldIndex)
         checkReference(expectedType, actualReference)
-        actualReference
+        alias(actualReference, expectedType, targetOwnership)
       }
     }
   }
-  def getReferenceFromArray(address: ElementAddressV, expectedType: ReferenceH[ReferendH]): ReferenceV = {
+  def getReferenceFromArray(
+    address: ElementAddressV,
+    expectedType: ReferenceH[ReferendH],
+    targetOwnership: OwnershipH
+  ): ReferenceV = {
     val ElementAddressV(objectId, elementIndex) = address
     objectsById.get(objectId).referend match {
       case ai @ ArrayInstanceV(_, _, _, _) => {
         val ref = ai.getElement(elementIndex)
         checkReference(expectedType, ref)
-        ref
+        alias(ref, expectedType, targetOwnership)
       }
     }
   }
 
   def dereference(reference: ReferenceV): ReferendV = {
-    vassert(objectsById.contains(reference))
-    objectsById.get(reference).referend
+    vassert(objectsById.contains(reference.allocId))
+    objectsById.get(reference.allocId).referend
   }
 
-  def incrementReferenceHoldCount(registerId: RegisterId, reference: ReferenceV) = {
-    incrementObjectRefCount(RegisterHoldToObjectReferrer(registerId), reference.allocId)
+  def incrementReferenceHoldCount(expressionId: ExpressionId, reference: ReferenceV) = {
+    incrementObjectRefCount(RegisterHoldToObjectReferrer(expressionId), reference.allocId)
   }
 
-  def decrementReferenceHoldCount(registerId: RegisterId, reference: ReferenceV) = {
-    decrementObjectRefCount(RegisterHoldToObjectReferrer(registerId), reference.allocId)
+  def decrementReferenceHoldCount(expressionId: ExpressionId, reference: ReferenceV) = {
+    decrementObjectRefCount(RegisterHoldToObjectReferrer(expressionId), reference.allocId)
   }
 
   // rename to incrementObjectRefCount
@@ -295,7 +334,7 @@ class Heap(in_vivemDout: PrintStream) {
   }
 
   def deallocate(reference: ReferenceV) = {
-    val allocation = objectsById.get(reference)
+    val allocation = objectsById.get(reference.allocId)
     vassert(allocation.getTotalRefCount() == 0)
     objectsById.remove(reference.allocId)
     vivemDout.print(" o" + reference.allocId.num + "dealloc")
@@ -326,26 +365,26 @@ class Heap(in_vivemDout: PrintStream) {
   }
 
   def getRefCount(reference: ReferenceV, category: RefCountCategory): Int = {
-    vassert(objectsById.contains(reference))
-    val allocation = objectsById.get(reference)
+    vassert(objectsById.contains(reference.allocId))
+    val allocation = objectsById.get(reference.allocId)
     allocation.getRefCount(category)
   }
 
   def getTotalRefCount(reference: ReferenceV): Int = {
-    vassert(objectsById.contains(reference))
-    val allocation = objectsById.get(reference)
+    vassert(objectsById.contains(reference.allocId))
+    val allocation = objectsById.get(reference.allocId)
     allocation.getTotalRefCount()
   }
 
   def ensureRefCount(reference: ReferenceV, category: RefCountCategory, expectedNum: Int) = {
-    vassert(objectsById.contains(reference))
-    val allocation = objectsById.get(reference)
+    vassert(objectsById.contains(reference.allocId))
+    val allocation = objectsById.get(reference.allocId)
     allocation.ensureRefCount(category, expectedNum)
   }
 
   def ensureTotalRefCount(reference: ReferenceV, expectedNum: Int) = {
-    vassert(objectsById.contains(reference))
-    val allocation = objectsById.get(reference)
+    vassert(objectsById.contains(reference.allocId))
+    val allocation = objectsById.get(reference.allocId)
     allocation.ensureTotalRefCount(expectedNum)
   }
 
@@ -354,6 +393,10 @@ class Heap(in_vivemDout: PrintStream) {
   }
 
   def alias(reference: ReferenceV, expectedType: ReferenceH[ReferendH], targetOwnership: OwnershipH): ReferenceV = {
+    if (expectedType.ownership == targetOwnership) {
+      return reference
+    }
+
     val ReferenceV(actualKind, oldSeenAsType, oldOwnership, objectId) = reference
     vassert((oldOwnership == ShareH) == (targetOwnership == ShareH))
     if (oldSeenAsType.hamut != expectedType.kind) {
@@ -395,10 +438,10 @@ class Heap(in_vivemDout: PrintStream) {
       destinationMap: mutable.Map[ReferenceV, Allocation],
       inputReachable: ReferenceV): Unit = {
     // Doublecheck that all the inputReachables are actually in this ..
-    vassert(objectsById.contains(inputReachable))
-    vassert(objectsById.get(inputReachable).referend.tyype.hamut == inputReachable.actualKind.hamut)
+    vassert(objectsById.contains(inputReachable.allocId))
+    vassert(objectsById.get(inputReachable.allocId).referend.tyype.hamut == inputReachable.actualKind.hamut)
 
-    val allocation = objectsById.get(inputReachable)
+    val allocation = objectsById.get(inputReachable.allocId)
     if (destinationMap.contains(inputReachable)) {
       return
     }
@@ -427,23 +470,23 @@ class Heap(in_vivemDout: PrintStream) {
     callsById(expectedCallId)
   }
 
-  def moveArgumentIntoRegister(registerId: RegisterId, argumentIndex: Int, expectedType: ReferenceH[ReferendH]) = {
-    val reference = getCurrentCall(registerId.blockId.callId).takeArgument(argumentIndex)
+  def takeArgument(callId: CallId, argumentIndex: Int, expectedType: ReferenceH[ReferendH]) = {
+    val reference = getCurrentCall(callId).takeArgument(argumentIndex)
     checkReference(expectedType, reference)
-    setReferenceRegister(registerId, reference) // this increments it
     decrementReferenceRefCount(
-      ArgumentToObjectReferrer(ArgumentId(registerId.blockId.callId, argumentIndex)),
+      ArgumentToObjectReferrer(ArgumentId(callId, argumentIndex)),
       reference) // decrementing because taking it out of arg
     // Now, the register is the only one that has this reference.
+    reference
   }
 
-  def returnFromRegister(registerId: RegisterId, expectedType: ReferenceH[ReferendH]) = {
-    val ref = takeReferenceFromRegister(registerId, expectedType)
-    incrementReferenceRefCount(
-      ResultToObjectReferrer(registerId.blockId.callId),
-      ref) // incrementing because putting it into the return slot
-    ReturnV(registerId.blockId, ref)
-  }
+//  def returnFromRegister(expressionId: ExpressionId, expectedType: ReferenceH[ReferendH]) = {
+//    val ref = takeReferenceFromRegister(expressionId, expectedType)
+//    incrementReferenceRefCount(
+//      ResultToObjectReferrer(expressionId.callId),
+//      ref) // incrementing because putting it into the return slot
+//    ReturnV(expressionId.blockId, ref)
+//  }
 
   // For example, for the integer we pass into the array generator
   def allocateTransient(ownership: OwnershipH, referend: ReferendV) = {
@@ -453,66 +496,65 @@ class Heap(in_vivemDout: PrintStream) {
     ref
   }
 
-  def aliasIntoRegister(registerId: RegisterId, reference: ReferenceV, expectedType: ReferenceH[ReferendH], targetOwnership: OwnershipH) = {
-    val ref = alias(reference, expectedType, targetOwnership)
-    setReferenceRegister(registerId, ref)
-  }
+//  def aliasIntoRegister(expressionId: ExpressionId, reference: ReferenceV, expectedType: ReferenceH[ReferendH], targetOwnership: OwnershipH) = {
+//    val ref = alias(reference, expectedType, targetOwnership)
+//    setReferenceRegister(expressionId, ref)
+//  }
 
   def printReferend(referend: ReferendV) = {
     referend match {
-      case VoidV() => vivemDout.print("ø")
       case IntV(value) => vivemDout.print(value)
       case BoolV(value) => vivemDout.print(value)
       case StrV(value) => vivemDout.print(value)
       case FloatV(value) => vivemDout.print(value)
-      case StructInstanceV(structH, members) => vivemDout.print(structH.fullName + "{" + members.map("o" + _.allocId.num).mkString(", ") + "}")
+      case StructInstanceV(structH, members) => {
+        vivemDout.print(structH.fullName + "{" + members.map("o" + _.allocId.num).mkString(", ") + "}")
+      }
       case ArrayInstanceV(typeH, memberTypeH, size, elements) => vivemDout.print("array:" + size + ":" + memberTypeH + "{" + elements.map("o" + _.allocId.num).mkString(", ") + "}")
     }
   }
 
-  def setReferenceRegister(registerId: RegisterId, reference: ReferenceV) = {
-    val call = getCurrentCall(registerId.blockId.callId)
-    incrementReferenceRefCount(RegisterToObjectReferrer(registerId), reference) // incrementing because putting it into a register
-    call.setRegister(registerId, ReferenceRegisterV(reference))
-    vivemDout.print(" r" + registerId.line + "<-o" + reference.allocId.num)
-  }
+//  def setReferenceRegister(expressionId: ExpressionId, reference: ReferenceV) = {
+//    val call = getCurrentCall(expressionId.callId)
+//    incrementReferenceRefCount(RegisterToObjectReferrer(expressionId), reference) // incrementing because putting it into a register
+//    call.setRegister(expressionId, ReferenceRegisterV(reference))
+//    vivemDout.print(" r" + expressionId.line + "<-o" + reference.allocId.num)
+//  }
+//
+//  def setReferenceRegisterFromReturn(expressionId: ExpressionId, ret: ReturnV) = {
+//    incrementReferenceRefCount(RegisterToObjectReferrer(expressionId), ret.reference)
+//    decrementReferenceRefCount(ResultToObjectReferrer(ret.blockId.callId), ret.reference)
+//    getCurrentCall(expressionId.callId)
+//      .setRegister(expressionId, ReferenceRegisterV(ret.reference))
+//    vivemDout.print(" r" + expressionId.line + "<-o" + ret.reference.allocId.num)
+//  }
 
-  def setReferenceRegisterFromReturn(registerId: RegisterId, ret: ReturnV) = {
-    incrementReferenceRefCount(RegisterToObjectReferrer(registerId), ret.reference)
-    decrementReferenceRefCount(ResultToObjectReferrer(ret.blockId.callId), ret.reference)
-    getCurrentCall(registerId.blockId.callId)
-      .setRegister(registerId, ReferenceRegisterV(ret.reference))
-    vivemDout.print(" r" + registerId.line + "<-o" + ret.reference.allocId.num)
-  }
-
-  def getReferenceFromReturn(ret: ReturnV) = {
-    decrementReferenceRefCount(ResultToObjectReferrer(ret.blockId.callId), ret.reference)
-    ret.reference
-  }
+//  def getReferenceFromReturn(ret: ReturnV) = {
+//    decrementReferenceRefCount(ResultToObjectReferrer(ret.zorkcallId), ret.zorkreference)
+//    ret.zorkreference
+//  }
 
 
-  def deallocateFromReturn(ret: ReturnV) = {
-    decrementReferenceRefCount(ResultToObjectReferrer(ret.blockId.callId), ret.reference)
-    deallocate(ret.reference)
-  }
+//  def deallocateFromReturn(ret: ReturnV) = {
+//    decrementReferenceRefCount(ResultToObjectReferrer(ret.callId), ret.reference)
+//    deallocate(ret.reference)
+//  }
 
-  def initializeArrayElementFromReturn(
+  def initializeArrayElement(
       arrayReference: ReferenceV,
       index: Int,
-      ret: ReturnV) = {
+      ret: ReferenceV) = {
     dereference(arrayReference) match {
       case a @ ArrayInstanceV(_, _, _, _) => {
-        decrementReferenceRefCount(ResultToObjectReferrer(ret.blockId.callId), ret.reference)
         incrementReferenceRefCount(
           ElementToObjectReferrer(ElementAddressV(arrayReference.allocId, index)),
-          ret.reference)
-        a.initializeElement(index, ret.reference)
+          ret)
+        a.initializeElement(index, ret)
       }
     }
   }
 
   def newStruct(
-      registerId: RegisterId,
       structDefH: StructDefinitionH,
       structRefH: ReferenceH[StructRefH],
       memberReferences: List[ReferenceV]):
@@ -551,36 +593,40 @@ class Heap(in_vivemDout: PrintStream) {
     arrayInstance.initializeElement(index, elementReference)
   }
 
-  def discardReturn(ret: ReturnV) = {
-    decrementReferenceRefCount(ResultToObjectReferrer(ret.blockId.callId), ret.reference)
-//    maybeDeallocate(ret.reference.allocId)
-  }
-
-  def takeReferenceFromRegister(registerId: RegisterId, expectedType: ReferenceH[ReferendH]) = {
-    val register = getCurrentCall(registerId.blockId.callId).takeRegister(registerId)
-    val ref = checkReferenceRegister(expectedType, register).reference
-    decrementReferenceRefCount(RegisterToObjectReferrer(registerId), ref)
-    ref
-  }
-
-  def takeReferencesFromRegistersInReverse(blockId: BlockId, registerIds: List[RegisterAccessH[ReferendH]]): List[ReferenceV] = {
-    registerIds
-        .reverse
-        .map({
-          case RegisterAccessH(argRegisterId, expectedType) => {
-            takeReferenceFromRegister(RegisterId(blockId, argRegisterId), expectedType)
-          }
-        })
-        .reverse
-  }
-
-  def allocateIntoRegister(registerId: RegisterId, ownership: OwnershipH, referend: ReferendV): ReferenceV = {
-    val ref = add(ownership, referend)
-    vivemDout.print(" o" + ref.allocId.num + "=")
-    printReferend(referend)
-    setReferenceRegister(registerId, ref)
-    ref
-  }
+//  def discardReturn(ret: ReturnV) = {
+//    decrementReferenceRefCount(ResultToObjectReferrer(ret.zorkcallId), ret.zorkreference)
+////    maybeDeallocate(ret.reference.allocId)
+//  }
+//
+//  def takeReferenceFromRegister(expressionId: ExpressionId, expectedType: ReferenceH[ReferendH]) = {
+//    val register = getCurrentCall(expressionId.callId).takeRegister(expressionId)
+//    val ref = checkReferenceRegister(expectedType, register).reference
+//    decrementReferenceRefCount(RegisterToObjectReferrer(expressionId), ref)
+//    ref
+//  }
+//
+//  def takeReferencesFromRegistersInReverse(blockId: BlockId, expressionIds: List[RegisterAccessH[ReferendH]]): List[ReferenceV] = {
+//    expressionIds
+//        .reverse
+//        .map({
+//          case RegisterAccessH(argRegisterId, expectedType) => {
+//            takeReferenceFromRegister(RegisterId(blockId, argRegisterId), expectedType)
+//          }
+//        })
+//        .reverse
+//  }
+//
+//  def allocateIntoRegister(
+//    expressionId: ExpressionId,
+//    ownership: OwnershipH,
+//    referend: ReferendV
+//  ): ReferenceV = {
+//    val ref = add(ownership, referend)
+//    vivemDout.print(" o" + ref.allocId.num + "=")
+//    printReferend(referend)
+//    setReferenceRegister(expressionId, ref)
+//    ref
+//  }
 
   def addUninitializedArray(
       arrayRefType: ReferenceH[UnknownSizeArrayTH],
@@ -605,7 +651,7 @@ class Heap(in_vivemDout: PrintStream) {
 
 
   def checkReference(expectedType: ReferenceH[ReferendH], actualReference: ReferenceV): Unit = {
-    vassert(objectsById.contains(actualReference))
+    vassert(objectsById.contains(actualReference.allocId))
     if (actualReference.seenAsCoord.hamut != expectedType) {
       vfail("Expected " + expectedType + " but was " + actualReference.seenAsCoord.hamut)
     }
@@ -626,7 +672,6 @@ class Heap(in_vivemDout: PrintStream) {
       case (BoolV(_), BoolH()) =>
       case (StrV(_), StrH()) =>
       case (FloatV(_), FloatH()) =>
-      case (VoidV(), VoidH()) =>
       case (StructInstanceV(structDefH, _), structRefH @ StructRefH(_)) => {
         if (structDefH.getRef != structRefH) {
           vfail("Expected " + structRefH + " but was " + structDefH)
@@ -687,11 +732,11 @@ class Heap(in_vivemDout: PrintStream) {
     }
   }
 
-  def pushNewStackFrame(functionH: FunctionH, args: Vector[ReferenceV]) = {
+  def pushNewStackFrame(functionH: PrototypeH, args: Vector[ReferenceV]) = {
     vassert(callsById.size == callIdStack.size)
     val callId =
       CallId(
-        if (callIdStack.nonEmpty) callIdStack.top.blockDepth + 1 else 0,
+        if (callIdStack.nonEmpty) callIdStack.top.callDepth + 1 else 0,
         functionH)
     val call = new Call(callId, args)
     callsById.put(callId, call)
@@ -710,16 +755,16 @@ class Heap(in_vivemDout: PrintStream) {
     vassert(callsById.size == callIdStack.size)
   }
 
-  def pushNewBlock(callId: CallId): BlockId = {
-    vassert(callsById.size == callIdStack.size)
-    getCurrentCall(callId).pushNewBlock()
-  }
-
-  def popBlock(blockId: BlockId): Unit = {
-    vassert(callsById.size == callIdStack.size)
-    getCurrentCall(blockId.callId).popBlock(blockId)
-    vassert(callsById.size == callIdStack.size)
-  }
+//  def pushNewBlock(callId: CallId): BlockId = {
+//    vassert(callsById.size == callIdStack.size)
+//    getCurrentCall(callId).pushNewBlock()
+//  }
+//
+//  def popBlock(blockId: BlockId): Unit = {
+//    vassert(callsById.size == callIdStack.size)
+//    getCurrentCall(blockId.callId).popBlock(blockId)
+//    vassert(callsById.size == callIdStack.size)
+//  }
 
   def toVon(ref: ReferenceV): IVonData = {
     dereference(ref) match {

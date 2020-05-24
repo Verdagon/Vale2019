@@ -27,7 +27,7 @@ import net.verdagon.vale.vfail
 // thought of as dimensions of a coordinate.
 case class ReferenceH[+T <: ReferendH](ownership: OwnershipH, kind: T) {
   kind match {
-    case IntH() | BoolH() | StrH() | FloatH() | VoidH() => {
+    case IntH() | BoolH() | StrH() | FloatH() => {
       // Make sure that if we're pointing at a primitives, it's via a Share reference.
       if (ownership != ShareH) {
         vfail("wot")
@@ -65,7 +65,6 @@ sealed trait ReferendH
 case class IntH() extends ReferendH
 case class BoolH() extends ReferendH
 case class StrH() extends ReferendH
-case class VoidH() extends ReferendH
 case class FloatH() extends ReferendH
 // A primitive which can never be instantiated. If something returns this, it
 // means that it will never actually return. For example, the return type of
