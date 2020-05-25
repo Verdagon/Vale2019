@@ -16,7 +16,7 @@ object MutateHammer {
       hamuts: HamutsBox,
       locals: LocalsBox,
       mutate2: Mutate2):
-  (NodeH[ReferendH]) = {
+  (ExpressionH[ReferendH]) = {
     val Mutate2(destinationExpr2, sourceExpr2) = mutate2
 
     val (sourceExprResultLine, sourceDeferreds) =
@@ -50,13 +50,13 @@ object MutateHammer {
   }
 
   private def translateMundaneUnknownSizeArrayMutate(
-      hinputs: Hinputs,
-      hamuts: HamutsBox,
-      locals: LocalsBox,
-      sourceExprResultLine: NodeH[ReferendH],
-      arrayExpr2: ReferenceExpression2,
-      indexExpr2: ReferenceExpression2
-  ): (NodeH[ReferendH], List[Expression2]) = {
+                                                      hinputs: Hinputs,
+                                                      hamuts: HamutsBox,
+                                                      locals: LocalsBox,
+                                                      sourceExprResultLine: ExpressionH[ReferendH],
+                                                      arrayExpr2: ReferenceExpression2,
+                                                      indexExpr2: ReferenceExpression2
+  ): (ExpressionH[ReferendH], List[Expression2]) = {
     val (destinationResultLine, destinationDeferreds) =
       translate(hinputs, hamuts, locals, arrayExpr2);
     val (indexExprResultLine, indexDeferreds) =
@@ -72,13 +72,13 @@ object MutateHammer {
   }
 
   private def translateMundaneKnownSizeArrayMutate(
-    hinputs: Hinputs,
-    hamuts: HamutsBox,
-    locals: LocalsBox,
-    sourceExprResultLine: NodeH[ReferendH],
-    arrayExpr2: ReferenceExpression2,
-    indexExpr2: ReferenceExpression2
-  ): (NodeH[ReferendH], List[Expression2]) = {
+                                                    hinputs: Hinputs,
+                                                    hamuts: HamutsBox,
+                                                    locals: LocalsBox,
+                                                    sourceExprResultLine: ExpressionH[ReferendH],
+                                                    arrayExpr2: ReferenceExpression2,
+                                                    indexExpr2: ReferenceExpression2
+  ): (ExpressionH[ReferendH], List[Expression2]) = {
     val (destinationResultLine, destinationDeferreds) =
       translate(hinputs, hamuts, locals, arrayExpr2);
     val (indexExprResultLine, indexDeferreds) =
@@ -94,13 +94,13 @@ object MutateHammer {
   }
 
   private def translateAddressibleMemberMutate(
-      hinputs: Hinputs,
-      hamuts: HamutsBox,
-      locals: LocalsBox,
-      sourceExprResultLine: NodeH[ReferendH],
-      structExpr2: ReferenceExpression2,
-      memberName: FullName2[IVarName2]
-  ): (NodeH[ReferendH], List[Expression2]) = {
+                                                hinputs: Hinputs,
+                                                hamuts: HamutsBox,
+                                                locals: LocalsBox,
+                                                sourceExprResultLine: ExpressionH[ReferendH],
+                                                structExpr2: ReferenceExpression2,
+                                                memberName: FullName2[IVarName2]
+  ): (ExpressionH[ReferendH], List[Expression2]) = {
     val (destinationResultLine, destinationDeferreds) =
       translate(hinputs, hamuts, locals, structExpr2);
 
@@ -151,13 +151,13 @@ object MutateHammer {
   }
 
   private def translateMundaneMemberMutate(
-      hinputs: Hinputs,
-      hamuts: HamutsBox,
-      locals: LocalsBox,
-      sourceExprResultLine: NodeH[ReferendH],
-      structExpr2: ReferenceExpression2,
-      memberName: FullName2[IVarName2]
-  ): (NodeH[ReferendH], List[Expression2]) = {
+                                            hinputs: Hinputs,
+                                            hamuts: HamutsBox,
+                                            locals: LocalsBox,
+                                            sourceExprResultLine: ExpressionH[ReferendH],
+                                            structExpr2: ReferenceExpression2,
+                                            memberName: FullName2[IVarName2]
+  ): (ExpressionH[ReferendH], List[Expression2]) = {
     val (destinationResultLine, destinationDeferreds) =
       translate(hinputs, hamuts, locals, structExpr2);
 
@@ -185,15 +185,15 @@ object MutateHammer {
   }
 
   private def translateAddressibleLocalMutate(
-      hinputs: Hinputs,
-      hamuts: HamutsBox,
-      locals: LocalsBox,
-      sourceExprResultLine: NodeH[ReferendH],
-      sourceResultPointerTypeH: ReferenceH[ReferendH],
-      varId: FullName2[IVarName2],
-      variability: Variability,
-      reference: Coord
-  ): (NodeH[ReferendH], List[Expression2]) = {
+                                               hinputs: Hinputs,
+                                               hamuts: HamutsBox,
+                                               locals: LocalsBox,
+                                               sourceExprResultLine: ExpressionH[ReferendH],
+                                               sourceResultPointerTypeH: ReferenceH[ReferendH],
+                                               varId: FullName2[IVarName2],
+                                               variability: Variability,
+                                               reference: Coord
+  ): (ExpressionH[ReferendH], List[Expression2]) = {
     val local = locals.get(varId).get
     val (boxStructRefH) =
       StructHammer.makeBox(hinputs, hamuts, variability, reference, sourceResultPointerTypeH)
@@ -209,8 +209,6 @@ object MutateHammer {
       LocalLoadH(
         local,
         m.BorrowH,
-        expectedLocalBoxType,
-        expectedBorrowBoxResultType,
         nameH)
     val storeNode =
         MemberStoreH(
@@ -223,12 +221,12 @@ object MutateHammer {
   }
 
   private def translateMundaneLocalMutate(
-      hinputs: Hinputs,
-      hamuts: HamutsBox,
-      locals: LocalsBox,
-      sourceExprResultLine: NodeH[ReferendH],
-      varId: FullName2[IVarName2]
-  ): (NodeH[ReferendH], List[Expression2]) = {
+                                           hinputs: Hinputs,
+                                           hamuts: HamutsBox,
+                                           locals: LocalsBox,
+                                           sourceExprResultLine: ExpressionH[ReferendH],
+                                           varId: FullName2[IVarName2]
+  ): (ExpressionH[ReferendH], List[Expression2]) = {
     val local = locals.get(varId).get
     val newStoreNode =
         LocalStoreH(

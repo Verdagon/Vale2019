@@ -20,7 +20,7 @@ object ExpressionHammer {
       hamuts: HamutsBox,
       locals: LocalsBox,
       expr2: Expression2
-  ): (NodeH[ReferendH], List[Expression2]) = {
+  ): (ExpressionH[ReferendH], List[Expression2]) = {
     expr2 match {
       case IntLiteral2(value) => {
         (ConstantI64H(value), List())
@@ -430,12 +430,12 @@ object ExpressionHammer {
   }
 
   def translateDeferreds(
-      hinputs: Hinputs,
-      hamuts: HamutsBox,
-      locals: LocalsBox,
-      originalExpr: NodeH[ReferendH],
-      deferreds: List[Expression2]):
-  NodeH[ReferendH] = {
+                          hinputs: Hinputs,
+                          hamuts: HamutsBox,
+                          locals: LocalsBox,
+                          originalExpr: ExpressionH[ReferendH],
+                          deferreds: List[Expression2]):
+  ExpressionH[ReferendH] = {
     if (deferreds.isEmpty) {
       return originalExpr
     }
@@ -472,7 +472,7 @@ object ExpressionHammer {
     result
   }
 
-  def flattenAndMakeBlock(innerExprsH: List[NodeH[ReferendH]]): BlockH = {
+  def flattenAndMakeBlock(innerExprsH: List[ExpressionH[ReferendH]]): BlockH = {
     vassert(innerExprsH.nonEmpty) // If we trip this, maybe we could make this return a non-block expr?
     BlockH(
       innerExprsH.flatMap({
@@ -505,7 +505,7 @@ object ExpressionHammer {
       hinputs: Hinputs, hamuts: HamutsBox,
       locals: LocalsBox,
       exprs2: List[Expression2]):
-  (List[NodeH[ReferendH]], List[Expression2]) = {
+  (List[ExpressionH[ReferendH]], List[Expression2]) = {
     exprs2 match {
       case Nil => (List(), List())
       case firstExpr :: restExprs => {

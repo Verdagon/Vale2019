@@ -4,7 +4,7 @@ import net.verdagon.vale.astronomer.FunctionA
 import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.templata._
 import net.verdagon.vale.templar.types._
-import net.verdagon.vale.{vassert, vassertSome, vfail}
+import net.verdagon.vale.{vassert, vassertSome, vfail, vwat}
 
 import scala.collection.immutable._
 
@@ -766,6 +766,12 @@ case class Function2(
   // Used for testing
   variables: List[ILocalVariable2],
   body: Block2) extends Queriable2 {
+
+  body.exprs.last match {
+    case Return2(_) =>
+    case _ => vwat()
+  }
+
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func) ++ header.all(func) ++ variables.flatMap(_.all(func)) ++ body.all(func)
   }

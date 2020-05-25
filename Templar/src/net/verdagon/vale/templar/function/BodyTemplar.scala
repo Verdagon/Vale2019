@@ -29,11 +29,11 @@ object BodyTemplar {
     function1.maybeRetCoordRune match {
       case None => {
         val banner = FunctionBanner2(Some(function1), functionFullName, params2)
-        val (body2, returnsFromRets) =
+        val (bodyWithoutReturn2, returnsFromRets) =
           evaluateFunctionBody(
             funcOuterEnv, temputs, bfunction1.origin.params, params2, bfunction1.body, isDestructor);
 
-        val returns = returnsFromRets + body2.resultRegister.reference
+        val returns = returnsFromRets + bodyWithoutReturn2.resultRegister.reference
 
         val returnsWithoutNever =
           if (returns.size > 1 && returns.contains(Coord(Share, Never2()))) {
@@ -49,7 +49,13 @@ object BodyTemplar {
 
         temputs.declareFunctionReturnType(banner.toSignature, returnType2)
         val header = FunctionHeader2(functionFullName, false, function1.isUserFunction, params2, returnType2, Some(function1));
-        (header, body2)
+
+        val bodyWithReturn2 =
+          bodyWithoutReturn2.exprs.last match {
+            case Return2(_) => bodyWithoutReturn2
+            case _ => Block2(bodyWithoutReturn2.exprs.init :+ Return2(bodyWithoutReturn2.exprs.last))
+          }
+        (header, bodyWithReturn2)
       }
       case Some(expectedRetCoordRune) => {
         val CoordTemplata(expectedRetCoord) =
@@ -101,7 +107,12 @@ object BodyTemplar {
           vfail("In function " + header + ":\nExpected return type " + expectedRetCoord + " but was " + returnsWithoutNever)
         }
 
-        (header, convertedBody2)
+        val bodyWithReturn2 =
+          convertedBody2.exprs.last match {
+            case Return2(_) => convertedBody2
+            case _ => Block2(convertedBody2.exprs.init :+ Return2(convertedBody2.exprs.last))
+          }
+        (header, bodyWithReturn2)
       }
     }
   }

@@ -18,7 +18,7 @@ object VonHammer {
       "Program",
       None,
       Vector(
-        VonMember(None, Some("interfaces"), VonArray(None, interfaces.map(vonfiyInterface).toVector)),
+        VonMember(None, Some("interfaces"), VonArray(None, interfaces.map(vonifyInterface).toVector)),
         VonMember(None, Some("structs"), VonArray(None, structs.map(vonfiyStruct).toVector)),
         VonMember(None, Some("externs"), VonArray(None, externs.map(vonifyPrototype).toVector)),
         VonMember(None, Some("functions"), VonArray(None, functions.map(vonifyFunction).toVector))))
@@ -31,7 +31,7 @@ object VonHammer {
       "StructId",
       None,
       Vector(
-        VonMember(None, Some("fullName"), fullName.toVonArray())))
+        VonMember(None, Some("name"), VonStr(fullName.toString()))))
   }
 
   def vonifyInterfaceRef(ref: InterfaceRefH): IVonData = {
@@ -41,17 +41,17 @@ object VonHammer {
       "InterfaceId",
       None,
       Vector(
-        VonMember(None, Some("fullName"), fullName.toVonArray())))
+        VonMember(None, Some("name"), VonStr(fullName.toString()))))
   }
 
-  def vonfiyInterface(interface: InterfaceDefinitionH): IVonData = {
+  def vonifyInterface(interface: InterfaceDefinitionH): IVonData = {
     val InterfaceDefinitionH(fullName, mutability, superInterfaces, prototypes) = interface
 
     VonObject(
       "Interface",
       None,
       Vector(
-        VonMember(None, Some("fullName"), fullName.toVonArray()),
+        VonMember(None, Some("name"), VonStr(fullName.toString())),
         VonMember(None, Some("mutability"), vonifyMutability(mutability)),
         VonMember(None, Some("superInterfaces"), VonArray(None, superInterfaces.map(vonifyInterfaceRef).toVector)),
         VonMember(None, Some("methods"), VonArray(None, prototypes.map(vonifyPrototype).toVector))))
@@ -64,7 +64,7 @@ object VonHammer {
       "Struct",
       None,
       Vector(
-        VonMember(None, Some("fullName"), fullName.toVonArray()),
+        VonMember(None, Some("name"), VonStr(fullName.toString())),
         VonMember(None, Some("mutability"), vonifyMutability(mutability)),
         VonMember(None, Some("edges"), VonArray(None, edges.map(edge => vonifyEdge(edge)).toVector)),
         VonMember(None, Some("members"), VonArray(None, members.map(vonifyStructMember).toVector))))
@@ -106,20 +106,20 @@ object VonHammer {
       "Prototype",
       None,
       Vector(
-        VonMember(None, Some("fullName"), fullName.toVonArray()),
+        VonMember(None, Some("name"), VonStr(fullName.toString())),
         VonMember(None, Some("params"), VonArray(None, params.map(vonifyCoord).toVector)),
-        VonMember(None, Some("returnType"), vonifyCoord(returnType))))
+        VonMember(None, Some("return"), vonifyCoord(returnType))))
   }
 
   def vonifyCoord(coord: ReferenceH[ReferendH]): IVonData = {
-    val ReferenceH(ownership, kind) = coord
+    val ReferenceH(ownership, referend) = coord
 
     VonObject(
       "Ref",
       None,
       Vector(
         VonMember(None, Some("ownership"), vonifyOwnership(ownership)),
-        VonMember(None, Some("kind"), vonifyKind(kind))))
+        VonMember(None, Some("referend"), vonifyKind(referend))))
   }
 
   def vonifyEdge(edgeH: EdgeH): IVonData = {
@@ -158,7 +158,7 @@ object VonHammer {
       "StructMember",
       None,
       Vector(
-        VonMember(None, Some("name"), name.toVonArray()),
+        VonMember(None, Some("name"), VonStr(name.toString())),
         VonMember(None, Some("variability"), vonifyVariability(variability)),
         VonMember(None, Some("type"), vonifyCoord(tyype))))
   }
@@ -214,13 +214,13 @@ object VonHammer {
     val BlockH(nodes) = block
 
     VonObject(
-      "Function",
+      "Block",
       None,
       Vector(
-        VonMember(None, Some("nodes"), VonArray(None, nodes.map(node => vonifyNode(node)).toVector))))
+        VonMember(None, Some("exprs"), VonArray(None, nodes.map(node => vonifyNode(node)).toVector))))
   }
 
-  def vonifyNode(node: NodeH[ReferendH]): IVonData = {
+  def vonifyNode(node: ExpressionH[ReferendH]): IVonData = {
     node match {
       case ConstantBoolH(value) => {
         VonObject(
@@ -246,12 +246,19 @@ object VonHammer {
       case ConstantF64H(value) => {
         vimpl()
       }
-      case DiscardH(sourceRegister) => {
+      case ReturnH(sourceExpr) => {
+        VonObject(
+          "Return",
+          None,
+          Vector(
+            VonMember(None, Some("sourceExpr"), vonifyNode(sourceExpr))))
+      }
+      case DiscardH(sourceExpr) => {
         VonObject(
           "Discard",
           None,
           Vector(
-            VonMember(None, Some("sourceRegister"), vonifyNode(sourceRegister))))
+            VonMember(None, Some("sourceExpr"), vonifyNode(sourceExpr))))
       }
       case ArgumentH(resultReference, argumentIndex) => {
         VonObject(
@@ -261,25 +268,25 @@ object VonHammer {
             VonMember(None, Some("resultType"), vonifyCoord(resultReference)),
             VonMember(None, Some("argumentIndex"), VonInt(argumentIndex))))
       }
-      case NewStructH(sourceRegisters, resultType) => {
+      case NewStructH(sourceExprs, resultType) => {
         VonObject(
           "NewStruct",
           None,
           Vector(
             VonMember(
               None,
-              Some("sourceRegisters"),
-              VonArray(None, sourceRegisters.map(vonifyNode).toVector)),
+              Some("sourceExprs"),
+              VonArray(None, sourceExprs.map(vonifyNode).toVector)),
             VonMember(None, Some("local"), vonifyCoord(resultType))))
       }
-      case StackifyH(sourceRegister, local, name) => {
+      case StackifyH(sourceExpr, local, name) => {
         VonObject(
           "Stackify",
           None,
           Vector(
-            VonMember(None, Some("sourceRegister"), vonifyNode(sourceRegister)),
+            VonMember(None, Some("sourceExpr"), vonifyNode(sourceExpr)),
             VonMember(None, Some("local"), vonifyLocal(local)),
-            VonMember(None, Some("name"), vonifyOptional[FullNameH](name, n => n.toVonArray()))))
+            VonMember(None, Some("name"), vonifyOptional[FullNameH](name, n => VonStr(n.toString())))))
       }
       case UnstackifyH(local) => {
         VonObject(
@@ -288,12 +295,12 @@ object VonHammer {
           Vector(
             VonMember(None, Some("local"), vonifyLocal(local))))
       }
-      case DestructureH(structRegister, localTypes, locals) => {
+      case DestructureH(structExpr, localTypes, locals) => {
         VonObject(
           "Destructure",
           None,
           Vector(
-            VonMember(None, Some("structRegister"), vonifyNode(structRegister)),
+            VonMember(None, Some("structExpr"), vonifyNode(structExpr)),
             VonMember(
               None,
               Some("localTypes"),
@@ -303,53 +310,59 @@ object VonHammer {
               Some("localIndices"),
               VonArray(None, locals.map(local => vonifyLocal(local))))))
       }
-      case StructToInterfaceUpcastH(sourceRegister, targetInterfaceRef) => {
+      case StructToInterfaceUpcastH(sourceExpr, targetInterfaceRef) => {
         vimpl()
       }
-      case InterfaceToInterfaceUpcastH(sourceRegister, targetInterfaceRef) => {
+      case InterfaceToInterfaceUpcastH(sourceExpr, targetInterfaceRef) => {
         vimpl()
       }
-      case LocalStoreH(local, sourceRegister,localName) => {
+      case LocalStoreH(local, sourceExpr,localName) => {
         vimpl()
       }
-      case LocalLoadH(local, targetOwnership, expectedLocalType, expectedResultType, localName) => {
+      case LocalLoadH(local, targetOwnership, localName) => {
         VonObject(
           "LocalLoad",
           None,
           Vector(
             VonMember(None, Some("local"), vonifyLocal(local)),
             VonMember(None, Some("targetOwnership"), vonifyOwnership(targetOwnership)),
-            VonMember(None, Some("expectedLocalType"), vonifyCoord(expectedLocalType)),
-            VonMember(None, Some("expectedResultType"), vonifyCoord(expectedResultType)),
-            VonMember(None, Some("localName"), localName.toVonArray())))
+            VonMember(None, Some("localName"), VonStr(localName.toString()))))
       }
-      case MemberStoreH(resultType, structRegister, memberIndex, sourceRegister, memberName) => {
+      case MemberStoreH(resultType, structExpr, memberIndex, sourceExpr, memberName) => {
         vimpl()
       }
-      case MemberLoadH(structRegister, memberIndex, targetOwnership, expectedMemberType, expectedResultType, memberName) => {
+      case MemberLoadH(structExpr, memberIndex, targetOwnership, expectedMemberType, expectedResultType, memberName) => {
         vimpl()
       }
-      case KnownSizeArrayStoreH(arrayRegister, indexRegister, sourceRegister) => {
+      case KnownSizeArrayStoreH(arrayExpr, indexExpr, sourceExpr) => {
         vimpl()
       }
-      case UnknownSizeArrayStoreH(arrayRegister, indexRegister, sourceRegister) => {
+      case UnknownSizeArrayStoreH(arrayExpr, indexExpr, sourceExpr) => {
         vimpl()
       }
-      case UnknownSizeArrayLoadH(arrayRegister, indexRegister, resultType, targetOwnership) => {
+      case UnknownSizeArrayLoadH(arrayExpr, indexExpr, resultType, targetOwnership) => {
         vimpl()
       }
-      case KnownSizeArrayLoadH(arrayRegister, indexRegister, resultType, targetOwnership) => {
+      case KnownSizeArrayLoadH(arrayExpr, indexExpr, resultType, targetOwnership) => {
         vimpl()
       }
-      case CallH(functionRegister, argsRegisters) => {
+      case ExternCallH(functionExpr, argsExprs) => {
         VonObject(
           "ExternCall",
           None,
           Vector(
-            VonMember(None, Some("function"), vonifyPrototype(functionRegister)),
-            VonMember(None, Some("argRegisters"), VonArray(None, argsRegisters.toVector.map(vonifyNode)))))
+            VonMember(None, Some("function"), vonifyPrototype(functionExpr)),
+            VonMember(None, Some("argExprs"), VonArray(None, argsExprs.toVector.map(vonifyNode)))))
       }
-      case InterfaceCallH(argsRegisters, virtualParamIndex, interfaceRefH, indexInEdge, functionType) => {
+      case CallH(functionExpr, argsExprs) => {
+        VonObject(
+          "Call",
+          None,
+          Vector(
+            VonMember(None, Some("function"), vonifyPrototype(functionExpr)),
+            VonMember(None, Some("argExprs"), VonArray(None, argsExprs.toVector.map(vonifyNode)))))
+      }
+      case InterfaceCallH(argsExprs, virtualParamIndex, interfaceRefH, indexInEdge, functionType) => {
         vimpl()
       }
       case IfH(conditionBlock, thenBlock, elseBlock) => {
@@ -378,7 +391,7 @@ object VonHammer {
     val Local(id, tyype) = local
 
     VonObject(
-      "RegisterAccess",
+      "Local",
       None,
       Vector(
         VonMember(None, Some("id"), vonifyVariableId(id)),
@@ -396,7 +409,7 @@ object VonHammer {
         VonMember(
           None,
           Some("name"),
-          vonifyOptional[FullNameH](maybeName, x => x.toVonArray()))))
+          vonifyOptional[FullNameH](maybeName, x => VonStr(x.toString())))))
   }
 
   def vonifyOptional[T](opt: Option[T], func: (T) => IVonData): IVonData = {
@@ -508,7 +521,7 @@ object VonHammer {
             VonMember(None, Some("envName"), vonifyFullName(hinputs, hamuts, env.fullName)),
             VonMember(None, Some("location"), translateName(hinputs, hamuts, it.getTemplateName()))))
       }
-      case ExternFunctionTemplata(header) => VonObject("ExternFunctionTemplata", None, Vector(VonMember(None, Some("fullName"), vonifyFullName(hinputs, hamuts, header.fullName))))
+      case ExternFunctionTemplata(header) => VonObject("ExternFunctionTemplata", None, Vector(VonMember(None, Some("name"), vonifyFullName(hinputs, hamuts, header.fullName))))
       case OwnershipTemplata(ownership) => VonObject("OwnershipTemplata", None, Vector(VonMember(None, Some("ownership"), vonifyOwnership(Conversions.evaluateOwnership(ownership)))))
       case VariabilityTemplata(variability) => VonObject("VariabilityTemplata", None, Vector(VonMember(None, Some("variability"), vonifyVariability(Conversions.evaluateVariability(variability)))))
       case MutabilityTemplata(mutability) => VonObject("MutabilityTemplata", None, Vector(VonMember(None, Some("mutability"), vonifyMutability(Conversions.evaluateMutability(mutability)))))

@@ -39,12 +39,12 @@ object ExpressionVivem {
   }
 
   def executeNode(
-      programH: ProgramH,
-      stdin: (() => String),
-      stdout: (String => Unit),
-      heap: Heap,
-      expressionId: ExpressionId,
-      node: NodeH[ReferendH] // rename to expression
+                   programH: ProgramH,
+                   stdin: (() => String),
+                   stdout: (String => Unit),
+                   heap: Heap,
+                   expressionId: ExpressionId,
+                   node: ExpressionH[ReferendH] // rename to expression
   ): INodeExecuteResult = {
     val callId = expressionId.callId
     node match {
@@ -338,10 +338,10 @@ object ExpressionVivem {
 //        NodeContinue(exprId))
       }
 
-      case LocalLoadH(localIndex, targetOwnership, expectedLocalType, expectedResultType, name) => {
+      case LocalLoadH(local, targetOwnership, name) => {
         vassert(targetOwnership != OwnH) // should have been Unstackified instead
-        val varAddress = heap.getVarAddress(expressionId.callId, localIndex)
-        val reference = heap.getReferenceFromLocal(varAddress, expectedLocalType, targetOwnership)
+        val varAddress = heap.getVarAddress(expressionId.callId, local)
+        val reference = heap.getReferenceFromLocal(varAddress, local.typeH, targetOwnership)
         heap.incrementReferenceRefCount(RegisterToObjectReferrer(callId), reference)
         heap.vivemDout.print(" *" + varAddress)
         NodeContinue(reference)

@@ -175,7 +175,6 @@ case class CitizenName2(
 case class TupleName2(
   members: List[Coord]
 ) extends ICitizenName2 {
-  println("ahoy")
   override def templateArgs: List[ITemplata] = members.map(CoordTemplata)
   def order = 16;
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {

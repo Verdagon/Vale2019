@@ -17,7 +17,7 @@ object LoadHammer {
       hamuts: HamutsBox,
       locals: LocalsBox,
       load2: SoftLoad2):
-  (NodeH[ReferendH], List[Expression2]) = {
+  (ExpressionH[ReferendH], List[Expression2]) = {
     val SoftLoad2(sourceExpr2, targetOwnership) = load2
 
     val (loadedAccessH, sourceDeferreds) =
@@ -56,7 +56,7 @@ object LoadHammer {
       arrayExpr2: ReferenceExpression2,
       indexExpr2: ReferenceExpression2,
       targetOwnershipT: t.Ownership
-  ): (NodeH[ReferendH], List[Expression2]) = {
+  ): (ExpressionH[ReferendH], List[Expression2]) = {
     val targetOwnership = Conversions.evaluateOwnership(targetOwnershipT)
 
     val (arrayResultLine, arrayDeferreds) =
@@ -90,7 +90,7 @@ object LoadHammer {
     arrayExpr2: ReferenceExpression2,
     indexExpr2: ReferenceExpression2,
     targetOwnershipT: t.Ownership
-  ): (NodeH[ReferendH], List[Expression2]) = {
+  ): (ExpressionH[ReferendH], List[Expression2]) = {
     val targetOwnership = Conversions.evaluateOwnership(targetOwnershipT)
 
     val (arrayResultLine, arrayDeferreds) =
@@ -125,7 +125,7 @@ object LoadHammer {
       memberName: FullName2[IVarName2],
       expectedType2: Coord,
       targetOwnershipT: t.Ownership
-  ): (NodeH[ReferendH], List[Expression2]) = {
+  ): (ExpressionH[ReferendH], List[Expression2]) = {
     val targetOwnership = Conversions.evaluateOwnership(targetOwnershipT)
 
     val (structResultLine, structDeferreds) =
@@ -186,7 +186,7 @@ object LoadHammer {
       expectedMemberType2: Coord,
       memberName: FullName2[IVarName2],
       targetOwnershipT: t.Ownership
-  ): (NodeH[ReferendH], List[Expression2]) = {
+  ): (ExpressionH[ReferendH], List[Expression2]) = {
     val targetOwnership = Conversions.evaluateOwnership(targetOwnershipT)
 
     val (structResultLine, structDeferreds) =
@@ -228,7 +228,7 @@ object LoadHammer {
       variability: Variability,
       localReference2: Coord,
       targetOwnershipT: t.Ownership
-  ): (NodeH[ReferendH], List[Expression2]) = {
+  ): (ExpressionH[ReferendH], List[Expression2]) = {
     val targetOwnership = Conversions.evaluateOwnership(targetOwnershipT)
 
     val local = locals.get(varId).get
@@ -249,8 +249,6 @@ object LoadHammer {
         LocalLoadH(
           local,
           m.BorrowH,
-          expectedStructBoxMemberType,
-          expectedBorrowBoxResultType,
           varNameH)
 
     val resultTypeH = ReferenceH(targetOwnership, localTypeH.kind)
@@ -272,7 +270,7 @@ object LoadHammer {
       varId: FullName2[IVarName2],
       expectedType2: Coord,
       targetOwnershipT: t.Ownership
-  ): (NodeH[ReferendH], List[Expression2]) = {
+  ): (ExpressionH[ReferendH], List[Expression2]) = {
     val targetOwnership = Conversions.evaluateOwnership(targetOwnershipT)
 
 
@@ -293,8 +291,6 @@ object LoadHammer {
         LocalLoadH(
           local,
           targetOwnership,
-          local.typeH,
-          resultTypeH,
           NameHammer.translateFullName(hinputs, hamuts, varId))
     (loadedNode, List())
   }
@@ -304,7 +300,7 @@ object LoadHammer {
       hamuts: HamutsBox,
       locals: LocalsBox,
       lookup2: LocalLookup2):
-  (NodeH[ReferendH]) = {
+  (ExpressionH[ReferendH]) = {
     val LocalLookup2(localVar, type2) = lookup2;
     vassert(type2 == localVar.reference)
 
@@ -321,8 +317,6 @@ object LoadHammer {
       LocalLoadH(
         local,
         m.BorrowH,
-        expectedStructBoxMemberType,
-        expectedBorrowBoxResultType,
         NameHammer.translateFullName(hinputs, hamuts, localVar.id))
     loadBoxNode
   }
@@ -332,7 +326,7 @@ object LoadHammer {
       hamuts: HamutsBox,
       locals: LocalsBox,
       lookup2: AddressMemberLookup2):
-  (NodeH[ReferendH], List[Expression2]) = {
+  (ExpressionH[ReferendH], List[Expression2]) = {
     val AddressMemberLookup2(structExpr2, memberName, resultType2) = lookup2;
 
     val (structResultLine, structDeferreds) =

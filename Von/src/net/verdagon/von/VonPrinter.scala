@@ -70,7 +70,7 @@ class VonPrinter(
       case VonSyntax(_, _, true, _) => mappedType + "("
       case VonSyntax(_, _, false, _) => mappedType + (if (hasMembers) "(" else "")
       case JsonSyntax => {
-        "{\"__type\": " + "\"" + StringEscapeUtils.escapeJavaScript(mappedType) + "\"" + (if (hasMembers) memberSeparator else "")
+        "{\"\": " + "\"" + StringEscapeUtils.escapeJavaScript(mappedType) + "\"" + (if (hasMembers) memberSeparator else "")
       }
     }
   }

@@ -15,7 +15,7 @@ object LetHammer {
       hamuts: HamutsBox,
       locals: LocalsBox,
       let2: LetNormal2):
-  NodeH[ReferendH] = {
+  ExpressionH[ReferendH] = {
     val LetNormal2(localVariable, sourceExpr2) = let2
 
     val (sourceExprResultLine, deferreds) =
@@ -44,7 +44,7 @@ object LetHammer {
       hamuts: HamutsBox,
       locals: LocalsBox,
       let2: LetAndLend2):
-  (NodeH[ReferendH]) = {
+  (ExpressionH[ReferendH]) = {
     val LetAndLend2(localVariable, sourceExpr2) = let2
 
     val (sourceExprResultLine, deferreds) =
@@ -69,15 +69,15 @@ object LetHammer {
   }
 
   private def translateAddressibleLet(
-      hinputs: Hinputs,
-      hamuts: HamutsBox,
-      locals: LocalsBox,
-      sourceExprResultLine: NodeH[ReferendH],
-      sourceResultPointerTypeH: ReferenceH[ReferendH],
-      varId: FullName2[IVarName2],
-      variability: Variability,
-      reference: Coord):
-  NodeH[ReferendH] = {
+                                       hinputs: Hinputs,
+                                       hamuts: HamutsBox,
+                                       locals: LocalsBox,
+                                       sourceExprResultLine: ExpressionH[ReferendH],
+                                       sourceResultPointerTypeH: ReferenceH[ReferendH],
+                                       varId: FullName2[IVarName2],
+                                       variability: Variability,
+                                       reference: Coord):
+  ExpressionH[ReferendH] = {
     val (boxStructRefH) =
       StructHammer.makeBox(hinputs, hamuts, variability, reference, sourceResultPointerTypeH)
     val expectedLocalBoxType = ReferenceH(m.OwnH, boxStructRefH)
@@ -94,17 +94,17 @@ object LetHammer {
   }
 
   private def translateAddressibleLetAndLend(
-      hinputs: Hinputs,
-      hamuts: HamutsBox,
-      locals: LocalsBox,
-      sourceExpr2: ReferenceExpression2,
-      sourceExprResultLine: NodeH[ReferendH],
-      sourceResultPointerTypeH: ReferenceH[ReferendH],
-      let2: LetAndLend2,
-      varId: FullName2[IVarName2],
-      variability: Variability,
-      reference: Coord):
-  (NodeH[ReferendH]) = {
+                                              hinputs: Hinputs,
+                                              hamuts: HamutsBox,
+                                              locals: LocalsBox,
+                                              sourceExpr2: ReferenceExpression2,
+                                              sourceExprResultLine: ExpressionH[ReferendH],
+                                              sourceResultPointerTypeH: ReferenceH[ReferendH],
+                                              let2: LetAndLend2,
+                                              varId: FullName2[IVarName2],
+                                              variability: Variability,
+                                              reference: Coord):
+  (ExpressionH[ReferendH]) = {
     val stackifyH =
       translateAddressibleLet(
         hinputs, hamuts, locals, sourceExprResultLine, sourceResultPointerTypeH, varId, variability, reference)
@@ -121,12 +121,12 @@ object LetHammer {
   }
 
   private def translateMundaneLet(
-      hinputs: Hinputs,
-      hamuts: HamutsBox,
-      locals: LocalsBox,
-      sourceExprResultLine: NodeH[ReferendH],
-      sourceResultPointerTypeH: ReferenceH[ReferendH],
-      varId: FullName2[IVarName2]):
+                                   hinputs: Hinputs,
+                                   hamuts: HamutsBox,
+                                   locals: LocalsBox,
+                                   sourceExprResultLine: ExpressionH[ReferendH],
+                                   sourceResultPointerTypeH: ReferenceH[ReferendH],
+                                   varId: FullName2[IVarName2]):
   StackifyH = {
     val localIndex =
       locals.addTemplarLocal(hinputs, hamuts, varId, sourceResultPointerTypeH)
@@ -139,15 +139,15 @@ object LetHammer {
   }
 
     private def translateMundaneLetAndLend(
-        hinputs: Hinputs,
-        hamuts: HamutsBox,
-        locals: LocalsBox,
-        sourceExpr2: ReferenceExpression2,
-        sourceExprResultLine: NodeH[ReferendH],
-        sourceResultPointerTypeH: ReferenceH[ReferendH],
-        let2: LetAndLend2,
-        varId: FullName2[IVarName2]):
-    NodeH[ReferendH] = {
+                                            hinputs: Hinputs,
+                                            hamuts: HamutsBox,
+                                            locals: LocalsBox,
+                                            sourceExpr2: ReferenceExpression2,
+                                            sourceExprResultLine: ExpressionH[ReferendH],
+                                            sourceResultPointerTypeH: ReferenceH[ReferendH],
+                                            let2: LetAndLend2,
+                                            varId: FullName2[IVarName2]):
+    ExpressionH[ReferendH] = {
 
       val stackifyH =
         translateMundaneLet(
@@ -175,7 +175,7 @@ object LetHammer {
       hamuts: HamutsBox,
       locals: LocalsBox,
       unlet2: Unlet2):
-  (NodeH[ReferendH]) = {
+  (ExpressionH[ReferendH]) = {
     val local =
       locals.get(unlet2.variable.id) match {
         case None => {
@@ -224,7 +224,7 @@ object LetHammer {
     hamuts: HamutsBox,
     locals: LocalsBox,
     des2: DestructureArraySequence2
-  ): NodeH[ReferendH] = {
+  ): ExpressionH[ReferendH] = {
     val DestructureArraySequence2(sourceExpr2, arrSeqT, destinationReferenceLocalVariables) = des2
 
     val (sourceExprResultLine, sourceExprDeferreds) =
@@ -268,7 +268,7 @@ object LetHammer {
       hamuts: HamutsBox,
       locals: LocalsBox,
       des2: Destructure2):
-  NodeH[ReferendH] = {
+  ExpressionH[ReferendH] = {
     val Destructure2(sourceExpr2, structRef2, destinationReferenceLocalVariables) = des2
 
     val (sourceExprResultLine, sourceExprDeferreds) =

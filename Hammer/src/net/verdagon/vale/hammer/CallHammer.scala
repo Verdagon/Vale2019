@@ -15,7 +15,7 @@ object CallHammer {
     locals: LocalsBox,
     prototype2: Prototype2,
     argsExprs2: List[ReferenceExpression2]):
-  (NodeH[ReferendH]) = {
+  (ExpressionH[ReferendH]) = {
     val (argsResultLines, argsDeferreds) =
       ExpressionHammer.translateExpressions(
         hinputs, hamuts, locals, argsExprs2);
@@ -28,7 +28,7 @@ object CallHammer {
     val (functionRefH) =
       FunctionHammer.translateFunctionRef(hinputs, hamuts, prototype2);
 
-    val callResultNode = CallH(functionRefH.prototype, argsResultLines)
+    val callResultNode = ExternCallH(functionRefH.prototype, argsResultLines)
 
       ExpressionHammer.translateDeferreds(
         hinputs, hamuts, locals, callResultNode, argsDeferreds)
@@ -41,7 +41,7 @@ object CallHammer {
       function: Prototype2,
       args: List[Expression2],
       resultType2: Coord):
-  NodeH[ReferendH] = {
+  ExpressionH[ReferendH] = {
     val returnType2 = function.returnType
     val paramTypes = function.paramTypes
     val (argLines, argsDeferreds) =
@@ -71,7 +71,7 @@ object CallHammer {
       hinputs: Hinputs, hamuts: HamutsBox,
       locals: LocalsBox,
       constructArray2: ConstructArray2):
-  (NodeH[ReferendH]) = {
+  (ExpressionH[ReferendH]) = {
     val ConstructArray2(arrayType2, sizeExpr2, generatorExpr2) = constructArray2;
 
     val (sizeRegisterId, sizeDeferreds) =
@@ -105,7 +105,7 @@ object CallHammer {
       hamuts: HamutsBox,
       locals: LocalsBox,
       das2: DestroyArraySequence2):
-  NodeH[ReferendH] = {
+  ExpressionH[ReferendH] = {
     val DestroyArraySequence2(arrayExpr2, arraySequenceType, consumerExpr2) = das2;
 
     val ArraySequenceT2(size, rawArrayType2 @ RawArrayT2(memberType2, mutability)) = arraySequenceType
@@ -144,7 +144,7 @@ object CallHammer {
     hamuts: HamutsBox,
     locals: LocalsBox,
     das2: DestroyUnknownSizeArray2):
-  NodeH[ReferendH] = {
+  ExpressionH[ReferendH] = {
     val DestroyUnknownSizeArray2(arrayExpr2, unknownSizeArrayType2, consumerExpr2) = das2;
 
     val UnknownSizeArrayT2(RawArrayT2(memberType2, mutability)) = unknownSizeArrayType2
@@ -176,7 +176,7 @@ object CallHammer {
       hinputs: Hinputs, hamuts: HamutsBox,
       locals: LocalsBox,
       if2: If2):
-  NodeH[ReferendH] = {
+  ExpressionH[ReferendH] = {
     val If2(condition2, thenBlock2, elseBlock2) = if2
 
     val (conditionBlockH, List()) =
@@ -231,7 +231,7 @@ object CallHammer {
       superFunctionHeader: FunctionHeader2,
       resultType2: Coord,
       argsExprs2: List[Expression2]):
-  NodeH[ReferendH] = {
+  ExpressionH[ReferendH] = {
     val (argLines, argsDeferreds) =
       ExpressionHammer.translateExpressions(
         hinputs, hamuts, locals, argsExprs2);
