@@ -10,6 +10,7 @@ import net.verdagon.vale.templar.templata.{FunctionHeader2, Prototype2}
 import net.verdagon.vale.templar.types._
 import net.verdagon.von.VonInt
 import org.scalatest.{FunSuite, Matchers}
+import net.verdagon.vale.driver.Compilation
 
 class OwnershipTests extends FunSuite with Matchers {
   test("Borrowing a temporary mutable makes a local var") {

@@ -3,6 +3,7 @@ package net.verdagon.vale.templar;
 import net.verdagon.vale._
 import net.verdagon.vale.astronomer._
 import net.verdagon.vale.scout.CodeLocationS
+import net.verdagon.vale.templar.EdgeTemplar.{FoundFunction, NeededOverride}
 import net.verdagon.vale.templar.OverloadTemplar.{ScoutExpectedFunctionFailure, ScoutExpectedFunctionSuccess}
 import net.verdagon.vale.templar.citizen.StructTemplar
 import net.verdagon.vale.templar.env._
@@ -14,7 +15,7 @@ import scala.collection.immutable.{List, ListMap, Map, Set}
 
 object Templar {
   def evaluate(program: ProgramA):
-  CompleteProgram2 = {
+  Temputs = {
 
     val ProgramA(structsA, interfacesA, impls1, functions1) = program;
 
@@ -141,32 +142,16 @@ object Templar {
 
     stampNeededOverridesUntilSettled(env11, temputs)
 
-    val reachables =
-      Reachability.findReachables(temputs.temputs)
-
-    val reachableFunctions =
-      temputs.getAllFunctions().filter(f => {
-        if (reachables.functions.contains(f.header.toSignature)) {
-//          println("Including reachable: " + f.header.fullName)
-          true
-        } else {
-          println("Shaking out unreachable: " + f.header.fullName)
-          false
-        }
-      })
-    reachableFunctions.foreach(f => {
-      println("Including: " + f.header.fullName)
-    })
-
-    val result =
-      CompleteProgram2(
-        temputs.getAllInterfaces().toList,
-        temputs.getAllStructs().toList,
-        temputs.impls,
-        emptyPackStructRef,
-        reachableFunctions)
-
-    result
+    temputs.temputs
+//    val result =
+//      CompleteProgram2(
+//        temputs.getAllInterfaces(),
+//        temputs.getAllStructs(),
+//        temputs.impls,
+//        emptyPackStructRef,
+//        temputs.getAllFunctions())
+//
+//    result
   }
 
   // (Once we add namespaces, this will probably change)
@@ -227,8 +212,14 @@ object Templar {
   }
 
   def stampNeededOverridesUntilSettled(env: NamespaceEnvironment[IName2], temputs: TemputsBox): Unit = {
-    val neededOverrides = EdgeTemplar.assembleEdges(temputs.functions, temputs.getAllInterfaces(), temputs.impls)
-
+    val partialEdges =
+      EdgeTemplar.assemblePartialEdges(
+        temputs.functions, temputs.getAllInterfaces(), temputs.impls)
+    val neededOverrides =
+      partialEdges.flatMap(e => e.methods.flatMap({
+        case n @ NeededOverride(_, _) => List(n)
+        case FoundFunction(_) => List()
+      }))
     if (neededOverrides.isEmpty) {
       return temputs
     }
@@ -242,7 +233,7 @@ object Templar {
             OverloadTemplar.scoutExpectedFunctionForPrototype(
               env,
               temputs,
-              neededOverride.name,
+              GlobalFunctionFamilyNameA(neededOverride.humanName),
               List(), // No explicitly specified ones. It has to be findable just by param filters.
               neededOverride.paramFilters,
               List(),
@@ -285,7 +276,7 @@ object Templar {
     }
   }
 
-  def runTemplar(code: String): Option[CompleteProgram2] = {
+  def runTemplar(code: String): Option[Temputs] = {
     Astronomer.runAstronomer(code) match {
       case None => None
       case Some(program1) => Some(evaluate(program1))

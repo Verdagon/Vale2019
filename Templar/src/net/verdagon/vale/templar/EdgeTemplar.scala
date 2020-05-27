@@ -1,59 +1,71 @@
 package net.verdagon.vale.templar
 
 import net.verdagon.vale.astronomer.{GlobalFunctionFamilyNameA, IImpreciseNameStepA, INameA}
-import net.verdagon.vale.templar.templata.{FunctionBanner2, Override2}
+import net.verdagon.vale.templar.templata.{FunctionBanner2, Override2, Prototype2, Signature2}
 import net.verdagon.vale.templar.types._
-import net.verdagon.vale.{vassert, vfail}
+import net.verdagon.vale.{vassert, vfail, vwat}
 
 object EdgeTemplar {
-  case class NeededOverride(name: GlobalFunctionFamilyNameA, paramFilters: List[ParamFilter])
+  sealed trait IMethod
+  case class NeededOverride(
+    humanName: String,
+    paramFilters: List[ParamFilter]
+  ) extends IMethod
+  case class FoundFunction(prototype: Prototype2) extends IMethod
 
-  def assembleEdges(
+  case class PartialEdge2(
+    struct: StructRef2,
+    interface: InterfaceRef2,
+    methods: List[IMethod])
+
+  def assemblePartialEdges(
     functions: List[net.verdagon.vale.templar.Function2],
     interfaces: List[InterfaceDefinition2],
     impls: List[Impl2]):
-  List[NeededOverride] = {
+  List[PartialEdge2] = {
 
     val interfaceEdgeBlueprints = makeInterfaceEdgeBlueprints(functions, interfaces)
 
     val overrideFunctionsAndIndicesByStructAndInterface = doBlah(functions, interfaces, impls, interfaceEdgeBlueprints)
 
-    val neededBanners =
+    val partialEdges2 =
       overrideFunctionsAndIndicesByStructAndInterface
-        .flatMap({ case ((struct, superInterface), overrideFunctionsAndIndices) =>
+        .map({ case ((struct, superInterface), overrideFunctionsAndIndices) =>
           val blueprint = interfaceEdgeBlueprints.find(_.interface == superInterface).get
           val overrideFunctionsByIndex =
             overrideFunctionsAndIndices.groupBy(_._2).mapValues(_.map(_._1).toList)
           // overrideIndex is the index in the itable
-          blueprint.superFamilyRootBanners.zipWithIndex.flatMap({ case (superFunction, overrideIndex) =>
-            overrideFunctionsByIndex.get(overrideIndex) match {
-              case None => {
-                val overrideParamFilters =
-                  superFunction.paramTypes.zipWithIndex.map({
-                    case (Coord(ownership, _), index) if index == superFunction.getVirtualIndex.get => {
-                      ParamFilter(Coord(ownership, struct), Some(Override2(superInterface)))
-                    }
-                    case (tyype, _) => ParamFilter(tyype, None)
-                  })
-                superFunction.fullName.last match {
-                  case FunctionName2(humanName, _, _) => List(NeededOverride(GlobalFunctionFamilyNameA(humanName), overrideParamFilters))
-                  case _ => List()
+          val methods =
+            blueprint.superFamilyRootBanners.zipWithIndex.map({ case (superFunction, overrideIndex) =>
+              overrideFunctionsByIndex.get(overrideIndex) match {
+                case None => {
+                  val overrideParamFilters =
+                    superFunction.paramTypes.zipWithIndex.map({
+                      case (Coord(ownership, _), index) if index == superFunction.getVirtualIndex.get => {
+                        ParamFilter(Coord(ownership, struct), Some(Override2(superInterface)))
+                      }
+                      case (tyype, _) => ParamFilter(tyype, None)
+                    })
+                  superFunction.fullName.last match {
+                    case FunctionName2(humanName, _, _) => NeededOverride(humanName, overrideParamFilters)
+                    case _ => vwat()
+                  }
+                }
+                case Some(List()) => vfail("wot")
+                case Some(List(onlyOverride)) => FoundFunction(onlyOverride.header.toPrototype)
+                case Some(multipleOverrides) => {
+                  vfail("Multiple overrides for struct " + struct + " for interface " + superInterface + ": " + multipleOverrides.map(_.header.toSignature).mkString(", "))
                 }
               }
-              case Some(List()) => vfail("wot")
-              case Some(List(_)) => List()
-              case Some(multipleOverrides) => {
-                vfail("Multiple overrides for struct " + struct + " for interface " + superInterface + ": " + multipleOverrides.map(_.header.toSignature).mkString(", "))
-              }
-            }
-          })
+            })
+          PartialEdge2(struct, superInterface, methods)
         })
 
-    neededBanners.toList
+    partialEdges2.toList
   }
 
 
-  private def doBlah(
+  def doBlah(
     functions: List[Function2],
     interfaces: List[InterfaceDefinition2],
     impls: List[Impl2],

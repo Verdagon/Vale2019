@@ -196,10 +196,13 @@ object FunctionTemplarCore {
       Function2(
         header,
         List(),
-        Block2(List(InterfaceFunctionCall2(
-          header,
-          header.returnType,
-          header.params.zipWithIndex.map({ case (param2, index) => ArgLookup2(index, param2.tyype) })))))
+        Block2(
+          List(
+            Return2(
+              InterfaceFunctionCall2(
+                header,
+                header.returnType,
+                header.params.zipWithIndex.map({ case (param2, index) => ArgLookup2(index, param2.tyype) }))))))
 
       temputs
         .declareFunctionReturnType(header.toSignature, returnReferenceType2)
@@ -238,9 +241,10 @@ object FunctionTemplarCore {
         List(),
         Block2(
           List(
-            FunctionCall2(
-              structDestructor,
-              List(ArgLookup2(0, structType2))))))
+            Return2(
+              FunctionCall2(
+                structDestructor,
+                List(ArgLookup2(0, structType2)))))))
 
     // If this fails, then the signature the FunctionTemplarMiddleLayer made for us doesn't
     // match what we just made

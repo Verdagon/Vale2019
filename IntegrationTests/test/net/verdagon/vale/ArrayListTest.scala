@@ -3,6 +3,7 @@ package net.verdagon.vale
 import net.verdagon.vale.templar.{CodeVarName2, FullName2}
 import net.verdagon.vale.templar.env.AddressibleLocalVariable2
 import net.verdagon.vale.templar.types.Varying
+import net.verdagon.vale.driver.Compilation
 import net.verdagon.von.VonInt
 import org.scalatest.{FunSuite, Matchers}
 

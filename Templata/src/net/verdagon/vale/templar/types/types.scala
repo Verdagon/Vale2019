@@ -317,7 +317,7 @@ case class InterfaceDefinition2(
   override def getRef = InterfaceRef2(fullName)
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
-    List(this).collect(func) ++ fullName.all(func)
+    List(this).collect(func) ++ fullName.all(func) ++ internalMethods.flatMap(_.all(func))
   }
 }
 

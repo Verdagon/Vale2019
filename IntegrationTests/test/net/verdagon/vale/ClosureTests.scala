@@ -9,6 +9,7 @@ import net.verdagon.vale.templar.templata.{FunctionHeader2, Parameter2}
 import net.verdagon.vale.templar.types._
 import net.verdagon.von.VonInt
 import org.scalatest.{FunSuite, Matchers}
+import net.verdagon.vale.driver.Compilation
 
 class ClosureTests extends FunSuite with Matchers {
 
@@ -130,7 +131,7 @@ class ClosureTests extends FunSuite with Matchers {
     // It's a reference because we know for sure that it's moved from our child,
     // which means we don't need to check afterwards, which means it doesn't need
     // to be boxed/addressible.
-    val closuredVarsStruct = vassertSome(temputs.structs.find(struct => struct.fullName.last match { case l @ LambdaCitizenName2(_) => true case _ => false }));
+    val closuredVarsStruct = vassertSome(temputs.getAllStructs().find(struct => struct.fullName.last match { case l @ LambdaCitizenName2(_) => true case _ => false }));
     val expectedMembers = List(StructMember2(CodeVarName2("x"), Final, ReferenceMemberType2(Coord(Share, Int2()))));
     vassert(closuredVarsStruct.members == expectedMembers)
 
@@ -185,7 +186,7 @@ class ClosureTests extends FunSuite with Matchers {
     val scoutput = compile.getScoutput()
     val temputs = compile.getTemputs()
     // The struct should have an int x in it.
-    val closuredVarsStruct = vassertSome(temputs.structs.find(struct => struct.fullName.last match { case l @ LambdaCitizenName2(_) => true case _ => false }));
+    val closuredVarsStruct = vassertSome(temputs.getAllStructs().find(struct => struct.fullName.last match { case l @ LambdaCitizenName2(_) => true case _ => false }));
     val expectedMembers = List(StructMember2(CodeVarName2("x"), Varying, AddressMemberType2(Coord(Share, Int2()))));
     vassert(closuredVarsStruct.members == expectedMembers)
 

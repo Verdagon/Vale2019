@@ -16,7 +16,7 @@ class TemplarTests extends FunSuite with Matchers {
     var parsedCache: Option[Program0] = None
     var scoutputCache: Option[ProgramS] = None
     var astroutsCache: Option[ProgramA] = None
-    var temputsCache: Option[CompleteProgram2] = None
+    var temputsCache: Option[Temputs] = None
 
     def getParsed(): Program0 = {
       parsedCache match {
@@ -52,7 +52,7 @@ class TemplarTests extends FunSuite with Matchers {
       }
     }
 
-    def getTemputs(): CompleteProgram2 = {
+    def getTemputs(): Temputs = {
       temputsCache match {
         case Some(temputs) => temputs
         case None => {
@@ -68,15 +68,18 @@ class TemplarTests extends FunSuite with Matchers {
   test("Simple program returning an int") {
     val compile = new Compilation("fn main(){3}")
     val temputs = compile.getTemputs()
-    temputs.only({
+
+    val main = temputs.lookupFunction("main")
+    main.only({
       case FunctionHeader2(simpleName("main"),false, true,List(), Coord(Share, Int2()), _) => true
     })
-    temputs.only({ case IntLiteral2(3) => true })
+    main.only({ case IntLiteral2(3) => true })
   }
 
   test("Hardcoding negative numbers") {
     val compile = new Compilation("fn main(){-3}")
-    compile.getTemputs().only({ case IntLiteral2(-3) => true })
+    val main = compile.getTemputs().lookupFunction("main")
+    main.only({ case IntLiteral2(-3) => true })
   }
 
   test("Taking an argument and returning it") {
@@ -91,9 +94,10 @@ class TemplarTests extends FunSuite with Matchers {
   test("Tests adding two numbers") {
     val compile = new Compilation("fn main(){ +(2, 3) }")
     val temputs = compile.getTemputs()
-    temputs.only({ case IntLiteral2(2) => true })
-    temputs.only({ case IntLiteral2(3) => true })
-    temputs.only({
+    val main = temputs.lookupFunction("main")
+    main.only({ case IntLiteral2(2) => true })
+    main.only({ case IntLiteral2(3) => true })
+    main.only({
       case FunctionCall2(
         functionName("+"),
         List(
@@ -152,8 +156,6 @@ class TemplarTests extends FunSuite with Matchers {
     val compile = new Compilation(OverloadSamples.overloads)
     val temputs = compile.getTemputs()
 
-    // Tests that we use the right overload, and both the overloads made it into temputs
-    vassert(temputs.getAllUserFunctions.size == 3)
     temputs.lookupFunction("main").header.returnType shouldEqual
         Coord(Share, Int2())
   }
@@ -173,7 +175,8 @@ class TemplarTests extends FunSuite with Matchers {
   test("Test mutating a local var") {
     val compile = new Compilation("fn main(){a! = 3; mut a = 4; }")
     val temputs = compile.getTemputs();
-    temputs.only({ case Mutate2(LocalLookup2(ReferenceLocalVariable2(FullName2(_, CodeVarName2("a")), Varying, _), _), IntLiteral2(4)) => })
+    val main = temputs.lookupFunction("main")
+    main.only({ case Mutate2(LocalLookup2(ReferenceLocalVariable2(FullName2(_, CodeVarName2("a")), Varying, _), _), IntLiteral2(4)) => })
   }
 
   test("Test taking a callable param") {
@@ -230,15 +233,15 @@ class TemplarTests extends FunSuite with Matchers {
     val temputs = compile.getTemputs()
 
     // Check the struct was made
-    temputs.only({
+    temputs.getAllStructs().collectFirst({
       case StructDefinition2(
       simpleName("MyStruct"),
       Mutable,
       List(StructMember2(CodeVarName2("a"), Final, ReferenceMemberType2(Coord(Share, Int2())))),
       false) =>
-    })
+    }).get
     // Check there's a constructor
-    temputs.only({
+    temputs.lookupFunction("MyStruct").only({
       case FunctionHeader2(
       simpleName("MyStruct"),
       _,
@@ -247,8 +250,9 @@ class TemplarTests extends FunSuite with Matchers {
       Coord(Own, StructRef2(simpleName("MyStruct"))),
       _) =>
     })
+    val main = temputs.lookupFunction("main")
     // Check that we call the constructor
-    temputs.only({
+    main.only({
       case FunctionCall2(
         Prototype2(simpleName("MyStruct"), _),
         List(IntLiteral2(7))) =>
@@ -261,18 +265,19 @@ class TemplarTests extends FunSuite with Matchers {
         |interface MyInterface { }
         |struct MyStruct { }
         |impl MyStruct for MyInterface;
+        |fn main(a MyStruct) {}
       """.stripMargin)
     val temputs = compile.getTemputs()
 
     val interfaceDef =
-      temputs.only({
+      temputs.getAllInterfaces().collectFirst({
         case id @ InterfaceDefinition2(simpleName("MyInterface"), Mutable, List()) => id
-      })
+      }).get
 
     val structDef =
-      temputs.only({
+      temputs.getAllStructs.collectFirst({
         case sd @ StructDefinition2(simpleName("MyStruct"), Mutable, _, false) => sd
-      })
+      }).get
 
     vassert(temputs.impls.exists(impl => {
       impl.struct == structDef.getRef && impl.interface == interfaceDef.getRef
@@ -376,7 +381,8 @@ class TemplarTests extends FunSuite with Matchers {
     val compile = new Compilation(InheritanceSamples.calling)
     val temputs = compile.getTemputs()
 
-    temputs.only({
+    val main = temputs.lookupFunction("main")
+    main.only({
       case up @ StructToInterfaceUpcast2(innerExpr, InterfaceRef2(simpleName("Car"))) => {
         innerExpr.resultRegister.only({
           case StructRef2(simpleName("Toyota")) =>

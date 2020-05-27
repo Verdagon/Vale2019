@@ -21,7 +21,11 @@ import scala.collection.immutable._
 case class Impl2(
   struct: StructRef2,
   interface: InterfaceRef2
-)
+) extends Queriable2 {
+  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
+    struct.all(func) ++ interface.all(func)
+  }
+}
 
 case class Temputs(
     functionGeneratorByName: Map[String, IFunctionGenerator],
@@ -520,6 +524,67 @@ case class Temputs(
   def getAllInterfaces(): List[InterfaceDefinition2] = interfaceDefsByRef.values.toList
 
   def getAllFunctions(): List[Function2] = functions
+
+
+  def getAllNonExternFunctions: List[Function2] = {
+    functions.filter(!_.header.isExtern)
+  }
+  def getAllUserFunctions: List[Function2] = {
+    functions.filter(_.header.isUserFunction)
+  }
+
+  def lookupUserFunction(humanName: String): Function2 = {
+    val matches =
+      functions
+        .filter(function => simpleName.unapply(function.header.fullName).contains(humanName))
+        .filter(_.header.isUserFunction)
+    if (matches.size == 0) {
+      vfail("Not found!")
+    } else if (matches.size > 1) {
+      vfail("Multiple found!")
+    }
+    matches.head
+  }
+
+  def lookupFunction(humanName: String): Function2 = {
+    val matches = functions.filter(f => {
+      f.header.fullName.last match {
+        case FunctionName2(n, _, _) if n == humanName => true
+        case _ => false
+      }
+    })
+    if (matches.size == 0) {
+      vfail("Function \"" + humanName + "\" not found!")
+    } else if (matches.size > 1) {
+      vfail("Multiple found!")
+    }
+    matches.head
+  }
+
+  def nameIsLambdaIn(name: FullName2[IFunctionName2], needleFunctionHumanName: String): Boolean = {
+    val lastThree = name.steps.slice(name.steps.size - 3, name.steps.size)
+    lastThree match {
+      case List(
+      FunctionName2(functionHumanName, _, _),
+      LambdaCitizenName2(_),
+      FunctionName2("__call", _, _)) if functionHumanName == needleFunctionHumanName => true
+      case _ => false
+    }
+  }
+
+  def lookupLambdaIn(needleFunctionHumanName: String): Function2 = {
+    val matches = functions.filter(f => nameIsLambdaIn(f.header.fullName, needleFunctionHumanName))
+    if (matches.size == 0) {
+      vfail("Lambda for \"" + needleFunctionHumanName + "\" not found!")
+    } else if (matches.size > 1) {
+      vfail("Multiple found!")
+    }
+    matches.head
+  }
+
+  def lookupImpl(structRef: StructRef2, interfaceRef: InterfaceRef2): Impl2 = {
+    impls.find(impl => impl.struct == structRef && impl.interface == interfaceRef).get
+  }
 }
 
 case class TemputsBox(var temputs: Temputs) {
@@ -767,10 +832,8 @@ case class Function2(
   variables: List[ILocalVariable2],
   body: Block2) extends Queriable2 {
 
-  body.exprs.last match {
-    case Return2(_) =>
-    case _ => vwat()
-  }
+  // Should end in a return (or panic or something)
+  vassert(body.exprs.last.referend == Never2())
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func) ++ header.all(func) ++ variables.flatMap(_.all(func)) ++ body.all(func)

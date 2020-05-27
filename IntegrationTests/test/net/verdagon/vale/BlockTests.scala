@@ -6,6 +6,7 @@ import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.types.{Bool2, Coord, Int2, Share}
 import net.verdagon.von.VonInt
 import org.scalatest.{FunSuite, Matchers}
+import net.verdagon.vale.driver.Compilation
 
 class BlockTests extends FunSuite with Matchers {
   test("Empty block") {

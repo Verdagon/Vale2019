@@ -204,6 +204,24 @@ case class Return2(
 ) extends ReferenceExpression2 {
   override def resultRegister = ReferenceRegister2(Coord(Share, Never2()))
 
+  sourceExpr match {
+    case Return2(_) => vwat()
+    case TemplarReinterpret2(Block2(exprs), _) => {
+      exprs.last match {
+        case Return2(_) => vwat()
+        case NeverLiteral2() => vwat()
+        case _ =>
+      }
+    }
+    case Block2(exprs) => {
+      exprs.last match {
+        case Return2(_) => vwat()
+        case _ =>
+      }
+    }
+    case _ =>
+  }
+
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func) ++ sourceExpr.all(func)
   }
@@ -229,6 +247,10 @@ case class Block2(
   if (exprs.exists(_.referend == Never2())) {
     vassert(exprs.last.referend == Never2())
   }
+
+  vassert(exprs.collect({
+    case Return2(_) =>
+  }).size <= 1)
 
   def lastReferenceExpr = exprs.last
   override def resultRegister = lastReferenceExpr.resultRegister

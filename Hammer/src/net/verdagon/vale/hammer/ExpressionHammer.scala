@@ -196,7 +196,7 @@ object ExpressionHammer {
         val (resultTypeH) =
           TypeHammer.translateReference(hinputs, hamuts, resultType2)
 
-//        hinputs.program2.lookupStruct(resultStructType2)
+//        hinputs.lookupStruct(resultStructType2)
 //        vassert(structDef2.getRef == resultTypeH.innerType)
 
         val structDefH = hamuts.structDefsByRef2(structRef2)

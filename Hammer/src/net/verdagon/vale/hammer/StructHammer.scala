@@ -16,7 +16,7 @@ object StructHammer {
   val BOX_MEMBER_NAME = "__boxee"
 
   def translateInterfaces(hinputs: Hinputs, hamuts: HamutsBox): Unit = {
-    hinputs.program2.interfaces.foreach(interface => translateInterfaceRef(hinputs, hamuts, interface.getRef))
+    hinputs.interfaces.foreach(interface => translateInterfaceRef(hinputs, hamuts, interface.getRef))
   }
 
   private def translateInterfaceRefs(
@@ -46,14 +46,14 @@ object StructHammer {
         // This is the only place besides InterfaceDefinitionH that can make a InterfaceRefH
         val temporaryInterfaceRefH = InterfaceRefH(fullNameH);
         hamuts.forwardDeclareInterface(interfaceRef2, temporaryInterfaceRefH)
-        val interfaceDef2 = hinputs.program2.lookupInterface(interfaceRef2);
+        val interfaceDef2 = hinputs.lookupInterface(interfaceRef2);
 
 
         val edgeBlueprint = hinputs.edgeBlueprintsByInterface(interfaceRef2);
 
         val prototypes2 =
           edgeBlueprint.superFamilyRootBanners.map(superFamilyRootBanner => {
-            hinputs.program2.lookupFunction(superFamilyRootBanner.toSignature).get.header.toPrototype
+            hinputs.lookupFunction(superFamilyRootBanner.toSignature).get.header.toPrototype
           })
 
         val (prototypesH) = FunctionHammer.translatePrototypes(hinputs, hamuts, prototypes2)
@@ -72,7 +72,7 @@ object StructHammer {
   }
 
   def translateStructs(hinputs: Hinputs, hamuts: HamutsBox): Unit = {
-    hinputs.program2.structs.foreach(structDef2 => translateStructRef(hinputs, hamuts, structDef2.getRef))
+    hinputs.structs.foreach(structDef2 => translateStructRef(hinputs, hamuts, structDef2.getRef))
   }
 
   def translateStructRef(
@@ -87,7 +87,7 @@ object StructHammer {
         // This is the only place besides StructDefinitionH that can make a StructRefH
         val temporaryStructRefH = StructRefH(fullNameH);
         hamuts.forwardDeclareStruct(structRef2, temporaryStructRefH)
-        val structDef2 = hinputs.program2.lookupStruct(structRef2);
+        val structDef2 = hinputs.lookupStruct(structRef2);
         val (membersH) =
           TypeHammer.translateMembers(hinputs, hamuts, structDef2.fullName, structDef2.members)
 

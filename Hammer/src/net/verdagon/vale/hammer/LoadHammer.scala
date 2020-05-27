@@ -137,7 +137,7 @@ object LoadHammer {
         case TupleT2(_, sr) => sr
         case PackT2(_, sr) => sr
       }
-    val structDef2 = hinputs.program2.lookupStruct(structRef2)
+    val structDef2 = hinputs.lookupStruct(structRef2)
     val memberIndex = structDef2.members.indexWhere(member => structDef2.fullName.addStep(member.name) == memberName)
     vassert(memberIndex >= 0)
     val member2 = structDef2.members(memberIndex)
@@ -201,7 +201,7 @@ object LoadHammer {
         case TupleT2(_, sr) => sr
         case PackT2(_, sr) => sr
       }
-    val structDef2 = hinputs.program2.lookupStruct(structRef2)
+    val structDef2 = hinputs.lookupStruct(structRef2)
     val memberIndex = structDef2.members.indexWhere(member => structDef2.fullName.addStep(member.name) == memberName)
     vassert(memberIndex >= 0)
 
@@ -338,7 +338,7 @@ object LoadHammer {
         case TupleT2(_, sr) => sr
         case PackT2(_, sr) => sr
       }
-    val structDef2 = hinputs.program2.lookupStruct(structRef2)
+    val structDef2 = hinputs.lookupStruct(structRef2)
     val memberIndex = structDef2.members.indexWhere(member => structDef2.fullName.addStep(member.name) == memberName)
     vassert(memberIndex >= 0)
     val member2 = structDef2.members(memberIndex)

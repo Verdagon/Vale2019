@@ -51,9 +51,10 @@ object BodyTemplar {
         val header = FunctionHeader2(functionFullName, false, function1.isUserFunction, params2, returnType2, Some(function1));
 
         val bodyWithReturn2 =
-          bodyWithoutReturn2.exprs.last match {
-            case Return2(_) => bodyWithoutReturn2
-            case _ => Block2(bodyWithoutReturn2.exprs.init :+ Return2(bodyWithoutReturn2.exprs.last))
+          if (bodyWithoutReturn2.exprs.last.referend == Never2()) {
+            bodyWithoutReturn2
+          } else {
+            Block2(bodyWithoutReturn2.exprs.init :+ Return2(bodyWithoutReturn2.exprs.last))
           }
         (header, bodyWithReturn2)
       }
@@ -84,9 +85,13 @@ object BodyTemplar {
               vfail("Function " + function1.name + "(:" + params2.mkString(", :") + ")\nreturn type:\n" + expectedRetCoord + "\ndoesn't match body's result:\n" + unconvertedBody2.resultRegister.reference)
             }
             case (true) => {
-              val convertedBodyExpr2 =
-                TypeTemplar.convert(funcOuterEnv.snapshot, temputs, unconvertedBody2, expectedRetCoord);
-              (Block2(List(convertedBodyExpr2)))
+              if (unconvertedBody2.referend == Never2()) {
+                unconvertedBody2
+              } else {
+                val convertedBodyExpr2 =
+                  TypeTemplar.convert(funcOuterEnv.snapshot, temputs, unconvertedBody2, expectedRetCoord);
+                (Block2(List(convertedBodyExpr2)))
+              }
             }
           }
 
@@ -108,10 +113,12 @@ object BodyTemplar {
         }
 
         val bodyWithReturn2 =
-          convertedBody2.exprs.last match {
-            case Return2(_) => convertedBody2
-            case _ => Block2(convertedBody2.exprs.init :+ Return2(convertedBody2.exprs.last))
+          if (convertedBody2.exprs.last.referend == Never2()) {
+            convertedBody2
+          } else {
+            Block2(convertedBody2.exprs.init :+ Return2(convertedBody2.exprs.last))
           }
+
         (header, bodyWithReturn2)
       }
     }
@@ -145,7 +152,11 @@ object BodyTemplar {
         val expressions =
           BlockTemplar.unletUnmovedVariablesIntroducedSince(
             temputs, startingFuncOuterEnv, funcOuterEnv, None, unresultifiedUndestructedExpressions)
-        expressions :+ NeverLiteral2()
+        if (expressions.last.referend == Never2()) {
+          expressions
+        } else {
+          expressions :+ NeverLiteral2()
+        }
       } else if (unresultifiedUndestructedExpressions.last.referend == Void2()) {
         val expressions =
           BlockTemplar.unletUnmovedVariablesIntroducedSince(

@@ -235,8 +235,7 @@ case class LocalLoadH(
   // Name of the local variable, for debug purposes.
   localName: FullNameH
 ) extends ExpressionH[ReferendH] {
-  override def resultType: ReferenceH[ReferendH] = local.typeH
-  vassert(resultType.ownership == targetOwnership)
+  override def resultType: ReferenceH[ReferendH] = ReferenceH(targetOwnership, local.typeH.kind)
 }
 
 // Takes a reference from the given "source" register, and swaps it into the given
@@ -468,6 +467,24 @@ case class ReturnH(
   sourceRegister: ExpressionH[ReferendH]
 ) extends ExpressionH[NeverH] {
   override def resultType: ReferenceH[NeverH] = ReferenceH(ShareH, NeverH())
+
+  sourceRegister match {
+    case ReturnH(_) => vwat()
+    case ReinterpretH(BlockH(exprs), _) => {
+      exprs.last match {
+        case ReturnH(_) => vwat()
+        case UnreachableH() => vwat()
+        case _ =>
+      }
+    }
+    case BlockH(exprs) => {
+      exprs.last match {
+        case ReturnH(_) => vwat()
+        case _ =>
+      }
+    }
+    case _ =>
+  }
 }
 
 // Constructs an unknown-size array, whose length is the integer from sizeRegister,

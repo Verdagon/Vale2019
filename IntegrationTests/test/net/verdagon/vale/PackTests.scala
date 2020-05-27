@@ -4,6 +4,7 @@ import net.verdagon.vale.templar.{ArraySequenceE2, PackE2, TupleE2}
 import net.verdagon.vale.templar.types.{Int2, PackT2}
 import net.verdagon.von.VonInt
 import org.scalatest.{FunSuite, Matchers}
+import net.verdagon.vale.driver.Compilation
 
 class PackTests extends FunSuite with Matchers {
   test("Simple pack with one int") {
@@ -16,7 +17,7 @@ class PackTests extends FunSuite with Matchers {
 
     val temputs = compile.getTemputs()
     temputs.lookupFunction("main").header.returnType.referend shouldEqual Int2()
-    temputs.all({ case PackE2(_, _, _) => }).size shouldEqual 0
+    temputs.lookupFunction("main").all({ case PackE2(_, _, _) => }).size shouldEqual 0
 
     compile.evalForReferend(Vector()) shouldEqual VonInt(5)
   }
@@ -31,7 +32,7 @@ class PackTests extends FunSuite with Matchers {
 
     val temputs = compile.getTemputs()
     temputs.lookupFunction("main").header.returnType.referend.only({ case PackT2(_, _) => })
-    temputs.only({ case PackE2(_, _, _) => })
+    temputs.lookupFunction("main").only({ case PackE2(_, _, _) => })
   }
 
   test("Extract seq") {

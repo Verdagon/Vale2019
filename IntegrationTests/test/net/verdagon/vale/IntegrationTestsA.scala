@@ -5,6 +5,7 @@ import net.verdagon.vale.{metal => m}
 import net.verdagon.vale.vivem.{Heap, IntV, StructInstanceV}
 import net.verdagon.von.{VonBool, VonFloat, VonInt}
 import org.scalatest.{FunSuite, Matchers}
+import net.verdagon.vale.driver.Compilation
 
 class IntegrationTestsA extends FunSuite with Matchers {
 
@@ -61,7 +62,7 @@ class IntegrationTestsA extends FunSuite with Matchers {
   }
 
   test("Test overloads") {
-    val compile = new Compilation(OverloadSamples.overloads))
+    val compile = new Compilation(OverloadSamples.overloads)
     compile.evalForReferend(Vector()) shouldEqual VonInt(6)
   }
 

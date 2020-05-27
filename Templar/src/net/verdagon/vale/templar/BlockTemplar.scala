@@ -34,7 +34,11 @@ object BlockTemplar {
         val expressions =
           BlockTemplar.unletUnmovedVariablesIntroducedSince(
             temputs, startingFate, fate, None, unresultifiedUndestructedExpressions)
-        expressions :+ NeverLiteral2()
+        if (expressions.last.referend == Never2()) {
+          expressions
+        } else {
+          expressions :+ NeverLiteral2()
+        }
       } else if (unresultifiedUndestructedExpressions.last.referend == Void2()) {
         val expressions =
           BlockTemplar.unletUnmovedVariablesIntroducedSince(

@@ -4,6 +4,7 @@ import net.verdagon.vale.templar.{CitizenName2, FullName2, FunctionName2, simple
 import net.verdagon.vale.templar.templata.{Abstract2, Signature2}
 import net.verdagon.vale.templar.types._
 import org.scalatest.{FunSuite, Matchers}
+import net.verdagon.vale.driver.Compilation
 
 class VirtualTests extends FunSuite with Matchers {
 

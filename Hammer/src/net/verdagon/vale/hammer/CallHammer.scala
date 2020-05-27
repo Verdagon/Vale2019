@@ -372,27 +372,27 @@ object CallHammer {
 //    (access)
 //  }
 
-  private def getPrototypeForStructInterfaceCall(
-      hinputs: Hinputs,
-      structRef2: StructRef2,
-      superFamilyRootBanner: FunctionBanner2):
-  Prototype2 = {
-
-    val structDef2 = hinputs.program2.lookupStruct(structRef2)
-    val ancestorInterfaces2 =
-      hinputs.program2.impls.filter(impl => impl.struct == structDef2.getRef).map(_.interface)
-    val edgeBlueprints = ancestorInterfaces2.map(hinputs.edgeBlueprintsByInterface)
-    val matchingEdgeBlueprint =
-      edgeBlueprints.find(_.superFamilyRootBanners.contains(superFamilyRootBanner)).get;
-
-    val indexInEdgeBlueprint = matchingEdgeBlueprint.superFamilyRootBanners.indexOf(superFamilyRootBanner);
-    vassert(indexInEdgeBlueprint >= 0);
-
-    val edge =
-      hinputs.edges.find(
-        edge => edge.interface == matchingEdgeBlueprint.interface && edge.struct == structRef2).get;
-    val methodPrototype2 = edge.methods(indexInEdgeBlueprint)
-    methodPrototype2
-  }
+//  private def getPrototypeForStructInterfaceCall(
+//      hinputs: Hinputs,
+//      structRef2: StructRef2,
+//      superFamilyRootBanner: FunctionBanner2):
+//  Prototype2 = {
+//
+//    val structDef2 = hinputs.lookupStruct(structRef2)
+//    val ancestorInterfaces2 =
+//      hinputs.impls.filter(impl => impl.struct == structDef2.getRef).map(_.interface)
+//    val edgeBlueprints = ancestorInterfaces2.map(hinputs.edgeBlueprintsByInterface)
+//    val matchingEdgeBlueprint =
+//      edgeBlueprints.find(_.superFamilyRootBanners.contains(superFamilyRootBanner)).get;
+//
+//    val indexInEdgeBlueprint = matchingEdgeBlueprint.superFamilyRootBanners.indexOf(superFamilyRootBanner);
+//    vassert(indexInEdgeBlueprint >= 0);
+//
+//    val edge =
+//      hinputs.edges.find(
+//        edge => edge.interface == matchingEdgeBlueprint.interface && edge.struct == structRef2).get;
+//    val methodPrototype2 = edge.methods(indexInEdgeBlueprint)
+//    methodPrototype2
+//  }
 
 }

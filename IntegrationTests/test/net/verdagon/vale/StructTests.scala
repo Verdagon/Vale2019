@@ -3,6 +3,7 @@ package net.verdagon.vale
 import net.verdagon.vale.vivem.PanicException
 import net.verdagon.von.VonInt
 import org.scalatest.{FunSuite, Matchers}
+import net.verdagon.vale.driver.Compilation
 
 class StructTests extends FunSuite with Matchers {
   test("Make empty mut struct") {

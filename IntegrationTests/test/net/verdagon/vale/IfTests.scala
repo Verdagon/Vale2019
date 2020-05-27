@@ -5,6 +5,7 @@ import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.types._
 import net.verdagon.von.{VonInt, VonStr}
 import org.scalatest.{FunSuite, Matchers}
+import net.verdagon.vale.driver.Compilation
 
 class IfTests extends FunSuite with Matchers {
   test("Simple true branch returning an int") {
@@ -19,7 +20,7 @@ class IfTests extends FunSuite with Matchers {
     val CodeBody1(BodySE(_, BlockSE(_, List(IfSE(_, _, _))))) = main.body
 
     val temputs = compile.getTemputs()
-    temputs.only({ case If2(_, _, _) => })
+    temputs.lookupFunction("main").only({ case If2(_, _, _) => })
 
     compile.evalForReferend(Vector()) shouldEqual VonInt(3)
   }
@@ -44,7 +45,7 @@ class IfTests extends FunSuite with Matchers {
       """.stripMargin)
 
     val temputs = compile.getTemputs()
-    val ifs = temputs.all({ case if2 @ If2(_, _, _) => if2 })
+    val ifs = temputs.lookupFunction("main").all({ case if2 @ If2(_, _, _) => if2 })
     ifs.foreach(iff => iff.resultRegister.reference shouldEqual Coord(Share, Int2()))
     ifs.size shouldEqual 2
     val userFuncs = temputs.getAllUserFunctions
@@ -75,7 +76,7 @@ class IfTests extends FunSuite with Matchers {
       """.stripMargin)
 
     val temputs = compile.getTemputs()
-    val ifs = temputs.all({ case if2 @ If2(_, _, _) => if2 })
+    val ifs = temputs.lookupFunction("main").all({ case if2 @ If2(_, _, _) => if2 })
     ifs.foreach(iff => iff.resultRegister.reference shouldEqual Coord(Share, Int2()))
     val userFuncs = temputs.getAllUserFunctions
     userFuncs.foreach(func => {
@@ -101,7 +102,7 @@ class IfTests extends FunSuite with Matchers {
       """.stripMargin)
 
     val temputs = compile.getTemputs()
-    val ifs = temputs.all({ case if2 @ If2(_, _, _) => if2 })
+    val ifs = temputs.lookupFunction("main").all({ case if2 @ If2(_, _, _) => if2 })
     ifs.foreach(iff => iff.resultRegister.reference shouldEqual Coord(Share, Str2()))
 
     compile.evalForReferend(Vector()) shouldEqual VonStr("#")

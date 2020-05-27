@@ -7,7 +7,7 @@ import net.verdagon.vale.hinputs.Hinputs
 import net.verdagon.vale.metal.ProgramH
 import net.verdagon.vale.parser.{Program0, VParser}
 import net.verdagon.vale.scout.{ProgramS, Scout}
-import net.verdagon.vale.templar.{CompleteProgram2, Templar}
+import net.verdagon.vale.templar.{CompleteProgram2, Templar, Temputs}
 import net.verdagon.vale.vassert
 import net.verdagon.vale.vivem.{Heap, PrimitiveReferendV, ReferenceV, Vivem}
 import net.verdagon.von.IVonData
@@ -16,7 +16,7 @@ class Compilation(code: String, useCommonEnv: Boolean = true) {
   var parsedCache: Option[Program0] = None
   var scoutputCache: Option[ProgramS] = None
   var astroutsCache: Option[ProgramA] = None
-  var temputsCache: Option[CompleteProgram2] = None
+  var temputsCache: Option[Temputs] = None
   var hinputsCache: Option[Hinputs] = None
   var hamutsCache: Option[ProgramH] = None
 
@@ -54,7 +54,7 @@ class Compilation(code: String, useCommonEnv: Boolean = true) {
     }
   }
 
-  def getTemputs(): CompleteProgram2 = {
+  def getTemputs(): Temputs = {
     temputsCache match {
       case Some(temputs) => temputs
       case None => {

@@ -5,6 +5,7 @@ import net.verdagon.vale.metal.{IntH, ReferenceH}
 import net.verdagon.vale.{metal => m}
 import net.verdagon.vale.templar.types.Share
 import org.scalatest.{FunSuite, Matchers}
+import net.verdagon.vale.driver.Compilation
 
 class HammerTests extends FunSuite with Matchers {
   // Hammer tests only test the general structure of things, not the generated nodes.

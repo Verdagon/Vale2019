@@ -6,6 +6,7 @@ import net.verdagon.vale.templar.env.ReferenceLocalVariable2
 import net.verdagon.vale.templar.types.{Coord, Final, Int2, Share}
 import net.verdagon.von.VonInt
 import org.scalatest.{FunSuite, Matchers}
+import net.verdagon.vale.driver.Compilation
 
 class PatternTests extends FunSuite with Matchers {
   // To get something like this to work would be rather involved.

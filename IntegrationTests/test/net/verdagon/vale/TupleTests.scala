@@ -4,6 +4,7 @@ import net.verdagon.vale.templar._
 import net.verdagon.vale.templar.types.Int2
 import net.verdagon.von.{VonBool, VonInt}
 import org.scalatest.{FunSuite, Matchers}
+import net.verdagon.vale.driver.Compilation
 
 class TupleTests extends FunSuite with Matchers {
   test("Simple tuple with one int") {
@@ -12,7 +13,7 @@ class TupleTests extends FunSuite with Matchers {
     val temputs = compile.getTemputs()
     temputs.lookupFunction("main").header.returnType.referend shouldEqual Int2()
     // Funny story, theres no such thing as a one element tuple! It becomes a one element array.
-    temputs.only({ case ArraySequenceE2(_, _, _) => })
+    temputs.lookupFunction("main").only({ case ArraySequenceE2(_, _, _) => })
 
     compile.evalForReferend(Vector()) shouldEqual VonInt(9)
   }

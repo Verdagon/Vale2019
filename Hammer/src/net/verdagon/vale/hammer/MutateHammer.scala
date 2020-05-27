@@ -110,7 +110,7 @@ object MutateHammer {
         case TupleT2(_, sr) => sr
         case PackT2(_, sr) => sr
       }
-    val structDef2 = hinputs.program2.lookupStruct(structRef2)
+    val structDef2 = hinputs.lookupStruct(structRef2)
     val memberIndex = structDef2.members.indexWhere(member => structDef2.fullName.addStep(member.name) == memberName)
     vassert(memberIndex >= 0)
     val member2 = structDef2.members(memberIndex)
@@ -165,7 +165,7 @@ object MutateHammer {
       structExpr2.resultRegister.reference.referend match {
         case sr @ StructRef2(_) => sr
       }
-    val structDef2 = hinputs.program2.lookupStruct(structRef2)
+    val structDef2 = hinputs.lookupStruct(structRef2)
     val memberIndex =
       structDef2.members
         .indexWhere(member => structDef2.fullName.addStep(member.name) == memberName)

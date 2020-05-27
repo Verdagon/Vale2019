@@ -108,7 +108,7 @@ object DestructorTemplar {
         List(Parameter2(CodeVarName2("x"), None, type2)),
         Coord(Share, Void2()),
         Some(originFunction1))
-    val function2 = Function2(header, List(), Block2(List(dropExpr2)))
+    val function2 = Function2(header, List(), Block2(List(dropExpr2, Return2(VoidLiteral2()))))
     temputs.declareFunctionReturnType(header.toSignature, Coord(Share, Void2()))
     temputs.addFunction(function2)
     vassert(temputs.exactDeclaredSignatureExists(bodyEnv.fullName))
@@ -247,13 +247,13 @@ object DestructorTemplar {
         }
       })
 
-    val voidLiteral = VoidLiteral2()
+    val returnVoid = Return2(VoidLiteral2())
 
     val function2 =
       Function2(
         header,
         memberLocalVariables,
-        Block2(List(destroyedUnletStruct) ++ destructMemberExprs :+ voidLiteral))
+        Block2(List(destroyedUnletStruct) ++ destructMemberExprs :+ returnVoid))
     temputs.addFunction(function2)
     (function2.header)
   }
@@ -295,7 +295,8 @@ object DestructorTemplar {
             DestroyArraySequence2(
               ArgLookup2(0, arrayRefType),
               sequence,
-              ifunctionExpression))))
+              ifunctionExpression),
+            Return2(VoidLiteral2()))))
 
     temputs.declareFunctionReturnType(function2.header.toSignature, function2.header.returnType)
     temputs.addFunction(function2)
@@ -336,7 +337,8 @@ object DestructorTemplar {
             DestroyUnknownSizeArray2(
               ArgLookup2(0, arrayRefType2),
               array,
-              ifunctionExpression))))
+              ifunctionExpression),
+            Return2(VoidLiteral2()))))
 
       temputs.declareFunctionReturnType(function2.header.toSignature, function2.header.returnType)
       temputs.addFunction(function2)

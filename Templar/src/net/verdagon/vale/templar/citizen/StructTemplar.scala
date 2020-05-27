@@ -302,14 +302,15 @@ object StructTemplar {
         List(),
         Block2(
           List(
-            Construct2(
-              anonymousSubstructRef,
-              anonymousSubstructType,
-              List(
-                Construct2(
-                  functionStructRef,
-                  Coord(Share, functionStructRef),
-                  List()))))))
+            Return2(
+              Construct2(
+                anonymousSubstructRef,
+                anonymousSubstructType,
+                List(
+                  Construct2(
+                    functionStructRef,
+                    Coord(Share, functionStructRef),
+                    List())))))))
     temputs.declareFunctionSignature(constructor2.header.toSignature, None)
     temputs.declareFunctionReturnType(constructor2.header.toSignature, constructor2.header.returnType)
     temputs.addFunction(constructor2);

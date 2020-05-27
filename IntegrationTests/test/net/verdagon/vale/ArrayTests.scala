@@ -7,6 +7,7 @@ import net.verdagon.vale.templar.env.ReferenceLocalVariable2
 import net.verdagon.vale.templar.types._
 import net.verdagon.von.{VonBool, VonInt}
 import org.scalatest.{FunSuite, Matchers}
+import net.verdagon.vale.driver.Compilation
 
 class ArrayTests extends FunSuite with Matchers {
   test("Simple arraysequence and compiletime index lookup") {
@@ -54,7 +55,7 @@ class ArrayTests extends FunSuite with Matchers {
       """.stripMargin)
 
     val temputs = compile.getTemputs()
-    temputs.only({
+    temputs.lookupFunction("main").only({
       case ArraySequenceLookup2(_, _, _) => {
       }
     })
@@ -106,7 +107,8 @@ class ArrayTests extends FunSuite with Matchers {
       """.stripMargin)
 
     val temputs = compile.getTemputs()
-    temputs.only({
+    val main = temputs.lookupFunction("Array")
+    main.only({
       case ConstructArray2(UnknownSizeArrayT2(RawArrayT2(Coord(Share, Int2()), Immutable)), _, _) =>
     })
 

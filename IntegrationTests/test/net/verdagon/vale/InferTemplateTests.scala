@@ -5,6 +5,7 @@ import net.verdagon.vale.templar.templata.{CoordTemplata, Parameter2}
 import net.verdagon.vale.templar.types.{Borrow, Coord, Own, StructRef2}
 import net.verdagon.von.VonInt
 import org.scalatest.{FunSuite, Matchers}
+import net.verdagon.vale.driver.Compilation
 
 class InferTemplateTests extends FunSuite with Matchers {
   test("Test inferring a borrowed argument") {

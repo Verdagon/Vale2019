@@ -17,7 +17,7 @@ class VivemTests extends FunSuite with Matchers {
     val programH = ProgramH(List(), List(), List(), List(main))
     val result =
       Vivem.executeWithPrimitiveArgs(programH, Vector(), System.out, Vivem.emptyStdin, Vivem.nullStdout)
-    result shouldEqual Some(VonInt(7))
+    result shouldEqual VonInt(7)
   }
 
   test("Adding") {
@@ -54,6 +54,6 @@ class VivemTests extends FunSuite with Matchers {
     val programH = ProgramH(List(), List(), List(), List(main, addExtern))
     val result =
       Vivem.executeWithPrimitiveArgs(programH, Vector(), System.out, Vivem.emptyStdin, Vivem.nullStdout)
-    result shouldEqual Some(VonInt(159))
+    result shouldEqual VonInt(159)
   }
 }

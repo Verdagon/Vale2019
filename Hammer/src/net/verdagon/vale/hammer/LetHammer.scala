@@ -274,7 +274,7 @@ object LetHammer {
     val (sourceExprResultLine, sourceExprDeferreds) =
       translate(hinputs, hamuts, locals, sourceExpr2);
 
-    val structDef2 = hinputs.program2.lookupStruct(structRef2)
+    val structDef2 = hinputs.lookupStruct(structRef2)
 
     // Destructure2 will immediately destroy any addressible references inside it
     // (see Destructure2 comments).

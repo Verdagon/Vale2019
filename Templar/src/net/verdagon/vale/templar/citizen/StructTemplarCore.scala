@@ -486,7 +486,8 @@ object StructTemplarCore {
             localVariables,
             Block2(
               List(
-                FunctionCall2(lambdaFunctionPrototype, argExpressions))))
+                Return2(
+                  FunctionCall2(lambdaFunctionPrototype, argExpressions)))))
         temputs.addFunction(forwarderFunction)
       }
     })
@@ -545,11 +546,12 @@ object StructTemplarCore {
         Block2(
           List(
             Discard2(ArgLookup2(0, Coord(Share, structRef))),
-            FunctionCall2(
-              prototype,
-              forwarderHeader.params.tail.zipWithIndex.map({ case (param, index) =>
-                ArgLookup2(index + 1, param.tyype)
-              })))))
+            Return2(
+              FunctionCall2(
+                prototype,
+                forwarderHeader.params.tail.zipWithIndex.map({ case (param, index) =>
+                  ArgLookup2(index + 1, param.tyype)
+                }))))))
     temputs.addFunction(forwarderFunction)
 
     structRef
@@ -581,10 +583,11 @@ object StructTemplarCore {
         List(),
         Block2(
           List(
-            Construct2(
-              structDef.getRef,
-              Coord(if (structDef.mutability == Mutable) Own else Share, structDef.getRef),
-              constructorParams.zipWithIndex.map({ case (p, index) => ArgLookup2(index, p.tyype) })))))
+            Return2(
+              Construct2(
+                structDef.getRef,
+                Coord(if (structDef.mutability == Mutable) Own else Share, structDef.getRef),
+                constructorParams.zipWithIndex.map({ case (p, index) => ArgLookup2(index, p.tyype) }))))))
 
     // we cant make the destructor here because they might have a user defined one somewhere
     temputs.declareFunctionReturnType(constructor2.header.toSignature, constructor2.header.returnType)
