@@ -329,10 +329,28 @@ object VonHammer {
             VonMember(None, Some("localName"), VonStr(localName.toString()))))
       }
       case MemberStoreH(resultType, structExpr, memberIndex, sourceExpr, memberName) => {
-        vimpl()
+        VonObject(
+          "MemberStore",
+          None,
+          Vector(
+            VonMember(None, Some("resultType"), vonifyCoord(resultType)),
+            VonMember(None, Some("structExpr"), vonifyNode(structExpr)),
+            VonMember(None, Some("memberIndex"), VonInt(memberIndex)),
+            VonMember(None, Some("sourceExpr"), vonifyNode(sourceExpr)),
+            VonMember(None, Some("memberName"), VonStr(memberName.toString()))))
       }
       case MemberLoadH(structExpr, memberIndex, targetOwnership, expectedMemberType, expectedResultType, memberName) => {
-        vimpl()
+
+        VonObject(
+          "MemberLoad",
+          None,
+          Vector(
+            VonMember(None, Some("structExpr"), vonifyNode(structExpr)),
+            VonMember(None, Some("memberIndex"), VonInt(memberIndex)),
+            VonMember(None, Some("targetOwnership"), vonifyOwnership(targetOwnership)),
+            VonMember(None, Some("expectedMemberType"), vonifyCoord(expectedMemberType)),
+            VonMember(None, Some("expectedResultType"), vonifyCoord(expectedResultType)),
+            VonMember(None, Some("memberName"), VonStr(memberName.toString()))))
       }
       case KnownSizeArrayStoreH(arrayExpr, indexExpr, sourceExpr) => {
         vimpl()

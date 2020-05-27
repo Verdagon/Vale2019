@@ -2,7 +2,7 @@ package net.verdagon.vale.driver
 
 import net.verdagon.vale.astronomer.{Astronomer, ProgramA}
 import net.verdagon.vale.carpenter.Carpenter
-import net.verdagon.vale.hammer.Hammer
+import net.verdagon.vale.hammer.{Hammer, VonHammer}
 import net.verdagon.vale.hinputs.Hinputs
 import net.verdagon.vale.metal.ProgramH
 import net.verdagon.vale.parser.{Program0, VParser}
@@ -81,6 +81,7 @@ class Compilation(code: String, useCommonEnv: Boolean = true) {
       case Some(hamuts) => hamuts
       case None => {
         val hamuts = Hammer.translate(getHinputs())
+        VonHammer.vonifyProgram(hamuts)
         hamutsCache = Some(hamuts)
         hamuts
       }
