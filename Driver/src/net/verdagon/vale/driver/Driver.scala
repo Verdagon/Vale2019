@@ -1,6 +1,6 @@
 package net.verdagon.vale.driver
 
-import java.io.{OutputStream, PrintStream}
+import java.io.{BufferedWriter, File, FileWriter, OutputStream, PrintStream}
 import java.util.InputMismatchException
 
 import net.verdagon.vale.astronomer.{Astronomer, ProgramA}
@@ -71,17 +71,52 @@ object Driver {
     }
   }
 
+  val usage = """
+    Usage: mmlaln [--min-size num] [--max-size num] filename
+  """
+
   def main(args: Array[String]): Unit = {
     try {
-      vcheck(args.size >= 1, "Empty args!", InputException)
-      args(0) match {
+      case class Options(
+        inputFiles: List[String],
+        outputFile: Option[String],
+        mode: Option[String], // build v run etc
+      )
+
+      def parseOpts(opts: Options, list: List[String]) : Options = {
+        list match {
+          case Nil => opts
+          case "-o" :: value :: tail => {
+            vcheck(opts.outputFile.isEmpty, "Multiple output files specified!", InputException)
+            parseOpts(opts.copy(outputFile = Some(value)), tail)
+          }
+//          case "--min-size" :: value :: tail =>
+//            parseOpts(opts ++ Map('minsize -> value.toInt), tail)
+//          case string :: opt2 :: tail if isSwitch(opt2) =>
+//            parseOpts(opts ++ Map('infile -> string), list.tail)
+          case value :: _ if value.startsWith("-") => throw InputException("Unknown option " + value)
+          case value :: tail => {
+            if (opts.mode.isEmpty) {
+              parseOpts(opts.copy(mode = Some(value)), tail)
+            } else {
+              parseOpts(opts.copy(inputFiles = opts.inputFiles :+ value), tail)
+            }
+          }
+        }
+      }
+      val opts = parseOpts(Options(List(), None, None), args.toList)
+      vcheck(opts.mode.nonEmpty, "No mode!", InputException)
+      vcheck(opts.inputFiles.nonEmpty, "No input files!", InputException)
+      vcheck(opts.outputFile.nonEmpty, "No output file!", InputException)
+
+      opts.mode.get match {
         case "build" => {
-          vcheck(args.size >= 2, "Need name!", InputException)
-          val code = readCode(args(1))
+          val code = opts.inputFiles.map(readCode).mkString("\n\n\n")
           val program = build(code)
           val programV = VonHammer.vonifyProgram(program)
           val json = new VonPrinter(JsonSyntax, 120).print(programV)
-          println(json)
+          println("Wrote to file " + opts.outputFile.get)
+          writeFile(opts.outputFile.get, json)
         }
         case "run" => {
           vcheck(args.size >= 2, "Need name!", InputException)
@@ -115,7 +150,8 @@ object Driver {
           println()
           val programV = VonHammer.vonifyProgram(program)
           val json = new VonPrinter(JsonSyntax, 120).print(programV)
-          println(json)
+          println("Wrote to file " + opts.outputFile.get)
+          writeFile(opts.outputFile.get, json)
         }
       }
     } catch {
@@ -124,5 +160,12 @@ object Driver {
         return
       }
     }
+  }
+
+  def writeFile(filename: String, s: String): Unit = {
+    val file = new File(filename)
+    val bw = new BufferedWriter(new FileWriter(file))
+    bw.write(s)
+    bw.close()
   }
 }
