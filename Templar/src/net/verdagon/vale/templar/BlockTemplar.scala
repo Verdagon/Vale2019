@@ -26,34 +26,8 @@ object BlockTemplar {
 
     fate.addScoutedLocals(block1.locals)
 
-    val (unresultifiedUndestructedExpressions, returnsFromExprs) =
-      evaluateBlockStatements(temputs, fate, block1.exprs);
-
-    val expressionsWithResult =
-      if (unresultifiedUndestructedExpressions.exists(_.referend == Never2())) {
-        val expressions =
-          BlockTemplar.unletUnmovedVariablesIntroducedSince(
-            temputs, startingFate, fate, None, unresultifiedUndestructedExpressions)
-        if (expressions.last.referend == Never2()) {
-          expressions
-        } else {
-          expressions :+ NeverLiteral2()
-        }
-      } else if (unresultifiedUndestructedExpressions.last.referend == Void2()) {
-        val expressions =
-          BlockTemplar.unletUnmovedVariablesIntroducedSince(
-            temputs, startingFate, fate, None, unresultifiedUndestructedExpressions)
-        expressions :+ VoidLiteral2()
-      } else {
-        val (undestructedExpressions, resultLocalVariable) =
-          BlockTemplar.resultifyExpressions(fate, unresultifiedUndestructedExpressions)
-        val expressions =
-          BlockTemplar.unletUnmovedVariablesIntroducedSince(
-            temputs, startingFate, fate, Some(resultLocalVariable), undestructedExpressions)
-        val exprsWithResult =
-          BlockTemplar.addUnlet(fate, expressions, resultLocalVariable)
-        exprsWithResult
-      }
+    val (expressionsWithResult, returnsFromExprs) =
+      evaluateBlockStatements(temputs, startingFate, fate, block1.exprs)
 
     val block2 = Block2(expressionsWithResult)
 
@@ -64,23 +38,49 @@ object BlockTemplar {
     (block2, returnsFromExprs)
   }
 
-  def addUnlet(
+  def evaluateBlockStatements(
+    temputs: TemputsBox,
+    startingFate: FunctionEnvironment,
     fate: FunctionEnvironmentBox,
-    exprs: List[ReferenceExpression2],
-    resultLocalVariable: ILocalVariable2):
-  (List[ReferenceExpression2]) = {
-    val getResultExpr =
-      ExpressionTemplar.unletLocal(fate, resultLocalVariable)
-    (exprs :+ getResultExpr)
+    exprs: List[IExpressionAE]):
+  (List[ReferenceExpression2], Set[Coord]) = {
+    val (unneveredUnresultifiedUndestructedExpressions, returnsFromExprs) =
+      evaluateBlockStatementsInner(temputs, fate, exprs);
+
+    val unreversedVariablesToDestruct = getUnmovedVariablesIntroducedSince(startingFate, fate)
+
+    val unresultifiedUndestructedExpressions =
+      if (unneveredUnresultifiedUndestructedExpressions.exists(_.referend == Never2()) &&
+          unneveredUnresultifiedUndestructedExpressions.last.referend != Never2()) {
+        unneveredUnresultifiedUndestructedExpressions :+ UnreachableMootE2(VoidLiteral2())
+      } else {
+        unneveredUnresultifiedUndestructedExpressions
+      }
+
+    val newExpressionsList =
+      if (unreversedVariablesToDestruct.isEmpty) {
+        unresultifiedUndestructedExpressions
+      } else if (unresultifiedUndestructedExpressions.last.referend == Never2()) {
+        val moots = mootAll(temputs, fate, unreversedVariablesToDestruct)
+        unresultifiedUndestructedExpressions ++ moots
+      } else {
+        val (resultifiedExpressions, resultLocalVariable) =
+          BlockTemplar.resultifyExpressions(fate, unresultifiedUndestructedExpressions)
+
+        val reversedVariablesToDestruct = unreversedVariablesToDestruct.reverse
+        // Dealiasing should be done by hammer. But destructors are done here
+        val destroyExpressions = unletAll(temputs, fate, reversedVariablesToDestruct)
+
+        (resultifiedExpressions ++ destroyExpressions) :+ ExpressionTemplar.unletLocal(fate, resultLocalVariable)
+      }
+
+    (newExpressionsList, returnsFromExprs)
   }
 
-  def unletUnmovedVariablesIntroducedSince(
-    temputs: TemputsBox,
+  def getUnmovedVariablesIntroducedSince(
     sinceFate: FunctionEnvironment,
-    currentFate: FunctionEnvironmentBox,
-    maybeExcludeVar: Option[ILocalVariable2],
-    exprs: List[ReferenceExpression2]):
-  List[ReferenceExpression2] = {
+    currentFate: FunctionEnvironmentBox):
+  List[ILocalVariable2] = {
     val localsAsOfThen =
       sinceFate.variables.collect({
         case x @ ReferenceLocalVariable2(_, _, _) => x
@@ -99,17 +99,7 @@ object BlockTemplar {
     val unmovedLocalsDeclaredSinceThen =
       localsDeclaredSinceThen.filter(x => !currentFate.moveds.contains(x.id))
 
-    val unmovedLocalsDeclaredSinceThenExceptExcluded =
-      unmovedLocalsDeclaredSinceThen.filter(x => Some(x) != maybeExcludeVar)
-
-    val unreversedVariablesToDestruct = unmovedLocalsDeclaredSinceThenExceptExcluded
-
-    val reversedVariablesToDestruct = unreversedVariablesToDestruct.reverse
-    // Dealiasing should be done by hammer. But destructors are done here
-    val destructExprs =
-      unletAll(temputs, currentFate, reversedVariablesToDestruct)
-
-    exprs ++ destructExprs
+    unmovedLocalsDeclaredSinceThen
   }
 
   // Makes the last expression stored in a variable.
@@ -120,9 +110,6 @@ object BlockTemplar {
   (List[ReferenceExpression2], ReferenceLocalVariable2) = {
     vassert(exprs.nonEmpty)
     val lastExpr = exprs.last
-    vassert(lastExpr.referend != Never2())
-    vassert(lastExpr.referend != Void2())
-
     val resultVarNum = fate.nextVarCounter()
     val resultVarId = fate.fullName.addStep(TemplarBlockResultVarName2(resultVarNum))
     val resultVariable = ReferenceLocalVariable2(resultVarId, Final, lastExpr.resultRegister.reference)
@@ -131,7 +118,7 @@ object BlockTemplar {
     (exprs.init :+ resultLet, resultVariable)
   }
 
-  def evaluateBlockStatements(
+  private def evaluateBlockStatementsInner(
     temputs: TemputsBox,
     fate: FunctionEnvironmentBox,
     expr1: List[IExpressionAE]):
@@ -157,7 +144,7 @@ object BlockTemplar {
           }
 
         val (restExprs2, returnsFromRest) =
-          evaluateBlockStatements(temputs, fate, rest1)
+          evaluateBlockStatementsInner(temputs, fate, rest1)
 
         (destructedFirstExpr2 +: restExprs2, returnsFromFirst ++ returnsFromRest)
       }
@@ -178,6 +165,21 @@ object BlockTemplar {
         val tailExprs2 =
           unletAll(temputs, fate, tail)
         (maybeHeadExpr2 :: tailExprs2)
+      }
+    }
+  }
+
+  def mootAll(
+    temputs: TemputsBox,
+    fate: FunctionEnvironmentBox,
+    variables: List[ILocalVariable2]):
+  (List[ReferenceExpression2]) = {
+    variables match {
+      case Nil => (List())
+      case head :: tail => {
+        val unlet = UnreachableMootE2(ExpressionTemplar.unletLocal(fate, head))
+        val tailExprs2 = mootAll(temputs, fate, tail)
+        (unlet :: tailExprs2)
       }
     }
   }

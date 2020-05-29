@@ -49,6 +49,14 @@ class VonPrinter(
     }
   }
 
+  def repeatStr(str: String, n: Int): String = {
+    var result = "";
+    (0 until n).foreach(i => {
+      result = result + str
+    })
+    result
+  }
+
   def printObjectMultiline(obbject: VonObject, indentation: Int): String = {
     val VonObject(tyype, None, unfilteredMembers) = obbject
 
@@ -60,7 +68,7 @@ class VonPrinter(
           case None => printMemberMultiline(member, indentation + 1)
           case Some(s) => s
         }
-      "  ".repeat(indentation + 1) + memberStr + (if (index == members.size - 1) "" else ",")
+      repeatStr("  ", indentation + 1) + memberStr + (if (index == members.size - 1) "" else ",")
     }).mkString("\n") + printObjectEnd(members.nonEmpty)
   }
 
@@ -106,7 +114,7 @@ class VonPrinter(
           case None => printMultiline(member, indentation + 1)
           case Some(s) => s
         }
-      "  ".repeat(indentation + 1) + memberStr + (if (index == members.size - 1) "" else ",")
+      repeatStr("  ", indentation + 1) + memberStr + (if (index == members.size - 1) "" else ",")
     }).mkString("\n") + printArrayEnd()
   }
 

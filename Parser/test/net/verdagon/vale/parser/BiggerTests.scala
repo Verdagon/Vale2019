@@ -98,7 +98,12 @@ class BiggerTests extends FunSuite with Matchers with Collector {
 
   test("Simple struct") {
     compile(VParser.struct, "struct Moo { x &Int; }") shouldEqual
-        StructP("Moo",MutableP,None,List(),List(StructMemberP("x",FinalP,BorrowPT(NameOrRunePT("Int")))))
+        StructP("Moo",false,MutableP,None,List(),List(StructMemberP("x",FinalP,BorrowPT(NameOrRunePT("Int")))))
+  }
+
+  test("Export struct") {
+    compile(VParser.struct, "struct Moo export { x &Int; }") shouldEqual
+      StructP("Moo",true,MutableP,None,List(),List(StructMemberP("x",FinalP,BorrowPT(NameOrRunePT("Int")))))
   }
 
   test("Test block's trailing void presence") {

@@ -67,9 +67,16 @@ object TypeTemplar {
       return sourceExpr
     }
 
-    if (sourceType == Never2()) {
-      return (TemplarReinterpret2(sourceExpr, targetPointerType))
+    if (sourceExpr.resultRegister.reference.referend == Never2()) {
+      return sourceExpr
     }
+
+    vcurious(targetPointerType.referend != Never2())
+
+    // We make the hammer aware of nevers.
+//    if (sourceType == Never2()) {
+//      return (TemplarReinterpret2(sourceExpr, targetPointerType))
+//    }
 
     val sourceExprDecayedOwnershipped =
       (sourceOwnership, targetOwnership) match {

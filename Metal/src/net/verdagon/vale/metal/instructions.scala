@@ -194,7 +194,7 @@ case class InterfaceToInterfaceUpcastH(
   def resultType = ReferenceH(sourceRegister.resultType.ownership, targetInterfaceRef)
 }
 
-case class UnreachableH() extends ExpressionH[NeverH] {
+case class UnreachableMootH(innerExpr: ExpressionH[ReferendH]) extends ExpressionH[NeverH] {
   override def resultType: ReferenceH[NeverH] = ReferenceH(ShareH, NeverH())
 }
 
@@ -241,36 +241,36 @@ case class LocalLoadH(
 // Takes a reference from the given "source" register, and swaps it into the given
 // struct's member. The member's old reference is put into a new register.
 case class MemberStoreH(
-                         resultType: ReferenceH[ReferendH],
-                         // Register containing a reference to the struct whose member we will swap.
-                         structRegister: ExpressionH[StructRefH],
-                         // Which member to swap out, starting at 0.
-                         memberIndex: Int,
-                         // Register containing the new value for the struct's member.
-                         // As with any read from a register, this will invalidate the register.
-                         sourceRegister: ExpressionH[ReferendH],
-                         // Name of the member, for debug purposes.
-                         memberName: FullNameH
+  resultType: ReferenceH[ReferendH],
+  // Register containing a reference to the struct whose member we will swap.
+  structRegister: ExpressionH[StructRefH],
+  // Which member to swap out, starting at 0.
+  memberIndex: Int,
+  // Register containing the new value for the struct's member.
+  // As with any read from a register, this will invalidate the register.
+  sourceRegister: ExpressionH[ReferendH],
+  // Name of the member, for debug purposes.
+  memberName: FullNameH
 ) extends ExpressionH[ReferendH]
 
 // Takes a reference from the given "struct" register, and copies it into a new
 // register. This can never move a reference, only alias it.
 case class MemberLoadH(
-                        // Register containing a reference to the struct whose member we will read.
-                        // As with any read from a register, this will invalidate the register.
-                        structRegister: ExpressionH[StructRefH],
-                        // Which member to read from, starting at 0.
-                        memberIndex: Int,
-                        // The ownership to load as. For example, we might load a constraint reference from a
-                        // owning Car reference member.
-                        targetOwnership: OwnershipH,
-                        // The type we expect the member to be. This can easily be looked up, but is provided
-                        // here to be convenient for LLVM.
-                        expectedMemberType: ReferenceH[ReferendH],
-                        // The type of the resulting reference.
-                        resultType: ReferenceH[ReferendH],
-                        // Member's name, for debug purposes.
-                        memberName: FullNameH
+  // Register containing a reference to the struct whose member we will read.
+  // As with any read from a register, this will invalidate the register.
+  structRegister: ExpressionH[StructRefH],
+  // Which member to read from, starting at 0.
+  memberIndex: Int,
+  // The ownership to load as. For example, we might load a constraint reference from a
+  // owning Car reference member.
+  targetOwnership: OwnershipH,
+  // The type we expect the member to be. This can easily be looked up, but is provided
+  // here to be convenient for LLVM.
+  expectedMemberType: ReferenceH[ReferendH],
+  // The type of the resulting reference.
+  resultType: ReferenceH[ReferendH],
+  // Member's name, for debug purposes.
+  memberName: FullNameH
 ) extends ExpressionH[ReferendH] {
   vassert(expectedMemberType.kind == resultType.kind)
   vassert(resultType.ownership == targetOwnership)
@@ -391,21 +391,21 @@ case class ExternCallH(
 
 // Calls a function on an interface.
 case class InterfaceCallH(
-                           // Registers containing the arguments to pass to the function.
-                           // As with any read from a register, this will invalidate the registers.
-                           argsRegisters: List[ExpressionH[ReferendH]],
-                           // Which parameter has the interface whose table we'll read to get the function.
-                           virtualParamIndex: Int,
-                           // The type of the interface.
-                           // TODO: Take this out, it's redundant, can get it from argsRegisters[virtualParamIndex]
-                           interfaceRefH: InterfaceRefH,
-                           // The index in the vtable for the function.
-                           indexInEdge: Int,
-                           // The function we expect to be calling. Note that this is the prototype for the abstract
-                           // function, not the prototype for the function that will eventually be called. The
-                           // difference is that this prototype will have an interface at the virtualParamIndex'th
-                           // parameter, and the function that is eventually called will have a struct there.
-                           functionType: PrototypeH
+  // Registers containing the arguments to pass to the function.
+  // As with any read from a register, this will invalidate the registers.
+  argsRegisters: List[ExpressionH[ReferendH]],
+  // Which parameter has the interface whose table we'll read to get the function.
+  virtualParamIndex: Int,
+  // The type of the interface.
+  // TODO: Take this out, it's redundant, can get it from argsRegisters[virtualParamIndex]
+  interfaceRefH: InterfaceRefH,
+  // The index in the vtable for the function.
+  indexInEdge: Int,
+  // The function we expect to be calling. Note that this is the prototype for the abstract
+  // function, not the prototype for the function that will eventually be called. The
+  // difference is that this prototype will have an interface at the virtualParamIndex'th
+  // parameter, and the function that is eventually called will have a struct there.
+  functionType: PrototypeH
 ) extends ExpressionH[ReferendH] {
   override def resultType: ReferenceH[ReferendH] = functionType.returnType
   vassert(indexInEdge >= 0)
@@ -415,15 +415,17 @@ case class InterfaceCallH(
 // call thenBlock or elseBlock. The result of the thenBlock or elseBlock will be put into
 // registerId.
 case class IfH(
-                // The block for the condition. If this results in a true, we'll run thenBlock, otherwise
-                // we'll run elseBlock.
-                conditionBlock: ExpressionH[BoolH],
-                // The block to run if conditionBlock results in a true. The result of this block will be
-                // put into registerId.
-                thenBlock: ExpressionH[ReferendH],
-                // The block to run if conditionBlock results in a false. The result of this block will be
-                // put into registerId.
-                elseBlock: ExpressionH[ReferendH]
+  // The block for the condition. If this results in a true, we'll run thenBlock, otherwise
+  // we'll run elseBlock.
+  conditionBlock: ExpressionH[BoolH],
+  // The block to run if conditionBlock results in a true. The result of this block will be
+  // put into registerId.
+  thenBlock: ExpressionH[ReferendH],
+  // The block to run if conditionBlock results in a false. The result of this block will be
+  // put into registerId.
+  elseBlock: ExpressionH[ReferendH],
+
+  commonSupertype: ReferenceH[ReferendH],
 ) extends ExpressionH[ReferendH] {
   (thenBlock.resultType.kind, elseBlock.resultType.kind) match {
     case (NeverH(), _) =>
@@ -431,7 +433,7 @@ case class IfH(
     case (a, b) if a == b =>
     case _ => vwat()
   }
-  override def resultType: ReferenceH[ReferendH] = thenBlock.resultType
+  override def resultType: ReferenceH[ReferendH] = commonSupertype
 }
 
 // A while loop. Continuously runs bodyBlock until it returns false.
@@ -473,7 +475,6 @@ case class ReturnH(
     case ReinterpretH(BlockH(exprs), _) => {
       exprs.last match {
         case ReturnH(_) => vwat()
-        case UnreachableH() => vwat()
         case _ =>
       }
     }
@@ -547,11 +548,11 @@ case class DestroyUnknownSizeArrayH(
 
 // Creates a new struct instance.
 case class NewStructH(
-                       // Registers containing the values we'll use as members of the new struct.
-                       // As with any read from a register, this will invalidate the register.
-                       sourceRegisters: List[ExpressionH[ReferendH]],
-                       // The type of struct we'll create.
-                       resultType: ReferenceH[StructRefH]
+  // Registers containing the values we'll use as members of the new struct.
+  // As with any read from a register, this will invalidate the register.
+  sourceRegisters: List[ExpressionH[ReferendH]],
+  // The type of struct we'll create.
+  resultType: ReferenceH[StructRefH]
 ) extends ExpressionH[StructRefH]
 
 // Gets the length of an unknown-sized array.

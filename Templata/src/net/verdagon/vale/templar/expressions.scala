@@ -204,22 +204,10 @@ case class Return2(
 ) extends ReferenceExpression2 {
   override def resultRegister = ReferenceRegister2(Coord(Share, Never2()))
 
-  sourceExpr match {
-    case Return2(_) => vwat()
-    case TemplarReinterpret2(Block2(exprs), _) => {
-      exprs.last match {
-        case Return2(_) => vwat()
-        case NeverLiteral2() => vwat()
-        case _ =>
-      }
+  def getFinalExpr(expression2: Expression2): Unit = {
+    expression2 match {
+      case Block2(exprs) => getFinalExpr(exprs.last)
     }
-    case Block2(exprs) => {
-      exprs.last match {
-        case Return2(_) => vwat()
-        case _ =>
-      }
-    }
-    case _ =>
   }
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
@@ -293,6 +281,21 @@ case class TupleE2(
   }
 }
 
+// Discards a reference, whether it be owned or borrow or whatever.
+// This is used after panics or other never-returning things, to signal that a certain
+// variable should be considered gone. See AUMAP.
+// This can also be used if theres anything after a panic in a block, like
+//   fn main() {
+//     panic();
+//     println("hi");
+//   }
+case class UnreachableMootE2(innerExpr: ReferenceExpression2) extends ReferenceExpression2 {
+  override def resultRegister = ReferenceRegister2(Coord(Share, Never2()))
+  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
+    List(this).collect(func) ++ innerExpr.all(func)
+  }
+}
+
 case class ArraySequenceE2(
     elements: List[ReferenceExpression2],
     resultReference: Coord,
@@ -312,14 +315,6 @@ case class ArraySize2(array: ReferenceExpression2) extends ReferenceExpression2 
 
 case class VoidLiteral2() extends ReferenceExpression2 {
   override def resultRegister = ReferenceRegister2(Coord(Share, Void2()))
-
-  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
-    List(this).collect(func)
-  }
-}
-
-case class NeverLiteral2() extends ReferenceExpression2 {
-  override def resultRegister = ReferenceRegister2(Coord(Share, Never2()))
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func)

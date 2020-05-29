@@ -68,6 +68,7 @@ case class CodeLocationS(
 
 case class StructS(
     name: TopLevelCitizenDeclarationNameS,
+    export: Boolean,
     mutabilityRune: IRuneS,
     // This is needed for recursive structures like
     //   struct ListNode<T> imm rules(T Ref) {

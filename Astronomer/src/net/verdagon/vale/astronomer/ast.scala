@@ -29,7 +29,7 @@ case class ProgramA(
     val matches = structs.find(_.name == name)
     vassert(matches.size == 1)
     matches.head match {
-      case i @ StructA(_, _, _, _, _, _, _, _, _, _) => i
+      case i @ StructA(_, _, _, _, _, _, _, _, _, _, _) => i
     }
   }
 }
@@ -41,6 +41,7 @@ trait TypeDefinitionA {
 
 case class StructA(
     name: TopLevelCitizenDeclarationNameA,
+    export: Boolean,
     mutabilityRune: IRuneA,
 
     // This is needed for recursive structures like

@@ -46,6 +46,7 @@ case class ProgramH(
 
 case class StructDefinitionH(
     fullName: FullNameH,
+    export: Boolean,
     mutability: Mutability,
     edges: List[EdgeH],
     members: List[StructMemberH]) {
@@ -104,7 +105,7 @@ case class FunctionH(
   isExtern: Boolean,
   // TODO: Get rid of this, since it's only for testing. Perhaps use an external set?
   isUserFunction: Boolean,
-  block: BlockH) {
+  body: ExpressionH[ReferendH]) {
   def fullName = prototype.fullName
 }
 

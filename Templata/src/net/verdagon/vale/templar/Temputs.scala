@@ -830,10 +830,7 @@ case class Function2(
   header: FunctionHeader2,
   // Used for testing
   variables: List[ILocalVariable2],
-  body: Block2) extends Queriable2 {
-
-  // Should end in a return (or panic or something)
-  vassert(body.exprs.last.referend == Never2())
+  body: ReferenceExpression2) extends Queriable2 {
 
   def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
     List(this).collect(func) ++ header.all(func) ++ variables.flatMap(_.all(func)) ++ body.all(func)

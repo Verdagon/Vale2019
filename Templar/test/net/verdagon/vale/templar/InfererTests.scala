@@ -159,6 +159,7 @@ class InfererTests extends FunSuite with Matchers {
           StructEnvEntry(
             StructA(
               TopLevelCitizenDeclarationNameA("MutTStruct", CodeLocationS(0, 0)),
+              false,
               CodeRuneA("M"),
               Some(MutableP),
               TemplateTemplataType(List(CoordTemplataType), KindTemplataType),
@@ -185,6 +186,7 @@ class InfererTests extends FunSuite with Matchers {
       StructEnvEntry(
         StructA(
           TopLevelCitizenDeclarationNameA("MutStruct", CodeLocationS(0, 0)),
+          false,
           CodeRuneA("M"),
           Some(MutableP),
           KindTemplataType,

@@ -6,6 +6,8 @@ import net.verdagon.vale.vivem.{Heap, IntV, StructInstanceV}
 import net.verdagon.von.{VonBool, VonFloat, VonInt}
 import org.scalatest.{FunSuite, Matchers}
 import net.verdagon.vale.driver.Compilation
+import net.verdagon.vale.templar.templata.Signature2
+import net.verdagon.vale.templar.types.{Coord, Int2, Share, Str2}
 
 class IntegrationTestsA extends FunSuite with Matchers {
 
@@ -407,5 +409,27 @@ class IntegrationTestsA extends FunSuite with Matchers {
         |""".stripMargin)
 
     compile.evalForReferend(Vector()) shouldEqual VonBool(true)
+  }
+
+
+  test("Test shaking") {
+    // Make sure that functions that cant be called by main will not be included.
+
+    val compile = new Compilation(
+      """
+        |fn bork(x Str) { print(x); }
+        |fn helperFunc(x Int) { print(x); }
+        |fn helperFunc(x Str) { print(x); }
+        |fn main() {
+        |  helperFunc(4);
+        |}
+        |""".stripMargin)
+    val hinputs = compile.getHinputs()
+
+    vassertSome(hinputs.lookupFunction(Signature2(FullName2(List(), FunctionName2("helperFunc", List(), List(Coord(Share, Int2())))))))
+
+    vassert(None == hinputs.lookupFunction(Signature2(FullName2(List(), FunctionName2("bork", List(), List(Coord(Share, Str2())))))))
+
+    vassert(None == hinputs.lookupFunction(Signature2(FullName2(List(), FunctionName2("helperFunc", List(), List(Coord(Share, Str2())))))))
   }
 }

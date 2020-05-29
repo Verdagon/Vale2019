@@ -18,6 +18,7 @@ case class ImplP(
 
 case class StructP(
   name: String,
+  export: Boolean,
   mutability: MutabilityP,
   identifyingRunes: Option[List[String]],
   templateRules: List[IRulexPR],

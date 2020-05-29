@@ -29,11 +29,11 @@ object BodyTemplar {
     function1.maybeRetCoordRune match {
       case None => {
         val banner = FunctionBanner2(Some(function1), functionFullName, params2)
-        val (bodyWithoutReturn2, returnsFromRets) =
+        val (body2, returnsFromRets) =
           evaluateFunctionBody(
             funcOuterEnv, temputs, bfunction1.origin.params, params2, bfunction1.body, isDestructor);
 
-        val returns = returnsFromRets + bodyWithoutReturn2.resultRegister.reference
+        val returns = returnsFromRets + body2.resultRegister.reference
 
         val returnsWithoutNever =
           if (returns.size > 1 && returns.contains(Coord(Share, Never2()))) {
@@ -50,13 +50,7 @@ object BodyTemplar {
         temputs.declareFunctionReturnType(banner.toSignature, returnType2)
         val header = FunctionHeader2(functionFullName, false, function1.isUserFunction, params2, returnType2, Some(function1));
 
-        val bodyWithReturn2 =
-          if (bodyWithoutReturn2.exprs.last.referend == Never2()) {
-            bodyWithoutReturn2
-          } else {
-            Block2(bodyWithoutReturn2.exprs.init :+ Return2(bodyWithoutReturn2.exprs.last))
-          }
-        (header, bodyWithReturn2)
+        (header, body2)
       }
       case Some(expectedRetCoordRune) => {
         val CoordTemplata(expectedRetCoord) =
@@ -79,7 +73,7 @@ object BodyTemplar {
             bfunction1.body,
             isDestructor);
 
-        val convertedBody2 =
+        val body2 =
           TemplataTemplar.isTypeTriviallyConvertible(temputs, unconvertedBody2.resultRegister.reference, expectedRetCoord) match {
             case (false) => {
               vfail("Function " + function1.name + "(:" + params2.mkString(", :") + ")\nreturn type:\n" + expectedRetCoord + "\ndoesn't match body's result:\n" + unconvertedBody2.resultRegister.reference)
@@ -95,7 +89,7 @@ object BodyTemplar {
             }
           }
 
-        val returns = returnsFromRets + convertedBody2.resultRegister.reference
+        val returns = returnsFromRets + body2.resultRegister.reference
 
         val returnsWithoutNever =
           if (returns.size > 1 && returns.contains(Coord(Share, Never2()))) {
@@ -112,14 +106,7 @@ object BodyTemplar {
           vfail("In function " + header + ":\nExpected return type " + expectedRetCoord + " but was " + returnsWithoutNever)
         }
 
-        val bodyWithReturn2 =
-          if (convertedBody2.exprs.last.referend == Never2()) {
-            convertedBody2
-          } else {
-            Block2(convertedBody2.exprs.init :+ Return2(convertedBody2.exprs.last))
-          }
-
-        (header, bodyWithReturn2)
+        (header, body2)
       }
     }
   }
@@ -139,42 +126,10 @@ object BodyTemplar {
     val letExprs2 =
       evaluateLets(funcOuterEnv, temputs, params1, params2);
 
-    val (postLetUnresultifiedUndestructedExpressions, returnsFromInside) =
-      BlockTemplar.evaluateBlockStatements(temputs, funcOuterEnv, body1.block.exprs);
+    val (statementsFromBlock, returnsFromInside) =
+      BlockTemplar.evaluateBlockStatements(temputs, startingFuncOuterEnv, funcOuterEnv, body1.block.exprs);
 
-    val unresultifiedUndestructedExpressions = letExprs2 ++ postLetUnresultifiedUndestructedExpressions
-
-    // If we trip this, we probably just want to make it a List(VoidLiteral2()) and proceed.
-    vcurious(unresultifiedUndestructedExpressions.nonEmpty)
-
-    val expressionsWithResult =
-      if (unresultifiedUndestructedExpressions.exists(_.referend == Never2())) {
-        val expressions =
-          BlockTemplar.unletUnmovedVariablesIntroducedSince(
-            temputs, startingFuncOuterEnv, funcOuterEnv, None, unresultifiedUndestructedExpressions)
-        if (expressions.last.referend == Never2()) {
-          expressions
-        } else {
-          expressions :+ NeverLiteral2()
-        }
-      } else if (unresultifiedUndestructedExpressions.last.referend == Void2()) {
-        val expressions =
-          BlockTemplar.unletUnmovedVariablesIntroducedSince(
-            temputs, startingFuncOuterEnv, funcOuterEnv, None, unresultifiedUndestructedExpressions)
-        expressions :+ VoidLiteral2()
-      } else {
-        val (undestructedExpressions, resultLocalVariable) =
-          BlockTemplar.resultifyExpressions(funcOuterEnv, unresultifiedUndestructedExpressions)
-        val expressions =
-          BlockTemplar.unletUnmovedVariablesIntroducedSince(
-            temputs, startingFuncOuterEnv, funcOuterEnv, Some(resultLocalVariable), undestructedExpressions)
-        val exprsWithResult =
-          BlockTemplar.addUnlet(
-            funcOuterEnv,
-            expressions,
-            resultLocalVariable)
-        exprsWithResult
-      }
+    val letsAndExpressionsWithResult = letExprs2 ++ statementsFromBlock
 
     if (isDestructor) {
       // If it's a destructor, make sure that we've actually destroyed/moved/unlet'd
@@ -188,7 +143,7 @@ object BodyTemplar {
       }
     }
 
-    val block2 = Block2(expressionsWithResult)
+    val block2 = Block2(letsAndExpressionsWithResult)
 
     (block2, returnsFromInside)
   }

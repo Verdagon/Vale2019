@@ -96,6 +96,7 @@ object StructHammer {
         val structDefH =
           StructDefinitionH(
             fullNameH,
+            structDef2.`export`,
             Conversions.evaluateMutability(structDef2.mutability),
             edgesH,
             membersH);
@@ -125,6 +126,7 @@ object StructHammer {
         val structDefH =
           StructDefinitionH(
             boxFullNameH,
+            false,
             m.Mutable,
             List(),
             List(memberH));

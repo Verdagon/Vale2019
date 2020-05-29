@@ -99,12 +99,13 @@ object VParser
   def struct: Parser[StructP] = positioned {
     ("struct" ~> optWhite ~> exprIdentifier <~ optWhite) ~
         opt(identifyingRunesPR <~ optWhite) ~
+        (opt("export") <~ optWhite) ~
         (opt("imm") <~ optWhite) ~
         (opt(templateRulesPR) <~ optWhite <~ "{" <~ optWhite) ~
         repsep(structMember, optWhite) <~ (optWhite <~ "}") ^^ {
-      case name ~ identifyingRunes ~ imm ~ maybeTemplateRules ~ members => {
+      case name ~ identifyingRunes ~ export ~ imm ~ maybeTemplateRules ~ members => {
         val mutability = if (imm == Some("imm")) ImmutableP else MutableP
-        StructP(name, mutability, identifyingRunes, maybeTemplateRules.getOrElse(List()), members)
+        StructP(name, export.nonEmpty, mutability, identifyingRunes, maybeTemplateRules.getOrElse(List()), members)
       }
     }
   }

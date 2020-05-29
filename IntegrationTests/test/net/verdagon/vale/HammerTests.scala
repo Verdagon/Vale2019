@@ -60,7 +60,7 @@ class HammerTests extends FunSuite with Matchers {
       """
         |interface Blark imm { }
         |abstract fn wot(virtual b *Blark) *Int;
-        |struct MyStruct imm {}
+        |struct MyStruct export imm {}
         |impl MyStruct for Blark;
         |fn wot(b *MyStruct impl Blark) *Int { 9 }
       """.stripMargin)

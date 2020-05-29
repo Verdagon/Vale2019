@@ -27,6 +27,7 @@ class StructTests extends FunSuite with Matchers with Collector {
           TopLevelStruct(
             StructP(
               "ListNode",
+              false,
               MutableP,
               Some(List("E")),
               List(),
@@ -48,6 +49,7 @@ class StructTests extends FunSuite with Matchers with Collector {
         TopLevelStruct(
           StructP(
             "Vecf",
+            false,
             MutableP,
             Some(List("N")),
             List(TypedPR(Some("N"),IntTypePR)),
@@ -67,6 +69,7 @@ class StructTests extends FunSuite with Matchers with Collector {
       TopLevelStruct(
         StructP(
           "Vecf",
+          false,
           MutableP,
           Some(List("N")),
           List(TypedPR(Some("N"),IntTypePR)),

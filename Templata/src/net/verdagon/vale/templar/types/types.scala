@@ -264,10 +264,11 @@ trait CitizenDefinition2 {
 
 // We include templateArgTypes to aid in looking this up... same reason we have name
 case class StructDefinition2(
-                              fullName: FullName2[ICitizenName2],
-                              mutability: Mutability,
-                              members: List[StructMember2],
-                              isClosure: Boolean
+  fullName: FullName2[ICitizenName2],
+  export: Boolean,
+  mutability: Mutability,
+  members: List[StructMember2],
+  isClosure: Boolean
 ) extends CitizenDefinition2 with Queriable2 {
 
   // debt: move this to somewhere else. let's allow packs to have packs, just nothing else.

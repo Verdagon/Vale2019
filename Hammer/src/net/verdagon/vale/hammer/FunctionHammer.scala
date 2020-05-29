@@ -40,8 +40,9 @@ object FunctionHammer {
               Map[FullName2[IVarName2], VariableIdH](),
               Set[VariableIdH](),
               Map[VariableIdH,Local]()));
-        val bodyH =
-          BlockHammer.translateBlock(hinputs, hamuts, locals.snapshot, body)
+        val (bodyH, List()) =
+          ExpressionHammer.translate(hinputs, hamuts, locals, body)
+        vassert(locals.unstackifiedVars.size == locals.locals.size)
         val resultCoord = bodyH.resultType
         if (resultCoord.kind != NeverH() && resultCoord != prototypeH.returnType) {
           vfail(

@@ -67,7 +67,7 @@ object ExpressionVivem {
           case NodeContinue(r) => vfail()
         }
       }
-      case UnreachableH() => {
+      case UnreachableMootH(_) => {
         vfail()
       }
       case ConstantI64H(value) => {

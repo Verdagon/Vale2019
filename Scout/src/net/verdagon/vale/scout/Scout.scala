@@ -131,7 +131,7 @@ object Scout {
   }
 
   private def scoutStruct(file: String, head: StructP): StructS = {
-    val StructP(structHumanName, mutability, maybeIdentifyingRunes, rulesP, members) = head
+    val StructP(structHumanName, export, mutability, maybeIdentifyingRunes, rulesP, members) = head
     val codeLocation = CodeLocationS(head.pos.line, head.pos.column)
     val structName = TopLevelCitizenDeclarationNameS(structHumanName, codeLocation)
 
@@ -188,6 +188,7 @@ object Scout {
 
     StructS(
       structName,
+      export,
       mutabilityRune,
       Some(mutability),
       knowableValueRunes,

@@ -236,6 +236,7 @@ class TemplarTests extends FunSuite with Matchers {
     temputs.getAllStructs().collectFirst({
       case StructDefinition2(
       simpleName("MyStruct"),
+      false,
       Mutable,
       List(StructMember2(CodeVarName2("a"), Final, ReferenceMemberType2(Coord(Share, Int2())))),
       false) =>
@@ -276,7 +277,7 @@ class TemplarTests extends FunSuite with Matchers {
 
     val structDef =
       temputs.getAllStructs.collectFirst({
-        case sd @ StructDefinition2(simpleName("MyStruct"), Mutable, _, false) => sd
+        case sd @ StructDefinition2(simpleName("MyStruct"), false, Mutable, _, false) => sd
       }).get
 
     vassert(temputs.impls.exists(impl => {
@@ -305,7 +306,7 @@ class TemplarTests extends FunSuite with Matchers {
     val compile = new Compilation(
       """
         |interface MyOption<T> imm rules(T Ref) { }
-        |struct MySome<T> imm rules(T Ref) { value T; }
+        |struct MySome<T> export imm rules(T Ref) { value T; }
         |impl<T> MySome<T> for MyOption<T>;
         |fn moo(a MySome<*Int>) { }
       """.stripMargin)
@@ -645,26 +646,5 @@ class TemplarTests extends FunSuite with Matchers {
         |}
         |""".stripMargin)
     val temputs = compile.getTemputs()
-  }
-
-  test("Test shaking") {
-    // Make sure that functions that cant be called by main will not be included.
-
-    val compile = new Compilation(
-      """
-        |fn bork(x Str) { print(x); }
-        |fn helperFunc(x Int) { print(x); }
-        |fn helperFunc(x Str) { print(x); }
-        |fn main() {
-        |  helperFunc(4);
-        |}
-        |""".stripMargin)
-    val temputs = compile.getTemputs()
-
-    vassertSome(temputs.lookupFunction(Signature2(FullName2(List(), FunctionName2("helperFunc", List(), List(Coord(Share, Int2())))))))
-
-    vassert(None == temputs.lookupFunction(Signature2(FullName2(List(), FunctionName2("bork", List(), List(Coord(Share, Str2())))))))
-
-    vassert(None == temputs.lookupFunction(Signature2(FullName2(List(), FunctionName2("helperFunc", List(), List(Coord(Share, Str2())))))))
   }
 }

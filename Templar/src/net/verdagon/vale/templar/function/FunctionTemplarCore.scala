@@ -168,7 +168,10 @@ object FunctionTemplarCore {
     val argLookups =
       header.params.zipWithIndex.map({ case (param2, index) => ArgLookup2(index, param2.tyype) })
     val function2 =
-      Function2(header, List(), Block2(List(Return2(ExternFunctionCall2(header.toPrototype, argLookups)))))
+      Function2(
+        header,
+        List(),
+        Return2(ExternFunctionCall2(header.toPrototype, argLookups)))
 
     temputs.declareFunctionReturnType(header.toSignature, header.returnType)
     temputs.addFunction(function2)

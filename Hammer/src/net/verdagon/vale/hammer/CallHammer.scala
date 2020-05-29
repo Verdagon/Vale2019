@@ -191,6 +191,9 @@ object CallHammer {
       ExpressionHammer.translate(hinputs, hamuts, locals, elseBlock2);
     val elseResultCoord = elseBlockH.resultType
 
+    val commonSupertypeH =
+      TypeHammer.translateReference(hinputs, hamuts, if2.resultRegister.reference)
+
 //    val resultCoord =
 //      (thenResultCoord, elseResultCoord) match {
 //        case (ReferenceH(m.ShareH, NeverH()), ReferenceH(m.ShareH, NeverH())) => ReferenceH(m.ShareH, NeverH()))
@@ -203,7 +206,7 @@ object CallHammer {
 //        }
 //        case _ => vwat()
 //      }
-    val ifCallNode = IfH(conditionBlockH.expectBoolAccess(), thenBlockH, elseBlockH)
+    val ifCallNode = IfH(conditionBlockH.expectBoolAccess(), thenBlockH, elseBlockH, commonSupertypeH)
 
     ifCallNode
   }

@@ -506,7 +506,7 @@ object ExpressionTemplar {
             }
             case TupleT2(_, structRef) => {
               temputs.lookupStruct(structRef) match {
-                case structDef @ StructDefinition2(_, _, _, _) => {
+                case structDef @ StructDefinition2(_, _, _, _, _) => {
                   val (structMember, memberIndex) = structDef.getMemberAndIndex(memberName)
                   val memberFullName = structDef.fullName.addStep(structDef.members(memberIndex).name)
                   val memberType = structMember.tyype.expectReferenceMember().reference;
@@ -719,16 +719,17 @@ object ExpressionTemplar {
         vassert(fate.variables == fate.variables)
         (fate.moveds != fate.moveds, "Don't move things from inside whiles!")
 
-        // Normally the body will end in a true, to signal the while loop to keep
-        // going. But, if the body ends in a panic or something, then this If must
-        // end in a Never, because any block that has a never in it should result
-        // in a never, to be honest.
-        val bodyEndLiteral =
-          if (bodyExpr2.referend == Never2()) NeverLiteral2() else BoolLiteral2(true)
+        val thenBody =
+          if (bodyExpr2.referend == Never2()) {
+            bodyExpr2
+          } else {
+            Block2(List(bodyExpr2, BoolLiteral2(true)))
+          }
+
         val ifExpr2 =
           If2(
             conditionExpr2,
-            Block2(List(bodyExpr2, bodyEndLiteral)),
+            thenBody,
             Block2(List(BoolLiteral2(false))))
         val whileExpr2 = While2(Block2(List(ifExpr2)))
         (whileExpr2, returnsFromCondition ++ returnsFromBody)

@@ -29,9 +29,6 @@ object ExpressionHammer {
         val constructH = NewStructH(List(), ProgramH.emptyTupleStructType)
         (constructH, List())
       }
-      case NeverLiteral2() => {
-        (UnreachableH(), List())
-      }
       case StrLiteral2(value) => {
         (ConstantStrH(value), List())
       }
@@ -369,7 +366,8 @@ object ExpressionHammer {
       case Discard2(innerExpr) => {
         val (undiscardedInnerExprH, innerDeferreds) =
           translate(hinputs, hamuts, locals, innerExpr);
-        vassert(innerDeferreds.isEmpty) // curiosity assert
+
+        vassert(innerDeferreds.isEmpty) // BMHD, probably need to translate them here.
 
         undiscardedInnerExprH.resultType.ownership match {
           case m.BorrowH | m.ShareH =>
@@ -394,14 +392,13 @@ object ExpressionHammer {
       case Return2(innerExpr) => {
         val (innerExprResultLine, innerDeferreds) =
           translate(hinputs, hamuts, locals, innerExpr);
-        vcurious(innerDeferreds.isEmpty)
 
-        val returnH = ReturnH(innerExprResultLine);
+        // Return is a special case where we execute the *inner* expression (not the whole return expression) and
+        // then the deferreds and then the return. See MEDBR.
+        val innerWithDeferreds =
+            translateDeferreds(hinputs, hamuts, locals, innerExprResultLine, innerDeferreds)
 
-        val returnWithDeferredsH =
-            translateDeferreds(hinputs, hamuts, locals, returnH, innerDeferreds)
-
-        (returnWithDeferredsH, List())
+        (ReturnH(innerWithDeferreds), List())
       }
       case ArgLookup2(paramIndex, type2) => {
         val typeH = TypeHammer.translateReference(hinputs, hamuts, type2)
@@ -421,6 +418,14 @@ object ExpressionHammer {
             CallHammer.translateDestroyUnknownSizeArray(
               hinputs, hamuts, locals, das2)
         (dusaH, List())
+      }
+
+      case UnreachableMootE2(innerExpr) => {
+        val (innerExprResultLine, innerDeferreds) =
+          translate(hinputs, hamuts, locals, innerExpr);
+        val innerWithDeferredsH =
+          translateDeferreds(hinputs, hamuts, locals, innerExprResultLine, innerDeferreds)
+        (UnreachableMootH(innerWithDeferredsH), List())
       }
 
       case _ => {

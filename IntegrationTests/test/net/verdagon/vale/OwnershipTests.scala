@@ -214,7 +214,10 @@ class OwnershipTests extends FunSuite with Matchers {
       """.stripMargin)
 
     val main = compile.getTemputs().lookupFunction("main")
-    main.allOf(classOf[LetNormal2]).size shouldEqual 1
+    // Only one variable containing a Muta
+    main.only({
+      case LetNormal2(ReferenceLocalVariable2(_,Final,Coord(Own,StructRef2(FullName2(List(),CitizenName2("Muta",List()))))),_) =>
+    })
 
     compile.run(Vector())
   }
