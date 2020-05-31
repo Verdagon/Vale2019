@@ -1,12 +1,13 @@
 package net.verdagon.vale.samples
 
-import net.verdagon.vale.{HashMap, Opt, OptingArrayList}
+import net.verdagon.vale.{ArrayUtils, HashMap, Opt, OptingArrayList}
 
 object Roguelike {
   val code: String =
     Opt.code +
       OptingArrayList.code +
       HashMap.code +
+  ArrayUtils.code +
       """
         |struct Vec2 imm {
         |  x Float;
@@ -82,43 +83,33 @@ object Roguelike {
         |  tiles HashMap<Location, TerrainTile, LocationHasher, LocationEquator>;
         |}
         |
-        |fn for<F>(beginInclusive Int, endExclusive Int, func F) {
-        |  i! = beginInclusive;
-        |  while (i < endExclusive) {
-        |    func(i);
-        |    mut i = i + 1;
-        |  }
-        |}
-        |
         |fn main() {
         |  board =
-        |      Array<mut, Array<mut, Str>>(10, &IFunction1<mut, Int, Array<mut, Str>>((row){
-        |        Array<mut, Str>(10, &IFunction1<mut, Int, Str>((col){
-        |          = if (row == 0) { "#" }
-        |            else if (col == 0) { "#" }
-        |            else if (row == 9) { "#" }
-        |            else if (col == 9) { "#" }
-        |            else { "." }
-        |        }))
-        |      }));
+        |    Arr<mut>(10, (row){
+        |      Arr<mut>(10, (col){
+        |        = if (row == 0) { "#" }
+        |          else if (col == 0) { "#" }
+        |          else if (row == 9) { "#" }
+        |          else if (col == 9) { "#" }
+        |          else { "." }
+        |      })
+        |    });
         |
         |  playerRow! = 4;
         |  playerCol! = 3;
         |
         |  running! = true;
         |  while (running) {
-        |    for(0, 10, (rowI){
-        |      row = board.(rowI);
-        |      for(0, 10, (colI){
-        |        cell = row.(colI);
-        |        if (and(rowI == playerRow, colI == playerCol)) {
+        |    eachI &board (rowI, row){
+        |      eachI &row (cellI, cell){
+        |        if (and(rowI == playerRow, cellI == playerCol)) {
         |          print("@");
         |        } else {
         |          print(cell);
         |        }
-        |      });
+        |      }
         |      println("");
-        |    });
+        |    }
         |
         |    key = __getch();
         |    println(key);

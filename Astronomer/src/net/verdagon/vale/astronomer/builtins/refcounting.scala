@@ -45,7 +45,7 @@ object RefCounting {
                   List(
                     LocalLoadAE(CodeVarNameA("num"), false),
                     IntLiteralAE(1)))),
-              PackAE(List()))))))
+              VoidAE())))))
 
   val checkMemberRcName = FunctionNameA("__checkmemberrc", CodeLocationS(0, 0))
   val checkmemberrc =
@@ -78,5 +78,5 @@ object RefCounting {
               LocalVariableA(CodeVarNameA("num"), FinalP, NotUsed, Used, NotUsed, NotUsed, NotUsed, NotUsed)),
             List(
               CheckRefCountAE(LocalLoadAE(CodeVarNameA("obj"), false), MemberRefCount, LocalLoadAE(CodeVarNameA("num"), false)),
-              PackAE(List()))))))
+              VoidAE())))))
 }

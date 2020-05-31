@@ -67,6 +67,12 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
 
   private[parser] def bracedBlock = ("{" ~> optWhite ~> block <~ optWhite <~ "}")
 
+  private[parser] def eachI: Parser[FunctionCallPE] = {
+    ("eachI" ~> white ~> postfixableExpressions <~ white) ~ lambda ^^ {
+      case collection ~ lam => FunctionCallPE(LookupPE("eachI", List()), List(collection, lam), true)
+    }
+  }
+
   private[parser] def whiile: Parser[WhilePE] = {
     ("while" ~> optWhite ~> "(" ~> optWhite ~> block <~ optWhite <~ ")" <~ optWhite) ~ bracedBlock ^^ {
       case cond ~ thenBlock => WhilePE(cond, thenBlock)
@@ -106,7 +112,7 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
     // debt: "block" is here temporarily because we get ambiguities in this case:
     //   fn main() { {_ + _}(4 + 5) }
     // because it mistakenly successfully parses {_ + _} then dies on the next part.
-    (mutate <~ ";") | swap | let | whiile | ifLadder | (expression <~ ";") | ("block" ~> optWhite ~> bracedBlock)
+    (mutate <~ ";") | swap | let | whiile | eachI | ifLadder | (expression <~ ";") | ("block" ~> optWhite ~> bracedBlock)
   }
 
   private[parser] def expressionElementLevel1: Parser[IExpressionPE] = {

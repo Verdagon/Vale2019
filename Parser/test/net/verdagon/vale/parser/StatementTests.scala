@@ -107,4 +107,35 @@ class StatementTests extends FunSuite with Matchers {
   test("Ret") {
     compile("ret 3;") shouldEqual ReturnPE(IntLiteralPE(3))
   }
+
+
+  test("eachI") {
+    compile("eachI row (cellI, cell){ 0 }") shouldEqual
+      FunctionCallPE(
+        LookupPE("eachI",List()),
+        List(
+          LookupPE("row",List()),
+          LambdaPE(
+            FunctionP(
+              None,false,false,true,List(),List(),
+              List(PatternPP(Some(CaptureP("cellI",FinalP)),None,None,None), PatternPP(Some(CaptureP("cell",FinalP)),None,None,None)),
+              None,
+              Some(BlockPE(List(IntLiteralPE(0))))))),
+        true)
+  }
+
+  test("eachI with borrow") {
+    compile("eachI &row (cellI, cell){ 0 }") shouldEqual
+      FunctionCallPE(
+        LookupPE("eachI",List()),
+        List(
+          LendPE(LookupPE("row",List())),
+          LambdaPE(
+            FunctionP(
+              None,false,false,true,List(),List(),
+              List(PatternPP(Some(CaptureP("cellI",FinalP)),None,None,None), PatternPP(Some(CaptureP("cell",FinalP)),None,None,None)),
+              None,
+              Some(BlockPE(List(IntLiteralPE(0))))))),
+        true)
+  }
 }
