@@ -16,6 +16,8 @@ case class TypedPR(rune: Option[String], tyype: ITypePR) extends IRulexPR
 case class TemplexPR(templex: ITemplexPRT) extends IRulexPR
 // This is for built-in parser functions, such as exists() or isBaseOf() etc.
 case class CallPR(name: String, args: List[IRulexPR]) extends IRulexPR
+case class ResolveSignaturePR(nameStrRule: IRulexPR, argsPackRule: PackPR) extends IRulexPR
+case class PackPR(elements: List[IRulexPR]) extends IRulexPR
 
 sealed trait ITypePR
 case object IntTypePR extends ITypePR
@@ -25,6 +27,7 @@ case object MutabilityTypePR extends ITypePR
 case object PermissionTypePR extends ITypePR
 case object LocationTypePR extends ITypePR
 case object CoordTypePR extends ITypePR
+case object PrototypeTypePR extends ITypePR
 case object KindTypePR extends ITypePR
 case object CitizenTemplateTypePR extends ITypePR
 //case object StructTypePR extends ITypePR
@@ -46,6 +49,7 @@ case class NameOrRunePRT(name: String) extends ITemplexPRT
 case class TypedRunePRT(rune: String, tyype: ITypePR) extends ITemplexPRT
 case class AnonymousRunePRT() extends ITemplexPRT
 case class BorrowPRT(inner: ITemplexPRT) extends ITemplexPRT
+case class StringPRT(str: String) extends ITemplexPRT
 case class SharePRT(inner: ITemplexPRT) extends ITemplexPRT
 case class CallPRT(template: ITemplexPRT, args: List[ITemplexPRT]) extends ITemplexPRT
 // This is for example fn(Int)Bool, fn:imm(Int, Int)Str, fn:mut()(Str, Bool)
@@ -83,6 +87,8 @@ object RulePUtils {
 
   def getOrderedRuneDeclarationsFromRulexWithDuplicates(rulex: IRulexPR): List[String] = {
     rulex match {
+      case PackPR(elements) => getOrderedRuneDeclarationsFromRulexesWithDuplicates(elements)
+      case ResolveSignaturePR(nameStrRule, argsPackRule) =>getOrderedRuneDeclarationsFromRulexWithDuplicates(nameStrRule) ++ getOrderedRuneDeclarationsFromRulexWithDuplicates(argsPackRule)
       case EqualsPR(left, right) => getOrderedRuneDeclarationsFromRulexWithDuplicates(left) ++ getOrderedRuneDeclarationsFromRulexWithDuplicates(right)
       case OrPR(possibilities) => getOrderedRuneDeclarationsFromRulexesWithDuplicates(possibilities)
       case DotPR(container, memberName) => getOrderedRuneDeclarationsFromRulexWithDuplicates(container)
@@ -99,6 +105,8 @@ object RulePUtils {
 
   def getOrderedRuneDeclarationsFromTemplexWithDuplicates(templex: ITemplexPRT): List[String] = {
     templex match {
+      case BorrowPRT(inner) => getOrderedRuneDeclarationsFromTemplexWithDuplicates(inner)
+      case StringPRT(value) => List()
       case IntPRT(value) => List()
       case MutabilityPRT(mutability) => List()
       case PermissionPRT(permission) => List()

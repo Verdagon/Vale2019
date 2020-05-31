@@ -246,6 +246,30 @@ case class IntegerTemplata(value: Integer) extends ITemplata {
     List(this).collect(func)
   }
 }
+case class StringTemplata(value: String) extends ITemplata {
+  override def order: Int = 17;
+  override def tyype: ITemplataType = StringTemplataType
+
+  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
+    List(this).collect(func)
+  }
+}
+case class PrototypeTemplata(value: Prototype2) extends ITemplata {
+  override def order: Int = 18;
+  override def tyype: ITemplataType = PrototypeTemplataType
+
+  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
+    List(this).collect(func)
+  }
+}
+case class CoordListTemplata(value: List[Coord]) extends ITemplata {
+  override def order: Int = 18;
+  override def tyype: ITemplataType = PackTemplataType(CoordTemplataType)
+
+  def all[T](func: PartialFunction[Queriable2, T]): List[T] = {
+    List(this).collect(func)
+  }
+}
 
 // ExternFunction/ImplTemplata are here because for example when we create an anonymous interface
 // substruct, we want to add its forwarding functions and its impl to the environment, but it's

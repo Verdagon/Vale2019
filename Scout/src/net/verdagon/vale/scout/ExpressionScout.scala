@@ -208,7 +208,7 @@ object ExpressionScout {
             patternP)
         val rulesS = userRulesS ++ implicitRulesS
 
-        val allRunes = PredictorEvaluator.getAllRunes(letFullName, List(), rulesS, List(patternS), None)
+        val allRunes = PredictorEvaluator.getAllRunes(List(), rulesS, List(patternS), None)
 
         // See MKKRFA
         val knowableRunesFromAbove = stackFrame.parentEnv.allUserDeclaredRunes()

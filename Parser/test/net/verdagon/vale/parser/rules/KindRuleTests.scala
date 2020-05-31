@@ -182,12 +182,12 @@ class KindRuleTests extends FunSuite with Matchers {
         ManualSequencePRT(List(AnonymousRunePRT(), AnonymousRunePRT()))
   }
 
-  test("Callable kind rule") {
-    compile(callableRulePR, "fn(Int)Void") shouldEqual
-        FunctionPRT(None,PackPRT(List(NameOrRunePRT("Int"))),NameOrRunePRT("Void"))
-    compile(callableRulePR, "fn(T)R") shouldEqual
-        FunctionPRT(None,PackPRT(List(NameOrRunePRT("T"))),NameOrRunePRT("R"))
-  }
+//  test("Callable kind rule") {
+//    compile(callableRulePR, "fn(Int)Void") shouldEqual
+//        FunctionPRT(None,PackPRT(List(NameOrRunePRT("Int"))),NameOrRunePRT("Void"))
+//    compile(callableRulePR, "fn(T)R") shouldEqual
+//        FunctionPRT(None,PackPRT(List(NameOrRunePRT("T"))),NameOrRunePRT("R"))
+//  }
 
   test("Prototype kind rule") {
     compile(prototypeRulePR, "fn moo(Int)Void") shouldEqual

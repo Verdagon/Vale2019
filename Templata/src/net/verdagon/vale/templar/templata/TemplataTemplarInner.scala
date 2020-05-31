@@ -159,13 +159,13 @@ class TemplataTemplarInner[Env, State](delegate: ITemplataTemplarInnerDelegate[E
           }
         }
       }
-      case PackAT(memberTypeTemplexesS, resultType) => {
-        val memberTemplatas = evaluateTemplexes(env, state, memberTypeTemplexesS)
-        vassert(memberTemplatas.forall(_.tyype == CoordTemplataType))
-        val memberCoords = memberTemplatas.map({ case CoordTemplata(c) => c })
-        val (packKind, _) = delegate.getPackKind(env, state, memberCoords)
-        coerce(state, KindTemplata(packKind), resultType)
-      }
+//      case PackAT(memberTypeTemplexesS, resultType) => {
+//        val memberTemplatas = evaluateTemplexes(env, state, memberTypeTemplexesS)
+//        vassert(memberTemplatas.forall(_.tyype == CoordTemplataType))
+//        val memberCoords = memberTemplatas.map({ case CoordTemplata(c) => c })
+//        val (packKind, _) = delegate.getPackKind(env, state, memberCoords)
+//        coerce(state, KindTemplata(packKind), resultType)
+//      }
       case x => {
         println(x)
         vfail("not yet " + x)

@@ -5,7 +5,7 @@ import net.verdagon.vale.astronomer._
 import net.verdagon.vale.parser.{BorrowP, OwnP, ShareP}
 import net.verdagon.vale.scout.patterns.{AbstractSP, AtomSP, OverrideSP}
 import net.verdagon.vale.scout.{Environment => _, FunctionEnvironment => _, IEnvironment => _}
-import net.verdagon.vale.templar.{IName2, IRune2, NameTranslator}
+import net.verdagon.vale.templar.{FunctionName2, IName2, IRune2, NameTranslator}
 import net.verdagon.vale.templar.infer.infer._
 import net.verdagon.vale.templar.templata.{Conversions, _}
 import net.verdagon.vale.templar.types._
@@ -355,7 +355,7 @@ class InfererMatcher[Env, State](
       }
       case (RuneTT(rune, expectedType), actualTemplata) => {
         if (actualTemplata.tyype != expectedType) {
-          return (InferMatchConflict(inferences.inferences, s"Doesn't match type! Expected ${expectedType} but received ${actualTemplata}", List()))
+          return InferMatchConflict(inferences.inferences, s"Doesn't match type! Expected ${expectedType} but received ${actualTemplata.tyype}", List())
         }
         matchTemplataAgainstRuneSP(env, state, localRunes, inferences, actualTemplata, rune, expectedType) match {
           case imc @ InferMatchConflict(_, _, _) => return imc
@@ -465,18 +465,18 @@ class InfererMatcher[Env, State](
       case (PrototypeTT(_, _, _), _) => {
         vfail("what even is this")
       }
-      case (PackTT(expectedMembers, _), KindTemplata(PackT2(actualMembers, _))) => {
-        val membersDeeplySatisfied =
-          expectedMembers.zip(actualMembers).foldLeft((true))({
-            case ((deeplySatisfiedSoFar), (expectedMember, actualMember)) => {
-              matchTemplataAgainstTemplexTR(env, state, localRunes, inferences, CoordTemplata(actualMember), expectedMember) match {
-                case (imc @ InferMatchConflict(_, _, _)) => return (imc)
-                case (InferMatchSuccess(deeplySatisfied)) => (deeplySatisfiedSoFar && deeplySatisfied)
-              }
-            }
-          })
-        (InferMatchSuccess(membersDeeplySatisfied))
-      }
+//      case (PackTT(expectedMembers, _), KindTemplata(PackT2(actualMembers, _))) => {
+//        val membersDeeplySatisfied =
+//          expectedMembers.zip(actualMembers).foldLeft((true))({
+//            case ((deeplySatisfiedSoFar), (expectedMember, actualMember)) => {
+//              matchTemplataAgainstTemplexTR(env, state, localRunes, inferences, CoordTemplata(actualMember), expectedMember) match {
+//                case (imc @ InferMatchConflict(_, _, _)) => return (imc)
+//                case (InferMatchSuccess(deeplySatisfied)) => (deeplySatisfiedSoFar && deeplySatisfied)
+//              }
+//            }
+//          })
+//        (InferMatchSuccess(membersDeeplySatisfied))
+//      }
       case (RepeaterSequenceTT(mutabilityTemplex, sizeTemplex, elementTemplex, resultType), CoordTemplata(Coord(ownership, ArraySequenceT2(size, RawArrayT2(elementCoord, mutability))))) => {
         vassert(resultType == CoordTemplataType)
         vcurious(ownership == Share || ownership == Own)
@@ -685,34 +685,60 @@ class InfererMatcher[Env, State](
 
     instance match {
       case KindTemplata(actualReferend) => {
-        components match {
-          case List(mutabilityRule) => {
-            val actualMutability = delegate.getMutability(state, actualReferend)
-            matchTemplataAgainstRulexTR(
-              env, state, localRunes, inferences, MutabilityTemplata(actualMutability), mutabilityRule)
-          }
-          case _ => vfail("Wrong number of components for kind")
-        }
+        vcheck(components.size == 1, "Wrong number of components for kind")
+        val List(mutabilityRule) = components
+
+        val actualMutability = delegate.getMutability(state, actualReferend)
+        matchTemplataAgainstRulexTR(
+          env, state, localRunes, inferences, MutabilityTemplata(actualMutability), mutabilityRule)
       }
       case CoordTemplata(actualReference) => {
-        components match {
-          case List(ownershipRule, kindRule) => {
-            val actualOwnership = OwnershipTemplata(actualReference.ownership)
-            val ownershipDeeplySatisfied =
-              matchTemplataAgainstRulexTR(env, state, localRunes, inferences, actualOwnership, ownershipRule) match {
-                case (imc @ InferMatchConflict(_, _, _)) => return (imc)
-                case (InferMatchSuccess(ods)) => (ods)
-              }
-            val actualKind = KindTemplata(actualReference.referend)
-            val kindDeeplySatisfied =
-              matchTemplataAgainstRulexTR(env, state, localRunes, inferences, actualKind, kindRule) match {
-                case (imc @ InferMatchConflict(_, _, _)) => return (imc)
-                case (InferMatchSuccess(kds)) => (kds)
-              }
-            (InferMatchSuccess(ownershipDeeplySatisfied && kindDeeplySatisfied))
+        vcheck(components.size == 2, "Wrong number of components for coord")
+        val List(ownershipRule, kindRule) = components
+        val actualOwnership = OwnershipTemplata(actualReference.ownership)
+        val ownershipDeeplySatisfied =
+          matchTemplataAgainstRulexTR(env, state, localRunes, inferences, actualOwnership, ownershipRule) match {
+            case (imc @ InferMatchConflict(_, _, _)) => return (imc)
+            case (InferMatchSuccess(ods)) => (ods)
           }
-          case _ => vfail("Wrong number of components for kind")
-        }
+        val actualKind = KindTemplata(actualReference.referend)
+        val kindDeeplySatisfied =
+          matchTemplataAgainstRulexTR(env, state, localRunes, inferences, actualKind, kindRule) match {
+            case (imc @ InferMatchConflict(_, _, _)) => return (imc)
+            case (InferMatchSuccess(kds)) => (kds)
+          }
+        (InferMatchSuccess(ownershipDeeplySatisfied && kindDeeplySatisfied))
+      }
+      case PrototypeTemplata(actualPrototype) => {
+        vcheck(components.size == 3, "Wrong number of components for prototype")
+        val List(nameRule, paramsRule, retRule) = components
+        val actualHumanNameTemplata =
+          actualPrototype.fullName.last match {
+            case FunctionName2(humanName, _, _) => StringTemplata(humanName)
+            case _ => return InferMatchConflict(inferences.inferences, "Actual prototype doesn't have a human name: " + actualPrototype.fullName.last, List())
+          }
+        val actualParamsTemplata = CoordListTemplata(actualPrototype.paramTypes)
+        val actualRetTemplata = CoordTemplata(actualPrototype.returnType)
+
+        val nameDeeplySatisfied =
+          matchTemplataAgainstRulexTR(env, state, localRunes, inferences, actualHumanNameTemplata, nameRule) match {
+            case (imc @ InferMatchConflict(_, _, _)) => return imc
+            case (InferMatchSuccess(ods)) => ods
+          }
+
+        val paramsDeeplySatisfied =
+          matchTemplataAgainstRulexTR(env, state, localRunes, inferences, actualParamsTemplata, paramsRule) match {
+            case (imc @ InferMatchConflict(_, _, _)) => return (imc)
+            case (InferMatchSuccess(kds)) => (kds)
+          }
+
+        val retDeeplySatisfied =
+          matchTemplataAgainstRulexTR(env, state, localRunes, inferences, actualRetTemplata, retRule) match {
+            case (imc @ InferMatchConflict(_, _, _)) => return (imc)
+            case (InferMatchSuccess(kds)) => (kds)
+          }
+
+        (InferMatchSuccess(nameDeeplySatisfied && paramsDeeplySatisfied && retDeeplySatisfied))
       }
     }
   }

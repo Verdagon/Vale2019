@@ -14,6 +14,7 @@ case class ComponentsSR(
   container: TypedSR,
   components: List[IRulexSR]
 ) extends IRulexSR
+//case class PackSR(elements: List[IRulexSR]) extends IRulexSR
 case class TypedSR(rune: IRuneS, tyype: ITypeSR) extends IRulexSR
 case class TemplexSR(templex: ITemplexS) extends IRulexSR
 // This is for built-in parser functions, such as exists() or isBaseOf() etc.
@@ -22,6 +23,7 @@ case class CallSR(name: String, args: List[IRulexSR]) extends IRulexSR {
 
 sealed trait ITypeSR
 case object IntTypeSR extends ITypeSR
+case object PrototypeTypeSR extends ITypeSR
 case object BoolTypeSR extends ITypeSR
 case object OwnershipTypeSR extends ITypeSR
 case object MutabilityTypeSR extends ITypeSR
@@ -43,24 +45,23 @@ case object VariabilityTypeSR extends ITypeSR
 
 object RuleSUtils {
 
-  def getDistinctOrderedRunesForRulex(envFullName: INameS, rulex: IRulexSR): List[IRuneS] = {
+  def getDistinctOrderedRunesForRulex(rulex: IRulexSR): List[IRuneS] = {
     rulex match {
-      case EqualsSR(left, right) => (getDistinctOrderedRunesForRulex(envFullName, left) ++ getDistinctOrderedRunesForRulex(envFullName, right)).distinct
-      case IsaSR(left, right) => (getDistinctOrderedRunesForRulex(envFullName, left) ++ getDistinctOrderedRunesForRulex(envFullName, right)).distinct
-      case OrSR(possibilities) => possibilities.flatMap(getDistinctOrderedRunesForRulex(envFullName, _)).distinct
+//      case PackSR(elements) => getDistinctOrderedRunesForRulexes(elements)
+      case EqualsSR(left, right) => (getDistinctOrderedRunesForRulex(left) ++ getDistinctOrderedRunesForRulex(right)).distinct
+      case IsaSR(left, right) => (getDistinctOrderedRunesForRulex(left) ++ getDistinctOrderedRunesForRulex(right)).distinct
+      case OrSR(possibilities) => possibilities.flatMap(getDistinctOrderedRunesForRulex).distinct
       case ComponentsSR(container, components) => {
-        getDistinctOrderedRunesForRulex(envFullName, container) ++
-          components.flatMap(getDistinctOrderedRunesForRulex(envFullName, _)).toSet
+        getDistinctOrderedRunesForRulex(container) ++ components.flatMap(getDistinctOrderedRunesForRulex).toSet
       }
       case TypedSR(rune, tyype) => List(rune)
       case TemplexSR(templex) => TemplexSUtils.getDistinctOrderedRunesForTemplex(templex)
-      case CallSR(name, args) => args.flatMap(getDistinctOrderedRunesForRulex(envFullName, _)).distinct
+      case CallSR(name, args) => args.flatMap(getDistinctOrderedRunesForRulex).distinct
     }
   }
 
-  def getDistinctOrderedRunesForRulexes(envFullName: INameS, rulexes: List[IRulexSR]):
-  List[IRuneS] = {
-    rulexes.flatMap(getDistinctOrderedRunesForRulex(envFullName, _)).distinct
+  def getDistinctOrderedRunesForRulexes(rulexes: List[IRulexSR]): List[IRuneS] = {
+    rulexes.flatMap(getDistinctOrderedRunesForRulex).distinct
   }
 
   // This can make a ref for the given kind, choosing the appropriate ownership.

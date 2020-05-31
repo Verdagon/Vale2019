@@ -118,6 +118,9 @@ sealed trait ITemplexA {
 case class IntAT(value: Int) extends ITemplexA {
   override def resultType: ITemplataType = IntegerTemplataType
 }
+case class StringAT(value: String) extends ITemplexA {
+  override def resultType: ITemplataType = StringTemplataType
+}
 case class BoolAT(value: Boolean) extends ITemplexA {
   override def resultType: ITemplataType = BooleanTemplataType
 }
@@ -135,6 +138,9 @@ case class OwnershipAT(ownership: OwnershipP) extends ITemplexA {
 }
 case class VariabilityAT(variability: VariabilityP) extends ITemplexA {
   override def resultType: ITemplataType = VariabilityTemplataType
+}
+case class CoordListAT(elements: List[ITemplexA]) extends ITemplexA {
+  override def resultType: ITemplataType = PackTemplataType(CoordTemplataType)
 }
 
 case class NameAT(
@@ -195,12 +201,12 @@ case class PrototypeAT(
   override def resultType: ITemplataType = vimpl()
 }
 
-case class PackAT(
-  members: List[ITemplexA],
-  // This is here because we might want to coerce the result. We do this for
-  // calls, packs, etc.
-  resultType: ITemplataType
-) extends ITemplexA
+//case class PackAT(
+//  members: List[ITemplexA],
+//  // This is here because we might want to coerce the result. We do this for
+//  // calls, packs, etc.
+//  resultType: ITemplataType
+//) extends ITemplexA
 
 case class RepeaterSequenceAT(
   mutability: ITemplexA,

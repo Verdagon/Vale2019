@@ -28,7 +28,7 @@ package object infer {
     inferences: Inferences
   ) extends IInferSolveResult
 
-  sealed trait IInferEvaluateResult[T]
+  sealed trait IInferEvaluateResult[+T]
   case class InferEvaluateConflict[T](
     // This is in here because when we do an Or rule, we want to know why each
     // case failed; we want to have all the conflicts in a row, we want to have

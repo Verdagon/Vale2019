@@ -6,7 +6,7 @@ import net.verdagon.vale.parser._
 import scala.util.parsing.combinator.RegexParsers
 
 trait RuleTemplexParser extends RegexParsers with ParserUtils {
-  // Add any new rules to the "Check no parser rules match empty" test!
+  // Add any new rules to the "Nothing matches empty string" test!
 
   private[parser] def keywordOrIdentifierOrRuneRuleTemplexPR: Parser[ITemplexPRT] = {
     "true" ^^^ BoolPRT(true) |
@@ -24,12 +24,13 @@ trait RuleTemplexParser extends RegexParsers with ParserUtils {
     typeIdentifier ^^ NameOrRunePRT
   }
 
-  // Add any new rules to the "Check no parser rules match empty" test!
+  // Add any new rules to the "Nothing matches empty string" test!
 
   private[parser] def ruleTemplexPR: Parser[ITemplexPRT] = {
     // The template calls are first because Moo:(Int, Bool) is ambiguous, that (Int, Bool)
     // could be interpreted as a pack.
     ("_" ^^^ AnonymousRunePRT()) |
+    (string ^^ StringPRT) |
     (("&" ~> optWhite ~> ruleTemplexPR) ^^ BorrowPRT) |
     (("*" ~> optWhite ~> ruleTemplexPR) ^^ SharePRT) |
     ((keywordOrIdentifierOrRuneRuleTemplexPR <~ optWhite <~ "<" <~ optWhite) ~ repsep(ruleTemplexPR, optWhite ~> "," <~ optWhite) <~ optWhite <~ ">" ^^ {
@@ -48,7 +49,7 @@ trait RuleTemplexParser extends RegexParsers with ParserUtils {
     rep1sep(ruleTemplexPR, optWhite ~> "|" <~ optWhite)
   }
 
-  // Add any new rules to the "Check no parser rules match empty" test!
+  // Add any new rules to the "Nothing matches empty string" test!
 
   private[parser] def manualSeqRulePR: Parser[ITemplexPRT] = {
     ("[" ~> optWhite ~> repsep(ruleTemplexPR, optWhite ~> "," <~ optWhite) <~ optWhite <~ "]") ^^ {
@@ -56,7 +57,7 @@ trait RuleTemplexParser extends RegexParsers with ParserUtils {
     }
   }
 
-  // Add any new rules to the "Check no parser rules match empty" test!
+  // Add any new rules to the "Nothing matches empty string" test!
 
   private[parser] def repeaterSeqRulePR: Parser[ITemplexPRT] = {
     (("[" ~> optWhite ~> ruleTemplexPR <~ optWhite <~ "*" <~ optWhite) ~ (ruleTemplexPR <~ optWhite <~ "]") ^^ {
@@ -67,7 +68,7 @@ trait RuleTemplexParser extends RegexParsers with ParserUtils {
     })
   }
 
-  // Add any new rules to the "Check no parser rules match empty" test!
+  // Add any new rules to the "Nothing matches empty string" test!
 
   private[parser] def prototypeRulePR: Parser[ITemplexPRT] = {
     ("fn" ~> optWhite ~> exprIdentifier <~ optWhite <~ "(" <~ optWhite) ~
@@ -77,7 +78,7 @@ trait RuleTemplexParser extends RegexParsers with ParserUtils {
     }
   }
 
-  // Add any new rules to the "Check no parser rules match empty" test!
+  // Add any new rules to the "Nothing matches empty string" test!
 
   private[parser] def callableRulePR: Parser[ITemplexPRT] = {
     ("fn" ~> optWhite ~> opt(":" ~> optWhite ~> ruleTemplexPR) ~ ("(" ~> optWhite ~> repsep(ruleTemplexPR, optWhite ~ "," ~ optWhite) <~ optWhite <~ ")") ~ (optWhite ~> ruleTemplexPR)) ^^ {
@@ -85,7 +86,7 @@ trait RuleTemplexParser extends RegexParsers with ParserUtils {
     }
   }
 
-  // Add any new rules to the "Check no parser rules match empty" test!
+  // Add any new rules to the "Nothing matches empty string" test!
 
   private[parser] def packRulePR: Parser[ITemplexPRT] = {
     ("(" ~> optWhite ~> repsep(ruleTemplexPR, optWhite ~ "," ~ optWhite) <~ optWhite <~ ")") ^^ {
@@ -93,5 +94,5 @@ trait RuleTemplexParser extends RegexParsers with ParserUtils {
     }
   }
 
-  // Add any new rules to the "Check no parser rules match empty" test!
+  // Add any new rules to the "Nothing matches empty string" test!
 }

@@ -4,7 +4,7 @@ import net.verdagon.vale.astronomer.{FakeState => _, SimpleEnvironment => _, _}
 import net.verdagon.vale.astronomer.ruletyper.IRuleTyperEvaluatorDelegate
 import net.verdagon.vale.parser._
 import net.verdagon.vale.scout.{IEnvironment => _, _}
-import net.verdagon.vale.templar.{CitizenName2, CitizenTemplateName2, CodeRune2, FullName2, IName2, ImplicitRune2, NameTranslator, PrimitiveName2}
+import net.verdagon.vale.templar.{CitizenName2, CitizenTemplateName2, CodeRune2, FullName2, FunctionName2, IName2, ImplicitRune2, NameTranslator, PrimitiveName2}
 import net.verdagon.vale.{vassert, vassertSome, vfail, vimpl, scout => s}
 import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.infer.{InfererEquator, InfererEvaluator}
@@ -47,7 +47,11 @@ case class SimpleEnvironment(simpleEntries: Map[IName2, IEnvEntry]) extends IEnv
     simpleEntries.get(name).map(EnvironmentUtils.entryToTemplata(this, _))
   }
   override def getAllTemplatasWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): List[ITemplata] = {
-    vimpl()
+    simpleEntries
+      .filter({ case (key, _) => EnvironmentUtils.impreciseNamesMatch(name, key)})
+      .values
+      .map(EnvironmentUtils.entryToTemplata(this, _))
+      .toList
   }
   override def getNearestTemplataWithName(name: IImpreciseNameStepA, lookupFilter: Set[ILookupContext]): Option[ITemplata] = {
     val values =
@@ -97,6 +101,14 @@ class FakeInfererEvaluatorDelegate extends IInfererEvaluatorDelegate[SimpleEnvir
     vassert(results.size == 1)
     results.head
   }
+
+  override def resolveExactSignature(env: SimpleEnvironment, state: FakeState, name: String, coords: List[Coord]): Prototype2 = {
+    val templatas = env.getAllTemplatasWithName(GlobalFunctionFamilyNameA(name), Set(TemplataLookupContext))
+    val prototypes = templatas.collect({ case PrototypeTemplata(prot) => prot })
+    val matchingPrototypes = prototypes.filter(_.paramTypes == coords)
+    vassert(matchingPrototypes.size == 1)
+    matchingPrototypes.head
+  }
 }
 
 class FakeTemplataTemplarInnerDelegate extends ITemplataTemplarInnerDelegate[SimpleEnvironment, FakeState] {
@@ -137,6 +149,9 @@ class FakeTemplataTemplarInnerDelegate extends ITemplataTemplarInnerDelegate[Sim
 }
 
 class InfererTests extends FunSuite with Matchers {
+  val incrementPrototype =
+    Prototype2(FullName2(List(), FunctionName2("increment", List(), List(Coord(Share, Int2())))), Coord(Share, Int2()))
+
   def makeCannedEnvironment(): SimpleEnvironment = {
     var entries = Map[IName2, IEnvEntry]()
     entries = entries ++ Map(
@@ -219,6 +234,10 @@ class InfererTests extends FunSuite with Matchers {
     entries = entries ++ Map(voidName -> TemplataEnvEntry(KindTemplata(Void2())))
     val intName = PrimitiveName2("Int")
     entries = entries ++ Map(intName -> TemplataEnvEntry(KindTemplata(Int2())))
+    val boolName = PrimitiveName2("Bool")
+    entries = entries ++ Map(boolName -> TemplataEnvEntry(KindTemplata(Bool2())))
+    val callPrototype = PrototypeTemplata(incrementPrototype)
+    entries = entries ++ Map(callPrototype.value.fullName.last -> TemplataEnvEntry(callPrototype))
     SimpleEnvironment(entries)
   }
 
@@ -232,10 +251,9 @@ class InfererTests extends FunSuite with Matchers {
             case StructRef2(FullName2(_, CitizenName2(humanName, _))) if humanName.startsWith("Imm") => Immutable
             case InterfaceRef2(FullName2(_, CitizenName2(humanName, _))) if humanName.startsWith("Mut") => Mutable
             case InterfaceRef2(FullName2(_, CitizenName2(humanName, _))) if humanName.startsWith("Imm") => Immutable
-            case Int2() => Immutable
+            case Int2() | Void2() | Bool2() => Immutable
             case ArraySequenceT2(_, RawArrayT2(_, mutability)) => mutability
             case UnknownSizeArrayT2(RawArrayT2(_, mutability)) => mutability
-            case Void2() => Immutable
             case _ => vfail()
           }
         }
@@ -1021,6 +1039,89 @@ class InfererTests extends FunSuite with Matchers {
           None,
           true)
     vassert(isf.toString.contains("Isa failed"))
+  }
+
+  test("Test evaluate prototype components") {
+    val (InferSolveSuccess(conclusions)) =
+      makeCannedEvaluator()
+        .solve(
+          makeCannedEnvironment(),
+          FakeState(),
+          List(
+            EqualsTR(
+              ComponentsTR(
+                PrototypeTemplataType,
+                List(
+                  TemplexTR(StringTT("increment")),
+                  TemplexTR(CoordListTT(List(NameTT(CodeTypeNameA("Int"), CoordTemplataType)))),
+                  TemplexTR(NameTT(CodeTypeNameA("Int"), CoordTemplataType)))),
+              TemplexTR(RuneTT(CodeRune2("F"),PrototypeTemplataType)))),
+          Map(CodeRune2("F") -> CoordTemplataType),
+          Set(CodeRune2("F")),
+          Map(),
+          List(),
+          None,
+          true)
+    conclusions.templatasByRune(CodeRune2("F")) shouldEqual PrototypeTemplata(incrementPrototype)
+  }
+
+  test("Test evaluate prototype return") {
+    // We evaluate the prototype return when we fail to evaluate the name and params.
+    // Lets make it so we can only evaluate the params from evaluating the ret, to exercise
+    // evaluating the ret.
+
+    val (InferSolveSuccess(conclusions)) =
+      makeCannedEvaluator()
+        .solve(
+          makeCannedEnvironment(),
+          FakeState(),
+          List(
+            EqualsTR(
+              ComponentsTR(
+                PrototypeTemplataType,
+                List(
+                  TemplexTR(StringTT("increment")),
+                  TemplexTR(
+                    CoordListTT(
+                      List(
+                        RuneTT(CodeRune2("T"),CoordTemplataType)))),
+                  EqualsTR(
+                    TemplexTR(NameTT(CodeTypeNameA("Int"),CoordTemplataType)),
+                    TemplexTR(RuneTT(CodeRune2("T"),CoordTemplataType))))),
+              TemplexTR(RuneTT(CodeRune2("F"),PrototypeTemplataType)))),
+          Map(CodeRune2("T") -> CoordTemplataType, CodeRune2("F") -> PrototypeTemplataType),
+          Set(CodeRune2("T"), CodeRune2("F")),
+          Map(),
+          List(),
+          None,
+          true)
+    conclusions.templatasByRune(CodeRune2("F")) shouldEqual PrototypeTemplata(incrementPrototype)
+  }
+
+  test("Test match prototype components") {
+    val (InferSolveSuccess(conclusions)) =
+      makeCannedEvaluator()
+        .solve(
+          makeCannedEnvironment(),
+          FakeState(),
+          List(
+            EqualsTR(
+              TemplexTR(RuneTT(CodeRune2("F"),PrototypeTemplataType)),
+              ComponentsTR(
+                PrototypeTemplataType,
+                List(
+                  TemplexTR(RuneTT(CodeRune2("X"),StringTemplataType)),
+                  TemplexTR(RuneTT(CodeRune2("Y"),PackTemplataType(CoordTemplataType))),
+                  TemplexTR(RuneTT(CodeRune2("T"),CoordTemplataType)))))),
+          Map(CodeRune2("X") -> StringTemplataType, CodeRune2("Y") -> PackTemplataType(CoordTemplataType), CodeRune2("T") -> CoordTemplataType, CodeRune2("F") -> PrototypeTemplataType),
+          Set(CodeRune2("X"), CodeRune2("Y"), CodeRune2("T"), CodeRune2("F")),
+          Map(CodeRune2("F") -> PrototypeTemplata(incrementPrototype)),
+          List(),
+          None,
+          true)
+    conclusions.templatasByRune(CodeRune2("X")) shouldEqual StringTemplata("increment")
+    conclusions.templatasByRune(CodeRune2("Y")) shouldEqual CoordListTemplata(List(Coord(Share, Int2())))
+    conclusions.templatasByRune(CodeRune2("T")) shouldEqual CoordTemplata(Coord(Share, Int2()))
   }
 
   test("Test ownershipped") {

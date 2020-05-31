@@ -99,7 +99,7 @@ object Scout {
       RuleScout.translateRulexes(rate, implEnv.allUserDeclaredRunes(), templateRulesP)
 
     // We gather all the runes from the scouted rules to be consistent with the function scout.
-    val allRunes = PredictorEvaluator.getAllRunes(implEnv.name, identifyingRunes, userRulesS, List(), None)
+    val allRunes = PredictorEvaluator.getAllRunes(identifyingRunes, userRulesS, List(), None)
     val Conclusions(knowableValueRunes, _) = PredictorEvaluator.solve(Set(), userRulesS, List())
     val localRunes = allRunes
     val isTemplate = knowableValueRunes != allRunes
@@ -165,7 +165,7 @@ object Scout {
           TemplexSR(MutabilityST(mutability)))
 
     // We gather all the runes from the scouted rules to be consistent with the function scout.
-    val allRunes = PredictorEvaluator.getAllRunes(structEnv.name, identifyingRunes, rulesS, List(), None)
+    val allRunes = PredictorEvaluator.getAllRunes(identifyingRunes, rulesS, List(), None)
     val Conclusions(knowableValueRunes, predictedTypeByRune) = PredictorEvaluator.solve(Set(), rulesS, List())
     val localRunes = allRunes
     val isTemplate = knowableValueRunes != allRunes
@@ -226,7 +226,7 @@ object Scout {
         TemplexSR(MutabilityST(mutability)))
 
     // We gather all the runes from the scouted rules to be consistent with the function scout.
-    val allRunes = PredictorEvaluator.getAllRunes(interfaceFullName, identifyingRunes, rulesS, List(), None)
+    val allRunes = PredictorEvaluator.getAllRunes(identifyingRunes, rulesS, List(), None)
     val Conclusions(knowableValueRunes, predictedTypeByRune) =
       PredictorEvaluator.solve(Set(), rulesS, List())
     val localRunes = allRunes

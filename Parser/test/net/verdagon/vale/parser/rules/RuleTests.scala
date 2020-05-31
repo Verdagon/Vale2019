@@ -55,6 +55,7 @@ class RuleTests extends FunSuite with Matchers {
     checkFail(ruleTemplexPR, "")
     checkFail(ruleTemplexSetPR, "")
     checkFail(templateRulesPR, "")
+    checkFail(packPR, "")
   }
 
   test("Relations") {
@@ -70,5 +71,35 @@ class RuleTests extends FunSuite with Matchers {
 
   test("Super complicated") {
     compile(rulePR, "C = [I * X] | [N * T]") // succeeds
+  }
+//
+//  test("resolveExactSignature") {
+//    compile(rulePR, "C = resolveExactSignature(\"__call\", (&F, Int))") shouldEqual
+//      EqualsPR(
+//        TemplexPR(NameOrRunePRT("C")),
+//        CallPR(
+//          "resolveExactSignature",
+//          List(
+//            TemplexPR(StringPRT("__call")),
+//            PackPR(List(TemplexPR(BorrowPRT(NameOrRunePRT("F"))), TemplexPR(NameOrRunePRT("Int")))))))
+//  }
+
+  test("destructure prototype") {
+    compile(rulePR, "Prot(_, _, T) = moo") shouldEqual
+      EqualsPR(
+        ComponentsPR(
+          TypedPR(None,PrototypeTypePR),
+          List(TemplexPR(AnonymousRunePRT()), TemplexPR(AnonymousRunePRT()), TemplexPR(NameOrRunePRT("T")))),
+        TemplexPR(NameOrRunePRT("moo")))
+  }
+
+  test("prototype with coords") {
+    compile(rulePR, "Prot(_, (Int, Bool), _)") shouldEqual
+      ComponentsPR(
+        TypedPR(None,PrototypeTypePR),
+        List(
+          TemplexPR(AnonymousRunePRT()),
+          TemplexPR(PackPRT(List(NameOrRunePRT("Int"), NameOrRunePRT("Bool")))),
+          TemplexPR(AnonymousRunePRT())))
   }
 }

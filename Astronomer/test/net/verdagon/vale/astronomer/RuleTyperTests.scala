@@ -458,4 +458,25 @@ class RuleTyperTests extends FunSuite with Matchers {
           None)
     conclusions.typeByRune(CodeRuneA("K")) shouldEqual KindTemplataType
   }
+
+  test("Test evaluating prototype components") {
+    val (conclusions, RuleTyperSolveSuccess(_)) =
+      makeCannedRuleTyper()
+        .solve(
+          FakeState(),
+          makeCannedEnvironment(),
+          List(
+            ComponentsSR(
+              TypedSR(CodeRuneS("X"), PrototypeTypeSR),
+              List(
+                TemplexSR(RuneST(CodeRuneS("A"))),
+                TemplexSR(PackST(List(RuneST(CodeRuneS("B"))))),
+                TemplexSR(RuneST(CodeRuneS("C")))))),
+          List(),
+          None)
+    conclusions.typeByRune(CodeRuneA("X")) shouldEqual PrototypeTemplataType
+    conclusions.typeByRune(CodeRuneA("A")) shouldEqual StringTemplataType
+    conclusions.typeByRune(CodeRuneA("B")) shouldEqual CoordTemplataType
+    conclusions.typeByRune(CodeRuneA("C")) shouldEqual CoordTemplataType
+  }
 }

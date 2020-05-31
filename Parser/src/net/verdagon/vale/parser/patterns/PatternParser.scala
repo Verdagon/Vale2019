@@ -11,7 +11,7 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
   private[parser] def exprIdentifier: Parser[String]
 
 
-  // Add any new rules to the "Check no parser rules match empty" test!
+  // Add any new rules to the "Nothing matches empty string" test!
 
   // Remember, for pattern parsers, something *must* be present, don't match empty.
   // And it relies on that fact for the subpatterns too.
@@ -79,7 +79,7 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
 //    })
   }
 
-  // Add any new rules to the "Check no parser rules match empty" test!
+  // Add any new rules to the "Nothing matches empty string" test!
 
   // Remember, for pattern parsers, something *must* be present, don't match empty.
   // Luckily, for this rule, we always have the expr identifier.
@@ -89,7 +89,7 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
     }
   }
 
-  // Add any new rules to the "Check no parser rules match empty" test!
+  // Add any new rules to the "Nothing matches empty string" test!
 
   // Remember, for pattern parsers, something *must* be present, don't match empty.
   case class PatternTypePPI(ownership: Option[OwnershipP], runeOrKind: ITemplexPPT)
@@ -101,20 +101,20 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
     }
   }
 
-  // Add any new rules to the "Check no parser rules match empty" test!
+  // Add any new rules to the "Nothing matches empty string" test!
 
   private[parser] def destructure: Parser[List[PatternPP]] = {
     "(" ~> optWhite ~> repsep(atomPattern, optWhite ~> "," <~ optWhite) <~ optWhite <~ ")"
   }
 
-  // Add any new rules to the "Check no parser rules match empty" test!
+  // Add any new rules to the "Nothing matches empty string" test!
 
   private[parser] def patternOwnership: Parser[OwnershipP] = {
     // See "Capturing Kinds and Ownerships" for why we don't capture a rune here.
     (("^" ^^^ OwnP) | ("&" ^^^ BorrowP) | ("*" ^^^ ShareP))
   }
 
-  // Add any new rules to the "Check no parser rules match empty" test!
+  // Add any new rules to the "Nothing matches empty string" test!
 
   private[parser] def runeOrKindPattern: Parser[ITemplexPPT] = {
     patternTemplex
@@ -137,7 +137,7 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
 //    typeIdentifier ^^ NameTemplexPP
 //  }
 //
-//  // Add any new rules to the "Check no parser rules match empty" test!
+//  // Add any new rules to the "Nothing matches empty string" test!
 //
 //  private[parser] def callableKindPattern: Parser[CallableKindPP] = {
 //    ("(" ~> optWhite ~> repsep(underscoreOr(patternCoordRule), optWhite ~> "," <~ optWhite) <~ optWhite <~ ")" <~ optWhite <~ ":" <~ optWhite) ~ underscoreOr(patternCoordRule) ^^ {
@@ -145,7 +145,7 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
 //    }
 //  }
 //
-//  // Add any new rules to the "Check no parser rules match empty" test!
+//  // Add any new rules to the "Nothing matches empty string" test!
 //
 //  private[parser] def repeaterSequenceKindPattern: Parser[RepeaterSequenceTemplexPP] = {
 //    "[" ~> optWhite ~> (underscoreOr(patternIntRule) <~ optWhite <~ "*" <~ optWhite) ~ underscoreOr(patternCoordRule) <~ optWhite <~ "]" ^^ {
@@ -153,7 +153,7 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
 //    }
 //  }
 //
-//  // Add any new rules to the "Check no parser rules match empty" test!
+//  // Add any new rules to the "Nothing matches empty string" test!
 //
 //  private[parser] def manualSequenceKindPattern: Parser[ManualSequenceTemplexPP] = {
 //    "[" ~> optWhite ~> repsep(underscoreOr(patternCoordRule), optWhite <~ "," <~ optWhite) <~ optWhite <~ "]" ^^ {
@@ -161,7 +161,7 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
 //    }
 //  }
 
-  // Add any new rules to the "Check no parser rules match empty" test!
+  // Add any new rules to the "Nothing matches empty string" test!
 
 //  private[parser] def patternCoordRule: Parser[CoordPR] = {
 //    opt(patternOwnership <~ optWhite) ~ underscoreOr(atLeastOneOfWW(rune, patternKindRule)) ^^ {
@@ -182,7 +182,7 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
 //    }
 //  }
 
-  // Add any new rules to the "Check no parser rules match empty" test!
+  // Add any new rules to the "Nothing matches empty string" test!
 
 //  private[parser] def patternIntRule: Parser[IntPR] = {
 //    atLeastOneOfWW(rune, int) ^^ {
@@ -192,7 +192,7 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
 //    }
 //  }
 
-  // Add any new rules to the "Check no parser rules match empty" test!
+  // Add any new rules to the "Nothing matches empty string" test!
 
 //  // Like the "Moo" in "a: &Moo", we're parsing the kind in a pattern.
 //  private[parser] def patternKindRule: Parser[IKindTypePR] = {
@@ -228,7 +228,7 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
 //    })
 //  }
 //
-//  // Add any new rules to the "Check no parser rules match empty" test!
+//  // Add any new rules to the "Nothing matches empty string" test!
 //
 //  private[parser] def patternManualSequenceKindRule: Parser[ManualSequenceTemplexPR] = {
 //    "[" ~> optWhite ~> repsep(patternCoordRule, optWhite ~> "," <~ optWhite) <~ optWhite <~ "]" ^^ {
@@ -236,7 +236,7 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
 //    }
 //  }
 //
-//  // Add any new rules to the "Check no parser rules match empty" test!
+//  // Add any new rules to the "Nothing matches empty string" test!
 //
 //  private[parser] def patternRepeaterSequenceKindRule: Parser[RepeaterSequenceTemplexPR] = {
 //    "[" ~> optWhite ~> (underscoreOr(patternIntRule) <~ optWhite <~ "*" <~ optWhite) ~ underscoreOr(patternCoordRule) <~ optWhite <~ "]" ^^ {
@@ -244,6 +244,6 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
 //    }
 //  }
 //
-//  // Add any new rules to the "Check no parser rules match empty" test!
+//  // Add any new rules to the "Nothing matches empty string" test!
 
 }

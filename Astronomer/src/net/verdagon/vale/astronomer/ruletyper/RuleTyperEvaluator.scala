@@ -132,7 +132,7 @@ class RuleTyperEvaluator[Env, State](
         }
       }
       case r @ CallSR(_, _) => evaluateRuleCall(state, env, conclusions, r)
-      case _ => vfail()
+      case other => vfail(other.toString)
     }
   }
 
@@ -219,6 +219,24 @@ class RuleTyperEvaluator[Env, State](
             (RuleTyperEvaluateSuccess(ruleT))
           }
         }
+      }
+      case "resolveExactSignature" => {
+        if (argumentRules.size != 2) {
+          return (RuleTyperEvaluateConflict(conclusions.conclusions, "resolveExactSignature expects 2 argument, but received " + argumentRules.size, None))
+        }
+        val List(nameRule, argsRule) = argumentRules
+        val nameRuleT =
+          makeMatcher().matchTypeAgainstRulexSR(state, env, conclusions, StringTemplataType, nameRule) match {
+            case (rtmc @ RuleTyperMatchConflict(_, _, _)) => return RuleTyperEvaluateConflict(conclusions.conclusions, "Conflict in toRef argument!", Some(rtmc))
+            case (RuleTyperMatchSuccess(nameRuleT)) => nameRuleT
+          }
+        val argsListRuleT =
+          makeMatcher().matchTypeAgainstRulexSR(state, env, conclusions, PackTemplataType(CoordTemplataType), argsRule) match {
+            case (rtmc @ RuleTyperMatchConflict(_, _, _)) => return RuleTyperEvaluateConflict(conclusions.conclusions, "Conflict in toRef argument!", Some(rtmc))
+            case (RuleTyperMatchSuccess(nameRuleT)) => nameRuleT
+          }
+        val ruleT = CallAR("resolveExactSignature", List(nameRuleT, argsListRuleT), PrototypeTemplataType)
+        RuleTyperEvaluateSuccess(ruleT)
       }
       case _ => vfail("Unknown function \"" + name + "\"!");
     }
@@ -407,6 +425,7 @@ class RuleTyperEvaluator[Env, State](
         case CoordTypeSR => CoordTemplataType
         case KindTypeSR => KindTemplataType
         case MutabilityTypeSR => MutabilityTemplataType
+        case PrototypeTypeSR => PrototypeTemplataType
       }
 
     conclusions.typeByRune.get(runeA) match {
@@ -593,6 +612,13 @@ class RuleTyperEvaluator[Env, State](
             case (RuleTyperEvaluateSuccess(templataFromRune)) => (Some(templataFromRune))
           }
         }
+        case PrototypeTypeSR => {
+          evaluatePrototypeComponents(state, env, conclusions, components) match {
+            case (iec @ RuleTyperEvaluateConflict(_, _, _)) => return (RuleTyperEvaluateConflict(conclusions.conclusions, "Failed evaluating prototype components!", Some(iec)))
+            case (RuleTyperEvaluateUnknown()) => (None)
+            case (RuleTyperEvaluateSuccess(templataFromRune)) => (Some(templataFromRune))
+          }
+        }
         case _ => vfail("Can only destructure coords and kinds!")
       }
 
@@ -653,6 +679,48 @@ class RuleTyperEvaluator[Env, State](
 
       }
       case _ => vfail("Coords must have 2 components")
+    }
+  }
+
+  private def evaluatePrototypeComponents(
+    state: State,
+    env: Env,
+    conclusions: ConclusionsBox,
+    components: List[IRulexSR]):
+  (IRuleTyperEvaluateResult[List[IRulexAR]]) = {
+    components match {
+      case List(humanNameRuleS, argsPackRuleS, returnRuleS) => {
+        val maybeHumanNameRuleT =
+          makeMatcher().matchTypeAgainstRulexSR(state, env, conclusions, StringTemplataType, humanNameRuleS) match {
+            case (rtmc @ RuleTyperMatchConflict(_, _, _)) => return (RuleTyperEvaluateConflict(conclusions.conclusions, "Prototype name component conflicted!", Some(rtmc)))
+            case (RuleTyperMatchUnknown()) => (None)
+            case (RuleTyperMatchSuccess(humanNameRuleT)) => (Some(humanNameRuleT))
+          }
+        val maybeCoordPackRuleT =
+          makeMatcher().matchTypeAgainstRulexSR(state, env, conclusions, PackTemplataType(CoordTemplataType), argsPackRuleS) match {
+            case (rtmc @ RuleTyperMatchConflict(_, _, _)) => {
+              return (RuleTyperEvaluateConflict(conclusions.conclusions, "Prototype args component conflicted!", Some(rtmc)))
+            }
+            case (RuleTyperMatchUnknown()) => (None)
+            case (RuleTyperMatchSuccess(kindRuleT)) => (Some(kindRuleT))
+          }
+        val maybeCoordRuleT =
+          makeMatcher().matchTypeAgainstRulexSR(state, env, conclusions, CoordTemplataType, returnRuleS) match {
+            case (rtmc @ RuleTyperMatchConflict(_, _, _)) => return (RuleTyperEvaluateConflict(conclusions.conclusions, "Prototype return component conflicted!", Some(rtmc)))
+            case (RuleTyperMatchUnknown()) => (None)
+            case (RuleTyperMatchSuccess(kindRuleT)) => (Some(kindRuleT))
+          }
+        (maybeHumanNameRuleT, maybeCoordPackRuleT, maybeCoordRuleT) match {
+          case (Some(humanNameRuleT), Some(coordPackRuleT), Some(coordRuleT)) => {
+            (RuleTyperEvaluateSuccess(List(humanNameRuleT, coordPackRuleT, coordRuleT)))
+          }
+          case (_, _, _) => {
+            (RuleTyperEvaluateUnknown())
+          }
+        }
+
+      }
+      case _ => vfail("Prototypes must have 3 components")
     }
   }
 

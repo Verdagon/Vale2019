@@ -60,6 +60,8 @@ trait IInfererDelegate[Env, State] {
   def structIsClosure(state: State, structRef: StructRef2): Boolean
 
   def getSimpleInterfaceMethod(state: State, interfaceRef: InterfaceRef2): Prototype2
+
+  def resolveExactSignature(env: Env, state: State, name: String, coords: List[Coord]): Prototype2
 }
 
 // This is the public API for the outside world to use the Infer code.
@@ -185,6 +187,10 @@ object Inferer {
 
       override def getSimpleInterfaceMethod(state: State, interfaceRef: InterfaceRef2): Prototype2 = {
         delegate.getSimpleInterfaceMethod(state, interfaceRef)
+      }
+
+      override def resolveExactSignature(env: Env, state: State, name: String, coords: List[Coord]): Prototype2 = {
+        delegate.resolveExactSignature(env, state, name, coords)
       }
     }
   }

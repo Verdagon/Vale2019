@@ -2,6 +2,7 @@ package net.verdagon.vale.templar
 
 import net.verdagon.vale.astronomer._
 import net.verdagon.vale.scout.ITemplexS
+import net.verdagon.vale.templar.OverloadTemplar.{ScoutExpectedFunctionFailure, ScoutExpectedFunctionSuccess}
 import net.verdagon.vale.templar.citizen.{ImplTemplar, StructTemplar}
 import net.verdagon.vale.templar.env.{IEnvironment, ILookupContext, TemplataLookupContext}
 import net.verdagon.vale.templar.infer._
@@ -144,6 +145,15 @@ object InferTemplar {
         }
         interfaceDef2.internalMethods.head.toPrototype
       }
+
+      override def resolveExactSignature(env: IEnvironment, state: TemputsBox, name: String, coords: List[Coord]): Prototype2 = {
+        OverloadTemplar.scoutExpectedFunctionForPrototype(env, state, GlobalFunctionFamilyNameA(name), List(), coords.map(ParamFilter(_, None)), List(), true) match {
+          case sef @ ScoutExpectedFunctionFailure(humanName, args, outscoredReasonByPotentialBanner, rejectedReasonByBanner, rejectedReasonByFunction) => {
+            vfail(sef.toString)
+          }
+          case ScoutExpectedFunctionSuccess(prototype) => prototype
+        }
+      }
     }
   }
 
@@ -235,6 +245,7 @@ object InferTemplar {
       case ComponentsAR(tyype, componentsA) => ComponentsTR(tyype, componentsA.map(translateRule))
       case OrAR(possibilities) => OrTR(possibilities.map(translateRule))
       case CallAR(name, args, resultType) => CallTR(name, args.map(translateRule), resultType)
+//      case CoordListAR(rules) => CoordListTR(rules.map(translateRule))
       case _ => vimpl()
     }
   }
@@ -249,8 +260,10 @@ object InferTemplar {
       case CallAT(template, args, resultType) => CallTT(translateTemplex(template), args.map(translateTemplex), resultType)
       case MutabilityAT(m) => MutabilityTT(m)
       case RepeaterSequenceAT(mutability, size, element, resultType) => RepeaterSequenceTT(translateTemplex(mutability), translateTemplex(size), translateTemplex(element), resultType)
-      case PackAT(members, resultType) => PackTT(members.map(translateTemplex), resultType)
+//      case PackAT(members, resultType) => PackTT(members.map(translateTemplex), resultType)
       case IntAT(value) => IntTT(value)
+      case StringAT(value) => StringTT(value)
+      case CoordListAT(elements) => CoordListTT(elements.map(translateTemplex))
       case _ => vimpl(templexA.toString)
     }
   }

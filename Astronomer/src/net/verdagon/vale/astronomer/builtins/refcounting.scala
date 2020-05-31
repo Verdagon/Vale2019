@@ -27,7 +27,7 @@ object RefCounting {
       List(
         EqualsAR(TemplexAR(RuneAT(CodeRuneA("I"), CoordTemplataType)), TemplexAR(NameAT(CodeTypeNameA("Int"), CoordTemplataType))),
         EqualsAR(TemplexAR(RuneAT(CodeRuneA("T"), CoordTemplataType)), ComponentsAR(CoordTemplataType, List(TemplexAR(OwnershipAT(BorrowP)), TemplexAR(RuneAT(CodeRuneA("TK"), KindTemplataType))))),
-        EqualsAR(TemplexAR(RuneAT(CodeRuneA("V"), CoordTemplataType)), ComponentsAR(CoordTemplataType, List(TemplexAR(OwnershipAT(ShareP)), TemplexAR(PackAT(List(), KindTemplataType)))))),
+        EqualsAR(TemplexAR(RuneAT(CodeRuneA("V"), CoordTemplataType)), TemplexAR(NameAT(CodeTypeNameA("Void"), CoordTemplataType)))),
       CodeBodyA(
         BodyAE(
           List(),
@@ -68,7 +68,7 @@ object RefCounting {
       List(
         EqualsAR(TemplexAR(RuneAT(CodeRuneA("I"), CoordTemplataType)), TemplexAR(NameAT(CodeTypeNameA("Int"), CoordTemplataType))),
         EqualsAR(TemplexAR(RuneAT(CodeRuneA("T"), CoordTemplataType)), ComponentsAR(CoordTemplataType, List(TemplexAR(OwnershipAT(BorrowP)), TemplexAR(RuneAT(CodeRuneA("TK"), KindTemplataType))))),
-        EqualsAR(TemplexAR(RuneAT(CodeRuneA("V"), CoordTemplataType)), ComponentsAR(CoordTemplataType, List(TemplexAR(OwnershipAT(ShareP)), TemplexAR(PackAT(List(), KindTemplataType)))))),
+        EqualsAR(TemplexAR(RuneAT(CodeRuneA("V"), CoordTemplataType)), TemplexAR(NameAT(CodeTypeNameA("Void"), CoordTemplataType)))),
       CodeBodyA(
         BodyAE(
           List(),

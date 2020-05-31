@@ -104,7 +104,6 @@ object FunctionScout {
 
     val allRunes =
       PredictorEvaluator.getAllRunes(
-        name,
         userSpecifiedIdentifyingRunes,
         rulesS,
         explicitParams1.map(_.pattern),
@@ -276,7 +275,6 @@ object FunctionScout {
 
     val allRunes =
       PredictorEvaluator.getAllRunes(
-        lambdaName,
         userSpecifiedAndMagicParamRunes,
         rulesS,
         explicitParams1.map(_.pattern),
@@ -481,7 +479,6 @@ object FunctionScout {
 
     val allRunes =
       PredictorEvaluator.getAllRunes(
-        funcName,
         userSpecifiedIdentifyingRunes,
         rulesS,
         paramsS.map(_.pattern),

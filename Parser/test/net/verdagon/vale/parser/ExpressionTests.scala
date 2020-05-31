@@ -127,24 +127,6 @@ class ExpressionTests extends FunSuite with Matchers {
       FunctionCallPE(LookupPE(">=",List()),List(IntLiteralPE(9), IntLiteralPE(3)),true)
   }
 
-//  test("Bork") {
-//    compile(VParser.expression,"""Array<M, E>(N, (i){ seq.(i)})""") shouldEqual
-//      FunctionCallPE(
-//        LookupPE("Array",List(NameOrRunePT("M"), NameOrRunePT("E"))),
-//        PackPE(
-//          List(
-//            LookupPE("N",List()),
-//            LambdaPE(
-//              FunctionP(
-//                None,false,false,true,List(),List(),
-//                List(PatternPP(Some(CaptureP("i",FinalP)),None,None,None)),
-//                None,
-//                Some(
-//                  BlockPE(List(DotCallPE(LookupPE("seq",List()),PackPE(List(LookupPE("i",List()))),true)))))))),
-//        true)
-//  }
-
-
 
   // debt: fix
 //  test("Array index") {

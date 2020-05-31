@@ -32,7 +32,7 @@ class ScoutParametersTests extends FunSuite with Matchers {
       main.templateRules match {
         case List(TypedSR(rune @ CodeRuneS("T"),CoordTypeSR)) => rune
       }
-    RuleSUtils.getDistinctOrderedRunesForRulexes(mainName, main.templateRules) match {
+    RuleSUtils.getDistinctOrderedRunesForRulexes(main.templateRules) match {
       case List(runeFromFunc) => vassert(runeInRules == runeFromFunc)
     }
   }
@@ -69,7 +69,7 @@ class ScoutParametersTests extends FunSuite with Matchers {
             TemplexSR(RuneST(ImplicitRuneS(_, 0)))))) =>
     }
 
-    RuleSUtils.getDistinctOrderedRunesForRulexes(mainName, main.templateRules) match {
+    RuleSUtils.getDistinctOrderedRunesForRulexes(main.templateRules) match {
       case List(
         ImplicitRuneS(_, 0),
           CodeRuneS("T"),
@@ -100,7 +100,7 @@ class ScoutParametersTests extends FunSuite with Matchers {
       }
     }
 
-    RuleSUtils.getDistinctOrderedRunesForRulexes(mainName, main.templateRules) shouldEqual
+    RuleSUtils.getDistinctOrderedRunesForRulexes(main.templateRules) shouldEqual
       List(paramRune)
   }
 
@@ -124,7 +124,7 @@ class ScoutParametersTests extends FunSuite with Matchers {
       }
     }
 
-    RuleSUtils.getDistinctOrderedRunesForRulexes(mainName, main.templateRules) shouldEqual
+    RuleSUtils.getDistinctOrderedRunesForRulexes(main.templateRules) shouldEqual
       List(paramRune)
   }
 
@@ -162,7 +162,7 @@ class ScoutParametersTests extends FunSuite with Matchers {
       }
     }
 
-    RuleSUtils.getDistinctOrderedRunesForRulexes(mainName, main.templateRules) shouldEqual
+    RuleSUtils.getDistinctOrderedRunesForRulexes(main.templateRules) shouldEqual
       List(tRune, aRune)
 
     // See CCAUIR.

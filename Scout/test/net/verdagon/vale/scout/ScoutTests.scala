@@ -92,7 +92,7 @@ class ScoutTests extends FunSuite with Matchers {
         }
       }
 
-    RuleSUtils.getDistinctOrderedRunesForRulexes(mainName, blork.templateRules) shouldEqual
+    RuleSUtils.getDistinctOrderedRunesForRulexes(blork.templateRules) shouldEqual
       List(paramRune, retRune)
 
     blork.params match {

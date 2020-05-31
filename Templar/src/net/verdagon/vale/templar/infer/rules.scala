@@ -49,6 +49,9 @@ sealed trait ITemplexT {
 case class IntTT(value: Int) extends ITemplexT {
   override def resultType: ITemplataType = IntegerTemplataType
 }
+case class StringTT(value: String) extends ITemplexT {
+  override def resultType: ITemplataType = StringTemplataType
+}
 case class BoolTT(value: Boolean) extends ITemplexT {
   override def resultType: ITemplataType = BooleanTemplataType
 }
@@ -126,12 +129,12 @@ case class PrototypeTT(
   override def resultType: ITemplataType = vimpl()
 }
 
-case class PackTT(
-  members: List[ITemplexT],
-  // This is here because we might want to coerce the result. We do this for
-  // calls, packs, etc.
-  resultType: ITemplataType
-) extends ITemplexT
+//case class PackTT(
+//  members: List[ITemplexT],
+//  // This is here because we might want to coerce the result. We do this for
+//  // calls, packs, etc.
+//  resultType: ITemplataType
+//) extends ITemplexT
 
 case class RepeaterSequenceTT(
   mutability: ITemplexT,
@@ -148,3 +151,9 @@ case class ManualSequenceTT(
   // calls, packs, etc.
   resultType: ITemplataType
 ) extends ITemplexT
+
+case class CoordListTT(
+  elements: List[ITemplexT]
+) extends ITemplexT {
+  override def resultType: ITemplataType = PackTemplataType(CoordTemplataType)
+}

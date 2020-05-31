@@ -16,7 +16,6 @@ import scala.collection.immutable.List
 object PredictorEvaluator {
 
   private[scout] def getAllRunes(
-    envFullName: INameS,
     userSpecifiedIdentifyingRunes: List[IRuneS],
     rules: List[IRulexSR],
     patterns1: List[AtomSP],
@@ -25,7 +24,7 @@ object PredictorEvaluator {
     (
       userSpecifiedIdentifyingRunes ++
         patterns1.flatMap(PatternSUtils.getDistinctOrderedRunesForPattern) ++
-        RuleSUtils.getDistinctOrderedRunesForRulexes(envFullName, rules) ++
+        RuleSUtils.getDistinctOrderedRunesForRulexes(rules) ++
         maybeRetRune.toList
       ).toSet
   }
@@ -68,8 +67,14 @@ object PredictorEvaluator {
       case r @ TypedSR(_, _) => evaluateTypedRule(conclusions, r)
       case TemplexSR(templex) => evaluateTemplex(conclusions, templex)
       case r @ CallSR(_, _) => evaluateRuleCall(conclusions, r)
+//      case r @ PackSR(_) => evaluatePackRule(conclusions, r)
     }
   }
+
+//  private def evaluatePackRule(conclusions: ConclusionsBox, rule: PackSR): Boolean = {
+//    val PackSR(elements) = rule
+//    evaluateRules(conclusions, elements).forall(_ == true)
+//  }
 
   private def evaluateRules(
     conclusions: ConclusionsBox,
@@ -101,6 +106,12 @@ object PredictorEvaluator {
         val List(kindRule) = argumentRules
         evaluateRule(conclusions, kindRule)
       }
+//      case "resolveExactSignature" => {
+//        val List(nameRule, argsRule) = argumentRules
+//        val evaluateNameSuccess = evaluateRule(conclusions, nameRule)
+//        val evaluateArgsSuccess = evaluateRule(conclusions, argsRule)
+//        evaluateNameSuccess && evaluateArgsSuccess
+//      }
       case _ => vfail("Unknown function \"" + name + "\"!");
     }
   }
@@ -124,6 +135,7 @@ object PredictorEvaluator {
   ): Boolean = {
     ruleTemplex match {
       case IntST(_) => true
+      case StringST(_) => true
       case BoolST(_) => true
       case MutabilityST(_) => true
       case PermissionST(_) => true
@@ -132,15 +144,14 @@ object PredictorEvaluator {
       case VariabilityST(_) => true
       case NameST(_) => true
       case AbsoluteNameST(_) => true
+      case BorrowST(inner) => evaluateTemplex(conclusions, inner)
       case RuneST(rune) => {
         conclusions.knowableValueRunes.contains(rune)
       }
       case OwnershippedST(_, kindRule) => evaluateTemplex(conclusions, kindRule)
       case CallST(templateRule, paramRules) => {
-        val templateKnown =
-          evaluateTemplex(conclusions, templateRule)
-        val argsKnown =
-          evaluateTemplexes(conclusions, paramRules)
+        val templateKnown = evaluateTemplex(conclusions, templateRule)
+        val argsKnown = evaluateTemplexes(conclusions, paramRules)
         templateKnown && argsKnown.forall(_ == true)
       }
       case PrototypeST(_, _, _) => {

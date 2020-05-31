@@ -40,6 +40,7 @@ class InfererEquator[Env, State](
       case (leftInterfaceTemplata @ InterfaceTemplata(_, _), rightInterfaceTemplata @ InterfaceTemplata(_, _)) => {
         (leftInterfaceTemplata == rightInterfaceTemplata)
       }
+      case (PrototypeTemplata(leftP), PrototypeTemplata(rightP)) => leftP == rightP
       case _ => vfail("make case for:\n" + left + "\n" + right)
     }
   }
@@ -56,6 +57,7 @@ class InfererEquator[Env, State](
       case LocationTemplataType =>
       case CoordTemplataType =>
       case KindTemplataType =>
+      case PrototypeTemplataType =>
 //      case StructTypeSR =>
 //      case InterfaceTypeSR =>
 //      case SequenceTypeSR =>
@@ -84,6 +86,7 @@ class InfererEquator[Env, State](
       case KindTemplata(_) =>
       case InterfaceTemplata(_, _) =>
       case StructTemplata(_, _) =>
+      case PrototypeTemplata(_) =>
     }
 
     (tyype, templata) match {
@@ -96,6 +99,7 @@ class InfererEquator[Env, State](
       case (CoordTemplataType, CoordTemplata(_)) => true
       case (CoordTemplataType, KindTemplata(_)) => false
       case (KindTemplataType, KindTemplata(_)) => true
+      case (PrototypeTemplataType, PrototypeTemplata(_)) => true
       case (KindTemplataType, StructTemplata(_, structA)) => {
         if (structA.isTemplate) {
           // It's a struct template, not a struct.

@@ -110,7 +110,7 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
   }
 
   private[parser] def expressionElementLevel1: Parser[IExpressionPE] = {
-    string |
+    stringExpr |
       integer |
       ("true" ^^^ BoolLiteralPE(true)) |
       ("false" ^^^ BoolLiteralPE(false)) |

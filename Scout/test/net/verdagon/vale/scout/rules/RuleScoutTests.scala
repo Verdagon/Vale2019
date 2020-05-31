@@ -34,7 +34,7 @@ class RuleScoutTests extends FunSuite with Matchers {
           TypedSR(CodeRuneS("C"),CoordTypeSR),
           OrSR(List(TemplexSR(RuneST(CodeRuneS("B"))), TemplexSR(RuneST(CodeRuneS("A"))), TemplexSR(NameST(CodeTypeNameS("Int")))))),
         TypedSR(CodeRuneS("A"),CoordTypeSR))
-    RuleSUtils.getDistinctOrderedRunesForRulexes(mainName, expectedRulesS) shouldEqual
+    RuleSUtils.getDistinctOrderedRunesForRulexes(expectedRulesS) shouldEqual
       List(CodeRuneS("B"), CodeRuneS("A"), CodeRuneS("C"))
 
     val results =
@@ -63,7 +63,7 @@ class RuleScoutTests extends FunSuite with Matchers {
 
   test("B") {
     val rulesS = compile("fn main() rules(B Ref = List<A>, A Ref, C Ref = B | A | Int) {}")
-    RuleSUtils.getDistinctOrderedRunesForRulexes(mainName, rulesS) match {
+    RuleSUtils.getDistinctOrderedRunesForRulexes(rulesS) match {
       case List(
         CodeRuneS("B"),
         CodeRuneS("A"),

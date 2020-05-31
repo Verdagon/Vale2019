@@ -8,7 +8,7 @@ trait RuleParser extends RegexParsers with ParserUtils {
 
   private[parser] def ruleTemplexPR: Parser[ITemplexPRT]
 
-  // Add any new rules to the "Check no parser rules match empty" test!
+  // Add any new rules to the "Nothing matches empty string" test!
 
   private[parser] def level0PR: Parser[IRulexPR] = {
     ruleTemplexPR ^^ TemplexPR
@@ -26,6 +26,7 @@ trait RuleParser extends RegexParsers with ParserUtils {
     "Permission" ^^^ PermissionTypePR |
     "Location" ^^^ LocationTypePR |
     "Ref" ^^^ CoordTypePR |
+    "Prot" ^^^ PrototypeTypePR |
 //    "Struct" ^^^ StructTypePR |
 //    "Seq" ^^^ SequenceTypePR |
 //    "Callable" ^^^ CallableTypePR |
@@ -68,7 +69,10 @@ trait RuleParser extends RegexParsers with ParserUtils {
   }
 
   private[parser] def level3PR: Parser[IRulexPR] = {
-    dotPR(level2PR) | level2PR
+    implementsPR |
+    existsPR |
+    dotPR(level2PR) |
+    level2PR
   }
 
   private[parser] def level4PR: Parser[IRulexPR] = {
@@ -76,8 +80,6 @@ trait RuleParser extends RegexParsers with ParserUtils {
   }
 
   private[parser] def level5PR: Parser[IRulexPR] = {
-    implementsPR |
-    existsPR |
     equalsPR(level4PR) |
     level4PR
   }
@@ -86,19 +88,19 @@ trait RuleParser extends RegexParsers with ParserUtils {
     level5PR
   }
 
-  // Add any new rules to the "Check no parser rules match empty" test!
+  // Add any new rules to the "Nothing matches empty string" test!
 
   private[parser] def identifyingRunesPR: Parser[List[String]] = {
     ("<" ~> optWhite ~> repsep(exprIdentifier, optWhite ~> "," <~ optWhite) <~ optWhite <~ ">")
   }
 
-  // Add any new rules to the "Check no parser rules match empty" test!
+  // Add any new rules to the "Nothing matches empty string" test!
 
   def templateRulesPR: Parser[List[IRulexPR]] = {
     ("rules" ~> optWhite ~> "(" ~> optWhite ~> repsep(rulePR, optWhite ~> "," <~ optWhite) <~ optWhite <~ ")")
   }
 
-  // Add any new rules to the "Check no parser rules match empty" test!
+  // Add any new rules to the "Nothing matches empty string" test!
 
   // Atomic means no neighboring, see parser doc.
   private[parser] def implementsPR: Parser[IRulexPR] = {
@@ -108,6 +110,8 @@ trait RuleParser extends RegexParsers with ParserUtils {
     }
   }
 
+  // Add any new rules to the "Nothing matches empty string" test!
+
   // Atomic means no neighboring, see parser doc.
   private[parser] def existsPR: Parser[IRulexPR] = {
     "exists" ~> optWhite ~> "(" ~> optWhite ~> rulePR <~ optWhite <~ ")" ^^ {
@@ -115,7 +119,13 @@ trait RuleParser extends RegexParsers with ParserUtils {
     }
   }
 
-  // Add any new rules to the "Check no parser rules match empty" test!
+  // Add any new rules to the "Nothing matches empty string" test!
+
+  private[parser] def packPR: Parser[PackPR] = {
+    ("(" ~> optWhite ~> repsep(rulePR, optWhite ~> "," <~ optWhite) <~ optWhite <~ ")") ^^ PackPR
+  }
+
+  // Add any new rules to the "Nothing matches empty string" test!
 
   private[parser] def equalsPR(inner: Parser[IRulexPR]): Parser[EqualsPR] = {
     (inner <~ optWhite <~ "=" <~ optWhite) ~ inner ^^ {
@@ -123,5 +133,5 @@ trait RuleParser extends RegexParsers with ParserUtils {
     }
   }
 
-  // Add any new rules to the "Check no parser rules match empty" test!
+  // Add any new rules to the "Nothing matches empty string" test!
 }

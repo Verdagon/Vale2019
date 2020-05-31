@@ -77,6 +77,7 @@ case class ImpreciseCodeVarNameS(name: String) extends IImpreciseNameStepS
 // See PVSBUFI
 sealed trait ITemplexS
 case class IntST(value: Int) extends ITemplexS
+case class StringST(value: String) extends ITemplexS
 case class MutabilityST(mutability: MutabilityP) extends ITemplexS
 case class PermissionST(permission: PermissionP) extends ITemplexS
 case class LocationST(location: LocationP) extends ITemplexS
@@ -105,6 +106,9 @@ case class PrototypeST(
 case class PackST(
   members: List[ITemplexS]
 ) extends ITemplexS
+case class BorrowST(
+  inner: ITemplexS
+) extends ITemplexS
 case class RepeaterSequenceST(
   mutability: ITemplexS,
   size: ITemplexS,
@@ -117,6 +121,7 @@ case class ManualSequenceST(
 object TemplexSUtils {
   def getDistinctOrderedRunesForTemplex(templex: ITemplexS): List[IRuneS] = {
     templex match {
+      case StringST(_) => List()
       case IntST(_) => List()
       case MutabilityST(_) => List()
       case PermissionST(_) => List()
@@ -128,6 +133,7 @@ object TemplexSUtils {
       case AbsoluteNameST(_) => List()
       case RuneST(rune) => List(rune)
       case OwnershippedST(_, inner) => getDistinctOrderedRunesForTemplex(inner)
+      case BorrowST(inner) => getDistinctOrderedRunesForTemplex(inner)
       case CallST(template, args) => {
         (template :: args).flatMap(getDistinctOrderedRunesForTemplex).distinct
       }

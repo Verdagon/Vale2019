@@ -22,6 +22,9 @@ object RuleScout {
     rulex: IRulexPR):
   IRulexSR = {
     rulex match {
+//      case PackPR(elements) => {
+//        PackSR(translateRulexes(ruleState, userDeclaredRunes, elements))
+//      }
       case EqualsPR(leftP, rightP) => {
         EqualsSR(translateRulex(ruleState, userDeclaredRunes, leftP), translateRulex(ruleState, userDeclaredRunes, rightP))
       }
@@ -53,6 +56,7 @@ object RuleScout {
   }
   def translateType(tyype: ITypePR): ITypeSR = {
     tyype match {
+      case PrototypeTypePR => PrototypeTypeSR
       case IntTypePR => IntTypeSR
       case BoolTypePR => BoolTypeSR
       case OwnershipTypePR => OwnershipTypeSR
@@ -75,6 +79,7 @@ object RuleScout {
     templex: ITemplexPRT):
   ITemplexS = {
     templex match {
+      case StringPRT(value) => StringST(value)
       case IntPRT(value) => IntST(value)
       case MutabilityPRT(mutability) => MutabilityST(mutability)
       case PermissionPRT(permission) => PermissionST(permission)
@@ -104,6 +109,7 @@ object RuleScout {
       }
       case PrototypePRT(name, parameters, returnType) => PrototypeST(name, parameters.map(translateTemplex(ruleState, userDeclaredRunes, _)), translateTemplex(ruleState, userDeclaredRunes, returnType))
       case PackPRT(members) => PackST(members.map(translateTemplex(ruleState, userDeclaredRunes, _)))
+      case BorrowPRT(inner) => BorrowST(translateTemplex(ruleState, userDeclaredRunes, inner))
       case RepeaterSequencePRT(mutability, size, element) => RepeaterSequenceST(translateTemplex(ruleState, userDeclaredRunes, mutability), translateTemplex(ruleState, userDeclaredRunes, size), translateTemplex(ruleState, userDeclaredRunes, element))
       case ManualSequencePRT(elements) => ManualSequenceST(elements.map(translateTemplex(ruleState, userDeclaredRunes, _)))
     }

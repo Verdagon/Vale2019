@@ -180,6 +180,7 @@ object EnvironmentUtils {
       case InterfaceEnvEntry(_) => contexts.contains(TemplataLookupContext)
       case TemplataEnvEntry(templata) => {
         templata match {
+          case PrototypeTemplata(_) => true
           case CoordTemplata(_) => contexts.contains(TemplataLookupContext)
           case KindTemplata(_) => contexts.contains(TemplataLookupContext)
           case StructTemplata(_, _) => contexts.contains(TemplataLookupContext)

@@ -2,6 +2,9 @@ package net.verdagon.vale
 
 // A condition that reflects a user error.
 object vcheck {
+  def apply[T <: Throwable](condition: Boolean, message: String): Unit = {
+    vcheck(condition, message, (s) => new RuntimeException(s))
+  }
   def apply[T <: Throwable](condition: Boolean, exceptionMaker: (String) => T): Unit = {
     vcheck(condition, "Check failed!", exceptionMaker)
   }

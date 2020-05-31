@@ -47,10 +47,12 @@ trait ParserUtils extends RegexParsers {
     }
   }
 
-  private[parser] def string: Parser[IExpressionPE] = {
-    "\"" ~> "[^\"]*".r <~ "\"" ^^ {
-      case thingStr => StrLiteralPE(thingStr)
-    }
+  private[parser] def string: Parser[String] = {
+    "\"" ~> "[^\"]*".r <~ "\""
+  }
+
+  private[parser] def stringExpr: Parser[IExpressionPE] = {
+    string ^^ StrLiteralPE
   }
 
   // ww = with whitespace

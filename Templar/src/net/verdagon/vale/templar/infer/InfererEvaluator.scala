@@ -24,18 +24,19 @@ private[infer] trait IInfererEvaluatorDelegate[Env, State] {
 
   def getAncestorInterfaceDistance(temputs: State, descendantCitizenRef: CitizenRef2, ancestorInterfaceRef: InterfaceRef2): (Option[Int])
 
-  def getAncestorInterfaces(temputs: State, descendantCitizenRef: CitizenRef2):
-  (Set[InterfaceRef2])
+  def getAncestorInterfaces(temputs: State, descendantCitizenRef: CitizenRef2): Set[InterfaceRef2]
 
   def lookupTemplata(env: Env, rune: IName2): ITemplata
 
   def getMemberCoords(state: State, structRef: StructRef2): List[Coord]
 
-  def citizenIsFromTemplate(state: State, citizen: CitizenRef2, template: ITemplata): (Boolean)
+  def citizenIsFromTemplate(state: State, citizen: CitizenRef2, template: ITemplata): Boolean
 
   def structIsClosure(state: State, structRef: StructRef2): Boolean
 
   def getSimpleInterfaceMethod(state: State, interfaceRef: InterfaceRef2): Prototype2
+
+  def resolveExactSignature(env: Env, state: State, name: String, coords: List[Coord]): Prototype2
 }
 
 // Given enough user specified template params and param inputs, we should be able to
@@ -405,6 +406,7 @@ class InfererEvaluator[Env, State](
     rule: IRulexTR
   ): (IInferEvaluateResult[ITemplata]) = {
     rule match {
+//      case r @ CoordListTR(_) => evaluateCoordListRule(env, state, localRunes, inferences, r)
       case r @ EqualsTR(_, _) => evaluateEqualsRule(env, state, localRunes, inferences, r)
       case r @ IsaTR(_, _) => evaluateIsaRule(env, state, localRunes, inferences, r)
       case r @ OrTR(_) => evaluateOrRule(env, state, localRunes, inferences, r)
@@ -454,6 +456,25 @@ class InfererEvaluator[Env, State](
       }
     })
   }
+
+//  private[infer] def evaluateCoordListRule(
+//      env: Env,
+//      state: State,
+//      runes: Set[IRune2],
+//      inferences: InferencesBox,
+//      rule: CoordListTR):
+//  IInferEvaluateResult[CoordListTemplata] = {
+//    val CoordListTR(coordRules) = rule
+//
+//    evaluateRules(env, state, runes, inferences, coordRules) match {
+//      case InferEvaluateSuccess(templatas, deeplySatisfied) => {
+//        val coords = templatas.map({ case CoordTemplata(c) => c })
+//        InferEvaluateSuccess(CoordListTemplata(coords), deeplySatisfied)
+//      }
+//      case InferEvaluateUnknown(deeplySatisfied) => InferEvaluateUnknown(deeplySatisfied)
+//      case imc @ InferEvaluateConflict(_, _, _) => InferEvaluateConflict(inferences.inferences, "Failed evaluating coord list", List(imc))
+//    }
+//  }
 
   private[infer] def evaluateRuleCall(
     env: Env,
@@ -589,12 +610,9 @@ class InfererEvaluator[Env, State](
     ruleTemplex: ITemplexT
   ): (IInferEvaluateResult[ITemplata]) = {
     ruleTemplex match {
-      case IntTT(value) => {
-        (InferEvaluateSuccess(IntegerTemplata(value), true))
-      }
-      case BoolTT(value) => {
-        (InferEvaluateSuccess(BooleanTemplata(value), true))
-      }
+      case StringTT(value) => InferEvaluateSuccess(StringTemplata(value), true)
+      case IntTT(value) => InferEvaluateSuccess(IntegerTemplata(value), true)
+      case BoolTT(value) => InferEvaluateSuccess(BooleanTemplata(value), true)
       case MutabilityTT(mutability) => {
         (InferEvaluateSuccess(MutabilityTemplata(Conversions.evaluateMutability(mutability)), true))
       }
@@ -736,22 +754,18 @@ class InfererEvaluator[Env, State](
       case PrototypeTT(_, _, _) => {
         vfail("Unimplemented")
       }
-      case PackTT(memberTemplexes, resultType) => {
+      case CoordListTT(memberTemplexes) => {
         evaluateTemplexes(env, state, localRunes, inferences, memberTemplexes) match {
           case (iec @ InferEvaluateConflict(_, _, _)) => {
-            return (InferEvaluateConflict(inferences.inferences, "Failed to evaluate CallAT arguments", List(iec)))
+            return (InferEvaluateConflict(inferences.inferences, "Failed to evaluate CoordListTT arguments", List(iec)))
           }
-          case (InferEvaluateUnknown(deeplySatisfied)) => {
-            (InferEvaluateUnknown(deeplySatisfied))
-          }
+          case (InferEvaluateUnknown(deeplySatisfied)) => InferEvaluateUnknown(deeplySatisfied)
           case (InferEvaluateSuccess(memberTemplatas, deeplySatisfied)) => {
             val memberCoords = memberTemplatas.collect({ case CoordTemplata(coord) => coord })
             if (memberCoords.size != memberTemplatas.size) {
               vfail("Packs can only take coords!")
             }
-
-            val packTemplata = templataTemplar.getPackKind(env, state, memberCoords, resultType)
-            (InferEvaluateSuccess(packTemplata, deeplySatisfied))
+            InferEvaluateSuccess(CoordListTemplata(memberCoords), deeplySatisfied)
           }
         }
       }
@@ -1012,6 +1026,13 @@ class InfererEvaluator[Env, State](
           case (InferEvaluateSuccess(templataFromRune, ds)) => (InferEvaluateSuccess(templataFromRune, ds))
         }
       }
+      case PrototypeTemplataType => {
+        evaluatePrototypeComponents(env, state, localRunes, inferences, components) match {
+          case (iec @ InferEvaluateConflict(_, _, _)) => return (InferEvaluateConflict(inferences.inferences, "Failed evaluating coord components!", List(iec)))
+          case (InferEvaluateUnknown(ds)) => (InferEvaluateUnknown(ds))
+          case (InferEvaluateSuccess(templataFromRune, ds)) => (InferEvaluateSuccess(templataFromRune, ds))
+        }
+      }
       case _ => vfail("Can only destructure coords and kinds!")
     }
   }
@@ -1083,6 +1104,85 @@ class InfererEvaluator[Env, State](
         // We have the mutability, but we can't know the entire kind just given a mutability.
         // Just hand upwards an unknown.
         (InferEvaluateUnknown(deeplySatisfied))
+      }
+    }
+  }
+
+  private def evaluatePrototypeComponents(
+    env: Env,
+    state: State,
+    localRunes: Set[IRune2],
+    inferences: InferencesBox,
+    components: List[IRulexTR]):
+  (IInferEvaluateResult[ITemplata]) = {
+    // Now we're going to try and evaluate all the components.
+    // At the end, if we have values for every component, then we'll
+    // assemble a shiny new coord out of them!
+    vcheck(components.size == 3, "Prototypes must have 3 components (name, coord list, coord), supplied " + components.size)
+    val List(nameRule, paramsRule, returnRule) = components
+
+    val (maybeName, nameDeeplySatisfied) =
+      evaluateRule(env, state, localRunes, inferences, nameRule) match {
+        case (iec@InferEvaluateConflict(_, _, _)) => return (InferEvaluateConflict(inferences.inferences, "floop", List(iec)))
+        case (InferEvaluateUnknown(ds)) => (None, ds)
+        case (InferEvaluateSuccess(templata, ds)) => {
+          templata match {
+            case StringTemplata(name) => (Some(name), ds)
+            case _ => vfail("First component of Prototype must be a string!")
+          }
+        }
+      }
+    val (maybeParams, paramsDeeplySatisfied) =
+      evaluateRule(env, state, localRunes, inferences, paramsRule) match {
+        case (iec@InferEvaluateConflict(_, _, _)) => return (InferEvaluateConflict(inferences.inferences, "floop", List(iec)))
+        case (InferEvaluateUnknown(ds)) => (None, ds)
+        case (InferEvaluateSuccess(templata, ds)) => {
+          templata match {
+            case CoordListTemplata(coords) => (Some(coords), ds)
+            case _ => vfail("First component of Coord must be an ownership!")
+          }
+        }
+      }
+
+    (maybeName, maybeParams) match {
+      case (Some(name), Some(params)) => {
+        // the prototype components rule is kind of weird because it can figure out the whole prototype
+        // from just the name and the params. So, we resolve it, and then once we get the prototype,
+        // we can match its return value against the return value part of the components rule.
+
+        val prot = delegate.resolveExactSignature(env, state, name, params)
+        val retDeeplySatisfied =
+          makeMatcher().matchTemplataAgainstRulexTR(env, state, localRunes, inferences, CoordTemplata(prot.returnType), returnRule) match {
+            case imc@InferMatchConflict(_, _, _) => {
+              // None from the match means something conflicted, bail!
+              return (InferEvaluateConflict(inferences.inferences, s"Prot rule evaluated name ${name} and params ${params} and found a prototype with return value ${prot.returnType}, but failed to match it against the Prot rule's return rule.", List(imc)))
+            }
+            case InferMatchSuccess(ds) => ds
+          }
+        val deeplySatisfied = nameDeeplySatisfied && paramsDeeplySatisfied && retDeeplySatisfied
+        (InferEvaluateSuccess(PrototypeTemplata(prot), deeplySatisfied))
+      }
+      case _ => {
+        // If we get here, then we couldn't evaluate the name or the params. Let's evaluate the return
+        // rule, just for kicks. Who knows, it could contain hints we could later use to evaluate
+        // name or params, in some weird circuitous way.
+
+        val retDeeplySatisfied =
+          evaluateRule(env, state, localRunes, inferences, returnRule) match {
+            case (iec@InferEvaluateConflict(_, _, _)) => return InferEvaluateConflict(inferences.inferences, "sparklebark", List(iec))
+            case (InferEvaluateUnknown(retDeeplySatisfied)) => retDeeplySatisfied
+            case (InferEvaluateSuccess(templata, retDeeplySatisfied)) => {
+              // There's nothing really useful to do with this return coord, we can't use it to resolve a function
+              // because functions are identified by name and params.
+              val _ = templata
+              retDeeplySatisfied
+            }
+          }
+        val deeplySatisfied = nameDeeplySatisfied && paramsDeeplySatisfied && retDeeplySatisfied
+        vcurious(!deeplySatisfied) // We only got here because name and params failed, so can this ever be true?
+
+        // deeplySatisfied can still be true even if the result is unknown, see IEUNDS.
+        InferEvaluateUnknown(deeplySatisfied)
       }
     }
   }
