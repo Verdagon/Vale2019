@@ -8,7 +8,7 @@ import scala.util.parsing.combinator.RegexParsers
 trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUtils {
 
   // Things needed from other parsers
-  private[parser] def exprIdentifier: Parser[String]
+  private[parser] def exprIdentifier: Parser[StringP]
 
 
   // Add any new rules to the "Nothing matches empty string" test!
@@ -17,6 +17,7 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
   // And it relies on that fact for the subpatterns too.
   private[parser] def atomPattern: Parser[PatternPP] = positioned {
 
+    pos ~
     opt("virtual" ~> white) ~
     (
       // The order here matters, we don't want the "a" rule to match "a A(_, _)" just because one starts with the other.
@@ -38,8 +39,9 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
         // Yes capture, no type, no destructure:
         underscoreOr(patternCapture) ^^ { case capture => (capture, None, None) }
     ) ~
-    opt(white ~> "impl" ~> white ~> patternTemplex) ^^ {
-      case maybeVirtual ~ maybeCaptureAndMaybeTypeAndMaybeDestructure ~ maybeInterface => {
+    opt(white ~> "impl" ~> white ~> patternTemplex) ~
+    pos ^^ {
+      case begin ~ maybeVirtual ~ maybeCaptureAndMaybeTypeAndMaybeDestructure ~ maybeInterface ~ end => {
         val (maybeCapture, maybeType, maybeDestructure) = maybeCaptureAndMaybeTypeAndMaybeDestructure
         val maybeVirtuality =
           (maybeVirtual, maybeInterface) match {
@@ -48,7 +50,7 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
             case (None, Some(interface)) => Some(OverrideP(interface))
             case (Some(_), Some(_)) => vfail()
           }
-        PatternPP(maybeCapture, maybeType, maybeDestructure, maybeVirtuality)
+        PatternPP(Range(begin, end), maybeCapture, maybeType, maybeDestructure, maybeVirtuality)
       }
     }
 

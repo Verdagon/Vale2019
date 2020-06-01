@@ -10,7 +10,7 @@ import scala.collection.immutable.{List, Map}
 object IFunction1 {
   val interface =
     InterfaceA(
-      TopLevelCitizenDeclarationNameA("IFunction1", CodeLocationS(0, 0)),
+      TopLevelCitizenDeclarationNameA("IFunction1", CodeLocationS(1, 1)),
       CodeRuneA("M"),
       None,
       TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType, CoordTemplataType), KindTemplataType),

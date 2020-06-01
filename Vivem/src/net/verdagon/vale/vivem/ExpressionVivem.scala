@@ -576,7 +576,7 @@ object ExpressionVivem {
             sourceReference.num)
         NodeContinue(targetReference)
       }
-      case IfH(conditionBlock, thenBlock, elseBlock) => {
+      case IfH(conditionBlock, thenBlock, elseBlock, commonSupertype) => {
         val conditionReference =
           executeNode(programH, stdin, stdout, heap, expressionId.addStep(0), conditionBlock) match {
             case r @ NodeReturn(_) => return r

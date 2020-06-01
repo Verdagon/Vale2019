@@ -3,10 +3,10 @@ package net.verdagon.vale.parser.patterns
 import net.verdagon.vale.parser.Patterns._
 import net.verdagon.vale.parser.VParser._
 import net.verdagon.vale.parser._
-import net.verdagon.vale.vfail
+import net.verdagon.vale.{vfail, vimpl}
 import org.scalatest.{FunSuite, Matchers}
 
-class CaptureAndDestructureTests extends FunSuite with Matchers {
+class CaptureAndDestructureTests extends FunSuite with Matchers with Collector {
   private def compile[T](parser: VParser.Parser[T], code: String): T = {
     VParser.parse(parser, code.toCharArray()) match {
       case VParser.NoSuccess(msg, input) => {
@@ -39,34 +39,39 @@ class CaptureAndDestructureTests extends FunSuite with Matchers {
 
 
   test("Capture with destructure with type inside") {
-    compile("a (a Int, b Bool)") shouldEqual
-        PatternPP(
-          Some(CaptureP("a",FinalP)),
+    compile("a (a Int, b Bool)") shouldHave {
+      case PatternPP(
+          Some(CaptureP(StringP(_, "a"),FinalP)),
           None,
           Some(
             List(
-              capturedWithType("a", NameOrRunePPT("Int")),
-              capturedWithType("b", NameOrRunePPT("Bool")))),
-          None)
+              capturedWithType("a", NameOrRunePPT(StringP(_, "Int"))),
+              capturedWithType("b", NameOrRunePPT(StringP(_, "Bool"))))),
+          None) =>
+    }
   }
   test("capture with empty sequence type") {
-    compile("a []") shouldEqual
-        capturedWithType("a", ManualSequencePPT(List()))
+    compile("a []") shouldHave {
+      case capturedWithType("a", ManualSequencePPT(List())) =>
+    }
   }
   test("empty destructure") {
-    compile(destructure,"()") shouldEqual List()
+    compile(destructure,"()") shouldHave { case List() =>
+    }
   }
   test("capture with empty destructure") {
-    compile("a ()") shouldEqual
-        PatternPP(Some(CaptureP("a",FinalP)),None,Some(List()),None)
+    compile("a ()") shouldHave {
+      case PatternPP(Some(CaptureP(StringP(_, "a"),FinalP)),None,Some(List()),None) =>
+    }
   }
   test("Destructure with nested atom") {
-    compile("a (b Int)") shouldEqual
-        PatternPP(
-          Some(CaptureP("a", FinalP)),
+    compile("a (b Int)") shouldHave {
+      case PatternPP(
+          Some(CaptureP(StringP(_, "a"), FinalP)),
           None,
           Some(
-            List(capturedWithType("b", NameOrRunePPT("Int")))),
-          None)
+            List(capturedWithType("b", NameOrRunePPT(StringP(_, "Int"))))),
+          None) =>
+    }
   }
 }

@@ -20,17 +20,11 @@ trait Collector {
     }
   }
 
-  implicit class ProgramWithExpect(program: Program0) {
-    def shouldHaveMatch[T](f: PartialFunction[Any, T]): T = {
+  implicit class ProgramWithExpect(program: Any) {
+    def shouldHave[T](f: PartialFunction[Any, T]): T = {
       recursiveCollectFirst(program, f) match {
         case None => throw new AssertionError("Couldn't find the thing, in:\n" + program)
         case Some(t) => t
-      }
-    }
-    def shouldHave(needle: Any): Unit = {
-      recursiveCollectFirst(program, { case x if needle == x => }) match {
-        case None => throw new AssertionError("Couldn't find " + needle + ", in:\n" + program)
-        case Some(_) =>
       }
     }
   }
@@ -50,39 +44,50 @@ class BiggerTests extends FunSuite with Matchers with Collector {
   }
 
   test("Simple while loop") {
-    compile(VParser.statement,"while () {}") shouldEqual
-        WhilePE(BlockPE(List(VoidPE())), BlockPE(List(VoidPE())))
+    compile(VParser.statement,"while () {}") shouldHave {
+      case WhilePE(BlockPE(List(VoidPE())), BlockPE(List(VoidPE()))) =>
+    }
   }
 
   test("Result after while loop") {
-    compile(VParser.block,"while () {} = false;") shouldEqual
-        BlockPE(List(
-          WhilePE(BlockPE(List(VoidPE())), BlockPE(List(VoidPE()))),
-          BoolLiteralPE(false)))
+    compile(VParser.block,"while () {} = false;") shouldHave {
+      case BlockPE(List(
+      WhilePE(BlockPE(List(VoidPE())), BlockPE(List(VoidPE()))),
+      BoolLiteralPE(false))) =>
+    }
   }
 
   test("Block with result") {
-    compile(VParser.block,"= 3;") shouldEqual BlockPE(List(IntLiteralPE(3)))
+    compile(VParser.block,"= 3;") shouldHave {
+      case BlockPE(List(IntLiteralPE(3))) =>
+    }
   }
 
   test("Simple function") {
-    compile(VParser.topLevelFunction, "fn sum(){3}") shouldEqual
-      FunctionP(Some("sum"),false,false,true,List(),List(), List(),None,Some(BlockPE(List(IntLiteralPE(3)))))
+    compile(VParser.topLevelFunction, "fn sum(){3}") match {
+      case FunctionP(_, Some(StringP(_, "sum")), None, None, None, None, Some(ParamsP(_,List())), None, Some(BlockPE(List(IntLiteralPE(3))))) =>
+    }
   }
 
 //  test("Simple function with typed identifying rune") {
 //    val func = compile(VParser.topLevelFunction, "fn sum<A>(a A){a}")
-//    func.templateRules shouldEqual
-//  }
+//    func.templateRules shouldHave {
+  // case  }
 
   test("Function call") {
     val program = compile(VParser.program, "fn main(){call(sum)}")
-    program shouldHave FunctionCallPE(LookupPE("call", List()),List(LookupPE("sum", List())),true)
+//    val main = program.lookupFunction("main")
+
+    program shouldHave {
+      case FunctionCallPE(LookupPE(StringP(_, "call"), List()),List(LookupPE(StringP(_, "sum"), List())),true) =>
+    }
   }
 
   test("Mutating as statement") {
     val program = compile(VParser.topLevelFunction, "fn main() { mut x = 6; }")
-    program.body.get.elements.head shouldEqual MutatePE(LookupPE("x",List()),IntLiteralPE(6))
+    program shouldHave {
+      case MutatePE(LookupPE(StringP(_, "x"),List()),IntLiteralPE(6)) =>
+    }
   }
 
 
@@ -91,42 +96,52 @@ class BiggerTests extends FunSuite with Matchers with Collector {
 
   test("Test templated lambda param") {
     val program = compile(VParser.program, "fn main(){(a){ a + a}(3)}")
-    program shouldHaveMatch { case FunctionCallPE(LambdaPE(_), List(IntLiteralPE(3)),true) => }
-    program shouldHave PatternPP(Some(CaptureP("a",FinalP)),None,None,None)
-    program shouldHave FunctionCallPE(LookupPE("+", List()),List(LookupPE("a", List()), LookupPE("a", List())),true)
+    program shouldHave { case FunctionCallPE(LambdaPE(_), List(IntLiteralPE(3)),true) => }
+    program shouldHave {
+      case PatternPP(Some(CaptureP(StringP(_, "a"),FinalP)),None,None,None) =>
+    }
+    program shouldHave {
+      case FunctionCallPE(LookupPE(StringP(_, "+"), List()),List(LookupPE(StringP(_, "a"), List()), LookupPE(StringP(_, "a"), List())),true) =>
+    }
   }
 
   test("Simple struct") {
-    compile(VParser.struct, "struct Moo { x &Int; }") shouldEqual
-        StructP("Moo",false,MutableP,None,List(),List(StructMemberP("x",FinalP,BorrowPT(NameOrRunePT("Int")))))
+    compile(VParser.struct, "struct Moo { x &Int; }") shouldHave {
+      case StructP(_, StringP(_, "Moo"), false, MutableP, None, None, List(StructMemberP(StringP(_, "x"), FinalP, BorrowPT(NameOrRunePT(StringP(_, "Int")))))) =>
+    }
   }
 
   test("Export struct") {
-    compile(VParser.struct, "struct Moo export { x &Int; }") shouldEqual
-      StructP("Moo",true,MutableP,None,List(),List(StructMemberP("x",FinalP,BorrowPT(NameOrRunePT("Int")))))
+    compile(VParser.struct, "struct Moo export { x &Int; }") shouldHave {
+      case StructP(_, StringP(_, "Moo"), true, MutableP, None, None, List(StructMemberP(StringP(_, "x"), FinalP, BorrowPT(NameOrRunePT(StringP(_, "Int")))))) =>
+    }
   }
 
   test("Test block's trailing void presence") {
-    compile(VParser.filledBody, "{ moo() }") shouldEqual
-        Some(BlockPE(List(FunctionCallPE(LookupPE("moo", List()),List(),true))))
+    compile(VParser.filledBody, "{ moo() }") shouldHave {
+      case Some(BlockPE(List(FunctionCallPE(LookupPE(StringP(_, "moo"), List()), List(), true)))) =>
+    }
 
-    compile(VParser.filledBody, "{ moo(); }") shouldEqual
-        Some(BlockPE(List(FunctionCallPE(LookupPE("moo", List()),List(),true), VoidPE())))
+    compile(VParser.filledBody, "{ moo(); }") shouldHave {
+      case Some(BlockPE(List(FunctionCallPE(LookupPE(StringP(_, "moo"), List()), List(), true), VoidPE()))) =>
+    }
   }
 
   test("ifs") {
-    compile(VParser.ifLadder, "if (true) { doBlarks(&x) } else { }") shouldEqual
-        IfPE(
-          BlockPE(List(BoolLiteralPE(true))),
-          BlockPE(List(FunctionCallPE(LookupPE("doBlarks", List()),List(LendPE(LookupPE("x", List()))),true))),
-          BlockPE(List(VoidPE())))
+    compile(VParser.ifLadder, "if (true) { doBlarks(&x) } else { }") shouldHave {
+      case IfPE(
+      BlockPE(List(BoolLiteralPE(true))),
+      BlockPE(List(FunctionCallPE(LookupPE(StringP(_, "doBlarks"), List()), List(LendPE(LookupPE(StringP(_, "x"), List()))), true))),
+      BlockPE(List(VoidPE()))) =>
+    }
   }
 
   test("Block with only a result") {
     compile(
       VParser.block,
-      "= doThings(a);") shouldEqual
-        BlockPE(List(FunctionCallPE(LookupPE("doThings", List()),List(LookupPE("a", List())),true)))
+      "= doThings(a);") shouldHave {
+      case BlockPE(List(FunctionCallPE(LookupPE(StringP(_, "doThings"), List()), List(LookupPE(StringP(_, "a"), List())), true))) =>
+    }
   }
 
 
@@ -136,8 +151,9 @@ class BiggerTests extends FunSuite with Matchers with Collector {
       """
         |b;
         |= a;
-      """.stripMargin) shouldEqual
-        BlockPE(List(LookupPE("b", List()), LookupPE("a", List())))
+      """.stripMargin) shouldHave {
+      case BlockPE(List(LookupPE(StringP(_, "b"), List()), LookupPE(StringP(_, "a"), List()))) =>
+    }
   }
 
 
@@ -149,11 +165,12 @@ class BiggerTests extends FunSuite with Matchers with Collector {
       """
         |a = 2;
         |= doThings(a);
-      """.stripMargin) shouldEqual
-        BlockPE(
-          List(
-            LetPE(List(),PatternPP(Some(CaptureP("a",FinalP)),None,None,None),IntLiteralPE(2)),
-            FunctionCallPE(LookupPE("doThings", List()),List(LookupPE("a", List())),true)))
+      """.stripMargin) shouldHave {
+      case BlockPE(
+        List(
+          LetPE(List(), PatternPP(Some(CaptureP(StringP(_, "a"), FinalP)), None, None, None), IntLiteralPE(2)),
+            FunctionCallPE(LookupPE(StringP(_, "doThings"), List()), List(LookupPE(StringP(_, "a"), List())), true))) =>
+    }
   }
 
   test("Templated impl") {
@@ -161,12 +178,13 @@ class BiggerTests extends FunSuite with Matchers with Collector {
       VParser.impl,
       """
         |impl<T> SomeStruct<T> for MyInterface<T>;
-      """.stripMargin) shouldEqual
-      ImplP(
-        List("T"),
-        List(),
-        CallPPT(NameOrRunePPT("SomeStruct"),List(NameOrRunePPT("T"))),
-        CallPPT(NameOrRunePPT("MyInterface"),List(NameOrRunePPT("T"))))
+      """.stripMargin) shouldHave {
+      case ImplP(_,
+      Some(IdentifyingRunesP(_, List(StringP(_, "T")))),
+      None,
+      CallPPT(NameOrRunePPT(StringP(_, "SomeStruct")), List(NameOrRunePPT(StringP(_, "T")))),
+      CallPPT(NameOrRunePPT(StringP(_, "MyInterface")), List(NameOrRunePPT(StringP(_, "T"))))) =>
+    }
   }
 
   test("Impling a template call") {
@@ -174,12 +192,13 @@ class BiggerTests extends FunSuite with Matchers with Collector {
       VParser.impl,
       """
         |impl MyIntIdentity for IFunction1<mut, Int, Int>;
-        |""".stripMargin) shouldEqual
-      ImplP(
-        List(),
-        List(),
-        NameOrRunePPT("MyIntIdentity"),
-        CallPPT(NameOrRunePPT("IFunction1"),List(MutabilityPPT(MutableP), NameOrRunePPT("Int"), NameOrRunePPT("Int"))))
+        |""".stripMargin) shouldHave {
+      case ImplP(_,
+      None,
+      None,
+      NameOrRunePPT(StringP(_, "MyIntIdentity")),
+      CallPPT(NameOrRunePPT(StringP(_, "IFunction1")), List(MutabilityPPT(MutableP), NameOrRunePPT(StringP(_, "Int")), NameOrRunePPT(StringP(_, "Int"))))) =>
+    }
   }
 
 
@@ -188,54 +207,61 @@ class BiggerTests extends FunSuite with Matchers with Collector {
       VParser.topLevelFunction,
       """
         |fn doCivicDance(virtual this Car) Int;
-      """.stripMargin) shouldEqual
-      FunctionP(
-        Some("doCivicDance"),false,false,true,List(),List(),
-        List(PatternPP(Some(CaptureP("this",FinalP)),Some(NameOrRunePPT("Car")),None,Some(AbstractP))),
-        Some(NameOrRunePPT("Int")),None)
+      """.stripMargin) shouldHave {
+      case FunctionP(
+        _,
+        Some(StringP(_, "doCivicDance")), None, None, None, None,
+        Some(ParamsP(_, List(PatternPP(Some(CaptureP(StringP(_, "this"), FinalP)), Some(NameOrRunePPT(StringP(_, "Car"))), None, Some(AbstractP))))),
+        Some(NameOrRunePPT(StringP(_, "Int"))), None) =>
+    }
   }
 
 
   test("17") {
     compile(
       VParser.structMember,
-      "a *ListNode<T>;") shouldEqual
-      StructMemberP("a",FinalP,SharePT(CallPT(NameOrRunePT("ListNode"),List(NameOrRunePT("T")))))
+      "a *ListNode<T>;") shouldHave {
+      case StructMemberP(StringP(_, "a"), FinalP, SharePT(CallPT(NameOrRunePT(StringP(_, "ListNode")), List(NameOrRunePT(StringP(_, "T")))))) =>
+    }
   }
 
   test("18") {
     compile(
       VParser.structMember,
-      "a Array<imm, T>;") shouldEqual
-      StructMemberP("a",FinalP,CallPT(NameOrRunePT("Array"),List(MutabilityPT(ImmutableP), NameOrRunePT("T"))))
+      "a Array<imm, T>;") shouldHave {
+      case StructMemberP(StringP(_, "a"), FinalP, CallPT(NameOrRunePT(StringP(_, "Array")), List(MutabilityPT(ImmutableP), NameOrRunePT(StringP(_, "T"))))) =>
+    }
   }
 
   test("19") {
     compile(VParser.statement,
-      "newLen = if (num == 0) { 1 } else { 2 };") shouldEqual
-      LetPE(
-        List(),
-        PatternPP(Some(CaptureP("newLen",FinalP)),None,None,None),
-        IfPE(
-          BlockPE(List(FunctionCallPE(LookupPE("==", List()),List(LookupPE("num", List()), IntLiteralPE(0)),true))),
-          BlockPE(List(IntLiteralPE(1))),
-          BlockPE(List(IntLiteralPE(2)))))
+      "newLen = if (num == 0) { 1 } else { 2 };") shouldHave {
+      case LetPE(
+      List(),
+      PatternPP(Some(CaptureP(StringP(_, "newLen"), FinalP)), None, None, None),
+      IfPE(
+      BlockPE(List(FunctionCallPE(LookupPE(StringP(_, "=="), List()), List(LookupPE(StringP(_, "num"), List()), IntLiteralPE(0)), true))),
+      BlockPE(List(IntLiteralPE(1))),
+      BlockPE(List(IntLiteralPE(2))))) =>
+    }
   }
 
   test("20") {
     compile(VParser.expression,
-      "weapon.owner.map()") shouldEqual
-      FunctionCallPE(
-        DotPE(
-          DotPE(LookupPE("weapon",List()),LookupPE("owner",List()),true),
-          LookupPE("map",List()),
-          true),
-        List(),
-        true)
+      "weapon.owner.map()") shouldHave {
+      case FunctionCallPE(
+      DotPE(
+      DotPE(LookupPE(StringP(_, "weapon"), List()), LookupPE(StringP(_, "owner"), List()), true),
+      LookupPE(StringP(_, "map"), List()),
+      true),
+      List(),
+      true) =>
+    }
   }
 
   test("!=") {
-    compile(VParser.expression,"3 != 4") shouldEqual
-      FunctionCallPE(LookupPE("!=",List()),List(IntLiteralPE(3), IntLiteralPE(4)),true)
+    compile(VParser.expression,"3 != 4") shouldHave {
+      case FunctionCallPE(LookupPE(StringP(_, "!="), List()), List(IntLiteralPE(3), IntLiteralPE(4)), true) =>
+    }
   }
 }

@@ -1,5 +1,6 @@
 package net.verdagon.vale.parser
 
+import net.verdagon.vale.vimpl
 import org.scalatest.{FunSuite, Matchers}
 
 class SignatureTests extends FunSuite with Matchers with Collector {
@@ -20,40 +21,48 @@ class SignatureTests extends FunSuite with Matchers with Collector {
   test("Impl function") {
     compile(
       VParser.topLevelFunction,
-      "fn maxHp(this Marine impl IUnit) { 5 }") shouldEqual
-        FunctionP(
-          Some("maxHp"),false,false,true,List(),List(),
-          List(
-            PatternPP(
-              Some(CaptureP("this",FinalP)),
-              Some(NameOrRunePPT("Marine")),
-              None,
-              Some(OverrideP(NameOrRunePPT("IUnit"))))),
+      "fn maxHp(this Marine impl IUnit) { 5 }") shouldHave {
+      case FunctionP(_,
+          Some(StringP(_, "maxHp")),None, None, None, None,
+          Some(
+            ParamsP(
+              _,
+              List(
+                PatternPP(
+                  Some(CaptureP(StringP(_, "this"),FinalP)),
+                  Some(NameOrRunePPT(StringP(_, "Marine"))),
+                  None,
+                  Some(OverrideP(NameOrRunePPT(StringP(_, "IUnit")))))))),
           None,
-          Some(BlockPE(List(IntLiteralPE(5)))))
+          Some(BlockPE(List(IntLiteralPE(5))))) =>
+    }
   }
 
   test("Param") {
     val program = compile(VParser.program, "fn call(f F){f()}")
-    program shouldHave PatternPP(Some(CaptureP("f",FinalP)),Some(NameOrRunePPT("F")),None,None)
+    program shouldHave {
+      case PatternPP(Some(CaptureP(StringP(_, "f"),FinalP)),Some(NameOrRunePPT(StringP(_, "F"))),None,None) =>
+    }
   }
 
   test("Templated function") {
-    compile(VParser.topLevelFunction, "fn sum () rules() {3}") shouldEqual
-        FunctionP(Some("sum"),false,false,true,List(),List(), List(),None,Some(BlockPE(List(IntLiteralPE(3)))))
+    compile(VParser.topLevelFunction, "fn sum () rules() {3}") shouldHave {
+      case FunctionP(_, Some(StringP(_, "sum")), None, None, None, Some(_), Some(_), None, Some(BlockPE(List(IntLiteralPE(3))))) =>
+    }
   }
 
   test("Identifying runes") {
     compile(
       VParser.topLevelFunction,
-      "fn wrap<A, F>(a A) { }") shouldEqual
-        FunctionP(
-          Some("wrap"),false,false,true,
-          List("A", "F"),
-          List(),
-          List(Patterns.capturedWithTypeRune("a", "A")),
-          None,
-          Some(BlockPE(List(VoidPE()))))
+      "fn wrap<A, F>(a A) { }") shouldHave {
+      case FunctionP(_,
+        Some(StringP(_, "wrap")), None, None,
+        Some(IdentifyingRunesP(_, List(StringP(_, "A"), StringP(_, "F")))),
+        None,
+        Some(ParamsP(_, List(Patterns.capturedWithTypeRune("a", "A")))),
+        None,
+        Some(BlockPE(List(VoidPE())))) =>
+    }
   }
 
 }

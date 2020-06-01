@@ -8,7 +8,7 @@ import net.verdagon.vale.scout.patterns.AtomSP
 object Arrays {
   def makeArrayFunction(mutability: MutabilityP): FunctionA = {
     FunctionA(
-      FunctionNameA("Array", if (mutability == MutableP) { CodeLocationS(0, 0) } else { CodeLocationS(1, 0) }),
+      FunctionNameA("Array", if (mutability == MutableP) { CodeLocationS(1, 1) } else { CodeLocationS(2, 1) }),
       false,
       TemplateTemplataType(List(MutabilityTemplataType, CoordTemplataType), FunctionTemplataType),
       Set(CodeRuneA("I")),

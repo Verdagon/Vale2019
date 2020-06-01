@@ -1,8 +1,9 @@
 package net.verdagon.vale.parser
 
+import net.verdagon.vale.vimpl
 import org.scalatest.{FunSuite, Matchers}
 
-class StatementTests extends FunSuite with Matchers {
+class StatementTests extends FunSuite with Matchers with Collector {
   private def compile(code: String): IExpressionPE = {
     VParser.parse(VParser.statement, code.toCharArray()) match {
       case VParser.NoSuccess(msg, input) => {
@@ -15,127 +16,145 @@ class StatementTests extends FunSuite with Matchers {
   }
 
   test("Simple let") {
-    compile("x = 4;") shouldEqual
-        LetPE(List(),PatternPP(Some(CaptureP("x",FinalP)),None,None,None),IntLiteralPE(4))
+    compile("x = 4;") shouldHave {
+      case LetPE(List(), PatternPP(Some(CaptureP(StringP(_, "x"), FinalP)), None, None, None), IntLiteralPE(4)) =>
+    }
   }
 
   test("8") {
-    compile("(x, y) = [4, 5];") shouldEqual
-        LetPE(
+    compile("(x, y) = [4, 5];") shouldHave {
+      case LetPE(
           List(),
           PatternPP(
             None,
             None,
             Some(
               List(
-                PatternPP(Some(CaptureP("x",FinalP)),None,None,None),
-                PatternPP(Some(CaptureP("y",FinalP)),None,None,None))),
+                PatternPP(Some(CaptureP(StringP(_, "x"),FinalP)),None,None,None),
+                PatternPP(Some(CaptureP(StringP(_, "y"),FinalP)),None,None,None))),
             None),
-          SequencePE(List(IntLiteralPE(4), IntLiteralPE(5))))
+          SequencePE(List(IntLiteralPE(4), IntLiteralPE(5)))) =>
+    }
   }
 
   test("9") {
-    compile("mut x.a = 5;") shouldEqual MutatePE(DotPE(LookupPE("x", List()), LookupPE("a", List()), true), IntLiteralPE(5));
+    compile("mut x.a = 5;") shouldHave {
+      case MutatePE(DotPE(LookupPE(StringP(_, "x"), List()), LookupPE(StringP(_, "a"), List()), true), IntLiteralPE(5)) =>
+    }
   }
 
   test("1PE") {
-    compile("""mut board.PE.PE.symbol = "v";""") shouldEqual
-        MutatePE(DotPE(DotPE(DotPE(LookupPE("board", List()), LookupPE("PE", List()), true), LookupPE("PE", List()), true), LookupPE("symbol", List()), true), StrLiteralPE("v"));
+    compile("""mut board.PE.PE.symbol = "v";""") shouldHave {
+      case MutatePE(DotPE(DotPE(DotPE(LookupPE(StringP(_, "board"), List()), LookupPE(StringP(_, "PE"), List()), true), LookupPE(StringP(_, "PE"), List()), true), LookupPE(StringP(_, "symbol"), List()), true), StrLiteralPE(StringP(_, "v"))) =>
+    }
   }
 
   test("Test simple let") {
-    compile("x = 3;") shouldEqual
-      LetPE(List(),PatternPP(Some(CaptureP("x",FinalP)),None,None,None),IntLiteralPE(3))
+    compile("x = 3;") shouldHave {
+      case LetPE(List(),PatternPP(Some(CaptureP(StringP(_, "x"),FinalP)),None,None,None),IntLiteralPE(3)) =>
+    }
   }
 
   test("Test varying let") {
-    compile("x! = 3;") shouldEqual
-      LetPE(List(),PatternPP(Some(CaptureP("x",VaryingP)),None,None,None),IntLiteralPE(3))
+    compile("x! = 3;") shouldHave {
+      case LetPE(List(),PatternPP(Some(CaptureP(StringP(_, "x"),VaryingP)),None,None,None),IntLiteralPE(3)) =>
+    }
   }
 
   test("Test simple mut") {
-    compile("mut x = 5;") shouldEqual
-      MutatePE(LookupPE("x", List()),IntLiteralPE(5))
+    compile("mut x = 5;") shouldHave {
+      case MutatePE(LookupPE(StringP(_, "x"), List()),IntLiteralPE(5)) =>
+    }
   }
 
   test("Test swap") {
-    compile("exch x, y;") shouldEqual
-      SwapPE(LookupPE("x",List()),LookupPE("y",List()))
+    compile("exch x, y;") shouldHave {
+      case SwapPE(LookupPE(StringP(_, "x"),List()),LookupPE(StringP(_, "y"),List())) =>
+    }
   }
 
   test("Dot on function call's result") {
-    compile("Wizard(8).charges;") shouldEqual
-        DotPE(
+    compile("Wizard(8).charges;") shouldHave {
+      case DotPE(
           FunctionCallPE(
-            LookupPE("Wizard", List()),
+            LookupPE(StringP(_, "Wizard"), List()),
             List(IntLiteralPE(8)),
             true),
-          LookupPE("charges", List()),
-          true)
+          LookupPE(StringP(_, "charges"), List()),
+          true) =>
+    }
   }
 
   test("Let with pattern with only a capture") {
-    compile("a = m;") shouldEqual
-        LetPE(List(),Patterns.capture("a"),LookupPE("m", List()))
+    compile("a = m;") shouldHave {
+      case LetPE(List(),Patterns.capture("a"),LookupPE(StringP(_, "m"), List())) =>
+    }
   }
 
   test("Let with simple pattern") {
-    compile("a Moo = m;") shouldEqual
-        LetPE(
+    compile("a Moo = m;") shouldHave {
+      case LetPE(
           List(),
-          PatternPP(Some(CaptureP("a",FinalP)),Some(NameOrRunePPT("Moo")),None,None),
-          LookupPE("m", List()))
+          PatternPP(Some(CaptureP(StringP(_, "a"),FinalP)),Some(NameOrRunePPT(StringP(_, "Moo"))),None,None),
+          LookupPE(StringP(_, "m"), List())) =>
+    }
   }
 
   test("Let with simple pattern in seq") {
-    compile("(a Moo) = m;") shouldEqual
-        LetPE(
+    compile("(a Moo) = m;") shouldHave {
+      case LetPE(
           List(),
           PatternPP(
             None,
             None,
-            Some(List(PatternPP(Some(CaptureP("a",FinalP)),Some(NameOrRunePPT("Moo")),None,None))),
+            Some(List(PatternPP(Some(CaptureP(StringP(_, "a"),FinalP)),Some(NameOrRunePPT(StringP(_, "Moo"))),None,None))),
             None),
-          LookupPE("m", List()))
+          LookupPE(StringP(_, "m"), List())) =>
+    }
   }
 
   test("Let with destructuring pattern") {
-    compile("Muta() = m;") shouldEqual
-      LetPE(List(),PatternPP(None,Some(NameOrRunePPT("Muta")),Some(List()),None),LookupPE("m", List()))
+    compile("Muta() = m;") shouldHave {
+      case LetPE(List(),PatternPP(None,Some(NameOrRunePPT(StringP(_, "Muta"))),Some(List()),None),LookupPE(StringP(_, "m"), List())) =>
+    }
   }
 
   test("Ret") {
-    compile("ret 3;") shouldEqual ReturnPE(IntLiteralPE(3))
+    compile("ret 3;") shouldHave {
+      case ReturnPE(IntLiteralPE(3)) =>
+    }
   }
 
 
   test("eachI") {
-    compile("eachI row (cellI, cell){ 0 }") shouldEqual
-      FunctionCallPE(
-        LookupPE("eachI",List()),
+    compile("eachI row (cellI, cell){ 0 }") shouldHave {
+      case FunctionCallPE(
+        LookupPE(StringP(_, "eachI"),List()),
         List(
-          LookupPE("row",List()),
+          LookupPE(StringP(_, "row"),List()),
           LambdaPE(
             FunctionP(
-              None,false,false,true,List(),List(),
-              List(PatternPP(Some(CaptureP("cellI",FinalP)),None,None,None), PatternPP(Some(CaptureP("cell",FinalP)),None,None,None)),
+              _,None,None,None,None,None,
+              Some(ParamsP(_, List(PatternPP(Some(CaptureP(StringP(_, "cellI"),FinalP)),None,None,None), PatternPP(Some(CaptureP(StringP(_, "cell"),FinalP)),None,None,None)))),
               None,
               Some(BlockPE(List(IntLiteralPE(0))))))),
-        true)
+        true) =>
+    }
   }
 
   test("eachI with borrow") {
-    compile("eachI &row (cellI, cell){ 0 }") shouldEqual
-      FunctionCallPE(
-        LookupPE("eachI",List()),
+    compile("eachI &row (cellI, cell){ 0 }") shouldHave {
+      case FunctionCallPE(
+        LookupPE(StringP(_, "eachI"),List()),
         List(
-          LendPE(LookupPE("row",List())),
+          LendPE(LookupPE(StringP(_, "row"),List())),
           LambdaPE(
             FunctionP(
-              None,false,false,true,List(),List(),
-              List(PatternPP(Some(CaptureP("cellI",FinalP)),None,None,None), PatternPP(Some(CaptureP("cell",FinalP)),None,None,None)),
+              _,None,None,None,None,None,
+              Some(ParamsP(_, List(PatternPP(Some(CaptureP(StringP(_, "cellI"),FinalP)),None,None,None), PatternPP(Some(CaptureP(StringP(_, "cell"),FinalP)),None,None,None)))),
               None,
               Some(BlockPE(List(IntLiteralPE(0))))))),
-        true)
+        true) =>
+    }
   }
 }

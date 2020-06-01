@@ -6,6 +6,7 @@
       <module fileurl="file://$PROJECT_DIR$/Carpenter/Carpenter.iml" filepath="$PROJECT_DIR$/Carpenter/Carpenter.iml" />
       <module fileurl="file://$PROJECT_DIR$/Driver/Driver.iml" filepath="$PROJECT_DIR$/Driver/Driver.iml" />
       <module fileurl="file://$PROJECT_DIR$/Hammer/Hammer.iml" filepath="$PROJECT_DIR$/Hammer/Hammer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Highlighter/Highlighter.iml" filepath="$PROJECT_DIR$/Highlighter/Highlighter.iml" />
       <module fileurl="file://$PROJECT_DIR$/Hinputs/Hinputs.iml" filepath="$PROJECT_DIR$/Hinputs/Hinputs.iml" />
       <module fileurl="file://$PROJECT_DIR$/IntegrationTests/IntegrationTests.iml" filepath="$PROJECT_DIR$/IntegrationTests/IntegrationTests.iml" />
       <module fileurl="file://$PROJECT_DIR$/Metal/Metal.iml" filepath="$PROJECT_DIR$/Metal/Metal.iml" />

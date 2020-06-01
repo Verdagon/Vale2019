@@ -6,7 +6,7 @@ import net.verdagon.vale.parser._
 import net.verdagon.vale.vfail
 import org.scalatest.{FunSuite, Matchers}
 
-class TypeAndDestructureTests extends FunSuite with Matchers {
+class TypeAndDestructureTests extends FunSuite with Matchers with Collector {
   private def compile[T](parser: VParser.Parser[T], code: String): T = {
     VParser.parse(parser, code.toCharArray()) match {
       case VParser.NoSuccess(msg, input) => {
@@ -41,78 +41,86 @@ class TypeAndDestructureTests extends FunSuite with Matchers {
 
 
   test("Empty destructure") {
-    compile("_ Muta()") shouldEqual
-        PatternPP(
+    compile("_ Muta()") shouldHave {
+      case PatternPP(
           None,
-          Some(NameOrRunePPT("Muta")),
+          Some(NameOrRunePPT(StringP(_, "Muta"))),
           Some(List()),
-          None)
+          None) =>
+    }
   }
 
   test("Templated destructure") {
-    compile("_ Muta<Int>()") shouldEqual
-        PatternPP(
+    compile("_ Muta<Int>()") shouldHave {
+      case PatternPP(
           None,
           Some(
             CallPPT(
-              NameOrRunePPT("Muta"),
-              List(NameOrRunePPT("Int")))),
+              NameOrRunePPT(StringP(_, "Muta")),
+              List(NameOrRunePPT(StringP(_, "Int"))))),
           Some(List()),
-          None)
-    compile("_ Muta<R>()") shouldEqual
-        PatternPP(
+          None) =>
+    }
+    compile("_ Muta<R>()") shouldHave {
+        case PatternPP(
           None,
           Some(
             CallPPT(
-              NameOrRunePPT("Muta"),
-              List(NameOrRunePPT("R")))),
+              NameOrRunePPT(StringP(_, "Muta")),
+              List(NameOrRunePPT(StringP(_, "R"))))),
           Some(List()),
-          None)
+          None) =>
+    }
   }
 
 
   test("Destructure with type outside") {
-    compile("_ [Int, Bool](a, b)") shouldEqual
-        PatternPP(
+    compile("_ [Int, Bool](a, b)") shouldHave {
+      case PatternPP(
           None,
           Some(
             ManualSequencePPT(
                 List(
-                  NameOrRunePPT("Int"),
-                  NameOrRunePPT("Bool")))),
+                  NameOrRunePPT(StringP(_, "Int")),
+                  NameOrRunePPT(StringP(_, "Bool"))))),
           Some(List(capture("a"), capture("b"))),
-          None)
+          None) =>
+    }
   }
   test("Destructure with typeless capture") {
-    compile("_ Muta(b)") shouldEqual
-        PatternPP(
+    compile("_ Muta(b)") shouldHave {
+      case PatternPP(
           None,
-          Some(NameOrRunePPT("Muta")),
-          Some(List(PatternPP(Some(CaptureP("b",FinalP)),None,None,None))),
-          None)
+          Some(NameOrRunePPT(StringP(_, "Muta"))),
+          Some(List(PatternPP(Some(CaptureP(StringP(_, "b"),FinalP)),None,None,None))),
+          None) =>
+    }
   }
   test("Destructure with typed capture") {
-    compile("_ Muta(b Marine)") shouldEqual
-        PatternPP(
+    compile("_ Muta(b Marine)") shouldHave {
+      case PatternPP(
           None,
-          Some(NameOrRunePPT("Muta")),
-          Some(List(PatternPP(Some(CaptureP("b",FinalP)),Some(NameOrRunePPT("Marine")),None,None))),
-          None)
+          Some(NameOrRunePPT(StringP(_, "Muta"))),
+          Some(List(PatternPP(Some(CaptureP(StringP(_, "b"),FinalP)),Some(NameOrRunePPT(StringP(_, "Marine"))),None,None))),
+          None) =>
+    }
   }
   test("Destructure with unnamed capture") {
-    compile("_ Muta(_ Marine)") shouldEqual
-        PatternPP(
+    compile("_ Muta(_ Marine)") shouldHave {
+      case PatternPP(
           None,
-          Some(NameOrRunePPT("Muta")),
-          Some(List(PatternPP(None,Some(NameOrRunePPT("Marine")),None,None))),
-          None)
+          Some(NameOrRunePPT(StringP(_, "Muta"))),
+          Some(List(PatternPP(None,Some(NameOrRunePPT(StringP(_, "Marine"))),None,None))),
+          None) =>
+    }
   }
   test("Destructure with runed capture") {
-    compile("_ Muta(_ R)") shouldEqual
-        PatternPP(
+    compile("_ Muta(_ R)") shouldHave {
+      case PatternPP(
           None,
-          Some(NameOrRunePPT("Muta")),
-          Some(List(PatternPP(None,Some(NameOrRunePPT("R")),None,None))),
-          None)
+          Some(NameOrRunePPT(StringP(_, "Muta"))),
+          Some(List(PatternPP(None,Some(NameOrRunePPT(StringP(_, "R"))),None,None))),
+          None) =>
+        }
   }
 }

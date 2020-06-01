@@ -5,17 +5,17 @@ import scala.collection.immutable.List
 sealed trait IRulexPR
 case class EqualsPR(left: IRulexPR, right: IRulexPR) extends IRulexPR
 case class OrPR(possibilities: List[IRulexPR]) extends IRulexPR
-case class DotPR(container: IRulexPR, memberName: String) extends IRulexPR
+case class DotPR(container: IRulexPR, memberName: StringP) extends IRulexPR
 case class ComponentsPR(
   // This is a TypedPR so that we can know the type, so we can know whether this is
   // a kind components rule or a coord components rule.
   container: TypedPR,
   components: List[IRulexPR]
 ) extends IRulexPR
-case class TypedPR(rune: Option[String], tyype: ITypePR) extends IRulexPR
+case class TypedPR(rune: Option[StringP], tyype: ITypePR) extends IRulexPR
 case class TemplexPR(templex: ITemplexPRT) extends IRulexPR
 // This is for built-in parser functions, such as exists() or isBaseOf() etc.
-case class CallPR(name: String, args: List[IRulexPR]) extends IRulexPR
+case class CallPR(name: StringP, args: List[IRulexPR]) extends IRulexPR
 case class ResolveSignaturePR(nameStrRule: IRulexPR, argsPackRule: PackPR) extends IRulexPR
 case class PackPR(elements: List[IRulexPR]) extends IRulexPR
 
@@ -45,11 +45,11 @@ case class LocationPRT(location: LocationP) extends ITemplexPRT
 case class OwnershipPRT(ownership: OwnershipP) extends ITemplexPRT
 case class VariabilityPRT(variability: VariabilityP) extends ITemplexPRT
 case class BoolPRT(value: Boolean) extends ITemplexPRT
-case class NameOrRunePRT(name: String) extends ITemplexPRT
-case class TypedRunePRT(rune: String, tyype: ITypePR) extends ITemplexPRT
+case class NameOrRunePRT(name: StringP) extends ITemplexPRT
+case class TypedRunePRT(rune: StringP, tyype: ITypePR) extends ITemplexPRT
 case class AnonymousRunePRT() extends ITemplexPRT
 case class BorrowPRT(inner: ITemplexPRT) extends ITemplexPRT
-case class StringPRT(str: String) extends ITemplexPRT
+case class StringPRT(str: StringP) extends ITemplexPRT
 case class SharePRT(inner: ITemplexPRT) extends ITemplexPRT
 case class CallPRT(template: ITemplexPRT, args: List[ITemplexPRT]) extends ITemplexPRT
 // This is for example fn(Int)Bool, fn:imm(Int, Int)Str, fn:mut()(Str, Bool)
@@ -61,7 +61,7 @@ case class FunctionPRT(
     returnType: ITemplexPRT
 ) extends ITemplexPRT
 case class PrototypePRT(
-    name: String,
+    name: StringP,
     parameters: List[ITemplexPRT],
     returnType: ITemplexPRT
 ) extends ITemplexPRT
@@ -93,7 +93,7 @@ object RulePUtils {
       case OrPR(possibilities) => getOrderedRuneDeclarationsFromRulexesWithDuplicates(possibilities)
       case DotPR(container, memberName) => getOrderedRuneDeclarationsFromRulexWithDuplicates(container)
       case ComponentsPR(container, components) => getOrderedRuneDeclarationsFromRulexesWithDuplicates(container :: components)
-      case TypedPR(maybeRune, tyype) => maybeRune.toList
+      case TypedPR(maybeRune, tyype) => maybeRune.map(_.str).toList
       case TemplexPR(templex) => getOrderedRuneDeclarationsFromTemplexWithDuplicates(templex)
       case CallPR(name, args) => getOrderedRuneDeclarationsFromRulexesWithDuplicates(args)
     }
@@ -114,7 +114,7 @@ object RulePUtils {
       case OwnershipPRT(ownership) => List()
       case BoolPRT(value) => List()
       case NameOrRunePRT(name) => List()
-      case TypedRunePRT(name, tyype) => List(name)
+      case TypedRunePRT(name, tyype) => List(name.str)
       case AnonymousRunePRT() => List()
       case CallPRT(template, args) => getOrderedRuneDeclarationsFromTemplexesWithDuplicates((template :: args))
       case FunctionPRT(mutability, parameters, returnType) => {

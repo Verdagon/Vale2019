@@ -5,9 +5,10 @@ import java.util.InputMismatchException
 
 import net.verdagon.vale.astronomer.{Astronomer, ProgramA}
 import net.verdagon.vale.carpenter.Carpenter
-import net.verdagon.vale.hammer.{Hammer, VonHammer}
+import net.verdagon.vale.hammer.{Hammer, Hamuts, VonHammer}
+import net.verdagon.vale.highlighter.{Highlighter, Spanner}
 import net.verdagon.vale.metal.ProgramH
-import net.verdagon.vale.parser.VParser
+import net.verdagon.vale.parser.{Program0, VParser, Vonifier}
 import net.verdagon.vale.scout.Scout
 import net.verdagon.vale.templar.Templar
 import net.verdagon.vale.vivem.Vivem
@@ -19,6 +20,44 @@ import scala.io.Source
 
 object Driver {
   case class InputException(message: String) extends Throwable
+
+  case class Options(
+    inputFiles: List[String],
+    outputFile: Option[String],
+    parsedsOutputFile: Option[String],
+    highlightOutputFile: Option[String],
+    mode: Option[String], // build v run etc
+  )
+
+  def parseOpts(opts: Options, list: List[String]) : Options = {
+    list match {
+      case Nil => opts
+      case "-o" :: value :: tail => {
+        vcheck(opts.outputFile.isEmpty, "Multiple output files specified!", InputException)
+        parseOpts(opts.copy(outputFile = Some(value)), tail)
+      }
+      case "-op" :: value :: tail => {
+        vcheck(opts.parsedsOutputFile.isEmpty, "Multiple parseds output files specified!", InputException)
+        parseOpts(opts.copy(parsedsOutputFile = Some(value)), tail)
+      }
+      case "-oh" :: value :: tail => {
+        vcheck(opts.parsedsOutputFile.isEmpty, "Multiple highlight output files specified!", InputException)
+        parseOpts(opts.copy(highlightOutputFile = Some(value)), tail)
+      }
+      //          case "--min-size" :: value :: tail =>
+      //            parseOpts(opts ++ Map('minsize -> value.toInt), tail)
+      //          case string :: opt2 :: tail if isSwitch(opt2) =>
+      //            parseOpts(opts ++ Map('infile -> string), list.tail)
+      case value :: _ if value.startsWith("-") => throw InputException("Unknown option " + value)
+      case value :: tail => {
+        if (opts.mode.isEmpty) {
+          parseOpts(opts.copy(mode = Some(value)), tail)
+        } else {
+          parseOpts(opts.copy(inputFiles = opts.inputFiles :+ value), tail)
+        }
+      }
+    }
+  }
 
   def readCode(path: String): String = {
     if (path.startsWith("sample:")) {
@@ -39,14 +78,35 @@ object Driver {
     }
   }
 
-  def build(code: String): ProgramH = {
+  def build(opts: Options): ProgramH = {
+    val code = opts.inputFiles.map(readCode).mkString("\n\n\n")
     val parsed = vassertSome(VParser.runParser(code))
     val scoutput = Scout.scoutProgram(parsed)
     val astrouts = Astronomer.runAstronomer(scoutput)
     val temputs = Templar.evaluate(astrouts)
     val hinputs = Carpenter.translate(temputs)
-    val hamuts = Hammer.translate(hinputs)
-    hamuts
+    val programH = Hammer.translate(hinputs)
+
+    val programV = VonHammer.vonifyProgram(programH)
+    val json = new VonPrinter(JsonSyntax, 120).print(programV)
+    println("Wrote to file " + opts.outputFile.get)
+    writeFile(opts.outputFile.get, json)
+
+    programH
+  }
+
+  def outputParseds(outputFile: String, program0: Program0): Unit = {
+    val program0J = Vonifier.vonifyProgram(program0)
+    val json = new VonPrinter(JsonSyntax, 120).print(program0J)
+    println("Wrote to file " + outputFile)
+    writeFile(outputFile, json)
+  }
+
+  def outputHamuts(outputFile: String, programH: ProgramH): Unit = {
+    val programV = VonHammer.vonifyProgram(programH)
+    val json = new VonPrinter(JsonSyntax, 120).print(programV)
+    println("Wrote to file " + outputFile)
+    writeFile(outputFile, json)
   }
 
   def run(program: ProgramH, verbose: Boolean): IVonData = {
@@ -77,51 +137,27 @@ object Driver {
 
   def main(args: Array[String]): Unit = {
     try {
-      case class Options(
-        inputFiles: List[String],
-        outputFile: Option[String],
-        mode: Option[String], // build v run etc
-      )
-
-      def parseOpts(opts: Options, list: List[String]) : Options = {
-        list match {
-          case Nil => opts
-          case "-o" :: value :: tail => {
-            vcheck(opts.outputFile.isEmpty, "Multiple output files specified!", InputException)
-            parseOpts(opts.copy(outputFile = Some(value)), tail)
-          }
-//          case "--min-size" :: value :: tail =>
-//            parseOpts(opts ++ Map('minsize -> value.toInt), tail)
-//          case string :: opt2 :: tail if isSwitch(opt2) =>
-//            parseOpts(opts ++ Map('infile -> string), list.tail)
-          case value :: _ if value.startsWith("-") => throw InputException("Unknown option " + value)
-          case value :: tail => {
-            if (opts.mode.isEmpty) {
-              parseOpts(opts.copy(mode = Some(value)), tail)
-            } else {
-              parseOpts(opts.copy(inputFiles = opts.inputFiles :+ value), tail)
-            }
-          }
-        }
-      }
-      val opts = parseOpts(Options(List(), None, None), args.toList)
+      val opts = parseOpts(Options(List(), None, None, None, None), args.toList)
       vcheck(opts.mode.nonEmpty, "No mode!", InputException)
       vcheck(opts.inputFiles.nonEmpty, "No input files!", InputException)
       vcheck(opts.outputFile.nonEmpty, "No output file!", InputException)
 
       opts.mode.get match {
+        case "highlight" => {
+          vcheck(opts.inputFiles.size == 1, "Must have exactly 1 input file for highlighting", InputException)
+          val code = readCode(opts.inputFiles.head)
+          val parsed = vassertSome(VParser.runParser(code))
+          val span = Spanner.forProgram(parsed)
+          val highlights = Highlighter.toHTML(code, span)
+          println("Writing to file " + opts.highlightOutputFile.get)
+          writeFile(opts.outputFile.get, highlights)
+        }
         case "build" => {
-          val code = opts.inputFiles.map(readCode).mkString("\n\n\n")
-          val program = build(code)
-          val programV = VonHammer.vonifyProgram(program)
-          val json = new VonPrinter(JsonSyntax, 120).print(programV)
-          println("Wrote to file " + opts.outputFile.get)
-          writeFile(opts.outputFile.get, json)
+          build(opts)
         }
         case "run" => {
           vcheck(args.size >= 2, "Need name!", InputException)
-          val code = readCode(args(1))
-          val program = build(code)
+          val program = build(opts)
 
           val verbose = args.slice(2, args.length).contains("--verbose")
           val result =
@@ -129,10 +165,8 @@ object Driver {
               Vivem.executeWithPrimitiveArgs(
                 program, Vector(), System.out, Vivem.emptyStdin, Vivem.nullStdout)
             } else {
-              val compile = new Compilation(code)
-
               Vivem.executeWithPrimitiveArgs(
-                compile.getHamuts(),
+                program,
                 Vector(),
                 new PrintStream(new OutputStream() {
                   override def write(b: Int): Unit = {
@@ -150,7 +184,7 @@ object Driver {
           println()
           val programV = VonHammer.vonifyProgram(program)
           val json = new VonPrinter(JsonSyntax, 120).print(programV)
-          println("Wrote to file " + opts.outputFile.get)
+          println("Writing to file " + opts.outputFile.get)
           writeFile(opts.outputFile.get, json)
         }
       }

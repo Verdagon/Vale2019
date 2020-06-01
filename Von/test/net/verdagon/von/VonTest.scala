@@ -5,13 +5,13 @@ import org.scalatest.{FunSuite, Matchers, _}
 class VonTest extends FunSuite with Matchers {
 
   test("Test 1") {
-    val data = VonObject("MyObj", None, Vector(VonMember(None, Some("mem"), VonInt(42))))
+    val data = VonObject("MyObj", None, Vector(VonMember("mem", VonInt(42))))
     new VonPrinter(VonSyntax(), 30).print(data) shouldEqual
       "MyObj(mem = 42)"
   }
 
   test("Test 2") {
-    val data = VonObject("MySuperSuperLongObject", None, Vector(VonMember(None, Some("member"), VonInt(42))))
+    val data = VonObject("MySuperSuperLongObject", None, Vector(VonMember("member", VonInt(42))))
     new VonPrinter(VonSyntax(), 30).print(data) shouldEqual
       """
         |MySuperSuperLongObject(
@@ -26,22 +26,19 @@ class VonTest extends FunSuite with Matchers {
         None,
         Vector(
           VonMember(
-            None,
-            Some("member"),
+            "member",
             VonObject(
               "MyObj",
               None,
               Vector(
                 VonMember(
-                  None,
-                  Some("member"),
+                  "member",
                   VonObject(
                     "MyObj",
                     None,
                     Vector(
                       VonMember(
-                        None,
-                        Some("member"),
+                        "member",
                         VonInt(42))))))))))
     new VonPrinter(VonSyntax(), 30).print(data) shouldEqual
       """

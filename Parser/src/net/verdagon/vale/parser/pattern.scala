@@ -10,6 +10,7 @@ case object AbstractP extends IVirtualityP
 case class OverrideP(tyype: ITemplexPPT) extends IVirtualityP
 
 case class PatternPP(
+    range: Range,
     capture: Option[CaptureP],
 
 //    ownership: Option[OwnershipP],
@@ -31,14 +32,14 @@ case class PatternPP(
     virtuality: Option[IVirtualityP]) extends Positional
 
 case class CaptureP(
-    name: String,
+    name: StringP,
     variability: VariabilityP)
 
 sealed trait ITemplexPPT
 case class IntPPT(value: Int) extends ITemplexPPT
 case class BoolPPT(value: Boolean) extends ITemplexPPT
 case class AnonymousRunePPT() extends ITemplexPPT
-case class NameOrRunePPT(name: String) extends ITemplexPPT
+case class NameOrRunePPT(name: StringP) extends ITemplexPPT
 case class MutabilityPPT(mutability: MutabilityP) extends ITemplexPPT
 case class OwnershippedPPT(ownership: OwnershipP, inner: ITemplexPPT) extends ITemplexPPT
 case class CallPPT(template: ITemplexPPT, args: List[ITemplexPPT]) extends ITemplexPPT
@@ -49,29 +50,73 @@ case class ManualSequencePPT(members: List[ITemplexPPT]) extends ITemplexPPT
 case class FunctionPPT(mutable: Option[ITemplexPPT], params: List[ITemplexPPT], ret: ITemplexPPT) extends ITemplexPPT
 
 object Patterns {
-  def ignore(): PatternPP = {
-    PatternPP(None,None,None,None)
+  object capturedWithTypeRune {
+    def apply(name: String, kindRune: String): PatternPP = {
+      PatternPP(Range.zero, Some(CaptureP(StringP(Range.zero, name), FinalP)), Some(NameOrRunePPT(StringP(Range.zero, kindRune))), None, None)
+    }
+
+    def unapply(arg: PatternPP): Option[(String, String)] = {
+      arg match {
+        case PatternPP(_, Some(CaptureP(StringP(_, name), FinalP)), Some(NameOrRunePPT(StringP(_, kindRune))), None, None) => Some((name, kindRune))
+        case _ => None
+      }
+    }
   }
-  def capture(name: String): PatternPP = {
-    PatternPP(Some(CaptureP(name,FinalP)),None,None,None)
-  }
-  def withDestructure(atoms: PatternPP*) = {
-    PatternPP(None,None,Some(atoms.toList),None)
-  }
-  def capturedWithType(name: String, templex: ITemplexPPT): PatternPP = {
-    PatternPP(Some(CaptureP(name,FinalP)), Some(templex),None, None)
-  }
-  def capturedWithTypeRune(name: String, kindRune: String): PatternPP = {
-    PatternPP(Some(CaptureP(name,FinalP)), Some(NameOrRunePPT(kindRune)), None, None)
-  }
-  def withType(kind: ITemplexPPT): PatternPP = {
-    PatternPP(None, Some(kind), None, None)
+  object withType {
+    def apply(kind: ITemplexPPT): PatternPP = {
+      PatternPP(Range.zero, None, Some(kind), None, None)
+    }
+    def unapply(arg: PatternPP): Option[ITemplexPPT] = {
+      arg.templex
+    }
   }
   def withTypeRune(rune: String): PatternPP = {
-    PatternPP(None, Some(NameOrRunePPT(rune)), None, None)
+    PatternPP(Range.zero, None, Some(NameOrRunePPT(StringP(Range.zero, rune))), None, None)
   }
-  def fromEnv(kindName: String): PatternPP = {
-    PatternPP(None, Some(NameOrRunePPT(kindName)), None, None)
+  object capture {
+    def apply(name: String): PatternPP = {
+      PatternPP(Range.zero, Some(CaptureP(StringP(Range.zero, name), FinalP)), None, None, None)
+    }
+
+    def unapply(arg: PatternPP): Option[String] = {
+      arg match {
+        case PatternPP(_, Some(CaptureP(StringP(_, name), FinalP)), None, None, None) => Some(name)
+        case _ => None
+      }
+    }
+  }
+  object fromEnv {
+    def apply(kindName: String): PatternPP = {
+      PatternPP(Range.zero, None, Some(NameOrRunePPT(StringP(Range.zero, kindName))), None, None)
+    }
+    def unapply(arg: PatternPP): Option[String] = {
+      arg match {
+        case PatternPP(_, None, Some(NameOrRunePPT(StringP(_, kindName))), None, None) => Some(kindName)
+        case _ => None
+      }
+    }
+  }
+  object withDestructure {
+    def withDestructure(atoms: PatternPP*): PatternPP = {
+      PatternPP(Range.zero, None, None, Some(atoms.toList), None)
+    }
+    def unapply(arg: PatternPP): Option[List[PatternPP]] = {
+      arg.destructure match {
+        case None => None
+        case Some(patterns) => Some(patterns)
+      }
+    }
+  }
+  object capturedWithType {
+    def apply(name: String, templex: ITemplexPPT): PatternPP = {
+      PatternPP(Range.zero, Some(CaptureP(StringP(Range.zero, name), FinalP)), Some(templex), None, None)
+    }
+    def unapply(arg: PatternPP): Option[(String, ITemplexPPT)] = {
+      arg match {
+        case PatternPP(_, Some(CaptureP(StringP(_, name), FinalP)), Some(templex), None, None) => Some((name, templex))
+        case _ => None
+      }
+    }
   }
 }
 

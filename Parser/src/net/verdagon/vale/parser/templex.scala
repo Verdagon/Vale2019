@@ -7,7 +7,7 @@ case class NullablePT(inner: ITemplexPT) extends ITemplexPT
 case class BorrowPT(inner: ITemplexPT) extends ITemplexPT
 case class OwnPT(inner: ITemplexPT) extends ITemplexPT
 case class AnonymousRunePT() extends ITemplexPT
-case class NameOrRunePT(rune: String) extends ITemplexPT
+case class NameOrRunePT(rune: StringP) extends ITemplexPT
 case class SharePT(inner: ITemplexPT) extends ITemplexPT
 
 case class CallPT(template: ITemplexPT, args: List[ITemplexPT]) extends ITemplexPT

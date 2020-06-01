@@ -1,12 +1,12 @@
 package net.verdagon.vale.parser.patterns
 
-import net.verdagon.vale.{parser, vfail}
+import net.verdagon.vale.{parser, vfail, vimpl}
 import net.verdagon.vale.parser.Patterns.{fromEnv, withType}
 import net.verdagon.vale.parser.VParser._
 import net.verdagon.vale.parser._
 import org.scalatest.{FunSuite, Matchers}
 
-class TypeTests extends FunSuite with Matchers {
+class TypeTests extends FunSuite with Matchers with Collector {
   private def compile[T](parser: VParser.Parser[T], code: String): T = {
     VParser.parse(parser, code.toCharArray()) match {
       case VParser.NoSuccess(msg, input) => {
@@ -38,45 +38,49 @@ class TypeTests extends FunSuite with Matchers {
   }
 
   test("Ignoring name") {
-    compile("_ Int") shouldEqual fromEnv("Int")
+    compile("_ Int") shouldHave { case fromEnv("Int") => }
   }
   test("Callable type") {
-    compile("_ fn(T)Void") shouldEqual
-        withType(
+    compile("_ fn(T)Void") shouldHave {
+      case withType(
           FunctionPPT(
             None,
-            List(NameOrRunePPT("T")),
-            NameOrRunePPT("Void")))
+            List(NameOrRunePPT(StringP(_, "T"))),
+            NameOrRunePPT(StringP(_, "Void")))) =>
+    }
   }
   test("15a") {
-    compile("_ [3 * MutableStruct]") shouldEqual
-        withType(
+    compile("_ [3 * MutableStruct]") shouldHave {
+      case withType(
           RepeaterSequencePPT(
               MutabilityPPT(MutableP),
               IntPPT(3),
-              NameOrRunePPT("MutableStruct")))
+              NameOrRunePPT(StringP(_, "MutableStruct")))) =>
+    }
   }
 
   test("15b") {
-    compile("_ [<imm> 3 * MutableStruct]") shouldEqual
-      withType(
+    compile("_ [<imm> 3 * MutableStruct]") shouldHave {
+      case withType(
         RepeaterSequencePPT(
           MutabilityPPT(ImmutableP),
           IntPPT(3),
-          NameOrRunePPT("MutableStruct")))
+          NameOrRunePPT(StringP(_, "MutableStruct")))) =>
+    }
   }
 
   test("Sequence type") {
-    compile("_ [Int, Bool]") shouldEqual
-        withType(
+    compile("_ [Int, Bool]") shouldHave {
+      case withType(
           ManualSequencePPT(
             List(
-              NameOrRunePPT("Int"),
-              NameOrRunePPT("Bool"))))
+              NameOrRunePPT(StringP(_, "Int")),
+              NameOrRunePPT(StringP(_, "Bool"))))) =>
+    }
   }
   test("15") {
-    compile("_ &[3 * MutableStruct]") shouldEqual
-      PatternPP(
+    compile("_ &[3 * MutableStruct]") shouldHave {
+      case PatternPP(
         None,
         Some(
           OwnershippedPPT(
@@ -84,13 +88,14 @@ class TypeTests extends FunSuite with Matchers {
             RepeaterSequencePPT(
               MutabilityPPT(MutableP),
               IntPPT(3),
-              NameOrRunePPT("MutableStruct")))),
+              NameOrRunePPT(StringP(_, "MutableStruct"))))),
         None,
-        None)
+        None) =>
+    }
   }
   test("15m") {
-    compile("_ &[<_> 3 * MutableStruct]") shouldEqual
-      PatternPP(
+    compile("_ &[<_> 3 * MutableStruct]") shouldHave {
+      case PatternPP(
         None,
         Some(
           OwnershippedPPT(
@@ -98,23 +103,25 @@ class TypeTests extends FunSuite with Matchers {
             RepeaterSequencePPT(
               AnonymousRunePPT(),
               IntPPT(3),
-              NameOrRunePPT("MutableStruct")))),
+              NameOrRunePPT(StringP(_, "MutableStruct"))))),
         None,
-        None)
+        None) =>
+    }
   }
   test("15z") {
-    compile("_ MyOption<MyList<Int>>") shouldEqual
-      PatternPP(
+    compile("_ MyOption<MyList<Int>>") shouldHave {
+      case PatternPP(
         None,
         Some(
           CallPPT(
-            NameOrRunePPT("MyOption"),
+            NameOrRunePPT(StringP(_, "MyOption")),
             List(
               CallPPT(
-                NameOrRunePPT("MyList"),
+                NameOrRunePPT(StringP(_, "MyList")),
                 List(
-                  NameOrRunePPT("Int")))))),
+                  NameOrRunePPT(StringP(_, "Int"))))))),
         None,
-        None)
+        None) =>
+    }
   }
 }

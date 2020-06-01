@@ -12,7 +12,7 @@ object TemplexScout {
 
   def translateTemplex(declaredRunes: Set[IRuneS], templexP: ITemplexPT): ITemplexS = {
     templexP match {
-      case NameOrRunePT(nameOrRune) => {
+      case NameOrRunePT(StringP(_, nameOrRune)) => {
         if (declaredRunes.contains(CodeRuneS(nameOrRune))) {
           RuneST(CodeRuneS(nameOrRune))
         } else {

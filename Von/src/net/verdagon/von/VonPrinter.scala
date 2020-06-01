@@ -129,12 +129,8 @@ class VonPrinter(
   def getMemberPrefix(member: VonMember):
   // None if we failed to put it on the one line.
   String = {
-    val VonMember(memberIndex, fieldName, _) = member
-
-    (memberIndex.map(_.toString).toList ++ fieldName.toList)
-      .reduceLeftOption(_ + " " + _) // None or Some("7") or Some("myField") or Some("7 myField")
-      .map(printMemberPrefix) // None or Some("7 = ") or Some("myField = ") or Some("7 myField = ")
-      .getOrElse("") // "" or "7 = " or "myField = " or "7 myField = "
+    val VonMember(fieldName, _) = member
+    printMemberPrefix(fieldName)
   }
 
 
@@ -303,13 +299,9 @@ class VonPrinter(
     lineWidthRemaining: Int):
   // None if we failed to put it on the one line.
   Option[String] = {
-    val VonMember(memberIndex, fieldName, value) = member
+    val VonMember(fieldName, value) = member
 
-    val identifier =
-      (memberIndex.map(_.toString).toList ++ fieldName.toList)
-        .reduceLeftOption(_ + " " + _) // None or Some("7") or Some("myField") or Some("7 myField")
-        .map(printMemberPrefix) // None or Some("7 = ") or Some("myField = ") or Some("7 myField = ")
-        .getOrElse("") // "" or "7 = " or "myField = " or "7 myField = "
+    val identifier = printMemberPrefix(fieldName)
 
     val lineWidthRemainingForValue = lineWidthRemaining - identifier.length
     if (lineWidthRemainingForValue <= 0) {

@@ -85,7 +85,7 @@ object ExpressionScout {
       }
       case IntLiteralPE(value) => (noDeclarations, NormalResult(IntLiteralSE(value)), noVariableUses, noVariableUses)
       case BoolLiteralPE(value) => (noDeclarations, NormalResult(BoolLiteralSE(value)), noVariableUses, noVariableUses)
-      case StrLiteralPE(value) => (noDeclarations, NormalResult(StrLiteralSE(value)), noVariableUses, noVariableUses)
+      case StrLiteralPE(StringP(_, value)) => (noDeclarations, NormalResult(StrLiteralSE(value)), noVariableUses, noVariableUses)
       case FloatLiteralPE(value) => (noDeclarations, NormalResult(FloatLiteralSE(value)), noVariableUses, noVariableUses)
 
       case FunctionCallPE(DotPE(container, memberLookup, true), methodArgs, borrowCallable) => {
@@ -102,8 +102,8 @@ object ExpressionScout {
         // Try again, with this new transformed expression.
         scoutExpression(stackFrame, newExprP)
       }
-      case MagicParamLookupPE(pos) => {
-        val name = MagicParamNameS(CodeLocationS(pos.line, pos.column))
+      case MagicParamLookupPE(range) => {
+        val name = MagicParamNameS(Scout.evalPos(range.begin))
         val lookup = LocalLookupResult(name)
         // We dont declare it here, because then scoutBlock will think its a local and
         // hide it from those above.
@@ -111,7 +111,7 @@ object ExpressionScout {
         // Leave it to scoutLambda to declare it.
         (noDeclarations, lookup, noVariableUses.markMoved(name), noVariableUses)
       }
-      case LookupPE(name, List()) => {
+      case LookupPE(StringP(_, name), List()) => {
         val (lookup, declarations) =
           stackFrame.findVariable(name) match {
             case Some(fullName) => {
@@ -127,7 +127,7 @@ object ExpressionScout {
           }
         (declarations, lookup, noVariableUses, noVariableUses)
       }
-      case LookupPE(templateName, templateArgs) => {
+      case LookupPE(StringP(_, templateName), templateArgs) => {
         val result =
           NormalResult(
             TemplateSpecifiedLookupSE(
@@ -190,8 +190,8 @@ object ExpressionScout {
 
         (noDeclarations, NormalResult(WhileSE(cond1, body1)), selfUses, childUses)
       }
-      case let @ LetPE(rulesP, patternP, exprPE) => {
-        val codeLocation = CodeLocationS(let.pos.line, let.pos.column)
+      case let @ LetPE(range, rulesP, patternP, exprPE) => {
+        val codeLocation = Scout.evalPos(range.begin)
         val (declarations, expr1, selfUses, childUses) =
           scoutExpressionAndCoerce(stackFrame, exprPE, borrowIfLookupResult = false);
 
@@ -240,7 +240,7 @@ object ExpressionScout {
           }
         (exportedNames1 ++ exportedNames2, NormalResult(mutateExpr1), sourceSelfUses.thenMerge(destinationSelfUses), sourceChildUses.thenMerge(destinationChildUses))
       }
-      case DotPE(containerExprPE, LookupPE(memberName, templateArgs), borrowContainer) => {
+      case DotPE(containerExprPE, LookupPE(StringP(_, memberName), templateArgs), borrowContainer) => {
         if (templateArgs != List()) {
           // such as myStruct.someField<Foo>.
           // Can't think of a good use for it yet.

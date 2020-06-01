@@ -23,17 +23,19 @@ class StructTests extends FunSuite with Matchers with Collector {
         |  value E;
         |  next ListNode<E>;
         |}
-      """.stripMargin) shouldEqual
-          TopLevelStruct(
+      """.stripMargin) shouldHave {
+      case TopLevelStruct(
             StructP(
-              "ListNode",
+              _,
+              StringP(_, "ListNode"),
               false,
               MutableP,
-              Some(List("E")),
-              List(),
+              Some(IdentifyingRunesP(_, List(StringP(_, "E")))),
+              None,
               List(
-                StructMemberP("value",FinalP,NameOrRunePT("E")),
-                StructMemberP("next",FinalP,CallPT(NameOrRunePT("ListNode"),List(NameOrRunePT("E")))))))
+                StructMemberP(StringP(_, "value"),FinalP,NameOrRunePT(StringP(_, "E"))),
+                StructMemberP(StringP(_, "next"),FinalP,CallPT(NameOrRunePT(StringP(_, "ListNode")),List(NameOrRunePT(StringP(_, "E")))))))) =>
+    }
   }
 
   test("Struct with int rune") {
@@ -45,15 +47,17 @@ class StructTests extends FunSuite with Matchers with Collector {
         |  values [N * Float];
         |}
         |
-      """.stripMargin) shouldEqual
-        TopLevelStruct(
-          StructP(
-            "Vecf",
-            false,
-            MutableP,
-            Some(List("N")),
-            List(TypedPR(Some("N"),IntTypePR)),
-            List(StructMemberP("values",FinalP,ArraySequencePT(MutabilityPT(MutableP), NameOrRunePT("N"), NameOrRunePT("Float"))))))
+      """.stripMargin) shouldHave {
+      case TopLevelStruct(
+      StructP(
+      _,
+      StringP(_, "Vecf"),
+      false,
+      MutableP,
+      Some(IdentifyingRunesP(_, List(StringP(_, "N")))),
+      Some(TemplateRulesP(_, List(TypedPR(Some(StringP(_, "N")), IntTypePR)))),
+      List(StructMemberP(StringP(_, "values"), FinalP, ArraySequencePT(MutabilityPT(MutableP), NameOrRunePT(StringP(_, "N")), NameOrRunePT(StringP(_, "Float"))))))) =>
+    }
   }
 
   test("Struct with int rune, array sequence specifies mutability") {
@@ -65,14 +69,16 @@ class StructTests extends FunSuite with Matchers with Collector {
         |  values [<imm> N * Float];
         |}
         |
-      """.stripMargin) shouldEqual
-      TopLevelStruct(
+      """.stripMargin) shouldHave {
+      case TopLevelStruct(
         StructP(
-          "Vecf",
+        _,
+          StringP(_, "Vecf"),
           false,
           MutableP,
-          Some(List("N")),
-          List(TypedPR(Some("N"),IntTypePR)),
-          List(StructMemberP("values",FinalP,ArraySequencePT(MutabilityPT(ImmutableP), NameOrRunePT("N"), NameOrRunePT("Float"))))))
+          Some(IdentifyingRunesP(_, List(StringP(_, "N")))),
+          Some(TemplateRulesP(_, List(TypedPR(Some(StringP(_, "N")),IntTypePR)))),
+          List(StructMemberP(StringP(_, "values"),FinalP,ArraySequencePT(MutabilityPT(ImmutableP), NameOrRunePT(StringP(_, "N")), NameOrRunePT(StringP(_, "Float"))))))) =>
+    }
   }
 }

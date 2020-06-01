@@ -1,7 +1,5 @@
 package net.verdagon.von
 
-import net.verdagon.vale.vassert
-
 sealed trait IVonData
 
 case class VonInt(value: Int) extends IVonData
@@ -16,12 +14,7 @@ case class VonObject(
   id: Option[String],
   members: Vector[VonMember]
 ) extends IVonData
-case class VonMember(
-    memberIndex: Option[Int],
-    fieldName: Option[String],
-    value: IVonData) {
-  vassert(memberIndex.nonEmpty || fieldName.nonEmpty)
-}
+case class VonMember(fieldName: String, value: IVonData)
 
 case class VonArray(
   id: Option[String],
@@ -40,5 +33,4 @@ case class VonMap(
 
 case class VonMapEntry(
   key: IVonData,
-  value: IVonData,
-)
+  value: IVonData)

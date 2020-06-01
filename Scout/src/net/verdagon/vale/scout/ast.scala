@@ -64,7 +64,9 @@ case class ProgramS(
 
 case class CodeLocationS(
   line: Int,
-  char: Int)
+  char: Int) {
+  println("hi")
+}
 
 case class StructS(
     name: TopLevelCitizenDeclarationNameS,
@@ -174,7 +176,6 @@ case class CodeBody1(body1: BodySE) extends IBody1
 // Underlying class for all XYZFunctionS types
 case class FunctionS(
     name: IFunctionDeclarationNameS,
-    isUserFunction: Boolean,
 
     // Runes that we can know without looking at args or template args.
     knowableRunes: Set[IRuneS],

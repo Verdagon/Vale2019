@@ -11,12 +11,6 @@ import scala.util.parsing.combinator.RegexParsers
 // - A rule shouldn't match whitespace on either side (it makes it hard to require
 //   whitespace, like inside the let statement).
 
-sealed trait TopLevelThingP
-case class TopLevelFunction(function: FunctionP) extends TopLevelThingP
-case class TopLevelStruct(struct: StructP) extends TopLevelThingP
-case class TopLevelInterface(function: InterfaceP) extends TopLevelThingP
-case class TopLevelImplements(impl: ImplP) extends TopLevelThingP
-
 object VParser
     extends RuleParser
         with RuleTemplexParser
@@ -36,8 +30,8 @@ object VParser
   }
 
   def emptyBody: Parser[Option[BlockPE]] = {
-    "{" ~> optWhite ~> "}" ^^ {
-      case body => Some(BlockPE(List(VoidPE())))
+    pos ~ ("{" ~> optWhite ~> "}") ~ pos ^^ {
+      case begin ~ body ~ end => Some(BlockPE(Range(begin, end), List(VoidPE())))
     }
   }
 
@@ -47,9 +41,10 @@ object VParser
 
   def maybeBody = filledBody | emptyBody | noBody
 
-  def topLevelFunction: Parser[FunctionP] = positioned {
-        opt("abstract" <~ optWhite) ~
-        opt("extern" <~ optWhite) ~
+  def topLevelFunction: Parser[FunctionP] = {
+        pos ~
+        existsW("abstract") ~
+        existsW("extern") ~
         ("fn" ~> optWhite ~> exprIdentifier <~ optWhite) ~
         opt(identifyingRunesPR <~ optWhite) ~
         (patternPrototypeParams <~ optWhite) ~
@@ -59,17 +54,18 @@ object VParser
         opt(templateRulesPR <~ optWhite) ~
         opt(patternTemplex <~ optWhite) ~
         opt(templateRulesPR <~ optWhite) ~
-        (maybeBody) ^^ {
-      case maybeAbstract ~ maybeExtern ~ name ~ identifyingRunes ~ patternParams ~ maybeTemplateRulesBeforeReturn ~ maybeReturnType ~ maybeTemplateRulesAfterReturn ~ maybeBody => {
+        (maybeBody) ~
+        pos ^^ {
+      case begin ~ maybeAbstract ~ maybeExtern ~ name ~ identifyingRunes ~ patternParams ~ maybeTemplateRulesBeforeReturn ~ maybeReturnType ~ maybeTemplateRulesAfterReturn ~ maybeBody ~ end => {
         vassert(!(maybeTemplateRulesBeforeReturn.nonEmpty && maybeTemplateRulesAfterReturn.nonEmpty))
         FunctionP(
+          Range(begin, end),
           Some(name),
-          maybeExtern.nonEmpty,
-          maybeAbstract.nonEmpty,
-          true,
-          identifyingRunes.getOrElse(List()),
-          maybeTemplateRulesBeforeReturn.getOrElse(maybeTemplateRulesAfterReturn.getOrElse(List())),
-          patternParams,
+          maybeExtern,
+          maybeAbstract,
+          identifyingRunes,
+          (maybeTemplateRulesBeforeReturn.toList ++ maybeTemplateRulesAfterReturn.toList).headOption,
+          Some(patternParams),
           maybeReturnType,
           maybeBody)
       }
@@ -83,66 +79,54 @@ object VParser
     }
   }
 
-  private[parser] def interface: Parser[InterfaceP] = positioned {
-    ("interface " ~> optWhite ~> exprIdentifier <~ optWhite) ~
+  private[parser] def interface: Parser[InterfaceP] = {
+    pos ~ (("interface " ~> optWhite ~> exprIdentifier <~ optWhite) ~
         opt(identifyingRunesPR <~ optWhite) ~
         (opt("imm") <~ optWhite) ~
         (opt(templateRulesPR) <~ optWhite <~ "{" <~ optWhite) ~
-        repsep(topLevelFunction, optWhite) <~ (optWhite <~ "}") ^^ {
-      case name ~ maybeIdentifyingRunes ~ imm ~ maybeTemplateRules ~ members => {
+        repsep(topLevelFunction, optWhite) <~ (optWhite <~ "}")) ~ pos ^^ {
+      case begin ~ (name ~ maybeIdentifyingRunes ~ imm ~ maybeTemplateRules ~ members) ~ end => {
         val mutability = if (imm == Some("imm")) ImmutableP else MutableP
-        InterfaceP(name, mutability, maybeIdentifyingRunes, maybeTemplateRules.getOrElse(List()), members)
+        InterfaceP(Range(begin, end), name, mutability, maybeIdentifyingRunes, maybeTemplateRules, members)
       }
     }
   }
 
-  def struct: Parser[StructP] = positioned {
-    ("struct" ~> optWhite ~> exprIdentifier <~ optWhite) ~
+  def struct: Parser[StructP] = {
+    pos ~ (("struct" ~> optWhite ~> exprIdentifier <~ optWhite) ~
         opt(identifyingRunesPR <~ optWhite) ~
         (opt("export") <~ optWhite) ~
         (opt("imm") <~ optWhite) ~
         (opt(templateRulesPR) <~ optWhite <~ "{" <~ optWhite) ~
-        repsep(structMember, optWhite) <~ (optWhite <~ "}") ^^ {
-      case name ~ identifyingRunes ~ export ~ imm ~ maybeTemplateRules ~ members => {
+        repsep(structMember, optWhite) <~ (optWhite <~ "}")) ~ pos ^^ {
+      case begin ~ (name ~ identifyingRunes ~ export ~ imm ~ maybeTemplateRules ~ members) ~ end => {
         val mutability = if (imm == Some("imm")) ImmutableP else MutableP
-        StructP(name, export.nonEmpty, mutability, identifyingRunes, maybeTemplateRules.getOrElse(List()), members)
+        StructP(Range(begin, end), name, export.nonEmpty, mutability, identifyingRunes, maybeTemplateRules, members)
       }
     }
   }
 
-  private[parser] def impl: Parser[ImplP] = positioned {
-    ("impl" ~> optWhite ~>
+  private[parser] def impl: Parser[ImplP] = {
+    pos ~ (("impl" ~> optWhite ~>
       opt(identifyingRunesPR <~ optWhite) ~
       opt(templateRulesPR) <~ optWhite) ~
       (patternTemplex <~ optWhite <~ "for" <~ optWhite) ~
-      (patternTemplex <~ optWhite <~ ";") ^^ {
-      case maybeIdentifyingRunes ~ maybeTemplateRules ~ structType ~ interfaceType => {
-        ImplP(maybeIdentifyingRunes.getOrElse(List()), maybeTemplateRules.getOrElse(List()), structType, interfaceType)
+      (patternTemplex <~ optWhite <~ ";")) ~ pos ^^ {
+      case begin ~ (maybeIdentifyingRunes ~ maybeTemplateRules ~ structType ~ interfaceType) ~ end => {
+        ImplP(Range(begin, end), maybeIdentifyingRunes, maybeTemplateRules, structType, interfaceType)
       }
     }
   }
 
-  private[parser] def topLevelThing: Parser[TopLevelThingP] = {
+  private[parser] def topLevelThing: Parser[ITopLevelThing] = {
     struct ^^ TopLevelStruct |
     topLevelFunction ^^ TopLevelFunction |
     interface ^^ TopLevelInterface |
-    impl ^^ TopLevelImplements
+    impl ^^ TopLevelImpl
   }
 
   def program: Parser[Program0] = {
-    optWhite ~> repsep(topLevelThing, optWhite) <~ optWhite ^^ {
-      case tlts => {
-        val structs: List[StructP] =
-          tlts.collect({ case TopLevelStruct(s) => s });
-        val interfaces: List[InterfaceP] =
-          tlts.collect({ case TopLevelInterface(i) => i});
-        val impls: List[ImplP] =
-          tlts.collect({ case TopLevelImplements(i) => i });
-        val functions: List[FunctionP] =
-          tlts.collect({ case TopLevelFunction(f) => f });
-        Program0(structs, interfaces, impls, functions)
-      }
-    }
+    optWhite ~> repsep(topLevelThing, optWhite) <~ optWhite ^^ Program0
   }
 
   def runParser(codeWithComments: String): Option[Program0] = {

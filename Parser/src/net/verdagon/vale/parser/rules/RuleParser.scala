@@ -90,23 +90,27 @@ trait RuleParser extends RegexParsers with ParserUtils {
 
   // Add any new rules to the "Nothing matches empty string" test!
 
-  private[parser] def identifyingRunesPR: Parser[List[String]] = {
-    ("<" ~> optWhite ~> repsep(exprIdentifier, optWhite ~> "," <~ optWhite) <~ optWhite <~ ">")
+  private[parser] def identifyingRunesPR: Parser[IdentifyingRunesP] = {
+    pos ~ ("<" ~> optWhite ~> repsep(exprIdentifier, optWhite ~> "," <~ optWhite) <~ optWhite <~ ">") ~ pos ^^ {
+      case begin ~ runes ~ end => IdentifyingRunesP(Range(begin, end), runes)
+    }
   }
 
   // Add any new rules to the "Nothing matches empty string" test!
 
-  def templateRulesPR: Parser[List[IRulexPR]] = {
-    ("rules" ~> optWhite ~> "(" ~> optWhite ~> repsep(rulePR, optWhite ~> "," <~ optWhite) <~ optWhite <~ ")")
+  def templateRulesPR: Parser[TemplateRulesP] = {
+    pos ~ ("rules" ~> optWhite ~> "(" ~> optWhite ~> repsep(rulePR, optWhite ~> "," <~ optWhite) <~ optWhite <~ ")") ~ pos ^^ {
+      case begin ~ rules ~ end => TemplateRulesP(Range(begin, end), rules)
+    }
   }
 
   // Add any new rules to the "Nothing matches empty string" test!
 
   // Atomic means no neighboring, see parser doc.
   private[parser] def implementsPR: Parser[IRulexPR] = {
-    ("implements" ~> optWhite ~> "(" ~> optWhite ~> rulePR <~ optWhite <~ "," <~ optWhite) ~
+    pstr("implements") ~ (optWhite ~> "(" ~> optWhite ~> rulePR <~ optWhite <~ "," <~ optWhite) ~
         (rulePR <~ optWhite <~ ")") ^^ {
-      case struct ~ interface => CallPR("implements", List(struct, interface))
+      case impl ~ struct ~ interface => CallPR(impl, List(struct, interface))
     }
   }
 
@@ -114,8 +118,8 @@ trait RuleParser extends RegexParsers with ParserUtils {
 
   // Atomic means no neighboring, see parser doc.
   private[parser] def existsPR: Parser[IRulexPR] = {
-    "exists" ~> optWhite ~> "(" ~> optWhite ~> rulePR <~ optWhite <~ ")" ^^ {
-      case thing => CallPR("exists", List(thing))
+    pstr("exists") ~ (optWhite ~> "(" ~> optWhite ~> rulePR <~ optWhite <~ ")") ^^ {
+      case exists ~ thing => CallPR(exists, List(thing))
     }
   }
 

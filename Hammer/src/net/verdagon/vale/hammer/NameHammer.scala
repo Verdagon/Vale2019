@@ -37,8 +37,8 @@ object NameHammer {
       "CodeLocation",
       None,
       Vector(
-        VonMember(None, Some("line"), VonInt(line)),
-        VonMember(None, Some("char"), VonInt(char))))
+        VonMember("line", VonInt(line)),
+        VonMember("char", VonInt(char))))
   }
 
 //  def translateContainer(container: IContainer): IContainerH = {

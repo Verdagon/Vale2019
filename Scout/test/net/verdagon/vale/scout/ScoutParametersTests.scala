@@ -21,9 +21,6 @@ class ScoutParametersTests extends FunSuite with Matchers {
     }
   }
 
-  val mainName =
-      FunctionNameS("main", CodeLocationS(0, 0))
-
   test("Simple rune rule") {
     val program1 = compile("""fn main<T>(moo T) { }""")
     val main = program1.lookupFunction("main")

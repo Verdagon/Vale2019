@@ -43,35 +43,41 @@ object FunctionScout {
 
   def scoutTopLevelFunction(file: String, functionP: FunctionP): FunctionS = {
     val FunctionP(
-      Some(codeName),
+      range,
+      Some(StringP(_, codeName)),
       isExtern,
       isAbstract,
-      isUserFunction,
       userSpecifiedIdentifyingRuneNames,
       templateRulesP,
       paramsP,
       maybeRetPPT,
       maybeBody0
     ) = functionP
-    val codeLocation = CodeLocationS(functionP.pos.line, functionP.pos.column)
+    val codeLocation = Scout.evalPos(range.begin)
     val name = FunctionNameS(codeName, codeLocation)
 
     val userSpecifiedIdentifyingRunes =
       userSpecifiedIdentifyingRuneNames
-        .map(identifyingRuneName => CodeRuneS(identifyingRuneName))
+        .toList
+        .flatMap(_.runes)
+        .map({ case StringP(_, identifyingRuneName) => CodeRuneS(identifyingRuneName) })
     val userRunesFromRules =
-      RulePUtils.getOrderedRuneDeclarationsFromRulexesWithDuplicates(templateRulesP)
+      templateRulesP
+        .toList
+        .flatMap(rules => RulePUtils.getOrderedRuneDeclarationsFromRulexesWithDuplicates(rules.rules))
         .map(identifyingRuneName => CodeRuneS(identifyingRuneName))
     val userDeclaredRunes = userSpecifiedIdentifyingRunes ++ userRunesFromRules
 
     val functionEnv = FunctionEnvironment(name, None, userDeclaredRunes.toSet, paramsP.size)
 
     val rate = RuleStateBox(RuleState(name, 0))
-    val userRulesS = RuleScout.translateRulexes(rate, functionEnv.allUserDeclaredRunes(), templateRulesP)
+    val userRulesS =
+      RuleScout.translateRulexes(
+        rate, functionEnv.allUserDeclaredRunes(), templateRulesP.toList.flatMap(_.rules))
 
     val myStackFrameWithoutParams = StackFrame(name, functionEnv, None, noDeclarations)
     val (implicitRulesFromPatterns, explicitParamsPatterns1) =
-      PatternScout.scoutPatterns(myStackFrameWithoutParams, rate, paramsP)
+      PatternScout.scoutPatterns(myStackFrameWithoutParams, rate, paramsP.toList.flatMap(_.patterns))
 
     val explicitParams1 = explicitParamsPatterns1.map(ParameterS)
     val captureDeclarations =
@@ -92,9 +98,9 @@ object FunctionScout {
     //    vassert(exportedTemplateParamNames.size == exportedTemplateParamNames.toSet.size)
 
     val body1 =
-      if (isAbstract) {
+      if (isAbstract.nonEmpty) {
         AbstractBody1
-      } else if (isExtern) {
+      } else if (isExtern.nonEmpty) {
         ExternBody1
       } else {
         vassert(maybeBody0.nonEmpty)
@@ -164,7 +170,6 @@ object FunctionScout {
 
     FunctionS(
       name,
-      isUserFunction,
       knowableValueRunes,
       identifyingRunes,
       localRunes,
@@ -180,10 +185,13 @@ object FunctionScout {
       parentStackFrame: StackFrame,
       lambdaFunction0: FunctionP):
   (FunctionS, VariableUses) = {
-    val FunctionP(_, false, false, isUserFunction, userSpecifiedIdentifyingRuneNames, List(), paramsP, maybeRetPT, Some(body0)) = lambdaFunction0;
-    val codeLocation = CodeLocationS(lambdaFunction0.pos.line, lambdaFunction0.pos.column)
+    val FunctionP(range, _, None, None, userSpecifiedIdentifyingRuneNames, None, paramsP, maybeRetPT, Some(body0)) = lambdaFunction0;
+    val codeLocation = Scout.evalPos(range.begin)
     val userSpecifiedIdentifyingRunes: List[IRuneS] =
-      userSpecifiedIdentifyingRuneNames.map(identifyingRuneName => CodeRuneS(identifyingRuneName))
+      userSpecifiedIdentifyingRuneNames
+        .toList
+        .flatMap(_.runes)
+        .map({ case StringP(_, identifyingRuneName) => CodeRuneS(identifyingRuneName) })
 
     val lambdaName = LambdaNameS(/*parentStackFrame.name,*/ codeLocation)
     // Every lambda has a closure as its first arg, even if its empty
@@ -204,7 +212,7 @@ object FunctionScout {
       PatternScout.scoutPatterns(
         myStackFrameWithoutParams,
         rate,
-        paramsP);
+        paramsP.toList.flatMap(_.patterns));
     val explicitParams1 = explicitParamPatterns1.map(ParameterS)
 //    vassert(exportedTemplateParamNames.size == exportedTemplateParamNames.toSet.size)
 
@@ -338,7 +346,6 @@ object FunctionScout {
     val function1 =
       FunctionS(
         lambdaName,
-        isUserFunction,
         knowableValueRunes,
         identifyingRunes,
         localRunes,
@@ -442,29 +449,31 @@ object FunctionScout {
 
   def scoutInterfaceMember(interfaceEnv: Environment, functionP: FunctionP): FunctionS = {
     val FunctionP(
-      Some(codeName),
-      false,
+      range,
+      Some(StringP(_, codeName)),
+      None,
       _, // Ignore whether it thinks it's abstract or not
-      true,
       userSpecifiedIdentifyingRuneNames,
       templateRulesP,
       paramsP,
       maybeReturnType,
       None) = functionP;
-    val codeLocation = CodeLocationS(functionP.pos.line, functionP.pos.column)
+    val codeLocation = Scout.evalPos(range.begin)
     val funcName = FunctionNameS(codeName, codeLocation)
     val userSpecifiedIdentifyingRunes: List[IRuneS] =
       userSpecifiedIdentifyingRuneNames
-        .map(identifyingRuneName => CodeRuneS(identifyingRuneName))
+          .toList
+        .flatMap(_.runes)
+        .map({ case StringP(_, identifyingRuneName) => CodeRuneS(identifyingRuneName) })
 
     val rate = RuleStateBox(RuleState(funcName, 0))
 
-    val userRulesS = RuleScout.translateRulexes(rate, interfaceEnv.allUserDeclaredRunes(), templateRulesP)
+    val userRulesS = RuleScout.translateRulexes(rate, interfaceEnv.allUserDeclaredRunes(), templateRulesP.toList.flatMap(_.rules))
 
     val functionEnv = FunctionEnvironment(funcName, Some(interfaceEnv), userSpecifiedIdentifyingRunes.toSet, paramsP.size)
     val myStackFrame = StackFrame(funcName, functionEnv, None, noDeclarations)
     val (implicitRulesFromParams, patternsS) =
-      PatternScout.scoutPatterns(myStackFrame, rate, paramsP)
+      PatternScout.scoutPatterns(myStackFrame, rate, paramsP.toList.flatMap(_.patterns))
 
     val paramsS = patternsS.map(ParameterS)
 
@@ -514,7 +523,6 @@ object FunctionScout {
 
     FunctionS(
       funcName,
-      true,
       knowableValueRunes,
       identifyingRunes,
       localRunes,

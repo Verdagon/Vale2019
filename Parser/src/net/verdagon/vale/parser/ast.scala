@@ -2,52 +2,92 @@
 
 package net.verdagon.vale.parser
 
-import scala.util.parsing.input.Positional
+import net.verdagon.vale.vassert
 
-case class Program0(
-    structs: List[StructP],
-    interfaces: List[InterfaceP],
-    impls: List[ImplP],
-    functions: List[FunctionP])
+case class Pos(line: Int, col: Int) {
+  def <(that: Pos): Boolean = {
+    if (this.line < that.line) { true }
+    else if (that.line < this.line) { false }
+    else if (this.col < that.col) { true }
+    else if (that.col < this.col) { false }
+    else { false }
+  }
+}
+
+case class Range(begin: Pos, end: Pos) {
+  vassert(begin == end || begin < end)
+}
+object Range {
+  val zero = Range(Pos(0, 0), Pos(0, 0))
+}
+// Something that exists in the source code. An Option[UnitP] is better than a boolean
+// because it also contains the range it was found.
+case class UnitP(range: Range)
+case class StringP(range: Range, str: String)
+
+case class Program0(topLevelThings: List[ITopLevelThing]) {
+  def lookupFunction(name: String) = {
+    val results =
+      topLevelThings.collect({
+        case TopLevelFunction(f) if f.name.exists(_.str == name) => f
+      })
+    vassert(results.size == 1)
+    results.head
+  }
+}
+
+sealed trait ITopLevelThing
+case class TopLevelFunction(function: FunctionP) extends ITopLevelThing
+case class TopLevelStruct(struct: StructP) extends ITopLevelThing
+case class TopLevelInterface(interface: InterfaceP) extends ITopLevelThing
+case class TopLevelImpl(impl: ImplP) extends ITopLevelThing
 
 case class ImplP(
-  identifyingRunes: List[String],
-  rules: List[IRulexPR],
+  range: Range,
+  identifyingRunes: Option[IdentifyingRunesP],
+  rules: Option[TemplateRulesP],
   struct: ITemplexPPT,
-  interface: ITemplexPPT) extends Positional
+  interface: ITemplexPPT)
 
 case class StructP(
-  name: String,
+  range: Range,
+  name: StringP,
   export: Boolean,
   mutability: MutabilityP,
-  identifyingRunes: Option[List[String]],
-  templateRules: List[IRulexPR],
-  members: List[StructMemberP]) extends Positional
+  identifyingRunes: Option[IdentifyingRunesP],
+  templateRules: Option[TemplateRulesP],
+  members: List[StructMemberP])
 
 case class StructMemberP(
-  name: String,
+  name: StringP,
   variability: VariabilityP,
   tyype: ITemplexPT)
 
 case class InterfaceP(
-    name: String,
+    range: Range,
+    name: StringP,
     mutability: MutabilityP,
-    maybeIdentifyingRunes: Option[List[String]],
-    templateRules: List[IRulexPR],
-    members: List[FunctionP]) extends Positional
+    maybeIdentifyingRunes: Option[IdentifyingRunesP],
+    templateRules: Option[TemplateRulesP],
+    members: List[FunctionP])
 
+case class IdentifyingRunesP(range: Range, runes: List[StringP])
+case class TemplateRulesP(range: Range, rules: List[IRulexPR])
+case class ParamsP(range: Range, patterns: List[PatternPP])
 case class FunctionP(
-  name: Option[String],
-  isExtern: Boolean,
-  isAbstract: Boolean,
-  isUserFunction: Boolean,
+  range: Range,
+  name: Option[StringP],
+  isExtern: Option[UnitP],
+  isAbstract: Option[UnitP],
 
-  userSpecifiedIdentifyingRunes: List[String],
-  templateRules: List[IRulexPR],
+  // If Some(List()), should show up like the <> in fn moo<>(a Int, b Bool)
+  maybeUserSpecifiedIdentifyingRunes: Option[IdentifyingRunesP],
+  templateRules: Option[TemplateRulesP],
 
-  params: List[PatternPP],
+  params: Option[ParamsP],
   ret: Option[ITemplexPPT],
-  body: Option[BlockPE]) extends Positional
+  body: Option[BlockPE]
+)
 
 
 

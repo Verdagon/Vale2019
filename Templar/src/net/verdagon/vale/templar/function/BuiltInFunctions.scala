@@ -40,7 +40,7 @@ object BuiltInFunctions {
         FunctionTemplateName2(CallTemplar.DESTRUCTOR_NAME, CodeLocation2(0, 0)),
         FunctionEnvEntry(
           FunctionA(
-            FunctionNameA(CallTemplar.DESTRUCTOR_NAME, s.CodeLocationS(0, 0)),
+            FunctionNameA(CallTemplar.DESTRUCTOR_NAME, s.CodeLocationS(1, 1)),
             true,
             TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
             Set(CodeRuneA("V")),
@@ -123,7 +123,7 @@ object BuiltInFunctions {
     currentlyConstructingEnv
       .addUnevaluatedFunction(
         FunctionA(
-          FunctionNameA(CallTemplar.INTERFACE_DESTRUCTOR_NAME, CodeLocationS(0, 0)),
+          FunctionNameA(CallTemplar.INTERFACE_DESTRUCTOR_NAME, CodeLocationS(1, 1)),
           true,
           TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
           Set(CodeRuneA("V")),
@@ -189,7 +189,7 @@ object BuiltInFunctions {
     currentlyConstructingEnv
       .addUnevaluatedFunction(
         FunctionA(
-          FunctionNameA(CallTemplar.INTERFACE_DESTRUCTOR_NAME, CodeLocationS(0, 0)),
+          FunctionNameA(CallTemplar.INTERFACE_DESTRUCTOR_NAME, CodeLocationS(1, 1)),
           true,
           TemplateTemplataType(List(CoordTemplataType, KindTemplataType), FunctionTemplataType),
           Set(CodeRuneA("V")),
@@ -268,7 +268,7 @@ object BuiltInFunctions {
       currentlyConstructingEnv
         .addUnevaluatedFunction(
           FunctionA(
-            FunctionNameA(CallTemplar.DROP_FUNCTION_NAME, CodeLocationS(0, 0)),
+            FunctionNameA(CallTemplar.DROP_FUNCTION_NAME, CodeLocationS(1, 1)),
             true,
             TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
             Set(CodeRuneA("V")),
@@ -310,7 +310,7 @@ object BuiltInFunctions {
     currentlyConstructingEnv
       .addUnevaluatedFunction(
         FunctionA(
-          FunctionNameA("len", s.CodeLocationS(0, 0)),
+          FunctionNameA("len", s.CodeLocationS(1, 1)),
           true,
           TemplateTemplataType(List(CoordTemplataType), FunctionTemplataType),
           Set(CodeRuneA("I")),
@@ -395,7 +395,7 @@ object BuiltInFunctions {
     currentlyConstructingEnv
       .addUnevaluatedFunction(
         FunctionA(
-          FunctionNameA("panic", s.CodeLocationS(0, 0)),
+          FunctionNameA("panic", s.CodeLocationS(1, 1)),
           true,
           FunctionTemplataType,
           Set(),

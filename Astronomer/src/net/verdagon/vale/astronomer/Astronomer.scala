@@ -418,7 +418,7 @@ object Astronomer {
   }
 
   def translateFunction(astrouts: AstroutsBox, env: Environment, functionS: FunctionS): FunctionA = {
-    val FunctionS(nameS, isUserFunction, knowableRunesS, identifyingRunesS, localRunesS, maybePredictedType, paramsS, maybeRetCoordRune, isTemplate, templateRules, bodyS) = functionS
+    val FunctionS(nameS, knowableRunesS, identifyingRunesS, localRunesS, maybePredictedType, paramsS, maybeRetCoordRune, isTemplate, templateRules, bodyS) = functionS
     val nameA = translateFunctionDeclarationName(nameS)
     val knowableRunesA = knowableRunesS.map(Astronomer.translateRune)
     val localRunesA = localRunesS.map(Astronomer.translateRune)
@@ -447,7 +447,7 @@ object Astronomer {
 
     FunctionA(
       nameA,
-      isUserFunction,
+      true,
       tyype,
       knowableRunesA,
       identifyingRunesA,

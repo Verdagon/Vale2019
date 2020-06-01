@@ -3,10 +3,10 @@ package net.verdagon.vale.parser.patterns
 import net.verdagon.vale.parser.Patterns._
 import net.verdagon.vale.parser.VParser._
 import net.verdagon.vale.parser._
-import net.verdagon.vale.vfail
+import net.verdagon.vale.{vfail, vimpl}
 import org.scalatest.{FunSuite, Matchers}
 
-class DestructureTests extends FunSuite with Matchers {
+class DestructureParserTests extends FunSuite with Matchers with Collector {
   private def compile[T](parser: VParser.Parser[T], code: String): T = {
     VParser.parse(parser, code.toCharArray()) match {
       case VParser.NoSuccess(msg, input) => {
@@ -38,86 +38,107 @@ class DestructureTests extends FunSuite with Matchers {
   }
 
   test("Only empty destructure") {
-    compile("()") shouldEqual
-      withDestructure()
+    compile("()") shouldHave {
+      case withDestructure(List()) =>
+    }
   }
   test("One element destructure") {
-    compile("(a)") shouldEqual
-      withDestructure(capture("a"))
+    compile("(a)") shouldHave {
+      case withDestructure(List(capture("a"))) =>
+    }
   }
   test("One typed element destructure") {
-    compile("( _ A )") shouldEqual
-      withDestructure(withType(NameOrRunePPT("A")))
+    compile("( _ A )") shouldHave {
+      case withDestructure(List(withType(NameOrRunePPT(StringP(_, "A"))))) =>
+    }
   }
   test("Only two-element destructure") {
-    compile("(a, b)") shouldEqual
-        withDestructure(capture("a"), capture("b"))
+    compile("(a, b)") shouldHave {
+      case withDestructure(List(capture("a"), capture("b"))) =>
+    }
   }
   test("Two-element destructure with ignore") {
-    compile("(_, b)") shouldEqual
-        PatternPP(
+    compile("(_, b)") shouldHave {
+      case PatternPP(
           None,None,
-          Some(List(Patterns.ignore(), capture("b"))),
-          None)
+          Some(List(PatternPP(None, None, None, None), capture("b"))),
+          None) =>
+    }
   }
   test("Capture with destructure") {
-    compile("a (x, y)") shouldEqual
-      PatternPP(
-        Some(CaptureP("a",FinalP)),
+    compile("a (x, y)") shouldHave {
+      case PatternPP(
+        Some(CaptureP(StringP(_, "a"),FinalP)),
         None,
         Some(List(capture("x"), capture("y"))),
-        None)
+        None) =>
+    }
   }
   test("Type with destructure") {
-    compile("A(a, b)") shouldEqual
-      PatternPP(
+    compile("A(a, b)") shouldHave {
+      case PatternPP(
         None,
-        Some(NameOrRunePPT("A")),
+        Some(NameOrRunePPT(StringP(_, "A"))),
         Some(List(capture("a"), capture("b"))),
-        None)
+        None) =>
+    }
   }
   test("Capture and type with destructure") {
-    compile("a A(x, y)") shouldEqual
-      PatternPP(
-        Some(CaptureP("a",FinalP)),
-        Some(NameOrRunePPT("A")),
+    compile("a A(x, y)") shouldHave {
+      case PatternPP(
+        Some(CaptureP(StringP(_, "a"),FinalP)),
+        Some(NameOrRunePPT(StringP(_, "A"))),
         Some(List(capture("x"), capture("y"))),
-        None)
+        None) =>
+    }
   }
   test("Capture with types inside") {
-    compile("a (_ Int, _ Bool)") shouldEqual
-        PatternPP(
-          Some(CaptureP("a",FinalP)),
+    compile("a (_ Int, _ Bool)") shouldHave {
+      case PatternPP(
+          Some(CaptureP(StringP(_, "a"),FinalP)),
           None,
           Some(List(fromEnv("Int"), fromEnv("Bool"))),
-          None)
+          None) =>
+    }
   }
   test("Destructure with type inside") {
-    compile("(a Int, b Bool)") shouldEqual
-        withDestructure(
-          capturedWithType("a", NameOrRunePPT("Int")),
-          capturedWithType("b", NameOrRunePPT("Bool")))
+    compile("(a Int, b Bool)") shouldHave {
+      case withDestructure(
+      List(
+          capturedWithType("a", NameOrRunePPT(StringP(_, "Int"))),
+          capturedWithType("b", NameOrRunePPT(StringP(_, "Bool"))))) =>
+    }
   }
   test("Nested destructures A") {
-    compile("(a, (b, c))") shouldEqual
-        withDestructure(
+    compile("(a, (b, c))") shouldHave {
+      case withDestructure(
+        List(
           capture("a"),
           withDestructure(
+          List(
             capture("b"),
-            capture("c")))
+            capture("c"))))) =>
+    }
   }
   test("Nested destructures B") {
-    compile("((a), b)") shouldEqual
-        withDestructure(
+    compile("((a), b)") shouldHave {
+      case withDestructure(
+      List(
           withDestructure(
-            capture("a")),
-          capture("b"))
+          List(
+            capture("a"))),
+          capture("b"))) =>
+    }
   }
   test("Nested destructures C") {
-    compile("(((a)))") shouldEqual
-        withDestructure(
+    compile("(((a)))") shouldHave {
+      case withDestructure(
+      List(
           withDestructure(
+          List(
             withDestructure(
-              capture("a"))))
+            List(
+              capture("a"))))))) =>
+    }
   }
 }

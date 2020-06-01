@@ -40,7 +40,7 @@ object Forwarders {
       makeForwarder(">=", List(("left", "Int"), ("right", "Int")), "Bool", "__greaterThanOrEqInt"))
 
   def makeForwarder(functionName: String, params: List[(String, String)], ret: String, callee: String): FunctionA = {
-    val name = FunctionNameA(functionName, CodeLocationS(0, 0))
+    val name = FunctionNameA(functionName, CodeLocationS(1, 1))
     makeSimpleFunction(
       name,
       params,

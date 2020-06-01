@@ -5,7 +5,7 @@ import net.verdagon.vale.parser._
 import net.verdagon.vale.vfail
 import org.scalatest.{FunSuite, Matchers}
 
-class RuleTests extends FunSuite with Matchers {
+class RuleTests extends FunSuite with Matchers with Collector {
   private def compile[T](parser: VParser.Parser[T], code: String): T = {
     VParser.parse(parser, code.toCharArray()) match {
       case VParser.NoSuccess(msg, input) => {
@@ -59,14 +59,18 @@ class RuleTests extends FunSuite with Matchers {
   }
 
   test("Relations") {
-    compile(rulePR, "implements(MyObject, IObject)") shouldEqual
-        CallPR("implements",List(TemplexPR(NameOrRunePRT("MyObject")), TemplexPR(NameOrRunePRT("IObject"))))
-    compile(rulePR, "implements(R, IObject)") shouldEqual
-        CallPR("implements",List(TemplexPR(NameOrRunePRT("R")), TemplexPR(NameOrRunePRT("IObject"))))
-    compile(rulePR, "implements(MyObject, T)") shouldEqual
-        CallPR("implements",List(TemplexPR(NameOrRunePRT("MyObject")), TemplexPR(NameOrRunePRT("T"))))
-    compile(rulePR, "exists(fn +(T)Int)") shouldEqual
-        CallPR("exists", List(TemplexPR(PrototypePRT("+", List(NameOrRunePRT("T")), NameOrRunePRT("Int")))))
+    compile(rulePR, "implements(MyObject, IObject)") shouldHave {
+      case CallPR(StringP(_, "implements"),List(TemplexPR(NameOrRunePRT(StringP(_, "MyObject"))), TemplexPR(NameOrRunePRT(StringP(_, "IObject"))))) =>
+    }
+    compile(rulePR, "implements(R, IObject)") shouldHave {
+        case CallPR(StringP(_, "implements"),List(TemplexPR(NameOrRunePRT(StringP(_, "R"))), TemplexPR(NameOrRunePRT(StringP(_, "IObject"))))) =>
+    }
+    compile(rulePR, "implements(MyObject, T)") shouldHave {
+        case CallPR(StringP(_, "implements"),List(TemplexPR(NameOrRunePRT(StringP(_, "MyObject"))), TemplexPR(NameOrRunePRT(StringP(_, "T"))))) =>
+    }
+    compile(rulePR, "exists(fn +(T)Int)") shouldHave {
+        case CallPR(StringP(_, "exists"), List(TemplexPR(PrototypePRT(StringP(_, "+"), List(NameOrRunePRT(StringP(_, "T"))), NameOrRunePRT(StringP(_, "Int")))))) =>
+    }
   }
 
   test("Super complicated") {
@@ -74,32 +78,33 @@ class RuleTests extends FunSuite with Matchers {
   }
 //
 //  test("resolveExactSignature") {
-//    compile(rulePR, "C = resolveExactSignature(\"__call\", (&F, Int))") shouldEqual
-//      EqualsPR(
-//        TemplexPR(NameOrRunePRT("C")),
+//    compile(rulePR, "C = resolveExactSignature(\"__call\", (&F, Int))") shouldHave {//      case EqualsPR(
+//        TemplexPR(NameOrRunePRT(StringP(_, "C"))),
 //        CallPR(
 //          "resolveExactSignature",
 //          List(
 //            TemplexPR(StringPRT("__call")),
-//            PackPR(List(TemplexPR(BorrowPRT(NameOrRunePRT("F"))), TemplexPR(NameOrRunePRT("Int")))))))
+//            PackPR(List(TemplexPR(BorrowPRT(NameOrRunePRT(StringP(_, "F")))), TemplexPR(NameOrRunePRT(StringP(_, "Int"))))))))
 //  }
 
   test("destructure prototype") {
-    compile(rulePR, "Prot(_, _, T) = moo") shouldEqual
-      EqualsPR(
+    compile(rulePR, "Prot(_, _, T) = moo") shouldHave {
+      case EqualsPR(
         ComponentsPR(
           TypedPR(None,PrototypeTypePR),
-          List(TemplexPR(AnonymousRunePRT()), TemplexPR(AnonymousRunePRT()), TemplexPR(NameOrRunePRT("T")))),
-        TemplexPR(NameOrRunePRT("moo")))
+          List(TemplexPR(AnonymousRunePRT()), TemplexPR(AnonymousRunePRT()), TemplexPR(NameOrRunePRT(StringP(_, "T"))))),
+        TemplexPR(NameOrRunePRT(StringP(_, "moo")))) =>
+    }
   }
 
   test("prototype with coords") {
-    compile(rulePR, "Prot(_, (Int, Bool), _)") shouldEqual
-      ComponentsPR(
+    compile(rulePR, "Prot(_, (Int, Bool), _)") shouldHave {
+      case ComponentsPR(
         TypedPR(None,PrototypeTypePR),
         List(
           TemplexPR(AnonymousRunePRT()),
-          TemplexPR(PackPRT(List(NameOrRunePRT("Int"), NameOrRunePRT("Bool")))),
-          TemplexPR(AnonymousRunePRT())))
+          TemplexPR(PackPRT(List(NameOrRunePRT(StringP(_, "Int")), NameOrRunePRT(StringP(_, "Bool"))))),
+          TemplexPR(AnonymousRunePRT()))) =>
+    }
   }
 }

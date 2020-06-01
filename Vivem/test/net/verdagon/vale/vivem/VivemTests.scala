@@ -9,7 +9,7 @@ class VivemTests extends FunSuite with Matchers {
   test("Return 7") {
     val main =
       FunctionH(
-        PrototypeH(FullNameH(List(VonObject("F",None,Vector(VonMember(None,Some("humanName"),VonStr("main")), VonMember(None,Some("templateArgs"),VonArray(None,Vector())), VonMember(None,Some("parameters"),VonArray(None,Vector())))))),List(),ReferenceH(m.ShareH,IntH())),
+        PrototypeH(FullNameH(List(VonObject("F",None,Vector(VonMember("humanName",VonStr("main")), VonMember("templateArgs",VonArray(None,Vector())), VonMember("parameters",VonArray(None,Vector())))))),List(),ReferenceH(m.ShareH,IntH())),
         false,
         false,
         true,
@@ -24,12 +24,12 @@ class VivemTests extends FunSuite with Matchers {
 
     val addPrototype =
       PrototypeH(
-        FullNameH(List(VonObject("F",None,Vector(VonMember(None,Some("humanName"),VonStr("__addIntInt")), VonMember(None,Some("templateArgs"),VonArray(None,Vector())), VonMember(None,Some("parameters"),VonArray(None,Vector(VonObject("Ref",None,Vector(VonMember(None,Some("ownership"),VonObject("Share",None,Vector())), VonMember(None,Some("kind"),VonObject("Int",None,Vector())))), VonObject("Ref",None,Vector(VonMember(None,Some("ownership"),VonObject("Share",None,Vector())), VonMember(None,Some("kind"),VonObject("Int",None,Vector()))))))))))),
+        FullNameH(List(VonObject("F",None,Vector(VonMember("humanName",VonStr("__addIntInt")), VonMember("templateArgs",VonArray(None,Vector())), VonMember("parameters",VonArray(None,Vector(VonObject("Ref",None,Vector(VonMember("ownership",VonObject("Share",None,Vector())), VonMember("kind",VonObject("Int",None,Vector())))), VonObject("Ref",None,Vector(VonMember("ownership",VonObject("Share",None,Vector())), VonMember("kind",VonObject("Int",None,Vector()))))))))))),
         List(ReferenceH(ShareH,IntH()), ReferenceH(ShareH,IntH())),
         ReferenceH(ShareH,IntH()))
     val main =
       FunctionH(
-        PrototypeH(FullNameH(List(VonObject("F",None,Vector(VonMember(None,Some("humanName"),VonStr("main")), VonMember(None,Some("templateArgs"),VonArray(None,Vector())), VonMember(None,Some("parameters"),VonArray(None,Vector())))))),List(),ReferenceH(m.ShareH,IntH())),
+        PrototypeH(FullNameH(List(VonObject("F",None,Vector(VonMember("humanName",VonStr("main")), VonMember("templateArgs",VonArray(None,Vector())), VonMember("parameters",VonArray(None,Vector())))))),List(),ReferenceH(m.ShareH,IntH())),
         false,
         false,
         true,

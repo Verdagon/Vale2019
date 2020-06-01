@@ -69,23 +69,27 @@ object Scout {
 //  val unnamedMemberNameSeparator = "_mem_"
 
   def scoutProgram(program: Program0): ProgramS = {
-    val Program0(structsP, interfacesP, implsP, functions0) = program;
+    val Program0(topLevelThings) = program;
     val file = "in.vale"
-    val structsS = structsP.map(scoutStruct(file, _));
-    val interfacesS = interfacesP.map(scoutInterface(file, _));
-    val implsS = implsP.map(scoutImpl(file, _))
-    val functionsS = functions0.map(FunctionScout.scoutTopLevelFunction("in.vale", _))
+    val structsS = topLevelThings.collect({ case TopLevelStruct(s) => s }).map(scoutStruct(file, _));
+    val interfacesS = topLevelThings.collect({ case TopLevelInterface(i) => i }).map(scoutInterface(file, _));
+    val implsS = topLevelThings.collect({ case TopLevelImpl(i) => i }).map(scoutImpl(file, _))
+    val functionsS = topLevelThings.collect({ case TopLevelFunction(f) => f }).map(FunctionScout.scoutTopLevelFunction("in.vale", _))
     ProgramS(structsS, interfacesS, implsS, functionsS)
   }
 
   private def scoutImpl(file: String, impl0: ImplP): ImplS = {
-    val ImplP(identifyingRuneNames, templateRulesP, struct, interface) = impl0
+    val ImplP(range, identifyingRuneNames, maybeTemplateRulesP, struct, interface) = impl0
 
-    val codeLocation = CodeLocationS(impl0.pos.line, impl0.pos.column)
+    val templateRulesP = maybeTemplateRulesP.toList.flatMap(_.rules)
+
+    val codeLocation = Scout.evalPos(range.begin)
     val nameS = ImplNameS(codeLocation)
 
     val identifyingRunes: List[IRuneS] =
       identifyingRuneNames
+        .toList.flatMap(_.runes)
+        .map(_.str)
         .map(identifyingRuneName => CodeRuneS(identifyingRuneName))
     val runesFromRules =
       RulePUtils.getOrderedRuneDeclarationsFromRulexesWithDuplicates(templateRulesP)
@@ -131,15 +135,18 @@ object Scout {
   }
 
   private def scoutStruct(file: String, head: StructP): StructS = {
-    val StructP(structHumanName, export, mutability, maybeIdentifyingRunes, rulesP, members) = head
-    val codeLocation = CodeLocationS(head.pos.line, head.pos.column)
+    val StructP(range, StringP(_, structHumanName), export, mutability, maybeIdentifyingRunes, maybeTemplateRulesP, members) = head
+    val codeLocation = Scout.evalPos(range.begin)
     val structName = TopLevelCitizenDeclarationNameS(structHumanName, codeLocation)
 
+    val templateRulesP = maybeTemplateRulesP.toList.flatMap(_.rules)
+
     val identifyingRunes: List[IRuneS] =
-      maybeIdentifyingRunes.getOrElse(List())
+      maybeIdentifyingRunes
+          .toList.flatMap(_.runes).map(_.str)
         .map(identifyingRuneName => CodeRuneS(identifyingRuneName))
     val runesFromRules =
-      RulePUtils.getOrderedRuneDeclarationsFromRulexesWithDuplicates(head.templateRules)
+      RulePUtils.getOrderedRuneDeclarationsFromRulexesWithDuplicates(templateRulesP)
         .map(identifyingRuneName => CodeRuneS(identifyingRuneName))
     val userDeclaredRunes = identifyingRunes ++ runesFromRules
     val structEnv = Environment(None, structName, userDeclaredRunes.toSet)
@@ -154,7 +161,7 @@ object Scout {
 
     val rate = RuleStateBox(RuleState(structEnv.name, 0))
     val rulesWithoutMutabilityS =
-      RuleScout.translateRulexes(rate, structEnv.allUserDeclaredRunes(), rulesP) ++
+      RuleScout.translateRulexes(rate, structEnv.allUserDeclaredRunes(), templateRulesP) ++
       memberRules
 
     val mutabilityRune = rate.newImplicitRune()
@@ -171,7 +178,7 @@ object Scout {
     val isTemplate = knowableValueRunes != allRunes
 
     val membersS =
-      members.zip(memberRunes).map({ case (StructMemberP(name, variability, _), memberRune) =>
+      members.zip(memberRunes).map({ case (StructMemberP(StringP(_, name), variability, _), memberRune) =>
         StructMemberS(name, variability, memberRune)
       })
 
@@ -201,12 +208,14 @@ object Scout {
   }
 
   private def scoutInterface(file: String, headP: InterfaceP): InterfaceS = {
-    val InterfaceP(interfaceHumanName, mutability, maybeIdentifyingRunes, rulesP, internalMethodsP) = headP
-    val codeLocation = CodeLocationS(headP.pos.line, headP.pos.column)
+    val InterfaceP(range, StringP(_, interfaceHumanName), mutability, maybeIdentifyingRunes, maybeRulesP, internalMethodsP) = headP
+    val codeLocation = Scout.evalPos(range.begin)
     val interfaceFullName = TopLevelCitizenDeclarationNameS(interfaceHumanName, codeLocation)
+    val rulesP = maybeRulesP.toList.flatMap(_.rules)
 
     val identifyingRunes: List[IRuneS] =
-      maybeIdentifyingRunes.getOrElse(List())
+      maybeIdentifyingRunes
+        .toList.flatMap(_.runes).map(_.str)
         .map(identifyingRuneName => CodeRuneS(identifyingRuneName))
     val runesFromRules =
       RulePUtils.getOrderedRuneDeclarationsFromRulexesWithDuplicates(rulesP)
@@ -268,5 +277,10 @@ object Scout {
         Some(scoutProgram(program0))
       }
     }
+  }
+
+  def evalPos(pos: Pos): CodeLocationS = {
+    val Pos(line, col) = pos
+    CodeLocationS(line, col)
   }
 }

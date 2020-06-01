@@ -6,7 +6,7 @@ import net.verdagon.vale.parser._
 import net.verdagon.vale.vfail
 import org.scalatest.{FunSuite, Matchers}
 
-class CaptureAndTypeTests extends FunSuite with Matchers {
+class CaptureAndTypeTests extends FunSuite with Matchers with Collector {
   private def compile[T](parser: VParser.Parser[T], code: String): T = {
     VParser.parse(parser, code.toCharArray()) match {
       case VParser.NoSuccess(msg, input) => {
@@ -38,22 +38,27 @@ class CaptureAndTypeTests extends FunSuite with Matchers {
   }
 
   test("No capture, with type") {
-    compile("_ Int") shouldEqual
-      PatternPP(None, Some(NameOrRunePPT("Int")), None, None)
+    compile("_ Int") shouldHave {
+      case PatternPP(None, Some(NameOrRunePPT(StringP(_, "Int"))), None, None) =>
+    }
   }
   test("Capture with type") {
-    compile("a Int") shouldEqual
-        capturedWithType("a", NameOrRunePPT("Int"))
+    compile("a Int") shouldHave {
+      case capturedWithType("a", NameOrRunePPT(StringP(_, "Int"))) =>
+    }
   }
   test("Simple capture with tame") {
-    compile("a T") shouldEqual capturedWithTypeRune("a","T")
+    compile("a T") shouldHave {
+      case capturedWithTypeRune("a","T") =>
+    }
   }
   test("Capture with borrow tame") {
-    compile("arr &R") shouldEqual
-        PatternPP(
-          Some(CaptureP("arr",FinalP)),
-          Some(OwnershippedPPT(BorrowP, NameOrRunePPT("R"))),
+    compile("arr &R") shouldHave {
+      case PatternPP(
+          Some(CaptureP(StringP(_, "arr"),FinalP)),
+          Some(OwnershippedPPT(BorrowP, NameOrRunePPT(StringP(_, "R")))),
           None,
-          None)
+          None) =>
+    }
   }
 }

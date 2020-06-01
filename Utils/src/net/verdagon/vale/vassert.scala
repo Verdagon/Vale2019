@@ -1,5 +1,7 @@
 package net.verdagon.vale
 
+import org.scalatest.enablers.UnitWheneverAsserting
+
 // A condition that reflects a user error.
 object vcheck {
   def apply[T <: Throwable](condition: Boolean, message: String): Unit = {
@@ -79,5 +81,9 @@ object vimpl {
   }
   def apply(message: String): Nothing = {
     vfail(message)
+  }
+
+  def unapply(thing: Any): Option[Nothing] = {
+    vimpl()
   }
 }

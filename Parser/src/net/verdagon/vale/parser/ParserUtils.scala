@@ -1,8 +1,38 @@
 package net.verdagon.vale.parser
 
+import net.verdagon.vale.parser.VParser.opt
+
 import scala.util.parsing.combinator.RegexParsers
+import scala.util.parsing.input.{Position, Positional}
 
 trait ParserUtils extends RegexParsers {
+
+  case class PosWrapper(u: Unit) extends Positional
+  private[parser] def pos: Parser[Pos] = {
+    positioned(success() ^^ PosWrapper) ^^ (x => Pos(x.pos.line, x.pos.column))
+  }
+
+  private[parser] def existsW(str: String): Parser[Option[UnitP]] = {
+    opt(pos ~ str ~ pos <~ white) ^^ {
+      case None => None
+      case Some(begin ~ str ~ end) => Some(UnitP(Range(begin, end)))
+    }
+  }
+
+  // stands for positioned str
+  private[parser] def pstr(str: String): Parser[StringP] = {
+    pos ~ str ~ pos ^^ {
+      case begin ~ str ~ end => StringP(Range(begin, end), str)
+    }
+  }
+
+  // MW = maybe white
+  private[parser] def existsMW(str: String): Parser[Option[UnitP]] = {
+    opt(pos ~ str ~ pos <~ optWhite) ^^ {
+      case None => None
+      case Some(begin ~ str ~ end) => Some(UnitP(Range(begin, end)))
+    }
+  }
 
   private[parser] def white: Parser[Unit] = { "\\s+".r ^^^ () }
   private[parser] def optWhite: Parser[Unit] = { opt(white) ^^^ () }
@@ -11,21 +41,27 @@ trait ParserUtils extends RegexParsers {
   // we want marine^.item to explode marine and extract its item
   // but, we don't want it to parse it as (marine^).item
   // so, we need to look ahead a bit and see if there's a . after it.
-  private[parser] def exprIdentifier: Parser[String] = {
-    """[^\s\.\!\$\&\,\:\(\)\;\[\]\{\}\'\^\"\<\>\=\`]+""".r
+  private[parser] def exprIdentifier: Parser[StringP] = {
+    pos ~ """[^\s\.\!\$\&\,\:\(\)\;\[\]\{\}\'\^\"\<\>\=\`]+""".r ~ pos ^^ {
+      case begin ~ str ~ end => StringP(Range(begin, end), str)
+    }
   }
 
-  private[parser] def infixFunctionIdentifier: Parser[String] = {
-    """[^\s\.\$\&\,\:\(\)\;\[\]\{\}\'\"\<\>\=\`]+""".r
+  private[parser] def infixFunctionIdentifier: Parser[StringP] = {
+    pos ~ """[^\s\.\$\&\,\:\(\)\;\[\]\{\}\'\"\<\>\=\`]+""".r ~ pos ^^ {
+      case begin ~ str ~ end => StringP(Range(begin, end), str)
+    }
   }
 
-  private[parser] def typeIdentifier: Parser[String] = {
-    """[^\s\.\!\*\?\#\$\&\,\:\|\;\(\)\[\]\{\}=\<\>\`]+""".r
+  private[parser] def typeIdentifier: Parser[StringP] = {
+    pos ~ """[^\s\.\!\*\?\#\$\&\,\:\|\;\(\)\[\]\{\}=\<\>\`]+""".r ~ pos ^^ {
+      case begin ~ str ~ end => StringP(Range(begin, end), str)
+    }
   }
-
-  private[parser] def stringOr[T](string: String, parser: Parser[T]): Parser[Option[T]] = {
-    (string ^^^ { val x: Option[T] = None; x } | parser ^^ (a => Some(a)))
-  }
+//
+//  private[parser] def stringOr[T](string: String, parser: Parser[T]): Parser[Option[T]] = {
+//    (string ^^ { val x: Option[T] = None; x } | parser ^^ (a => Some(a)))
+//  }
 
   private[parser] def underscoreOr[T](parser: Parser[T]): Parser[Option[T]] = {
     ("_" ^^^ { val x: Option[T] = None; x } | parser ^^ (a => Some(a)))
@@ -38,7 +74,7 @@ trait ParserUtils extends RegexParsers {
   }
 
   private[parser] def integer: Parser[IExpressionPE] = {
-    int ^^ IntLiteralPE
+    pos ~ int ~ pos ^^ { case begin ~ n ~ end => IntLiteralPE(Range(begin, end), n) }
   }
 
   private[parser] def float: Parser[IExpressionPE] = {
@@ -47,8 +83,8 @@ trait ParserUtils extends RegexParsers {
     }
   }
 
-  private[parser] def string: Parser[String] = {
-    "\"" ~> "[^\"]*".r <~ "\""
+  private[parser] def string: Parser[StringP] = {
+    pos ~ ("\"" ~> "[^\"]*".r <~ "\"") ~ pos ^^ { case begin ~ s ~ end => StringP(Range(begin, end), s) }
   }
 
   private[parser] def stringExpr: Parser[IExpressionPE] = {

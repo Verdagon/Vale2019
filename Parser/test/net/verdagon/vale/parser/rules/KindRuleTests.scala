@@ -5,7 +5,7 @@ import net.verdagon.vale.parser._
 import net.verdagon.vale.vfail
 import org.scalatest.{FunSuite, Matchers}
 
-class KindRuleTests extends FunSuite with Matchers {
+class KindRuleTests extends FunSuite with Matchers with Collector {
   private def compile[T](parser: VParser.Parser[T], code: String): T = {
     VParser.parse(parser, code.toCharArray()) match {
       case VParser.NoSuccess(msg, input) => {
@@ -36,163 +36,190 @@ class KindRuleTests extends FunSuite with Matchers {
   }
 
   test("Empty Kind rule") {
-    compile(rulePR, "_ Kind") shouldEqual TypedPR(None,KindTypePR)
+    compile(rulePR, "_ Kind") shouldHave {
+      case TypedPR(None,KindTypePR) =>
+    }
   }
 
   test("Kind with rune") {
-    compile(rulePR, "T Kind") shouldEqual TypedPR(Some("T"),KindTypePR)
+    compile(rulePR, "T Kind") shouldHave {
+      case TypedPR(Some(StringP(_, "T")),KindTypePR) =>
+    }
     //runedTKind("T")
   }
 
   test("Kind with destructure only") {
-    compile(rulePR, "Kind(_)") shouldEqual
-        ComponentsPR(TypedPR(None,KindTypePR),List(TemplexPR(AnonymousRunePRT())))
+    compile(rulePR, "Kind(_)") shouldHave {
+      case ComponentsPR(TypedPR(None,KindTypePR),List(TemplexPR(AnonymousRunePRT()))) =>
+    }
 //        KindPR(None, KindTypePR, None, None)
   }
 
   test("Kind with rune and destructure") {
-    compile(rulePR, "T Kind(_)") shouldEqual
-        ComponentsPR(TypedPR(Some("T"),KindTypePR),List(TemplexPR(AnonymousRunePRT())))
-    compile(rulePR, "T Kind(mut)") shouldEqual
-        ComponentsPR(
-          TypedPR(Some("T"),KindTypePR),
-          List(TemplexPR(MutabilityPRT(MutableP))))
+    compile(rulePR, "T Kind(_)") shouldHave {
+      case ComponentsPR(TypedPR(Some(StringP(_, "T")),KindTypePR),List(TemplexPR(AnonymousRunePRT()))) =>
+    }
+    compile(rulePR, "T Kind(mut)") shouldHave {
+        case ComponentsPR(
+          TypedPR(Some(StringP(_, "T")),KindTypePR),
+          List(TemplexPR(MutabilityPRT(MutableP)))) =>
+    }
   }
 
   test("Kind matches plain Int") {
-    compile(rulePR, "Int") shouldEqual
-        TemplexPR(NameOrRunePRT("Int"))
+    compile(rulePR, "Int") shouldHave {
+      case TemplexPR(NameOrRunePRT(StringP(_, "Int"))) =>
+    }
   }
 
   test("Kind with value") {
-    compile(rulePR, "T Kind = Int") shouldEqual
-        EqualsPR(TypedPR(Some("T"),KindTypePR),TemplexPR(NameOrRunePRT("Int")))
+    compile(rulePR, "T Kind = Int") shouldHave {
+      case EqualsPR(TypedPR(Some(StringP(_, "T")),KindTypePR),TemplexPR(NameOrRunePRT(StringP(_, "Int")))) =>
+    }
   }
 
   test("Kind with destructure and value") {
-    compile(rulePR, "T Kind(_) = Int") shouldEqual
-        EqualsPR(
-          ComponentsPR(TypedPR(Some("T"),KindTypePR),List(TemplexPR(AnonymousRunePRT()))),
-          TemplexPR(NameOrRunePRT("Int")))
+    compile(rulePR, "T Kind(_) = Int") shouldHave {
+      case EqualsPR(
+          ComponentsPR(TypedPR(Some(StringP(_, "T")),KindTypePR),List(TemplexPR(AnonymousRunePRT()))),
+          TemplexPR(NameOrRunePRT(StringP(_, "Int")))) =>
+    }
   }
 
   test("Kind with sequence in value spot") {
-    compile(rulePR, "T Kind = [Int, Bool]") shouldEqual
-        EqualsPR(
-          TypedPR(Some("T"),KindTypePR),
+    compile(rulePR, "T Kind = [Int, Bool]") shouldHave {
+      case EqualsPR(
+          TypedPR(Some(StringP(_, "T")),KindTypePR),
           TemplexPR(
             ManualSequencePRT(
-              List(NameOrRunePRT("Int"), NameOrRunePRT("Bool")))))
+              List(NameOrRunePRT(StringP(_, "Int")), NameOrRunePRT(StringP(_, "Bool")))))) =>
+    }
   }
 
   test("Braces without Kind is sequence") {
-    compile(rulePR, "[Int, Bool]") shouldEqual
-        TemplexPR(
+    compile(rulePR, "[Int, Bool]") shouldHave {
+      case TemplexPR(
           ManualSequencePRT(
-            List(NameOrRunePRT("Int"), NameOrRunePRT("Bool"))))
+            List(NameOrRunePRT(StringP(_, "Int")), NameOrRunePRT(StringP(_, "Bool"))))) =>
+    }
   }
 
 //  test("Simple kind filters") {
-//    compile(rulePR, ":Struct") shouldEqual
-//        TypedPR(None,StructTypePR)
-//    compile(rulePR, ":Interface") shouldEqual
-//        TypedPR(None,InterfaceTypePR)
-////    compile(rulePR, ":Callable") shouldEqual
-////        TypedPR(None,CallableTypePR)
-//    compile(rulePR, ":KindTemplate") shouldEqual
-//        TypedPR(None,CitizenTemplateTypePR)
-//    compile(rulePR, ":Seq") shouldEqual
-//        TypedPR(None,SequenceTypePR)
+//    compile(rulePR, ":Struct") shouldHave {//        case TypedPR(None,StructTypePR)
+//    compile(rulePR, ":Interface") shouldHave {//        case TypedPR(None,InterfaceTypePR)
+////    compile(rulePR, ":Callable") shouldHave {////        case TypedPR(None,CallableTypePR)
+//    compile(rulePR, ":KindTemplate") shouldHave {//        case TypedPR(None,CitizenTemplateTypePR)
+//    compile(rulePR, ":Seq") shouldHave {//        case TypedPR(None,SequenceTypePR)
 //  }
 
   test("Templated struct, one arg") {
-    compile(rulePR,"Moo<Int>") shouldEqual
-      TemplexPR(CallPRT(NameOrRunePRT("Moo"),List(NameOrRunePRT("Int"))))
-    compile(rulePR,"Moo<*Int>") shouldEqual
-      TemplexPR(CallPRT(NameOrRunePRT("Moo"),List(SharePRT(NameOrRunePRT("Int")))))
+    compile(rulePR,"Moo<Int>") shouldHave {
+      case TemplexPR(CallPRT(NameOrRunePRT(StringP(_, "Moo")),List(NameOrRunePRT(StringP(_, "Int"))))) =>
+    }
+    compile(rulePR,"Moo<*Int>") shouldHave {
+      case TemplexPR(CallPRT(NameOrRunePRT(StringP(_, "Moo")),List(SharePRT(NameOrRunePRT(StringP(_, "Int")))))) =>
+    }
   }
 
   test("RWKILC") {
-    compile(rulePR,"List<Int>") shouldEqual
-        TemplexPR(CallPRT(NameOrRunePRT("List"),List(NameOrRunePRT("Int"))))
-    compile(rulePR,"K Int") shouldEqual
-        TypedPR(Some("K"),IntTypePR)
-    compile(rulePR,"K<Int>") shouldEqual
-        TemplexPR(CallPRT(NameOrRunePRT("K"),List(NameOrRunePRT("Int"))))
+    compile(rulePR,"List<Int>") shouldHave {
+      case TemplexPR(CallPRT(NameOrRunePRT(StringP(_, "List")),List(NameOrRunePRT(StringP(_, "Int"))))) =>
+    }
+    compile(rulePR,"K Int") shouldHave {
+        case TypedPR(Some(StringP(_, "K")),IntTypePR) =>
+    }
+    compile(rulePR,"K<Int>") shouldHave {
+        case TemplexPR(CallPRT(NameOrRunePRT(StringP(_, "K")),List(NameOrRunePRT(StringP(_, "Int"))))) =>
+    }
   }
 
   test("Templated struct, rune arg") {
     // Make sure every pattern on the way down to kind can match Int
-    compile(rulePR,"Moo<R>") shouldEqual
-        TemplexPR(CallPRT(NameOrRunePRT("Moo"),List(NameOrRunePRT("R"))))
+    compile(rulePR,"Moo<R>") shouldHave {
+        case TemplexPR(CallPRT(NameOrRunePRT(StringP(_, "Moo")),List(NameOrRunePRT(StringP(_, "R"))))) =>
+    }
   }
   test("Templated struct, multiple args") {
     // Make sure every pattern on the way down to kind can match Int
-    compile(rulePR,"Moo<Int, Str>") shouldEqual
-        TemplexPR(CallPRT(NameOrRunePRT("Moo"),List(NameOrRunePRT("Int"), NameOrRunePRT("Str"))))
+    compile(rulePR,"Moo<Int, Str>") shouldHave {
+        case TemplexPR(CallPRT(NameOrRunePRT(StringP(_, "Moo")),List(NameOrRunePRT(StringP(_, "Int")), NameOrRunePRT(StringP(_, "Str"))))) =>
+    }
   }
   test("Templated struct, arg is another templated struct with one arg") {
     // Make sure every pattern on the way down to kind can match Int
-    compile(rulePR,"Moo<Blarg<Int>>") shouldEqual
-        TemplexPR(
+    compile(rulePR,"Moo<Blarg<Int>>") shouldHave {
+        case TemplexPR(
           CallPRT(
-            NameOrRunePRT("Moo"),
+            NameOrRunePRT(StringP(_, "Moo")),
             List(
                 CallPRT(
-                  NameOrRunePRT("Blarg"),
-                  List(NameOrRunePRT("Int"))))))
+                  NameOrRunePRT(StringP(_, "Blarg")),
+                  List(NameOrRunePRT(StringP(_, "Int"))))))) =>
+    }
   }
   test("Templated struct, arg is another templated struct with multiple arg") {
     // Make sure every pattern on the way down to kind can match Int
-    compile(rulePR,"Moo<Blarg<Int, Str>>") shouldEqual
-        TemplexPR(
+    compile(rulePR,"Moo<Blarg<Int, Str>>") shouldHave {
+        case TemplexPR(
           CallPRT(
-            NameOrRunePRT("Moo"),
+            NameOrRunePRT(StringP(_, "Moo")),
             List(
                 CallPRT(
-                  NameOrRunePRT("Blarg"),
-                  List(NameOrRunePRT("Int"), NameOrRunePRT("Str"))))))
+                  NameOrRunePRT(StringP(_, "Blarg")),
+                  List(NameOrRunePRT(StringP(_, "Int")), NameOrRunePRT(StringP(_, "Str"))))))) =>
+    }
   }
 
   test("Repeater sequence") {
-    compile(repeaterSeqRulePR, "[_ * _]") shouldEqual
-      RepeaterSequencePRT(MutabilityPRT(MutableP), AnonymousRunePRT(),AnonymousRunePRT())
-    compile(repeaterSeqRulePR, "[<imm> _ * _]") shouldEqual
-      RepeaterSequencePRT(MutabilityPRT(ImmutableP), AnonymousRunePRT(),AnonymousRunePRT())
-    compile(repeaterSeqRulePR, "[3 * Int]") shouldEqual
-      RepeaterSequencePRT(MutabilityPRT(MutableP), IntPRT(3),NameOrRunePRT("Int"))
-    compile(repeaterSeqRulePR, "[N * Int]") shouldEqual
-        RepeaterSequencePRT(MutabilityPRT(MutableP), NameOrRunePRT("N"),NameOrRunePRT("Int"))
-    compile(repeaterSeqRulePR, "[_ * Int]") shouldEqual
-        RepeaterSequencePRT(MutabilityPRT(MutableP), AnonymousRunePRT(),NameOrRunePRT("Int"))
-    compile(repeaterSeqRulePR, "[N * T]") shouldEqual
-        RepeaterSequencePRT(MutabilityPRT(MutableP), NameOrRunePRT("N"),NameOrRunePRT("T"))
+    compile(repeaterSeqRulePR, "[_ * _]") shouldHave {
+      case RepeaterSequencePRT(MutabilityPRT(MutableP), AnonymousRunePRT(),AnonymousRunePRT()) =>
+    }
+    compile(repeaterSeqRulePR, "[<imm> _ * _]") shouldHave {
+      case RepeaterSequencePRT(MutabilityPRT(ImmutableP), AnonymousRunePRT(),AnonymousRunePRT()) =>
+    }
+    compile(repeaterSeqRulePR, "[3 * Int]") shouldHave {
+      case RepeaterSequencePRT(MutabilityPRT(MutableP), IntPRT(3),NameOrRunePRT(StringP(_, "Int"))) =>
+    }
+    compile(repeaterSeqRulePR, "[N * Int]") shouldHave {
+        case RepeaterSequencePRT(MutabilityPRT(MutableP), NameOrRunePRT(StringP(_, "N")),NameOrRunePRT(StringP(_, "Int"))) =>
+    }
+    compile(repeaterSeqRulePR, "[_ * Int]") shouldHave {
+        case RepeaterSequencePRT(MutabilityPRT(MutableP), AnonymousRunePRT(),NameOrRunePRT(StringP(_, "Int"))) =>
+    }
+    compile(repeaterSeqRulePR, "[N * T]") shouldHave {
+        case RepeaterSequencePRT(MutabilityPRT(MutableP), NameOrRunePRT(StringP(_, "N")),NameOrRunePRT(StringP(_, "T"))) =>
+    }
   }
 
   test("Regular sequence") {
-    compile(manualSeqRulePR, "[]") shouldEqual
-        ManualSequencePRT(List())
-    compile(manualSeqRulePR, "[Int]") shouldEqual
-        ManualSequencePRT(List(NameOrRunePRT("Int")))
-    compile(manualSeqRulePR, "[Int, Bool]") shouldEqual
-        ManualSequencePRT(List(NameOrRunePRT("Int"), NameOrRunePRT("Bool")))
-    compile(manualSeqRulePR, "[_, Bool]") shouldEqual
-        ManualSequencePRT(List(AnonymousRunePRT(), NameOrRunePRT("Bool")))
-    compile(manualSeqRulePR, "[_, _]") shouldEqual
-        ManualSequencePRT(List(AnonymousRunePRT(), AnonymousRunePRT()))
+    compile(manualSeqRulePR, "[]") shouldHave {
+        case ManualSequencePRT(List()) =>
+    }
+    compile(manualSeqRulePR, "[Int]") shouldHave {
+        case ManualSequencePRT(List(NameOrRunePRT(StringP(_, "Int")))) =>
+    }
+    compile(manualSeqRulePR, "[Int, Bool]") shouldHave {
+        case ManualSequencePRT(List(NameOrRunePRT(StringP(_, "Int")), NameOrRunePRT(StringP(_, "Bool")))) =>
+    }
+    compile(manualSeqRulePR, "[_, Bool]") shouldHave {
+        case ManualSequencePRT(List(AnonymousRunePRT(), NameOrRunePRT(StringP(_, "Bool")))) =>
+    }
+    compile(manualSeqRulePR, "[_, _]") shouldHave {
+        case ManualSequencePRT(List(AnonymousRunePRT(), AnonymousRunePRT())) =>
+    }
   }
 
 //  test("Callable kind rule") {
-//    compile(callableRulePR, "fn(Int)Void") shouldEqual
-//        FunctionPRT(None,PackPRT(List(NameOrRunePRT("Int"))),NameOrRunePRT("Void"))
-//    compile(callableRulePR, "fn(T)R") shouldEqual
-//        FunctionPRT(None,PackPRT(List(NameOrRunePRT("T"))),NameOrRunePRT("R"))
+//    compile(callableRulePR, "fn(Int)Void") shouldHave {//        case FunctionPRT(None,PackPRT(List(NameOrRunePRT(StringP(_, "Int")))),NameOrRunePRT(StringP(_, "Void")))
+//    compile(callableRulePR, "fn(T)R") shouldHave {//        case FunctionPRT(None,PackPRT(List(NameOrRunePRT(StringP(_, "T")))),NameOrRunePRT(StringP(_, "R")))
 //  }
 
   test("Prototype kind rule") {
-    compile(prototypeRulePR, "fn moo(Int)Void") shouldEqual
-        PrototypePRT("moo", List(NameOrRunePRT("Int")),NameOrRunePRT("Void"))
-    compile(prototypeRulePR, "fn moo(T)R") shouldEqual
-        PrototypePRT("moo", List(NameOrRunePRT("T")),NameOrRunePRT("R"))
+    compile(prototypeRulePR, "fn moo(Int)Void") shouldHave {
+        case PrototypePRT(StringP(_, "moo"), List(NameOrRunePRT(StringP(_, "Int"))),NameOrRunePRT(StringP(_, "Void"))) =>
+    }
+    compile(prototypeRulePR, "fn moo(T)R") shouldHave {
+        case PrototypePRT(StringP(_, "moo"), List(NameOrRunePRT(StringP(_, "T"))),NameOrRunePRT(StringP(_, "R"))) =>
+    }
   }
 }

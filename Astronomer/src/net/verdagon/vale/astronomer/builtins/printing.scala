@@ -6,7 +6,7 @@ import net.verdagon.vale.scout.{IEnvironment => _, FunctionEnvironment => _, Env
 import net.verdagon.vale.scout.patterns.AtomSP
 
 object Printing {
-  val printlnStrName = FunctionNameA("println", CodeLocationS(0, 0))
+  val printlnStrName = FunctionNameA("println", CodeLocationS(1, 1))
   val printlnStr =
     FunctionA(
       printlnStrName,
@@ -38,7 +38,7 @@ object Printing {
                     LocalLoadAE(CodeVarNameA("line"), false),
                     StrLiteralAE("\n"))))))))))
 
-  val printlnIntName = FunctionNameA("println", CodeLocationS(0, 0))
+  val printlnIntName = FunctionNameA("println", CodeLocationS(1, 1))
   val printlnInt =
     FunctionA(
       printlnIntName,
@@ -69,7 +69,7 @@ object Printing {
                   List(
                     LocalLoadAE(CodeVarNameA("line"), false))))))))))
 
-  val printIntName = FunctionNameA("print", CodeLocationS(0, 0))
+  val printIntName = FunctionNameA("print", CodeLocationS(1, 1))
   val printInt =
     FunctionA(
       printIntName,

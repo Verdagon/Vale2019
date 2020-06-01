@@ -21,9 +21,6 @@ class RuleScoutTests extends FunSuite with Matchers {
     }
   }
 
-  val mainName =
-      FunctionNameS("main", CodeLocationS(0, 0))
-
   test("A") {
     val expectedRulesS =
       List(

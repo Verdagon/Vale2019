@@ -122,7 +122,7 @@ object PatternScout {
           val codeLocation = CodeLocationS(patternPP.pos.line, patternPP.pos.column)
           CaptureS(UnnamedLocalNameS(codeLocation), FinalP)
         }
-        case Some(CaptureP(name, variability)) => {
+        case Some(CaptureP(StringP(_, name), variability)) => {
           CaptureS(CodeVarNameS(name), variability)
         }
       }
@@ -143,7 +143,7 @@ object PatternScout {
         val newRule = TypedSR(rune, RuleScout.translateType(runeType))
         (List(newRule), rune)
       }
-      case Some(NameOrRunePPT(nameOrRune)) if declaredRunes.contains(CodeRuneS(nameOrRune)) => {
+      case Some(NameOrRunePPT(StringP(_, nameOrRune))) if declaredRunes.contains(CodeRuneS(nameOrRune)) => {
         val rune = CodeRuneS(nameOrRune)
         val newRule = TypedSR(rune, RuleScout.translateType(runeType))
         (List(newRule), rune)
@@ -221,7 +221,7 @@ object PatternScout {
       }
       case IntPPT(value) => (List(), IntST(value), None)
       case BoolPPT(value) => (List(), BoolST(value), None)
-      case NameOrRunePPT(nameOrRune) => {
+      case NameOrRunePPT(StringP(_, nameOrRune)) => {
         if (declaredRunes.contains(CodeRuneS(nameOrRune))) {
           (List(), RuneST(CodeRuneS(nameOrRune)), Some(CodeRuneS(nameOrRune)))
         } else {
@@ -229,7 +229,7 @@ object PatternScout {
         }
       }
       case MutabilityPPT(mutability) => (List(), MutabilityST(mutability), None)
-      case OwnershippedPPT(BorrowP, NameOrRunePPT(ownedCoordRuneName)) if declaredRunes.contains(CodeRuneS(ownedCoordRuneName)) => {
+      case OwnershippedPPT(BorrowP, NameOrRunePPT(StringP(_, ownedCoordRuneName))) if declaredRunes.contains(CodeRuneS(ownedCoordRuneName)) => {
         vassert(declaredRunes.contains(CodeRuneS(ownedCoordRuneName)))
         val ownedCoordRune = CodeRuneS(ownedCoordRuneName)
         val kindRune = rulesS.newImplicitRune()

@@ -35,7 +35,7 @@ object RuleScout {
         val rune = ruleState.newImplicitRune()
         ComponentsSR(TypedSR(rune, translateType(tyype)), translateRulexes(ruleState, userDeclaredRunes, componentsP))
       }
-      case ComponentsPR(TypedPR(Some(rune), tyype), componentsP) => {
+      case ComponentsPR(TypedPR(Some(StringP(_, rune)), tyype), componentsP) => {
         ComponentsSR(
           TypedSR(
             CodeRuneS(rune),
@@ -46,12 +46,12 @@ object RuleScout {
         val rune = ruleState.newImplicitRune()
         TypedSR(rune, translateType(tyype))
       }
-      case TypedPR(Some(runeName), tyype) => {
+      case TypedPR(Some(StringP(_, runeName)), tyype) => {
         vassert(userDeclaredRunes.contains(CodeRuneS(runeName)))
         TypedSR(CodeRuneS(runeName), translateType(tyype))
       }
       case TemplexPR(templex) => TemplexSR(translateTemplex(ruleState, userDeclaredRunes, templex))
-      case CallPR(name, args) => CallSR(name, args.map(translateRulex(ruleState, userDeclaredRunes, _)))
+      case CallPR(StringP(_, name), args) => CallSR(name, args.map(translateRulex(ruleState, userDeclaredRunes, _)))
     }
   }
   def translateType(tyype: ITypePR): ITypeSR = {
@@ -79,7 +79,7 @@ object RuleScout {
     templex: ITemplexPRT):
   ITemplexS = {
     templex match {
-      case StringPRT(value) => StringST(value)
+      case StringPRT(StringP(_, value)) => StringST(value)
       case IntPRT(value) => IntST(value)
       case MutabilityPRT(mutability) => MutabilityST(mutability)
       case PermissionPRT(permission) => PermissionST(permission)
@@ -87,7 +87,7 @@ object RuleScout {
       case OwnershipPRT(ownership) => OwnershipST(ownership)
       case VariabilityPRT(variability) => VariabilityST(variability)
       case BoolPRT(value) => BoolST(value)
-      case NameOrRunePRT(name) => {
+      case NameOrRunePRT(StringP(_, name)) => {
         if (userDeclaredRunes.contains(CodeRuneS(name))) {
           RuneST(CodeRuneS(name))
         } else {
@@ -107,7 +107,7 @@ object RuleScout {
             translateTemplex(ruleState, userDeclaredRunes, paramsPack),
             translateTemplex(ruleState, userDeclaredRunes, returnType)))
       }
-      case PrototypePRT(name, parameters, returnType) => PrototypeST(name, parameters.map(translateTemplex(ruleState, userDeclaredRunes, _)), translateTemplex(ruleState, userDeclaredRunes, returnType))
+      case PrototypePRT(StringP(_, name), parameters, returnType) => PrototypeST(name, parameters.map(translateTemplex(ruleState, userDeclaredRunes, _)), translateTemplex(ruleState, userDeclaredRunes, returnType))
       case PackPRT(members) => PackST(members.map(translateTemplex(ruleState, userDeclaredRunes, _)))
       case BorrowPRT(inner) => BorrowST(translateTemplex(ruleState, userDeclaredRunes, inner))
       case RepeaterSequencePRT(mutability, size, element) => RepeaterSequenceST(translateTemplex(ruleState, userDeclaredRunes, mutability), translateTemplex(ruleState, userDeclaredRunes, size), translateTemplex(ruleState, userDeclaredRunes, element))
