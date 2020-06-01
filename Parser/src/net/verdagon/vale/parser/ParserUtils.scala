@@ -84,7 +84,15 @@ trait ParserUtils extends RegexParsers {
   }
 
   private[parser] def string: Parser[StringP] = {
-    pos ~ ("\"" ~> "[^\"]*".r <~ "\"") ~ pos ^^ { case begin ~ s ~ end => StringP(Range(begin, end), s) }
+    pos ~ ("\"" ~> "[^\"]*".r <~ "\"") ~ pos ^^ {
+      case begin ~ s ~ end => {
+        StringP(
+          Range(begin, end),
+          "\\\\t".r.replaceAllIn(
+            "\\\\n".r.replaceAllIn(s, "\n"),
+            "\t"))
+      }
+    }
   }
 
   private[parser] def stringExpr: Parser[IExpressionPE] = {

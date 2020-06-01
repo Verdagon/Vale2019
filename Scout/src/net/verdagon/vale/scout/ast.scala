@@ -62,11 +62,7 @@ case class ProgramS(
   }
 }
 
-case class CodeLocationS(
-  line: Int,
-  char: Int) {
-  println("hi")
-}
+case class CodeLocationS(line: Int, char: Int)
 
 case class StructS(
     name: TopLevelCitizenDeclarationNameS,

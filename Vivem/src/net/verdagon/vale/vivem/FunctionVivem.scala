@@ -72,6 +72,7 @@ object FunctionVivem {
 //        VivemExterns.lessThanOrEqInt
 //      case PrototypeH(FullNameH(List(NamePartH("__greaterThanInt", Some(List()), Some(List(ReferenceH(m.Share,IntH()), ReferenceH(m.Share,IntH()))), None))), List(ReferenceH(m.Share,IntH()), ReferenceH(m.Share,IntH())), ReferenceH(m.Share,BoolH())) =>
 //        VivemExterns.greaterThanInt
+      case """F("__eqStrStr",[],[R(*,s),R(*,s)])""" => VivemExterns.eqStrStr
       case """F("__greaterThanOrEqInt",[],[R(*,i),R(*,i)])""" => VivemExterns.greaterThanOrEqInt
       case """F("__eqIntInt",[],[R(*,i),R(*,i)])""" => VivemExterns.eqIntInt
       case """F("__eqBoolBool",[],[R(*,b),R(*,b)])""" => VivemExterns.eqBoolBool

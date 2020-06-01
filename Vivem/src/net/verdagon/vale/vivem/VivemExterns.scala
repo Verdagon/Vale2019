@@ -181,6 +181,17 @@ object VivemExterns {
     }
   }
 
+  def eqStrStr(memory: AdapterForExterns, args: Vector[ReferenceV]): ReferenceV = {
+    vassert(args.size == 2)
+    val aReferend = memory.dereference(args(0))
+    val bReferend = memory.dereference(args(1))
+    (aReferend, bReferend) match {
+      case (StrV(aValue), StrV(bValue)) => {
+        memory.addAllocationForReturn(ShareH, BoolV(aValue == bValue))
+      }
+    }
+  }
+
   def eqBoolBool(memory: AdapterForExterns, args: Vector[ReferenceV]): ReferenceV = {
     vassert(args.size == 2)
     val aReferend = memory.dereference(args(0))

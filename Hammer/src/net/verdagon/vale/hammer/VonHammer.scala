@@ -134,12 +134,15 @@ object VonHammer {
         VonMember("interface", vonifyInterfaceRef(interface)),
         VonMember(
           "methods",
-          VonListMap(
+          VonArray(
             None,
             structPrototypesByInterfacePrototype.toVector.map({ case (interfacePrototype, structPrototype) =>
-              VonMapEntry(
-                vonifyPrototype(interfacePrototype),
-                vonifyPrototype(structPrototype))
+              VonObject(
+                "Entry",
+                None,
+                Vector(
+                  VonMember("key", vonifyPrototype(interfacePrototype)),
+                  VonMember("value", vonifyPrototype(structPrototype))))
             })))))
   }
 

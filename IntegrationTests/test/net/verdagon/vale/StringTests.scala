@@ -19,4 +19,18 @@ class StringTests extends FunSuite with Matchers {
 
     compile.evalForReferend(Vector()) shouldEqual VonStr("sprogwoggle")
   }
+
+  test("String with escapes") {
+    val compile = new Compilation(
+      """
+        |fn main() {
+        |  "sprog\nwoggle"
+        |}
+        |""".stripMargin, false)
+
+    val temputs = compile.getTemputs()
+    temputs.lookupFunction("main").only({ case StrLiteral2("sprog\nwoggle") => })
+
+    compile.evalForReferend(Vector()) shouldEqual VonStr("sprog\nwoggle")
+  }
 }

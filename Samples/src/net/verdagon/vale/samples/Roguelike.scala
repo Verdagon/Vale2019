@@ -83,8 +83,8 @@ object Roguelike {
         |  tiles HashMap<Location, TerrainTile, LocationHasher, LocationEquator>;
         |}
         |
-        |fn main() {
-        |  board =
+        |fn makeBoard() Array<mut, Array<mut, Str>> {
+        |  ret
         |    Arr<mut>(10, (row){
         |      Arr<mut>(10, (col){
         |        = if (row == 0) { "#" }
@@ -94,35 +94,51 @@ object Roguelike {
         |          else { "." }
         |      })
         |    });
+        |}
+        |
+        |fn display(board &Array<mut, Array<mut, Str>>, playerRow Int, playerCol Int) {
+        |  toPrint! = "";
+        |  eachI &board (rowI, row){
+        |    eachI &row (cellI, cell){
+        |      if (and(rowI == playerRow, cellI == playerCol)) {
+        |        mut toPrint = toPrint + "@";
+        |      } else {
+        |        mut toPrint = toPrint + cell;
+        |      }
+        |    }
+        |    mut toPrint = toPrint + "\n";
+        |  }
+        |  print(toPrint);
+        |}
+        |
+        |fn main() {
+        |  board = makeBoard();
         |
         |  playerRow! = 4;
         |  playerCol! = 3;
         |
         |  running! = true;
         |  while (running) {
-        |    eachI &board (rowI, row){
-        |      eachI &row (cellI, cell){
-        |        if (and(rowI == playerRow, cellI == playerCol)) {
-        |          print("@");
-        |        } else {
-        |          print(cell);
-        |        }
-        |      }
-        |      println("");
-        |    }
+        |    display(&board, playerRow, playerCol);
         |
         |    key = __getch();
         |    println(key);
+        |    newPlayerRow! = playerRow;
+        |    newPlayerCol! = playerCol;
         |    if (key == 81) {
         |      mut running = false;
         |    } else if (key == 119) {
-        |      mut playerRow = playerRow - 1;
+        |      mut newPlayerRow = newPlayerRow - 1;
         |    } else if (key == 115) {
-        |      mut playerRow = playerRow + 1;
+        |      mut newPlayerRow = newPlayerRow + 1;
         |    } else if (key == 97) {
-        |      mut playerCol = playerCol - 1;
+        |      mut newPlayerCol = newPlayerCol - 1;
         |    } else if (key == 100) {
-        |      mut playerCol = playerCol + 1;
+        |      mut newPlayerCol = newPlayerCol + 1;
+        |    }
+        |    if (board.(newPlayerRow).(newPlayerCol) == ".") {
+        |      mut playerRow = newPlayerRow;
+        |      mut playerCol = newPlayerCol;
         |    }
         |  }
         |}
