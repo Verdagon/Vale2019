@@ -22,7 +22,7 @@ class ArrayListTest extends FunSuite with Matchers {
         |            = newElement;
         |          } else {
         |            a = list.array;
-        |            = a.(index);
+        |            = a[index];
         |          }
         |      }));
         |  mut list.array = newArray;
@@ -30,7 +30,7 @@ class ArrayListTest extends FunSuite with Matchers {
         |// todo: make that return a &E
         |fn get<E>(list &List<E>, index Int) E {
         |  a = list.array;
-        |  = a.(index);
+        |  = a[index];
         |}
         |
         |fn main() {

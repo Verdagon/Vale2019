@@ -7,34 +7,6 @@ import org.scalatest.{FunSuite, Matchers}
 import net.verdagon.vale.driver.Compilation
 
 class PackTests extends FunSuite with Matchers {
-  test("Simple pack with one int") {
-    val compile = new Compilation(
-      """
-        |fn main() Int {
-        |  (5)
-        |}
-      """.stripMargin)
-
-    val temputs = compile.getTemputs()
-    temputs.lookupFunction("main").header.returnType.referend shouldEqual Int2()
-    temputs.lookupFunction("main").all({ case PackE2(_, _, _) => }).size shouldEqual 0
-
-    compile.evalForReferend(Vector()) shouldEqual VonInt(5)
-  }
-
-  test("Pack with two ints") {
-    val compile = new Compilation(
-      """
-        |fn main() {
-        |  (5, 9)
-        |}
-      """.stripMargin)
-
-    val temputs = compile.getTemputs()
-    temputs.lookupFunction("main").header.returnType.referend.only({ case PackT2(_, _) => })
-    temputs.lookupFunction("main").only({ case PackE2(_, _, _) => })
-  }
-
   test("Extract seq") {
     val compile = new Compilation(
       """

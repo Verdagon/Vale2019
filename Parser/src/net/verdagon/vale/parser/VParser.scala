@@ -23,23 +23,23 @@ object VParser
   override def skipWhitespace = false
   override val whiteSpace = "[ \t\r\f]+".r
 
-  def filledBody: Parser[Option[BlockPE]] = {
-    "{" ~> optWhite ~> block <~ optWhite <~ "}" ^^ {
-      case body => Some(body)
+  def filledBody: Parser[BlockPE] = bracedBlock
+
+  def emptyBody: Parser[BlockPE] = {
+    pos ~ ("{" ~> optWhite ~> pos <~ optWhite <~ "}") ~ pos ^^ {
+      case begin ~ middle ~ end => BlockPE(Range(begin, end), List(VoidPE(Range(middle, middle))))
     }
   }
 
-  def emptyBody: Parser[Option[BlockPE]] = {
-    pos ~ ("{" ~> optWhite ~> "}") ~ pos ^^ {
-      case begin ~ body ~ end => Some(BlockPE(Range(begin, end), List(VoidPE())))
-    }
+  def noBody: Parser[Unit] = {
+    ";" ^^^ ()
   }
 
-  def noBody: Parser[Option[BlockPE]] = {
-    ";" ^^^ None
+  def maybeBody: Parser[Option[BlockPE]] = {
+    (filledBody ^^ (x => Some(x))) |
+      (emptyBody ^^^ None) |
+      (noBody ^^^ None)
   }
-
-  def maybeBody = filledBody | emptyBody | noBody
 
   def topLevelFunction: Parser[FunctionP] = {
         pos ~

@@ -50,7 +50,7 @@ class ArrayTests extends FunSuite with Matchers {
         |fn main() {
         |  i = 2;
         |  a = [2, 3, 4, 5, 6];
-        |  = a.(i);
+        |  = a[i];
         |}
       """.stripMargin)
 
@@ -144,7 +144,7 @@ class ArrayTests extends FunSuite with Matchers {
         |fn main() {
         |  a = Array<imm, Int>(10, &IFunction1<imm, Int, Int>({_}));
         |  i = 5;
-        |  = a.(i);
+        |  = a[i];
         |}
       """.stripMargin)
 //    val compile = new Compilation(
@@ -219,7 +219,7 @@ class ArrayTests extends FunSuite with Matchers {
       """
         |fn main() {
         |  arr = Array<mut, Int>(3, &IFunction1<imm, Int, Int>((row){row}));
-        |  mut arr.(1) = 1337;
+        |  mut arr[1] = 1337;
         |  = arr.1;
         |}
       """.stripMargin)
@@ -275,7 +275,7 @@ class ArrayTests extends FunSuite with Matchers {
         |  board = Array<mut, Int>(5, IFunction1<imm, Int, Int>((x){x}));
         |  result =
         |      Array<mut, Int>(5, &IFunction1<mut, Int, Int>((i){
-        |        board.(i) + 2
+        |        board[i] + 2
         |      }));
         |  = result.2;
         |}
@@ -312,10 +312,10 @@ class ArrayTests extends FunSuite with Matchers {
   test("Map from hardcoded values") {
     val compile = new Compilation(
       """fn toArray<M, N, E>(seq &[<_> N * E]) rules(M Mutability) {
-        |  Array<M, E>(N, &IFunction1<imm, Int, Int>((i){ seq.(i)}))
+        |  Array<M, E>(N, &IFunction1<imm, Int, Int>((i){ seq[i]}))
         |}
         |fn main() {
-        |  [6, 4, 3, 5, 2, 8].toArray<mut>().(3)
+        |  [6, 4, 3, 5, 2, 8].toArray<mut>()[3]
         |}
         |""".stripMargin)
     compile.evalForReferend(Vector()) shouldEqual VonInt(5)
@@ -325,7 +325,7 @@ class ArrayTests extends FunSuite with Matchers {
     val compile = new Compilation(
       ArrayUtils.code +
       """fn main() {
-        |  [[6, 60].toArray<imm>(), [4, 40].toArray<imm>(), [3, 30].toArray<imm>()].toArray<imm>().(2).(1)
+        |  [[6, 60].toArray<imm>(), [4, 40].toArray<imm>(), [3, 30].toArray<imm>()].toArray<imm>()[2][1]
         |}
         |""".stripMargin)
     compile.evalForReferend(Vector()) shouldEqual VonInt(30)

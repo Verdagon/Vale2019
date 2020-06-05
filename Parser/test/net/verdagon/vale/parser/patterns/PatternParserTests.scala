@@ -50,7 +50,7 @@ class PatternParserTests extends FunSuite with Matchers with Collector {
   }
   test("Name-only Capture") {
     compile(atomPattern,"a") match {
-      case PatternPP(_, Some(CaptureP(StringP(_, "a"), FinalP)), None, None, None) =>
+      case PatternPP(_, Some(CaptureP(_,StringP(_, "a"), FinalP)), None, None, None) =>
     }
   }
   test("Empty pattern list") {
@@ -77,7 +77,7 @@ class PatternParserTests extends FunSuite with Matchers with Collector {
     compile("a Moo(a, b)") shouldHave {
       case PatternPP(
           _,
-          Some(CaptureP(StringP(_, "a"),FinalP)),
+          Some(CaptureP(_,StringP(_, "a"),FinalP)),
           Some(NameOrRunePPT(StringP(_, "Moo"))),
           Some(List(capture("a"),capture("b"))),
           None) =>
@@ -90,9 +90,9 @@ class PatternParserTests extends FunSuite with Matchers with Collector {
     compile("moo T(a Int)") shouldHave {
       case PatternPP(
           _,
-          Some(CaptureP(StringP(_, "moo"),FinalP)),
+          Some(CaptureP(_,StringP(_, "moo"),FinalP)),
           Some(NameOrRunePPT(StringP(_, "T"))),
-          Some(List(PatternPP(_, Some(CaptureP(StringP(_, "a"),FinalP)),Some(NameOrRunePPT(StringP(_, "Int"))),None,None))),
+          Some(List(PatternPP(_, Some(CaptureP(_,StringP(_, "a"),FinalP)),Some(NameOrRunePPT(StringP(_, "Int"))),None,None))),
           None) =>
     }
   }
@@ -101,7 +101,7 @@ class PatternParserTests extends FunSuite with Matchers with Collector {
     compile("a [Int, Bool](a, b)") shouldHave {
       case PatternPP(
           _,
-          Some(CaptureP(StringP(_, "a"),FinalP)),
+          Some(CaptureP(_,StringP(_, "a"),FinalP)),
           Some(
             ManualSequencePPT(
                   List(
@@ -114,7 +114,7 @@ class PatternParserTests extends FunSuite with Matchers with Collector {
 
   test("Virtual function") {
     compile(VParser.atomPattern, "virtual this Car") shouldHave {
-      case PatternPP(_, Some(CaptureP(StringP(_, "this"),FinalP)),Some(NameOrRunePPT(StringP(_, "Car"))),None,Some(AbstractP)) =>
+      case PatternPP(_, Some(CaptureP(_,StringP(_, "this"),FinalP)),Some(NameOrRunePPT(StringP(_, "Car"))),None,Some(AbstractP)) =>
     }
   }
 }

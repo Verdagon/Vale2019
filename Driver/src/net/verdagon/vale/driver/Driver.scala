@@ -44,6 +44,10 @@ object Driver {
         vcheck(opts.parsedsOutputFile.isEmpty, "Multiple highlight output files specified!", InputException)
         parseOpts(opts.copy(highlightOutputFile = Some(value)), tail)
       }
+      case "-ph" :: tail => {
+        vcheck(opts.outputFile.isEmpty, "Multiple highlight output files specified!", InputException)
+        parseOpts(opts.copy(highlightOutputFile = Some("")), tail)
+      }
       //          case "--min-size" :: value :: tail =>
       //            parseOpts(opts ++ Map('minsize -> value.toInt), tail)
       //          case string :: opt2 :: tail if isSwitch(opt2) =>
@@ -60,7 +64,16 @@ object Driver {
   }
 
   def readCode(path: String): String = {
-    if (path.startsWith("sample:")) {
+    if (path == "stdin:") {
+      val allLines = new StringBuilder()
+      var ok = true
+      while (ok) {
+        val ln = scala.io.StdIn.readLine()
+        ok = ln != null
+        if (ok) allLines.append(ln + "\n")
+      }
+      allLines.toString()
+    } else if (path.startsWith("sample:")) {
       path.toLowerCase().slice("sample:".length, path.length) match {
         case "roguelike" => Roguelike.code
         case "terrain" => Terrain.generatorCode
@@ -131,16 +144,12 @@ object Driver {
     }
   }
 
-  val usage = """
-    Usage: mmlaln [--min-size num] [--max-size num] filename
-  """
-
   def main(args: Array[String]): Unit = {
     try {
       val opts = parseOpts(Options(List(), None, None, None, None), args.toList)
       vcheck(opts.mode.nonEmpty, "No mode!", InputException)
       vcheck(opts.inputFiles.nonEmpty, "No input files!", InputException)
-      vcheck(opts.outputFile.nonEmpty, "No output file!", InputException)
+      vcheck(opts.outputFile.nonEmpty || opts.highlightOutputFile.nonEmpty || opts.parsedsOutputFile.nonEmpty, "No output file!", InputException)
 
       opts.mode.get match {
         case "highlight" => {
@@ -149,8 +158,15 @@ object Driver {
           val parsed = vassertSome(VParser.runParser(code))
           val span = Spanner.forProgram(parsed)
           val highlights = Highlighter.toHTML(code, span)
-          println("Writing to file " + opts.highlightOutputFile.get)
-          writeFile(opts.outputFile.get, highlights)
+          opts.highlightOutputFile.get match {
+            case "" => {
+              println(highlights)
+            }
+            case file => {
+              println("Writing to file " + opts.highlightOutputFile.get)
+              writeFile(opts.highlightOutputFile.get, highlights)
+            }
+          }
         }
         case "build" => {
           build(opts)

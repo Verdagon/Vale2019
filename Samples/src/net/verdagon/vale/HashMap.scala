@@ -58,10 +58,10 @@ object HashMap {
       |            }));
       |    i = 0;
       |    while (i < map.table.len()) {
-      |      if (map.table.(i).empty?()) {
+      |      if (map.table[i].empty?()) {
       |        // do nothing
       |      } else {
-      |        node? = (mut map.table.(i) = None<HashNode<K, V>>());
+      |        node? = (mut map.table[i] = None<HashNode<K, V>>());
       |        node = get(node?);
       |        addNodeToTable(&newTable, map.hasher, node);
       |      }
@@ -80,14 +80,14 @@ object HashMap {
       |  index = findEmptyIndexForKey(table, startIndex, node.key);
       |
       |  opt Opt<HashNode<K, V>> = Some(node);
-      |  mut table.(index) = opt;
+      |  mut table[index] = opt;
       |}
       |
       |fn findEmptyIndexForKey<K, V>(table &Array<mut, Opt<HashNode<K, V>>>, startIndex Int, key K) Int {
       |  i = 0;
       |  while (i < table.len()) {
       |    index = (startIndex + i) mod table.len();
-      |    something = table.(index);
+      |    something = table[index];
       |    if (something.empty?()) {
       |      ret index;
       |    }
@@ -101,7 +101,7 @@ object HashMap {
       |  i = 0;
       |  while (i < table.len()) {
       |    index = (startIndex + i) mod table.len();
-      |    something = table.(index);
+      |    something = table[index];
       |    if (something.empty?()) {
       |      ret None<Int>();
       |    }
@@ -126,7 +126,7 @@ object HashMap {
       |    opt Opt<&V> = None<&V>();
       |    ret opt;
       |  }
-      |  node = this.table.(index?.get()).get();
+      |  node = this.table[index?.get()].get();
       |  opt Opt<&V> = Some<&V>(node.value);
       |  ret opt;
       |}
@@ -139,7 +139,7 @@ object HashMap {
       |  list = List<K>();
       |  index = 0;
       |  while (index < this.table.len()) {
-      |    node? = this.table.(index);
+      |    node? = this.table[index];
       |    if (not(node?.empty?())) {
       |      list.add(node?.get().key);
       |    }

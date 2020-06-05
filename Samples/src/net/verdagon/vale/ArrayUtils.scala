@@ -4,29 +4,29 @@ object ArrayUtils {
   val code =
     """
       |fn toArray<M, N, E, SM>(seq &[<SM> N * E]) rules(M Mutability) {
-      |  Array<M, E>(N, &IFunction1<SM, Int, E>((i){ seq.(i)}))
+      |  Array<M, E>(N, &IFunction1<SM, Int, E>((i){ seq[i]}))
       |}
       |
       |//fn each<N, E, F, M>(seq &[<M> N * E], func F) Void {
-      |//  Array<mut, Int>(N, &IFunction1<mut, Int, Int>((i){ func(seq.(i)); = 0; }));
+      |//  Array<mut, Int>(N, &IFunction1<mut, Int, Int>((i){ func(seq[i]); = 0; }));
       |//}
       |
       |//fn map<M>(seq &[<_> N * E], func F) rules(M Mutability) {
-      |//  Array<M>(N, (i){ func(seq.(i)) })
+      |//  Array<M>(N, (i){ func(seq[i]) })
       |//}
       |
       |//fn each<E, F>(arr &Array<_, E>, func F) Void {
-      |//  Array<mut, Int>(arr.len(), &IFunction1<mut, Int, Void>((i){ func(arr.(i)); = 0; }));
+      |//  Array<mut, Int>(arr.len(), &IFunction1<mut, Int, Void>((i){ func(arr[i]); = 0; }));
       |//}
       |
       |//fn map<M>(arr &Array<_, E>, func F) rules(M Mutability) {
-      |//  Array<M>(arr.len(), (i){ func(arr.(i)) })
+      |//  Array<M>(arr.len(), (i){ func(arr[i]) })
       |//}
       |
       |fn has<E, F>(arr &Array<_, E>, elem E, equator F) Bool {
       |  i = 0;
       |  while (i < arr.len()) {
-      |    if ((equator)(arr.(i), elem)) {
+      |    if ((equator)(arr[i], elem)) {
       |      ret true;
       |    }
       |    mut i = i + 1;
@@ -41,7 +41,7 @@ object ArrayUtils {
       |fn has<E, F>(seq &[<_> _ * E], elem E, equator F) Bool {
       |  i = 0;
       |  while (i < seq.len()) {
-      |    if ((equator)(seq.(i), elem)) {
+      |    if ((equator)(seq[i], elem)) {
       |      ret true;
       |    }
       |    mut i = i + 1;
@@ -63,7 +63,7 @@ object ArrayUtils {
       |  i! = 0;
       |  l = len(&arr);
       |  while (i < l) {
-      |    func(arr.(i));
+      |    func(arr[i]);
       |    mut i = i + 1;
       |  }
       |}
@@ -76,7 +76,7 @@ object ArrayUtils {
       |  i! = 0;
       |  l = len(&arr);
       |  while (i < l) {
-      |    func(i, arr.(i));
+      |    func(i, arr[i]);
       |    mut i = i + 1;
       |  }
       |}

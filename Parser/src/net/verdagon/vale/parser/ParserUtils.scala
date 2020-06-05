@@ -77,9 +77,17 @@ trait ParserUtils extends RegexParsers {
     pos ~ int ~ pos ^^ { case begin ~ n ~ end => IntLiteralPE(Range(begin, end), n) }
   }
 
+  private[parser] def bool: Parser[IExpressionPE] = {
+    pos ~ ("true"|"false") ~ pos ^^ {
+      case begin ~ "true" ~ end => BoolLiteralPE(Range(begin, end), true)
+      case begin ~ "false" ~ end => BoolLiteralPE(Range(begin, end), false)
+    }
+  }
+
+
   private[parser] def float: Parser[IExpressionPE] = {
-    raw"^-?\d+\.\d*".r ^^ {
-      case thingStr => FloatLiteralPE(thingStr.toFloat)
+    pos ~ raw"^-?\d+\.\d*".r ~ pos ^^ {
+      case begin ~ thingStr ~ end => FloatLiteralPE(Range(begin, end), thingStr.toFloat)
     }
   }
 

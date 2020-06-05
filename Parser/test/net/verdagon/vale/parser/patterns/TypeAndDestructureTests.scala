@@ -42,7 +42,7 @@ class TypeAndDestructureTests extends FunSuite with Matchers with Collector {
 
   test("Empty destructure") {
     compile("_ Muta()") shouldHave {
-      case PatternPP(
+      case PatternPP(_,
           None,
           Some(NameOrRunePPT(StringP(_, "Muta"))),
           Some(List()),
@@ -52,7 +52,7 @@ class TypeAndDestructureTests extends FunSuite with Matchers with Collector {
 
   test("Templated destructure") {
     compile("_ Muta<Int>()") shouldHave {
-      case PatternPP(
+      case PatternPP(_,
           None,
           Some(
             CallPPT(
@@ -62,7 +62,7 @@ class TypeAndDestructureTests extends FunSuite with Matchers with Collector {
           None) =>
     }
     compile("_ Muta<R>()") shouldHave {
-        case PatternPP(
+        case PatternPP(_,
           None,
           Some(
             CallPPT(
@@ -76,7 +76,7 @@ class TypeAndDestructureTests extends FunSuite with Matchers with Collector {
 
   test("Destructure with type outside") {
     compile("_ [Int, Bool](a, b)") shouldHave {
-      case PatternPP(
+      case PatternPP(_,
           None,
           Some(
             ManualSequencePPT(
@@ -89,37 +89,37 @@ class TypeAndDestructureTests extends FunSuite with Matchers with Collector {
   }
   test("Destructure with typeless capture") {
     compile("_ Muta(b)") shouldHave {
-      case PatternPP(
+      case PatternPP(_,
           None,
           Some(NameOrRunePPT(StringP(_, "Muta"))),
-          Some(List(PatternPP(Some(CaptureP(StringP(_, "b"),FinalP)),None,None,None))),
+          Some(List(PatternPP(_,Some(CaptureP(_,StringP(_, "b"),FinalP)),None,None,None))),
           None) =>
     }
   }
   test("Destructure with typed capture") {
     compile("_ Muta(b Marine)") shouldHave {
-      case PatternPP(
+      case PatternPP(_,
           None,
           Some(NameOrRunePPT(StringP(_, "Muta"))),
-          Some(List(PatternPP(Some(CaptureP(StringP(_, "b"),FinalP)),Some(NameOrRunePPT(StringP(_, "Marine"))),None,None))),
+          Some(List(PatternPP(_,Some(CaptureP(_,StringP(_, "b"),FinalP)),Some(NameOrRunePPT(StringP(_, "Marine"))),None,None))),
           None) =>
     }
   }
   test("Destructure with unnamed capture") {
     compile("_ Muta(_ Marine)") shouldHave {
-      case PatternPP(
+      case PatternPP(_,
           None,
           Some(NameOrRunePPT(StringP(_, "Muta"))),
-          Some(List(PatternPP(None,Some(NameOrRunePPT(StringP(_, "Marine"))),None,None))),
+          Some(List(PatternPP(_,None,Some(NameOrRunePPT(StringP(_, "Marine"))),None,None))),
           None) =>
     }
   }
   test("Destructure with runed capture") {
     compile("_ Muta(_ R)") shouldHave {
-      case PatternPP(
+      case PatternPP(_,
           None,
           Some(NameOrRunePPT(StringP(_, "Muta"))),
-          Some(List(PatternPP(None,Some(NameOrRunePPT(StringP(_, "R"))),None,None))),
+          Some(List(PatternPP(_,None,Some(NameOrRunePPT(StringP(_, "R"))),None,None))),
           None) =>
         }
   }

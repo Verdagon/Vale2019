@@ -155,10 +155,10 @@ class HashMapTest extends FunSuite with Matchers {
           |  m.add(12, 103);
           |  k = m.keys();
           |  assertEq(k.len(), 4);
-          |  assertEq(k.(0), 0);
-          |  assertEq(k.(1), 4);
-          |  assertEq(k.(2), 8);
-          |  assertEq(k.(3), 12);
+          |  assertEq(k[0], 0);
+          |  assertEq(k[1], 4);
+          |  assertEq(k[2], 8);
+          |  assertEq(k[3], 12);
           |  = 1337;
           |}
         """.stripMargin)

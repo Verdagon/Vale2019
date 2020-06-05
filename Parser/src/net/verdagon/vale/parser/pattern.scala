@@ -32,6 +32,7 @@ case class PatternPP(
     virtuality: Option[IVirtualityP]) extends Positional
 
 case class CaptureP(
+    range: Range,
     name: StringP,
     variability: VariabilityP)
 
@@ -52,12 +53,12 @@ case class FunctionPPT(mutable: Option[ITemplexPPT], params: List[ITemplexPPT], 
 object Patterns {
   object capturedWithTypeRune {
     def apply(name: String, kindRune: String): PatternPP = {
-      PatternPP(Range.zero, Some(CaptureP(StringP(Range.zero, name), FinalP)), Some(NameOrRunePPT(StringP(Range.zero, kindRune))), None, None)
+      PatternPP(Range.zero, Some(CaptureP(Range.zero, StringP(Range.zero, name), FinalP)), Some(NameOrRunePPT(StringP(Range.zero, kindRune))), None, None)
     }
 
     def unapply(arg: PatternPP): Option[(String, String)] = {
       arg match {
-        case PatternPP(_, Some(CaptureP(StringP(_, name), FinalP)), Some(NameOrRunePPT(StringP(_, kindRune))), None, None) => Some((name, kindRune))
+        case PatternPP(_, Some(CaptureP(_, StringP(_, name), FinalP)), Some(NameOrRunePPT(StringP(_, kindRune))), None, None) => Some((name, kindRune))
         case _ => None
       }
     }
@@ -75,12 +76,12 @@ object Patterns {
   }
   object capture {
     def apply(name: String): PatternPP = {
-      PatternPP(Range.zero, Some(CaptureP(StringP(Range.zero, name), FinalP)), None, None, None)
+      PatternPP(Range.zero, Some(CaptureP(Range.zero, StringP(Range.zero, name), FinalP)), None, None, None)
     }
 
     def unapply(arg: PatternPP): Option[String] = {
       arg match {
-        case PatternPP(_, Some(CaptureP(StringP(_, name), FinalP)), None, None, None) => Some(name)
+        case PatternPP(_, Some(CaptureP(_, StringP(_, name), FinalP)), None, None, None) => Some(name)
         case _ => None
       }
     }
@@ -109,11 +110,11 @@ object Patterns {
   }
   object capturedWithType {
     def apply(name: String, templex: ITemplexPPT): PatternPP = {
-      PatternPP(Range.zero, Some(CaptureP(StringP(Range.zero, name), FinalP)), Some(templex), None, None)
+      PatternPP(Range.zero, Some(CaptureP(Range.zero, StringP(Range.zero, name), FinalP)), Some(templex), None, None)
     }
     def unapply(arg: PatternPP): Option[(String, ITemplexPPT)] = {
       arg match {
-        case PatternPP(_, Some(CaptureP(StringP(_, name), FinalP)), Some(templex), None, None) => Some((name, templex))
+        case PatternPP(_, Some(CaptureP(_, StringP(_, name), FinalP)), Some(templex), None, None) => Some((name, templex))
         case _ => None
       }
     }

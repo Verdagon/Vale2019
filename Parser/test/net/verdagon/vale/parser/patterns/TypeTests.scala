@@ -80,7 +80,7 @@ class TypeTests extends FunSuite with Matchers with Collector {
   }
   test("15") {
     compile("_ &[3 * MutableStruct]") shouldHave {
-      case PatternPP(
+      case PatternPP(_,
         None,
         Some(
           OwnershippedPPT(
@@ -95,7 +95,7 @@ class TypeTests extends FunSuite with Matchers with Collector {
   }
   test("15m") {
     compile("_ &[<_> 3 * MutableStruct]") shouldHave {
-      case PatternPP(
+      case PatternPP(_,
         None,
         Some(
           OwnershippedPPT(
@@ -110,7 +110,7 @@ class TypeTests extends FunSuite with Matchers with Collector {
   }
   test("15z") {
     compile("_ MyOption<MyList<Int>>") shouldHave {
-      case PatternPP(
+      case PatternPP(_,
         None,
         Some(
           CallPPT(

@@ -79,7 +79,7 @@ object PatternScout {
     ruleState: RuleStateBox,
     patternPP: PatternPP):
   (List[IRulexSR], AtomSP) = {
-    val PatternPP(maybeCaptureP, maybeTypeP, maybeDestructureP, maybeVirtualityP) = patternPP
+    val PatternPP(_,maybeCaptureP, maybeTypeP, maybeDestructureP, maybeVirtualityP) = patternPP
 
     val declaredRunes = stackFrame.parentEnv.allUserDeclaredRunes()
 
@@ -122,7 +122,7 @@ object PatternScout {
           val codeLocation = CodeLocationS(patternPP.pos.line, patternPP.pos.column)
           CaptureS(UnnamedLocalNameS(codeLocation), FinalP)
         }
-        case Some(CaptureP(StringP(_, name), variability)) => {
+        case Some(CaptureP(_,StringP(_, name), variability)) => {
           CaptureS(CodeVarNameS(name), variability)
         }
       }

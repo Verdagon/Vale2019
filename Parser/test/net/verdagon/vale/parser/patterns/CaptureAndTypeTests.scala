@@ -39,7 +39,7 @@ class CaptureAndTypeTests extends FunSuite with Matchers with Collector {
 
   test("No capture, with type") {
     compile("_ Int") shouldHave {
-      case PatternPP(None, Some(NameOrRunePPT(StringP(_, "Int"))), None, None) =>
+      case PatternPP(_,None, Some(NameOrRunePPT(StringP(_, "Int"))), None, None) =>
     }
   }
   test("Capture with type") {
@@ -54,8 +54,8 @@ class CaptureAndTypeTests extends FunSuite with Matchers with Collector {
   }
   test("Capture with borrow tame") {
     compile("arr &R") shouldHave {
-      case PatternPP(
-          Some(CaptureP(StringP(_, "arr"),FinalP)),
+      case PatternPP(_,
+          Some(CaptureP(_,StringP(_, "arr"),FinalP)),
           Some(OwnershippedPPT(BorrowP, NameOrRunePPT(StringP(_, "R")))),
           None,
           None) =>

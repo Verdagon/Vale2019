@@ -86,8 +86,8 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
   // Remember, for pattern parsers, something *must* be present, don't match empty.
   // Luckily, for this rule, we always have the expr identifier.
   private[parser] def patternCapture: Parser[CaptureP] = {
-    exprIdentifier ~ opt("!") ^^ {
-      case name ~ maybeMutable => CaptureP(name, if (maybeMutable.nonEmpty) VaryingP else FinalP)
+    pos ~ exprIdentifier ~ opt("!") ~ pos ^^ {
+      case begin ~ name ~ maybeMutable ~ end => CaptureP(Range(begin, end), name, if (maybeMutable.nonEmpty) VaryingP else FinalP)
     }
   }
 

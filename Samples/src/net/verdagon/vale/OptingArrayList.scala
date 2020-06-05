@@ -16,7 +16,7 @@ val code =
     |    newArray =
     |        Array<mut, Opt<E>>(newLen, &IFunction1<mut, Int, Opt<E>>((index){
     |          = if (index < len(list)) {
-    |              = (mut list.array.(index) = None<E>());
+    |              = (mut list.array[index] = None<E>());
     |            } else {
     |              result Opt<E> = None<E>();
     |              = result;
@@ -24,16 +24,16 @@ val code =
     |        }));
     |    mut list.array = newArray;
     |  }
-    |  mut list.array.(list.size) = Some<E>(newElement);
+    |  mut list.array[list.size] = Some<E>(newElement);
     |  mut list.size = list.size + 1;
     |}
     |// todo make that return a &E
     |fn get<E>(list &List<E>, index Int) &Opt<E> {
     |  a = list.array;
-    |  = a.(index);
+    |  = a[index];
     |}
     |fn set<E>(list &List<E>, index Int, value E) Void {
-    |  mut list.array.(index) = Some(value);
+    |  mut list.array[index] = Some(value);
     |}
     |fn toArray<M, E>(list &List<E>) Array<M, E> rules(M Mutability) {
     |  Array<M, E>(list.len(), &IFunction1<mut, Int, E>((i){ list.get(i).get()}))

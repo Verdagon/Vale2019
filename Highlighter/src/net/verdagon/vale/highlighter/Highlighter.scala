@@ -42,16 +42,25 @@ object Highlighter {
   }
 
   def toHTML(builder: StringBuilder, iter: CodeIter, span: Span): String = {
-    builder.append(iter.advanceTo(span.range.begin))
+    builder.append(escape(iter.advanceTo(span.range.begin)))
     builder.append(s"""<span class="${span.classs}">""")
     span.children.foreach(child => {
-      builder.append(iter.advanceTo(child.range.begin))
+      builder.append(escape(iter.advanceTo(child.range.begin)))
       toHTML(builder, iter, child)
-      builder.append(iter.advanceTo(child.range.end))
+      builder.append(escape(iter.advanceTo(child.range.end)))
     })
-    builder.append(iter.advanceTo(span.range.end))
+    builder.append(escape(iter.advanceTo(span.range.end)))
     builder.append("</span>")
     builder.toString()
+  }
+
+  def escape(s: String): String = {
+    s
+      .replaceAll("\\{", "&#123;")
+      .replaceAll("\\}", "&#125;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll("\\n", "<br />")
   }
 
   def toHTML(code: String, span: Span): String = {

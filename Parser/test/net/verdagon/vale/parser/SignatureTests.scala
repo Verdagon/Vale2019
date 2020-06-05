@@ -28,26 +28,26 @@ class SignatureTests extends FunSuite with Matchers with Collector {
             ParamsP(
               _,
               List(
-                PatternPP(
-                  Some(CaptureP(StringP(_, "this"),FinalP)),
+                PatternPP(_,
+                  Some(CaptureP(_,StringP(_, "this"),FinalP)),
                   Some(NameOrRunePPT(StringP(_, "Marine"))),
                   None,
                   Some(OverrideP(NameOrRunePPT(StringP(_, "IUnit")))))))),
           None,
-          Some(BlockPE(List(IntLiteralPE(5))))) =>
+          Some(BlockPE(_, List(IntLiteralPE(_, 5))))) =>
     }
   }
 
   test("Param") {
     val program = compile(VParser.program, "fn call(f F){f()}")
     program shouldHave {
-      case PatternPP(Some(CaptureP(StringP(_, "f"),FinalP)),Some(NameOrRunePPT(StringP(_, "F"))),None,None) =>
+      case PatternPP(_,Some(CaptureP(_,StringP(_, "f"),FinalP)),Some(NameOrRunePPT(StringP(_, "F"))),None,None) =>
     }
   }
 
   test("Templated function") {
     compile(VParser.topLevelFunction, "fn sum () rules() {3}") shouldHave {
-      case FunctionP(_, Some(StringP(_, "sum")), None, None, None, Some(_), Some(_), None, Some(BlockPE(List(IntLiteralPE(3))))) =>
+      case FunctionP(_, Some(StringP(_, "sum")), None, None, None, Some(_), Some(_), None, Some(BlockPE(_, List(IntLiteralPE(_, 3))))) =>
     }
   }
 
@@ -61,7 +61,7 @@ class SignatureTests extends FunSuite with Matchers with Collector {
         None,
         Some(ParamsP(_, List(Patterns.capturedWithTypeRune("a", "A")))),
         None,
-        Some(BlockPE(List(VoidPE())))) =>
+        Some(BlockPE(_, List(VoidPE(_))))) =>
     }
   }
 

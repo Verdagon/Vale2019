@@ -45,27 +45,27 @@ class BiggerTests extends FunSuite with Matchers with Collector {
 
   test("Simple while loop") {
     compile(VParser.statement,"while () {}") shouldHave {
-      case WhilePE(BlockPE(List(VoidPE())), BlockPE(List(VoidPE()))) =>
+      case WhilePE(BlockPE(_, List(VoidPE(_))), BlockPE(_, List(VoidPE(_)))) =>
     }
   }
 
   test("Result after while loop") {
-    compile(VParser.block,"while () {} = false;") shouldHave {
-      case BlockPE(List(
-      WhilePE(BlockPE(List(VoidPE())), BlockPE(List(VoidPE()))),
-      BoolLiteralPE(false))) =>
+    compile(VParser.blockExprs,"while () {} = false;") shouldHave {
+      case List(
+      WhilePE(BlockPE(_, List(VoidPE(_))), BlockPE(_, List(VoidPE(_)))),
+      BoolLiteralPE(_, false)) =>
     }
   }
 
   test("Block with result") {
-    compile(VParser.block,"= 3;") shouldHave {
-      case BlockPE(List(IntLiteralPE(3))) =>
+    compile(VParser.blockExprs,"= 3;") shouldHave {
+      case List(IntLiteralPE(_, 3)) =>
     }
   }
 
   test("Simple function") {
     compile(VParser.topLevelFunction, "fn sum(){3}") match {
-      case FunctionP(_, Some(StringP(_, "sum")), None, None, None, None, Some(ParamsP(_,List())), None, Some(BlockPE(List(IntLiteralPE(3))))) =>
+      case FunctionP(_, Some(StringP(_, "sum")), None, None, None, None, Some(ParamsP(_,List())), None, Some(BlockPE(_, List(IntLiteralPE(_, 3))))) =>
     }
   }
 
@@ -79,14 +79,14 @@ class BiggerTests extends FunSuite with Matchers with Collector {
 //    val main = program.lookupFunction("main")
 
     program shouldHave {
-      case FunctionCallPE(LookupPE(StringP(_, "call"), List()),List(LookupPE(StringP(_, "sum"), List())),true) =>
+      case FunctionCallPE(_, LookupPE(StringP(_, "call"), List()),List(LookupPE(StringP(_, "sum"), List())),true) =>
     }
   }
 
   test("Mutating as statement") {
     val program = compile(VParser.topLevelFunction, "fn main() { mut x = 6; }")
     program shouldHave {
-      case MutatePE(LookupPE(StringP(_, "x"),List()),IntLiteralPE(6)) =>
+      case MutatePE(_,LookupPE(StringP(_, "x"),List()),IntLiteralPE(_, 6)) =>
     }
   }
 
@@ -96,12 +96,12 @@ class BiggerTests extends FunSuite with Matchers with Collector {
 
   test("Test templated lambda param") {
     val program = compile(VParser.program, "fn main(){(a){ a + a}(3)}")
-    program shouldHave { case FunctionCallPE(LambdaPE(_), List(IntLiteralPE(3)),true) => }
+    program shouldHave { case FunctionCallPE(_, LambdaPE(_), List(IntLiteralPE(_, 3)),true) => }
     program shouldHave {
-      case PatternPP(Some(CaptureP(StringP(_, "a"),FinalP)),None,None,None) =>
+      case PatternPP(_, Some(CaptureP(_,StringP(_, "a"),FinalP)),None,None,None) =>
     }
     program shouldHave {
-      case FunctionCallPE(LookupPE(StringP(_, "+"), List()),List(LookupPE(StringP(_, "a"), List()), LookupPE(StringP(_, "a"), List())),true) =>
+      case FunctionCallPE(_, LookupPE(StringP(_, "+"), List()),List(LookupPE(StringP(_, "a"), List()), LookupPE(StringP(_, "a"), List())),true) =>
     }
   }
 
@@ -119,40 +119,40 @@ class BiggerTests extends FunSuite with Matchers with Collector {
 
   test("Test block's trailing void presence") {
     compile(VParser.filledBody, "{ moo() }") shouldHave {
-      case Some(BlockPE(List(FunctionCallPE(LookupPE(StringP(_, "moo"), List()), List(), true)))) =>
+      case BlockPE(_, List(FunctionCallPE(_, LookupPE(StringP(_, "moo"), List()), List(), true))) =>
     }
 
     compile(VParser.filledBody, "{ moo(); }") shouldHave {
-      case Some(BlockPE(List(FunctionCallPE(LookupPE(StringP(_, "moo"), List()), List(), true), VoidPE()))) =>
+      case BlockPE(_, List(FunctionCallPE(_, LookupPE(StringP(_, "moo"), List()), List(), true), VoidPE(_))) =>
     }
   }
 
   test("ifs") {
     compile(VParser.ifLadder, "if (true) { doBlarks(&x) } else { }") shouldHave {
-      case IfPE(
-      BlockPE(List(BoolLiteralPE(true))),
-      BlockPE(List(FunctionCallPE(LookupPE(StringP(_, "doBlarks"), List()), List(LendPE(LookupPE(StringP(_, "x"), List()))), true))),
-      BlockPE(List(VoidPE()))) =>
+      case IfPE(_,
+      BlockPE(_, List(BoolLiteralPE(_, true))),
+      BlockPE(_, List(FunctionCallPE(_, LookupPE(StringP(_, "doBlarks"), List()), List(LendPE(LookupPE(StringP(_, "x"), List()))), true))),
+      BlockPE(_, List(VoidPE(_)))) =>
     }
   }
 
   test("Block with only a result") {
     compile(
-      VParser.block,
+      VParser.blockExprs,
       "= doThings(a);") shouldHave {
-      case BlockPE(List(FunctionCallPE(LookupPE(StringP(_, "doThings"), List()), List(LookupPE(StringP(_, "a"), List())), true))) =>
+      case List(FunctionCallPE(_, LookupPE(StringP(_, "doThings"), List()), List(LookupPE(StringP(_, "a"), List())), true)) =>
     }
   }
 
 
   test("Block with statement and result") {
     compile(
-      VParser.block,
+      VParser.blockExprs,
       """
         |b;
         |= a;
       """.stripMargin) shouldHave {
-      case BlockPE(List(LookupPE(StringP(_, "b"), List()), LookupPE(StringP(_, "a"), List()))) =>
+      case List(LookupPE(StringP(_, "b"), List()), LookupPE(StringP(_, "a"), List())) =>
     }
   }
 
@@ -161,15 +161,14 @@ class BiggerTests extends FunSuite with Matchers with Collector {
     // = doThings(a); could be misinterpreted as an expression doThings(=, a) if we're
     // not careful.
     compile(
-      VParser.block,
+      VParser.blockExprs,
       """
         |a = 2;
         |= doThings(a);
       """.stripMargin) shouldHave {
-      case BlockPE(
-        List(
-          LetPE(List(), PatternPP(Some(CaptureP(StringP(_, "a"), FinalP)), None, None, None), IntLiteralPE(2)),
-            FunctionCallPE(LookupPE(StringP(_, "doThings"), List()), List(LookupPE(StringP(_, "a"), List())), true))) =>
+      case List(
+          LetPE(_,List(), PatternPP(_, Some(CaptureP(_,StringP(_, "a"), FinalP)), None, None, None), IntLiteralPE(_, 2)),
+            FunctionCallPE(_, LookupPE(StringP(_, "doThings"), List()), List(LookupPE(StringP(_, "a"), List())), true)) =>
     }
   }
 
@@ -211,7 +210,7 @@ class BiggerTests extends FunSuite with Matchers with Collector {
       case FunctionP(
         _,
         Some(StringP(_, "doCivicDance")), None, None, None, None,
-        Some(ParamsP(_, List(PatternPP(Some(CaptureP(StringP(_, "this"), FinalP)), Some(NameOrRunePPT(StringP(_, "Car"))), None, Some(AbstractP))))),
+        Some(ParamsP(_, List(PatternPP(_, Some(CaptureP(_,StringP(_, "this"), FinalP)), Some(NameOrRunePPT(StringP(_, "Car"))), None, Some(AbstractP))))),
         Some(NameOrRunePPT(StringP(_, "Int"))), None) =>
     }
   }
@@ -236,32 +235,32 @@ class BiggerTests extends FunSuite with Matchers with Collector {
   test("19") {
     compile(VParser.statement,
       "newLen = if (num == 0) { 1 } else { 2 };") shouldHave {
-      case LetPE(
+      case LetPE(_,
       List(),
-      PatternPP(Some(CaptureP(StringP(_, "newLen"), FinalP)), None, None, None),
-      IfPE(
-      BlockPE(List(FunctionCallPE(LookupPE(StringP(_, "=="), List()), List(LookupPE(StringP(_, "num"), List()), IntLiteralPE(0)), true))),
-      BlockPE(List(IntLiteralPE(1))),
-      BlockPE(List(IntLiteralPE(2))))) =>
+      PatternPP(_, Some(CaptureP(_,StringP(_, "newLen"), FinalP)), None, None, None),
+      IfPE(_,
+      BlockPE(_, List(FunctionCallPE(_, LookupPE(StringP(_, "=="), List()), List(LookupPE(StringP(_, "num"), List()), IntLiteralPE(_, 0)), true))),
+      BlockPE(_, List(IntLiteralPE(_, 1))),
+      BlockPE(_, List(IntLiteralPE(_, 2))))) =>
     }
   }
 
   test("20") {
     compile(VParser.expression,
       "weapon.owner.map()") shouldHave {
-      case FunctionCallPE(
-      DotPE(
-      DotPE(LookupPE(StringP(_, "weapon"), List()), LookupPE(StringP(_, "owner"), List()), true),
-      LookupPE(StringP(_, "map"), List()),
-      true),
-      List(),
-      true) =>
+      case MethodCallPE(_,
+        DotPE(_,
+          LookupPE(StringP(_,"weapon"),List()),
+          LookupPE(StringP(_,"owner"),List())),
+        true,
+        LookupPE(StringP(_,"map"),List()),
+        List()) =>
     }
   }
 
   test("!=") {
     compile(VParser.expression,"3 != 4") shouldHave {
-      case FunctionCallPE(LookupPE(StringP(_, "!="), List()), List(IntLiteralPE(3), IntLiteralPE(4)), true) =>
+      case FunctionCallPE(_, LookupPE(StringP(_, "!="), List()), List(IntLiteralPE(_, 3), IntLiteralPE(_, 4)), true) =>
     }
   }
 }

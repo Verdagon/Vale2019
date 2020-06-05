@@ -59,16 +59,16 @@ class DestructureParserTests extends FunSuite with Matchers with Collector {
   }
   test("Two-element destructure with ignore") {
     compile("(_, b)") shouldHave {
-      case PatternPP(
+      case PatternPP(_,
           None,None,
-          Some(List(PatternPP(None, None, None, None), capture("b"))),
+          Some(List(PatternPP(_,None, None, None, None), capture("b"))),
           None) =>
     }
   }
   test("Capture with destructure") {
     compile("a (x, y)") shouldHave {
-      case PatternPP(
-        Some(CaptureP(StringP(_, "a"),FinalP)),
+      case PatternPP(_,
+        Some(CaptureP(_,StringP(_, "a"),FinalP)),
         None,
         Some(List(capture("x"), capture("y"))),
         None) =>
@@ -76,7 +76,7 @@ class DestructureParserTests extends FunSuite with Matchers with Collector {
   }
   test("Type with destructure") {
     compile("A(a, b)") shouldHave {
-      case PatternPP(
+      case PatternPP(_,
         None,
         Some(NameOrRunePPT(StringP(_, "A"))),
         Some(List(capture("a"), capture("b"))),
@@ -85,8 +85,8 @@ class DestructureParserTests extends FunSuite with Matchers with Collector {
   }
   test("Capture and type with destructure") {
     compile("a A(x, y)") shouldHave {
-      case PatternPP(
-        Some(CaptureP(StringP(_, "a"),FinalP)),
+      case PatternPP(_,
+        Some(CaptureP(_,StringP(_, "a"),FinalP)),
         Some(NameOrRunePPT(StringP(_, "A"))),
         Some(List(capture("x"), capture("y"))),
         None) =>
@@ -94,8 +94,8 @@ class DestructureParserTests extends FunSuite with Matchers with Collector {
   }
   test("Capture with types inside") {
     compile("a (_ Int, _ Bool)") shouldHave {
-      case PatternPP(
-          Some(CaptureP(StringP(_, "a"),FinalP)),
+      case PatternPP(_,
+          Some(CaptureP(_,StringP(_, "a"),FinalP)),
           None,
           Some(List(fromEnv("Int"), fromEnv("Bool"))),
           None) =>
