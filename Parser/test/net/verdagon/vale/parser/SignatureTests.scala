@@ -1,6 +1,6 @@
 package net.verdagon.vale.parser
 
-import net.verdagon.vale.vimpl
+import net.verdagon.vale.{vassert, vimpl}
 import org.scalatest.{FunSuite, Matchers}
 
 class SignatureTests extends FunSuite with Matchers with Collector {
@@ -11,6 +11,7 @@ class SignatureTests extends FunSuite with Matchers with Collector {
         fail("Couldn't parse!\n" + input.pos.longString);
       }
       case VParser.Success(expr, rest) => {
+        vassert(rest.atEnd)
         expr
       }
     }

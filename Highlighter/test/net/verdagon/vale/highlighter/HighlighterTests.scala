@@ -5,16 +5,16 @@ import net.verdagon.vale.vfail
 import org.scalatest.{FunSuite, Matchers}
 
 class HighlighterTests extends FunSuite with Matchers {
-  private def compile(code: String): Program0 = {
-    VParser.parse(VParser.program, code.toCharArray()) match {
+  private def highlight(code: String): String = {
+    VParser.runParser(code) match {
       case VParser.NoSuccess(msg, input) => {
         fail();
       }
-      case VParser.Success(program0, rest) => {
+      case VParser.Success((program0, commentRanges), rest) => {
         if (!rest.atEnd) {
           vfail(rest.pos.longString)
         }
-        program0
+        Highlighter.toHTML(code, Spanner.forProgram(program0), commentRanges)
       }
     }
   }
@@ -26,12 +26,20 @@ class HighlighterTests extends FunSuite with Matchers {
         |  3
         |}
         |""".stripMargin
-    val program1 = compile(code)
-    Highlighter.toHTML(code, Spanner.forProgram(program1)) shouldEqual
-      s"""<span class="Prog">
-         |<span class="Fn">fn <span class="FnName">main</span><span class="Params">()</span> {
-         |  <span class="Block"><span class="Num">3</span></span>
-         |}</span>
-         |</span>""".stripMargin
+    highlight(code) shouldEqual
+      """<span class="Prog"><br /><span class="Fn">fn <span class="FnName">main</span><span class="Params">()</span> <span class="Block">&#123;<br />  <span class="Num">3</span><br />&#125;</span></span><br /></span>"""
+  }
+
+  test("Highlighter with comments") {
+    val code =
+      """
+        |fn main(
+        | // hello
+        |) {
+        |  3//bork
+        |}
+        |""".stripMargin
+    highlight(code) shouldEqual
+      """<span class="Prog"><br /><span class="Fn">fn <span class="FnName">main</span><span class="Params">(<br /> <span class="Comment">// hello</span><br />)</span> <span class="Block">&#123;<br />  <span class="Num">3<span class="Comment">//bork</span></span><br />&#125;</span></span><br /></span>"""
   }
 }

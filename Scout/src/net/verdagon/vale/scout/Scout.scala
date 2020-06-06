@@ -135,7 +135,7 @@ object Scout {
   }
 
   private def scoutStruct(file: String, head: StructP): StructS = {
-    val StructP(range, StringP(_, structHumanName), export, mutability, maybeIdentifyingRunes, maybeTemplateRulesP, members) = head
+    val StructP(range, StringP(_, structHumanName), export, mutability, maybeIdentifyingRunes, maybeTemplateRulesP, StructMembersP(_, members)) = head
     val codeLocation = Scout.evalPos(range.begin)
     val structName = TopLevelCitizenDeclarationNameS(structHumanName, codeLocation)
 
@@ -178,7 +178,7 @@ object Scout {
     val isTemplate = knowableValueRunes != allRunes
 
     val membersS =
-      members.zip(memberRunes).map({ case (StructMemberP(StringP(_, name), variability, _), memberRune) =>
+      members.zip(memberRunes).map({ case (StructMemberP(_, StringP(_, name), variability, _), memberRune) =>
         StructMemberS(name, variability, memberRune)
       })
 
@@ -272,8 +272,8 @@ object Scout {
 
   def runScout(code: String): Option[ProgramS] = {
     VParser.runParser(code) match {
-      case None => None
-      case Some(program0) => {
+      case VParser.Failure(_, _) => None
+      case VParser.Success((program0, _), _) => {
         Some(scoutProgram(program0))
       }
     }

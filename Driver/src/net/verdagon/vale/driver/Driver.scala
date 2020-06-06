@@ -13,7 +13,7 @@ import net.verdagon.vale.scout.Scout
 import net.verdagon.vale.templar.Templar
 import net.verdagon.vale.vivem.Vivem
 import net.verdagon.vale.samples.Roguelike
-import net.verdagon.vale.{MainRetAdd, OrdinaryLinkedList, Sum, Terrain, vassert, vassertSome, vcheck}
+import net.verdagon.vale.{MainRetAdd, OrdinaryLinkedList, Sum, Terrain, vassert, vassertSome, vcheck, vfail}
 import net.verdagon.von.{IVonData, JsonSyntax, VonInt, VonPrinter}
 
 import scala.io.Source
@@ -93,7 +93,14 @@ object Driver {
 
   def build(opts: Options): ProgramH = {
     val code = opts.inputFiles.map(readCode).mkString("\n\n\n")
-    val parsed = vassertSome(VParser.runParser(code))
+    val parsed =
+      VParser.runParser(code) match {
+        case f @ VParser.Failure(msg, next) => vfail(f.toString())
+        case VParser.Success((program0, commentRanges), next) => {
+          vassert(next.atEnd)
+          program0
+        }
+      }
     val scoutput = Scout.scoutProgram(parsed)
     val astrouts = Astronomer.runAstronomer(scoutput)
     val temputs = Templar.evaluate(astrouts)
@@ -155,9 +162,16 @@ object Driver {
         case "highlight" => {
           vcheck(opts.inputFiles.size == 1, "Must have exactly 1 input file for highlighting", InputException)
           val code = readCode(opts.inputFiles.head)
-          val parsed = vassertSome(VParser.runParser(code))
+          val (parsed, commentRanges) =
+            VParser.runParser(code) match {
+              case f @ VParser.Failure(msg, next) => vfail(f.toString())
+              case VParser.Success((program0, commentRanges), next) => {
+                vassert(next.atEnd)
+                (program0, commentRanges)
+              }
+            }
           val span = Spanner.forProgram(parsed)
-          val highlights = Highlighter.toHTML(code, span)
+          val highlights = Highlighter.toHTML(code, span, commentRanges)
           opts.highlightOutputFile.get match {
             case "" => {
               println(highlights)

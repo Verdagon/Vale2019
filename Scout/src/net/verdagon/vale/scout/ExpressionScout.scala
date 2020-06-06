@@ -105,7 +105,7 @@ object ExpressionScout {
         // Leave it to scoutLambda to declare it.
         (noDeclarations, lookup, noVariableUses.markMoved(name), noVariableUses)
       }
-      case LookupPE(StringP(_, name), List()) => {
+      case LookupPE(StringP(_, name), None) => {
         val (lookup, declarations) =
           stackFrame.findVariable(name) match {
             case Some(fullName) => {
@@ -121,7 +121,7 @@ object ExpressionScout {
           }
         (declarations, lookup, noVariableUses, noVariableUses)
       }
-      case LookupPE(StringP(_, templateName), templateArgs) => {
+      case LookupPE(StringP(_, templateName), Some(TemplateArgsP(_, templateArgs))) => {
         val result =
           NormalResult(
             TemplateSpecifiedLookupSE(
@@ -231,7 +231,7 @@ object ExpressionScout {
         (exportedNames1 ++ exportedNames2, NormalResult(mutateExpr1), sourceSelfUses.thenMerge(destinationSelfUses), sourceChildUses.thenMerge(destinationChildUses))
       }
       case DotPE(_, containerExprPE, LookupPE(StringP(_, memberName), templateArgs)) => {
-        if (templateArgs != List()) {
+        if (templateArgs.nonEmpty) {
           // such as myStruct.someField<Foo>.
           // Can't think of a good use for it yet.
           vimpl("havent implemented looking up templated members yet")

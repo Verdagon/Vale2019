@@ -22,10 +22,13 @@ class TemplarTests extends FunSuite with Matchers {
       parsedCache match {
         case Some(parsed) => parsed
         case None => {
-          val parsed = VParser.runParser(code)
-          vassert(parsed != None) // runNamifier returns a None if it failed
-          parsedCache = parsed
-          parsed.get
+          VParser.runParser(code) match {
+            case VParser.Failure(_, _) => vwat()
+            case VParser.Success((program0, _), _) => {
+              parsedCache = Some(program0)
+              program0
+            }
+          }
         }
       }
     }

@@ -73,9 +73,9 @@ object VParser
   }
 
   def structMember: Parser[StructMemberP] = {
-    (exprIdentifier ~ opt("!") <~ optWhite) ~ (templex <~ optWhite <~ ";") ^^ {
-      case name ~ None ~ tyype => StructMemberP(name, FinalP, tyype)
-      case name ~ Some(_) ~ tyype => StructMemberP(name, VaryingP, tyype)
+    pos ~ (exprIdentifier ~ opt("!") <~ optWhite) ~ (templex <~ optWhite <~ ";") ~ pos ^^ {
+      case begin ~ (name ~ None) ~ tyype ~ end => StructMemberP(Range(begin, end), name, FinalP, tyype)
+      case begin ~ (name ~ Some(_)) ~ tyype ~ end => StructMemberP(Range(begin, end), name, VaryingP, tyype)
     }
   }
 
@@ -97,11 +97,12 @@ object VParser
         opt(identifyingRunesPR <~ optWhite) ~
         (opt("export") <~ optWhite) ~
         (opt("imm") <~ optWhite) ~
-        (opt(templateRulesPR) <~ optWhite <~ "{" <~ optWhite) ~
+        (opt(templateRulesPR) <~ optWhite) ~
+        (pos <~ "{" <~ optWhite) ~
         repsep(structMember, optWhite) <~ (optWhite <~ "}")) ~ pos ^^ {
-      case begin ~ (name ~ identifyingRunes ~ export ~ imm ~ maybeTemplateRules ~ members) ~ end => {
+      case begin ~ (name ~ identifyingRunes ~ export ~ imm ~ maybeTemplateRules ~ membersBegin ~ members) ~ end => {
         val mutability = if (imm == Some("imm")) ImmutableP else MutableP
-        StructP(Range(begin, end), name, export.nonEmpty, mutability, identifyingRunes, maybeTemplateRules, members)
+        StructP(Range(begin, end), name, export.nonEmpty, mutability, identifyingRunes, maybeTemplateRules, StructMembersP(Range(membersBegin, end), members))
       }
     }
   }
@@ -129,19 +130,28 @@ object VParser
     optWhite ~> repsep(topLevelThing, optWhite) <~ optWhite ^^ Program0
   }
 
-  def runParser(codeWithComments: String): Option[Program0] = {
+  def repeatStr(str: String, n: Int): String = {
+    var result = "";
+    (0 until n).foreach(i => {
+      result = result + str
+    })
+    result
+  }
+
+  def runParser(codeWithComments: String): ParseResult[(Program0, List[(Int, Int)])] = {
     val regex = "//[^\\r\\n]*".r
-    val code = regex.replaceAllIn(codeWithComments, "")
+    val commentRanges = regex.findAllMatchIn(codeWithComments).map(mat => (mat.start, mat.end)).toList
+    var code = codeWithComments
+    commentRanges.foreach({ case (begin, end) =>
+      code = code.substring(0, begin) + repeatStr(" ", (end - begin)) + code.substring(end)
+    })
 
     VParser.parse(VParser.program, code.toCharArray) match {
-      case VParser.NoSuccess(msg, _) => {
-        println("No! " + msg)
-        None
-      }
+      case VParser.NoSuccess(msg, next) => VParser.Failure(msg, next)
       case VParser.Success(program0, rest) => {
         vassert(rest.atEnd)
         vassert(rest.offset == code.length)
-        Some(program0)
+        VParser.Success((program0, commentRanges), rest)
       }
     }
   }

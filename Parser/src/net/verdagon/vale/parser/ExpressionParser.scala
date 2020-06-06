@@ -17,12 +17,20 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
 
   private[parser] def lookup: Parser[LookupPE] = {
 //    ("`" ~> "[^`]+".r <~ "`" ^^ (i => LookupPE(i, List()))) |
-    (exprIdentifier ^^ (i => LookupPE(i, List())))
+    (exprIdentifier ^^ (i => LookupPE(i, None)))
+  }
+
+  private[parser] def templateArgs: Parser[TemplateArgsP] = {
+    pos ~ ("<" ~> optWhite ~> repsep(templex, optWhite ~> "," <~ optWhite) <~ optWhite <~ ">") ~ pos ^^ {
+      case begin ~ args ~ end => {
+        TemplateArgsP(Range(begin, end), args)
+      }
+    }
   }
 
   private[parser] def templateSpecifiedLookup: Parser[LookupPE] = {
-    (exprIdentifier <~ optWhite) ~ ("<" ~> optWhite ~> repsep(templex, optWhite ~> "," <~ optWhite) <~ optWhite <~ ">") ^^ {
-      case name ~ templateArgs => LookupPE(name, templateArgs)
+    (exprIdentifier <~ optWhite) ~ templateArgs ^^ {
+      case name ~ templateArgs => LookupPE(name, Some(templateArgs))
     }
   }
 
@@ -46,7 +54,7 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
   private[parser] def not: Parser[IExpressionPE] = {
     pos ~ (pstr("not") <~ optWhite) ~ postfixableExpressions ~ pos ^^ {
       case begin ~ not ~ expr ~ end => {
-        FunctionCallPE(Range(begin, end), LookupPE(not, List()), List(expr), true)
+        FunctionCallPE(Range(begin, end), LookupPE(not, None), List(expr), true)
       }
     }
   }
@@ -78,7 +86,7 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
   private[parser] def eachOrEachI: Parser[FunctionCallPE] = {
     pos ~ (pstr("eachI") | pstr("each")) ~ (white ~> postfixableExpressions <~ white) ~ lambda ~ pos ^^ {
       case begin ~ eachI ~ collection ~ lam ~ end => {
-        FunctionCallPE(Range(begin, end), LookupPE(eachI, List()), List(collection, lam), true)
+        FunctionCallPE(Range(begin, end), LookupPE(eachI, None), List(collection, lam), true)
       }
     }
   }
@@ -148,7 +156,7 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
       tupleExpr |
       templateSpecifiedLookup |
       (lookup ^^ {
-        case l @ LookupPE(StringP(r, "_"), List()) => MagicParamLookupPE(r)
+        case l @ LookupPE(StringP(r, "_"), None) => MagicParamLookupPE(r)
         case other => other
       })
   }
@@ -162,7 +170,7 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
     case class IndexStep(args: List[IExpressionPE]) extends IStep
     def step: Parser[IStep] = {
       def afterDot = {
-        (integer ^^ { case IntLiteralPE(range, value) => LookupPE(StringP(range, value.toString), List()) }) |
+        (integer ^^ { case IntLiteralPE(range, value) => LookupPE(StringP(range, value.toString), None) }) |
         templateSpecifiedLookup |
         lookup
       }
@@ -257,19 +265,19 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
       binariableExpression(
         postfixableExpressions,
         white ~> (pstr("*") | pstr("/")) <~ white,
-        (range, op: StringP, left, right) => FunctionCallPE(range, LookupPE(op, List()), List(left, right), true))
+        (range, op: StringP, left, right) => FunctionCallPE(range, LookupPE(op, None), List(left, right), true))
 
     val withAddSubtract =
       binariableExpression(
         withMultDiv,
         white ~> (pstr("+") | pstr("-")) <~ white,
-        (range, op: StringP, left, right) => FunctionCallPE(range, LookupPE(op, List()), List(left, right), true))
+        (range, op: StringP, left, right) => FunctionCallPE(range, LookupPE(op, None), List(left, right), true))
 
     val withComparisons =
       binariableExpression(
         withAddSubtract,
         white ~> specialOperators <~ white,
-        (range, op: StringP, left, right) => FunctionCallPE(range, LookupPE(op, List()), List(left, right), true))
+        (range, op: StringP, left, right) => FunctionCallPE(range, LookupPE(op, None), List(left, right), true))
 
 //    val withAnd =
 //      binariableExpression(
@@ -287,10 +295,10 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
       binariableExpression(
         withComparisons,
         not(white ~> pstr("=") <~ white) ~> (white ~> infixFunctionIdentifier <~ white),
-        (range, funcName: StringP, left, right) => FunctionCallPE(range, LookupPE(funcName, List()), List(left, right), true))
+        (range, funcName: StringP, left, right) => FunctionCallPE(range, LookupPE(funcName, None), List(left, right), true))
 
     withCustomBinaries |
-    (specialOperators ^^ (op => LookupPE(op, List())))
+    (specialOperators ^^ (op => LookupPE(op, None)))
   }
 
   sealed trait StatementType

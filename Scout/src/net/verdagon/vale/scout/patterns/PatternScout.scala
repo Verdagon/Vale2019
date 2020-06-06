@@ -103,7 +103,7 @@ object PatternScout {
     val (newRulesFromDestructures, maybePatternsS) =
       maybeDestructureP match {
         case None => (List(), None)
-        case Some(destructureP) => {
+        case Some(DestructureP(_, destructureP)) => {
           val (newRulesFromDestructures, patternsS) =
             destructureP.foldLeft((List[IRulexSR](), List[AtomSP]()))({
               case ((previousNewRulesS, previousPatternsS), patternP) => {

@@ -61,7 +61,7 @@ class DestructureParserTests extends FunSuite with Matchers with Collector {
     compile("(_, b)") shouldHave {
       case PatternPP(_,
           None,None,
-          Some(List(PatternPP(_,None, None, None, None), capture("b"))),
+          Some(DestructureP(_,List(PatternPP(_,None, None, None, None), capture("b")))),
           None) =>
     }
   }
@@ -70,7 +70,7 @@ class DestructureParserTests extends FunSuite with Matchers with Collector {
       case PatternPP(_,
         Some(CaptureP(_,StringP(_, "a"),FinalP)),
         None,
-        Some(List(capture("x"), capture("y"))),
+        Some(DestructureP(_,List(capture("x"), capture("y")))),
         None) =>
     }
   }
@@ -79,7 +79,7 @@ class DestructureParserTests extends FunSuite with Matchers with Collector {
       case PatternPP(_,
         None,
         Some(NameOrRunePPT(StringP(_, "A"))),
-        Some(List(capture("a"), capture("b"))),
+        Some(DestructureP(_,List(capture("a"), capture("b")))),
         None) =>
     }
   }
@@ -88,7 +88,7 @@ class DestructureParserTests extends FunSuite with Matchers with Collector {
       case PatternPP(_,
         Some(CaptureP(_,StringP(_, "a"),FinalP)),
         Some(NameOrRunePPT(StringP(_, "A"))),
-        Some(List(capture("x"), capture("y"))),
+        Some(DestructureP(_,List(capture("x"), capture("y")))),
         None) =>
     }
   }
@@ -97,7 +97,7 @@ class DestructureParserTests extends FunSuite with Matchers with Collector {
       case PatternPP(_,
           Some(CaptureP(_,StringP(_, "a"),FinalP)),
           None,
-          Some(List(fromEnv("Int"), fromEnv("Bool"))),
+          Some(DestructureP(_,List(fromEnv("Int"), fromEnv("Bool")))),
           None) =>
     }
   }

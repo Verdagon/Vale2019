@@ -62,7 +62,8 @@ case class MethodCallPE(
   argExprs: List[IExpressionPE]
 ) extends IExpressionPE
 
-case class LookupPE(name: StringP, templateArgs: List[ITemplexPT]) extends IExpressionPE
+case class TemplateArgsP(range: Range, args: List[ITemplexPT])
+case class LookupPE(name: StringP, templateArgs: Option[TemplateArgsP]) extends IExpressionPE
 case class MagicParamLookupPE(range: Range) extends IExpressionPE
 
 case class LambdaPE(function: FunctionP) extends IExpressionPE

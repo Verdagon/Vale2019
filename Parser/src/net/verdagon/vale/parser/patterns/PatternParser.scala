@@ -105,8 +105,10 @@ trait PatternParser extends PatternTemplexParser with RegexParsers with ParserUt
 
   // Add any new rules to the "Nothing matches empty string" test!
 
-  private[parser] def destructure: Parser[List[PatternPP]] = {
-    "(" ~> optWhite ~> repsep(atomPattern, optWhite ~> "," <~ optWhite) <~ optWhite <~ ")"
+  private[parser] def destructure: Parser[DestructureP] = {
+    pos ~ ("(" ~> optWhite ~> repsep(atomPattern, optWhite ~> "," <~ optWhite) <~ optWhite <~ ")") ~ pos ^^ {
+      case begin ~ inners ~ end => DestructureP(Range(begin, end), inners)
+    }
   }
 
   // Add any new rules to the "Nothing matches empty string" test!

@@ -8,7 +8,7 @@ import net.verdagon.vale.metal.ProgramH
 import net.verdagon.vale.parser.{Program0, VParser}
 import net.verdagon.vale.scout.{ProgramS, Scout}
 import net.verdagon.vale.templar.{CompleteProgram2, Templar, Temputs}
-import net.verdagon.vale.vassert
+import net.verdagon.vale.{vassert, vwat}
 import net.verdagon.vale.vivem.{Heap, PrimitiveReferendV, ReferenceV, Vivem}
 import net.verdagon.von.IVonData
 
@@ -24,10 +24,14 @@ class Compilation(code: String, useCommonEnv: Boolean = true) {
     parsedCache match {
       case Some(parsed) => parsed
       case None => {
-        val parsed = VParser.runParser(code)
-        vassert(parsed != None) // runNamifier returns a None if it failed
-        parsedCache = parsed
-        parsed.get
+        VParser.runParser(code) match {
+          case VParser.Failure(_, _) => vwat()
+          case VParser.Success((program0, _), next) => {
+            vassert(next.atEnd)
+            parsedCache = Some(program0)
+            program0
+          }
+        }
       }
     }
   }

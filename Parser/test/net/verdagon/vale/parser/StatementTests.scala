@@ -1,6 +1,6 @@
 package net.verdagon.vale.parser
 
-import net.verdagon.vale.vimpl
+import net.verdagon.vale.{vassert, vimpl}
 import org.scalatest.{FunSuite, Matchers}
 
 class StatementTests extends FunSuite with Matchers with Collector {
@@ -10,6 +10,7 @@ class StatementTests extends FunSuite with Matchers with Collector {
         fail(msg);
       }
       case VParser.Success(expr, rest) => {
+        vassert(rest.atEnd)
         expr
       }
     }
@@ -24,14 +25,15 @@ class StatementTests extends FunSuite with Matchers with Collector {
   test("8") {
     compile("(x, y) = [4, 5];") shouldHave {
       case LetPE(_,
-          List(),
+      List(),
           PatternPP(_,
             None,
             None,
             Some(
-              List(
-                PatternPP(_,Some(CaptureP(_,StringP(_, "x"),FinalP)),None,None,None),
-                PatternPP(_,Some(CaptureP(_,StringP(_, "y"),FinalP)),None,None,None))),
+              DestructureP(_,
+                List(
+                  PatternPP(_,Some(CaptureP(_,StringP(_, "x"),FinalP)),None,None,None),
+                  PatternPP(_,Some(CaptureP(_,StringP(_, "y"),FinalP)),None,None,None)))),
             None),
           SequencePE(_,List(IntLiteralPE(_,4), IntLiteralPE(_,5)))) =>
     }
@@ -39,13 +41,13 @@ class StatementTests extends FunSuite with Matchers with Collector {
 
   test("9") {
     compile("mut x.a = 5;") shouldHave {
-      case MutatePE(_, DotPE(_, LookupPE(StringP(_, "x"), List()), LookupPE(StringP(_, "a"), List())), IntLiteralPE(_,5)) =>
+      case MutatePE(_, DotPE(_, LookupPE(StringP(_, "x"), None), LookupPE(StringP(_, "a"), None)), IntLiteralPE(_,5)) =>
     }
   }
 
   test("1PE") {
     compile("""mut board.PE.PE.symbol = "v";""") shouldHave {
-      case MutatePE(_, DotPE(_, DotPE(_, DotPE(_, LookupPE(StringP(_, "board"), List()), LookupPE(StringP(_, "PE"), List())), LookupPE(StringP(_, "PE"), List())), LookupPE(StringP(_, "symbol"), List())), StrLiteralPE(StringP(_, "v"))) =>
+      case MutatePE(_, DotPE(_, DotPE(_, DotPE(_, LookupPE(StringP(_, "board"), None), LookupPE(StringP(_, "PE"), None)), LookupPE(StringP(_, "PE"), None)), LookupPE(StringP(_, "symbol"), None)), StrLiteralPE(StringP(_, "v"))) =>
     }
   }
 
@@ -63,13 +65,13 @@ class StatementTests extends FunSuite with Matchers with Collector {
 
   test("Test simple mut") {
     compile("mut x = 5;") shouldHave {
-      case MutatePE(_, LookupPE(StringP(_, "x"), List()),IntLiteralPE(_,5)) =>
+      case MutatePE(_, LookupPE(StringP(_, "x"), None),IntLiteralPE(_,5)) =>
     }
   }
 
   test("Test swap") {
     compile("exch x, y;") shouldHave {
-      case SwapPE(LookupPE(StringP(_, "x"),List()),LookupPE(StringP(_, "y"),List())) =>
+      case SwapPE(LookupPE(StringP(_, "x"),None),LookupPE(StringP(_, "y"),None)) =>
     }
   }
 
@@ -77,44 +79,44 @@ class StatementTests extends FunSuite with Matchers with Collector {
     compile("Wizard(8).charges;") shouldHave {
       case DotPE(_,
           FunctionCallPE(_,
-            LookupPE(StringP(_, "Wizard"), List()),
+            LookupPE(StringP(_, "Wizard"), None),
             List(IntLiteralPE(_,8)),
             true),
-          LookupPE(StringP(_, "charges"), List())) =>
+          LookupPE(StringP(_, "charges"), None)) =>
     }
   }
 
   test("Let with pattern with only a capture") {
     compile("a = m;") shouldHave {
-      case LetPE(_,List(),Patterns.capture("a"),LookupPE(StringP(_, "m"), List())) =>
+      case LetPE(_,List(),Patterns.capture("a"),LookupPE(StringP(_, "m"), None)) =>
     }
   }
 
   test("Let with simple pattern") {
     compile("a Moo = m;") shouldHave {
       case LetPE(_,
-          List(),
+      List(),
           PatternPP(_,Some(CaptureP(_,StringP(_, "a"),FinalP)),Some(NameOrRunePPT(StringP(_, "Moo"))),None,None),
-          LookupPE(StringP(_, "m"), List())) =>
+          LookupPE(StringP(_, "m"), None)) =>
     }
   }
 
   test("Let with simple pattern in seq") {
     compile("(a Moo) = m;") shouldHave {
       case LetPE(_,
-          List(),
+      List(),
           PatternPP(_,
             None,
             None,
-            Some(List(PatternPP(_,Some(CaptureP(_,StringP(_, "a"),FinalP)),Some(NameOrRunePPT(StringP(_, "Moo"))),None,None))),
+            Some(DestructureP(_,List(PatternPP(_,Some(CaptureP(_,StringP(_, "a"),FinalP)),Some(NameOrRunePPT(StringP(_, "Moo"))),None,None)))),
             None),
-          LookupPE(StringP(_, "m"), List())) =>
+          LookupPE(StringP(_, "m"), None)) =>
     }
   }
 
   test("Let with destructuring pattern") {
     compile("Muta() = m;") shouldHave {
-      case LetPE(_,List(),PatternPP(_,None,Some(NameOrRunePPT(StringP(_, "Muta"))),Some(List()),None),LookupPE(StringP(_, "m"), List())) =>
+      case LetPE(_,List(),PatternPP(_,None,Some(NameOrRunePPT(StringP(_, "Muta"))),Some(DestructureP(_,List())),None),LookupPE(StringP(_, "m"), None)) =>
     }
   }
 
@@ -128,9 +130,9 @@ class StatementTests extends FunSuite with Matchers with Collector {
   test("eachI") {
     compile("eachI row (cellI, cell){ 0 }") shouldHave {
       case FunctionCallPE(_,
-        LookupPE(StringP(_, "eachI"),List()),
+        LookupPE(StringP(_, "eachI"),None),
         List(
-          LookupPE(StringP(_, "row"),List()),
+          LookupPE(StringP(_, "row"),None),
           LambdaPE(
             FunctionP(
               _,None,None,None,None,None,
@@ -144,9 +146,9 @@ class StatementTests extends FunSuite with Matchers with Collector {
   test("eachI with borrow") {
     compile("eachI &row (cellI, cell){ 0 }") shouldHave {
       case FunctionCallPE(_,
-        LookupPE(StringP(_, "eachI"),List()),
+        LookupPE(StringP(_, "eachI"),None),
         List(
-          LendPE(LookupPE(StringP(_, "row"),List())),
+          LendPE(LookupPE(StringP(_, "row"),None)),
           LambdaPE(
             FunctionP(
               _,None,None,None,None,None,

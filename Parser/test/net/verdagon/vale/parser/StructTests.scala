@@ -1,5 +1,6 @@
 package net.verdagon.vale.parser
 
+import net.verdagon.vale.vassert
 import org.scalatest.{FunSuite, Matchers}
 
 
@@ -11,6 +12,7 @@ class StructTests extends FunSuite with Matchers with Collector {
         fail("Couldn't parse!\n" + input.pos.longString);
       }
       case VParser.Success(expr, rest) => {
+        vassert(rest.atEnd)
         expr
       }
     }
@@ -32,9 +34,10 @@ class StructTests extends FunSuite with Matchers with Collector {
               MutableP,
               Some(IdentifyingRunesP(_, List(StringP(_, "E")))),
               None,
-              List(
-                StructMemberP(StringP(_, "value"),FinalP,NameOrRunePT(StringP(_, "E"))),
-                StructMemberP(StringP(_, "next"),FinalP,CallPT(NameOrRunePT(StringP(_, "ListNode")),List(NameOrRunePT(StringP(_, "E")))))))) =>
+              StructMembersP(_,
+                List(
+                  StructMemberP(_,StringP(_, "value"),FinalP,NameOrRunePT(StringP(_, "E"))),
+                  StructMemberP(_,StringP(_, "next"),FinalP,CallPT(NameOrRunePT(StringP(_, "ListNode")),List(NameOrRunePT(StringP(_, "E"))))))))) =>
     }
   }
 
@@ -56,7 +59,7 @@ class StructTests extends FunSuite with Matchers with Collector {
       MutableP,
       Some(IdentifyingRunesP(_, List(StringP(_, "N")))),
       Some(TemplateRulesP(_, List(TypedPR(Some(StringP(_, "N")), IntTypePR)))),
-      List(StructMemberP(StringP(_, "values"), FinalP, ArraySequencePT(MutabilityPT(MutableP), NameOrRunePT(StringP(_, "N")), NameOrRunePT(StringP(_, "Float"))))))) =>
+      StructMembersP(_, List(StructMemberP(_,StringP(_, "values"), FinalP, ArraySequencePT(MutabilityPT(MutableP), NameOrRunePT(StringP(_, "N")), NameOrRunePT(StringP(_, "Float")))))))) =>
     }
   }
 
@@ -78,7 +81,7 @@ class StructTests extends FunSuite with Matchers with Collector {
           MutableP,
           Some(IdentifyingRunesP(_, List(StringP(_, "N")))),
           Some(TemplateRulesP(_, List(TypedPR(Some(StringP(_, "N")),IntTypePR)))),
-          List(StructMemberP(StringP(_, "values"),FinalP,ArraySequencePT(MutabilityPT(ImmutableP), NameOrRunePT(StringP(_, "N")), NameOrRunePT(StringP(_, "Float"))))))) =>
+          StructMembersP(_, List(StructMemberP(_,StringP(_, "values"),FinalP,ArraySequencePT(MutabilityPT(ImmutableP), NameOrRunePT(StringP(_, "N")), NameOrRunePT(StringP(_, "Float")))))))) =>
     }
   }
 }

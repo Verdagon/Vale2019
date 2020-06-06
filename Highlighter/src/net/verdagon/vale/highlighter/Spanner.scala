@@ -9,13 +9,19 @@ case object W extends IClass
 case object Abst extends IClass
 case object Ext extends IClass
 case object Fn extends IClass
+case object Struct extends IClass
 case object FnName extends IClass
+case object StructName extends IClass
+case object Membs extends IClass
+case object Memb extends IClass
+case object MembName extends IClass
 case object Rules extends IClass
 case object Rune extends IClass
 case object IdentRunes extends IClass
 case object IdentRune extends IClass
 case object Params extends IClass
 case object Pat extends IClass
+case object Destructure extends IClass
 case object Capture extends IClass
 case object CaptureName extends IClass
 case object Block extends IClass
@@ -33,6 +39,8 @@ case object MemberAccess extends IClass
 case object Let extends IClass
 case object Lambda extends IClass
 case object MagicParam extends IClass
+case object TplArgs extends IClass
+case object Comment extends IClass
 
 case class Span(classs: IClass, range: Range, children: List[Span] = List())
 
@@ -44,9 +52,35 @@ object Spanner {
       program.topLevelThings.flatMap({
         case TopLevelFunction(f) => List(forFunction(f))
         case TopLevelInterface(_) => List()
-        case TopLevelStruct(_) => List()
+        case TopLevelStruct(s) => List(forStruct(s))
         case TopLevelImpl(_) => List()
       }))
+  }
+
+  def forStruct(struct: StructP): Span = {
+    val StructP(range, StringP(nameRange, _), _, _, maybeIdentifyingRunesP, maybeTemplateRulesP, StructMembersP(membersRange, members)) = struct
+
+    Span(
+      Struct,
+      range,
+      Span(StructName, nameRange, List()) ::
+      maybeIdentifyingRunesP.toList.map(forIdentifyingRunes) ++
+      maybeTemplateRulesP.toList.map(forTemplateRules) ++
+      List(
+        Span(
+          Membs,
+          membersRange,
+          members.map(forMember))))
+  }
+
+  def forMember(member: StructMemberP): Span = {
+    val StructMemberP(range, StringP(nameRange, _), _, tyype) = member
+    Span(
+      Memb,
+      range,
+      List(
+        Span(MembName, nameRange, List()),
+        forTemplexPT(tyype)))
   }
 
   def forFunction(function: FunctionP): Span = {
@@ -115,17 +149,21 @@ object Spanner {
         val allSpans = (callableSpan :: argSpans)
         Span(Call, range, allSpans)
       }
-      case MethodCallPE(range, callableExpr, _, LookupPE(StringP(nameRange, _), _), argExprs) => {
+      case MethodCallPE(range, callableExpr, _, LookupPE(StringP(methodNameRange, _), maybeTemplateArgs), argExprs) => {
         val callableSpan = forExpression(callableExpr)
-        val methodSpan = Span(CallLookup, nameRange, List())
+        val methodSpan = Span(CallLookup, methodNameRange, List())
+        val maybeTemplateArgsSpan = maybeTemplateArgs.toList.map(forTemplateArgs)
         val argSpans = argExprs.map(forExpression)
-        val allSpans = (callableSpan :: methodSpan :: argSpans)
+        val allSpans = (callableSpan :: methodSpan :: (maybeTemplateArgsSpan ++ argSpans))
         Span(Call, range, allSpans)
       }
-      case FunctionCallPE(range, LookupPE(StringP(nameRange, _), _), argExprs, _) => {
+      case FunctionCallPE(range, LookupPE(StringP(nameRange, _), maybeTemplateArgs), argExprs, _) => {
         val callableSpan = Span(CallLookup, nameRange, List())
+        val maybeTemplateArgsSpan = maybeTemplateArgs.toList.map(forTemplateArgs)
         val argSpans = argExprs.map(forExpression)
-        val allSpans = (callableSpan :: argSpans).sortWith(_.range.begin < _.range.begin)
+        val allSpans =
+          (callableSpan :: (maybeTemplateArgsSpan ++ argSpans))
+            .sortWith(_.range.begin < _.range.begin)
         Span(Call, range, allSpans)
       }
       case FunctionCallPE(range, callableExpr, argExprs, _) => {
@@ -147,11 +185,19 @@ object Spanner {
   }
 
   def forPattern(p: PatternPP): Span = {
-    val PatternPP(range, capture, templex, destructure, virtuality) = p
+    val PatternPP(range, capture, templex, maybeDestructure, virtuality) = p
     Span(
       Pat,
       range,
-      capture.toList.map(forCapture) ++ templex.toList.map(forTemplexPP))
+      capture.toList.map(forCapture) ++ templex.toList.map(forTemplexPP) ++ maybeDestructure.toList.map(forDestructure))
+  }
+
+  def forDestructure(d: DestructureP): Span = {
+    val DestructureP(range, patterns) = d
+    Span(
+      Destructure,
+      range,
+      patterns.map(forPattern))
   }
 
   def forCapture(c: CaptureP): Span = {
@@ -169,6 +215,23 @@ object Spanner {
       }
       case _ => vimpl()
     }
+  }
+
+  def forTemplexPT(t: ITemplexPT): Span = {
+    t match {
+      case NameOrRunePT(StringP(range, _)) => {
+        Span(Typ, range, List())
+      }
+      case _ => vimpl()
+    }
+  }
+
+  def forTemplateArgs(argsP: TemplateArgsP): Span = {
+    val TemplateArgsP(range, args) = argsP
+    Span(
+      TplArgs,
+      range,
+      args.map(forTemplexPT))
   }
 
   def forTemplateRules(rulesP: TemplateRulesP): Span = {

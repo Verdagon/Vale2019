@@ -56,9 +56,14 @@ case class StructP(
   mutability: MutabilityP,
   identifyingRunes: Option[IdentifyingRunesP],
   templateRules: Option[TemplateRulesP],
+  members: StructMembersP)
+
+case class StructMembersP(
+  range: Range,
   members: List[StructMemberP])
 
 case class StructMemberP(
+  range: Range,
   name: StringP,
   variability: VariabilityP,
   tyype: ITemplexPT)

@@ -28,8 +28,12 @@ case class PatternPP(
     // single type and in the other, T is a pack of types). And we might also want
     // to account for nested parens, like struct Fn:((#Params...), (#Rets...))
 
-    destructure: Option[List[PatternPP]],
+    destructure: Option[DestructureP],
     virtuality: Option[IVirtualityP]) extends Positional
+
+case class DestructureP(
+  range: Range,
+  patterns: List[PatternPP])
 
 case class CaptureP(
     range: Range,
@@ -99,12 +103,12 @@ object Patterns {
   }
   object withDestructure {
     def withDestructure(atoms: PatternPP*): PatternPP = {
-      PatternPP(Range.zero, None, None, Some(atoms.toList), None)
+      PatternPP(Range.zero, None, None, Some(DestructureP(Range.zero, atoms.toList)), None)
     }
     def unapply(arg: PatternPP): Option[List[PatternPP]] = {
       arg.destructure match {
         case None => None
-        case Some(patterns) => Some(patterns)
+        case Some(DestructureP(_, patterns)) => Some(patterns)
       }
     }
   }

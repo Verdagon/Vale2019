@@ -79,7 +79,7 @@ class PatternParserTests extends FunSuite with Matchers with Collector {
           _,
           Some(CaptureP(_,StringP(_, "a"),FinalP)),
           Some(NameOrRunePPT(StringP(_, "Moo"))),
-          Some(List(capture("a"),capture("b"))),
+          Some(DestructureP(_,List(capture("a"),capture("b")))),
           None) =>
     }
   }
@@ -92,7 +92,7 @@ class PatternParserTests extends FunSuite with Matchers with Collector {
           _,
           Some(CaptureP(_,StringP(_, "moo"),FinalP)),
           Some(NameOrRunePPT(StringP(_, "T"))),
-          Some(List(PatternPP(_, Some(CaptureP(_,StringP(_, "a"),FinalP)),Some(NameOrRunePPT(StringP(_, "Int"))),None,None))),
+          Some(DestructureP(_,List(PatternPP(_, Some(CaptureP(_,StringP(_, "a"),FinalP)),Some(NameOrRunePPT(StringP(_, "Int"))),None,None)))),
           None) =>
     }
   }
@@ -107,7 +107,7 @@ class PatternParserTests extends FunSuite with Matchers with Collector {
                   List(
                     NameOrRunePPT(StringP(_, "Int")),
                     NameOrRunePPT(StringP(_, "Bool"))))),
-          Some(List(capture("a"), capture("b"))),
+          Some(DestructureP(_,List(capture("a"), capture("b")))),
           None) =>
     }
   }
