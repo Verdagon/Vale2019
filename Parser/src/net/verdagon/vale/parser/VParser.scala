@@ -1,6 +1,6 @@
 package net.verdagon.vale.parser
 
-import net.verdagon.vale.parser.patterns.{PatternParser, PatternTemplexParser}
+import net.verdagon.vale.parser.patterns.{PatternParser}
 import net.verdagon.vale.parser.rules._
 import net.verdagon.vale.vassert
 
@@ -18,7 +18,7 @@ object VParser
         with ParserUtils
         with TemplexParser
         with PatternParser
-        with PatternTemplexParser
+//        with PatternTemplexParser
         with ExpressionParser {
   override def skipWhitespace = false
   override val whiteSpace = "[ \t\r\f]+".r
@@ -52,7 +52,7 @@ object VParser
         // to parse the `rules` in `rules(stuff here)` as a type and then fail when it hits the
         // parentheses.
         opt(templateRulesPR <~ optWhite) ~
-        opt(patternTemplex <~ optWhite) ~
+        opt(templex <~ optWhite) ~
         opt(templateRulesPR <~ optWhite) ~
         (maybeBody) ~
         pos ^^ {
@@ -111,8 +111,8 @@ object VParser
     pos ~ (("impl" ~> optWhite ~>
       opt(identifyingRunesPR <~ optWhite) ~
       opt(templateRulesPR) <~ optWhite) ~
-      (patternTemplex <~ optWhite <~ "for" <~ optWhite) ~
-      (patternTemplex <~ optWhite <~ ";")) ~ pos ^^ {
+      (templex <~ optWhite <~ "for" <~ optWhite) ~
+      (templex <~ optWhite <~ ";")) ~ pos ^^ {
       case begin ~ (maybeIdentifyingRunes ~ maybeTemplateRules ~ structType ~ interfaceType) ~ end => {
         ImplP(Range(begin, end), maybeIdentifyingRunes, maybeTemplateRules, structType, interfaceType)
       }

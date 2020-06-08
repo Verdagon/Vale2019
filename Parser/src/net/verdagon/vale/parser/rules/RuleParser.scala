@@ -90,8 +90,17 @@ trait RuleParser extends RegexParsers with ParserUtils {
 
   // Add any new rules to the "Nothing matches empty string" test!
 
+  private[parser] def identifyingRune: Parser[StringP] = {
+    pos ~ opt("'") ~ exprIdentifier ^^ {
+      case begin ~ None ~ e => e
+      case begin ~ Some(_) ~ StringP(r, name) => StringP(Range(begin, r.end), name)
+    }
+  }
+
+  // Add any new rules to the "Nothing matches empty string" test!
+
   private[parser] def identifyingRunesPR: Parser[IdentifyingRunesP] = {
-    pos ~ ("<" ~> optWhite ~> repsep(exprIdentifier, optWhite ~> "," <~ optWhite) <~ optWhite <~ ">") ~ pos ^^ {
+    pos ~ ("<" ~> optWhite ~> repsep(identifyingRune, optWhite ~> "," <~ optWhite) <~ optWhite <~ ">") ~ pos ^^ {
       case begin ~ runes ~ end => IdentifyingRunesP(Range(begin, end), runes)
     }
   }

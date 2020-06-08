@@ -83,7 +83,7 @@ object Formatter {
 //    vimpl()
 //  }
 //
-//  def formatTemplexPPT(templex: ITemplexPPT): IVonData = {
+//  def formatTemplexPT(templex: ITemplexPT): IVonData = {
 //    vimpl()
 //  }
 //

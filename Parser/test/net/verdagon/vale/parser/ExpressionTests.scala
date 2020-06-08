@@ -26,7 +26,7 @@ class ExpressionTests extends FunSuite with Matchers with Collector {
   }
 
   test("2") {
-    compile("4 + 5") shouldHave { case FunctionCallPE(_,LookupPE(StringP(_, "+"), None), List(IntLiteralPE(_, 4), IntLiteralPE(_, 5)),true) => }
+    compile("4 + 5") shouldHave { case FunctionCallPE(_,None,LookupPE(StringP(_, "+"), None), List(IntLiteralPE(_, 4), IntLiteralPE(_, 5)),true) => }
   }
 
   test("Floats") {
@@ -34,19 +34,23 @@ class ExpressionTests extends FunSuite with Matchers with Collector {
   }
 
   test("4") {
-    compile("+(4, 5)") shouldHave { case FunctionCallPE(_,LookupPE(StringP(_, "+"), None), List(IntLiteralPE(_, 4), IntLiteralPE(_, 5)),true) => }
+    compile("+(4, 5)") shouldHave { case FunctionCallPE(_,None,LookupPE(StringP(_, "+"), None), List(IntLiteralPE(_, 4), IntLiteralPE(_, 5)),true) => }
   }
 
   test("5") {
-    compile("x(y)") shouldHave { case FunctionCallPE(_,LookupPE(StringP(_, "x"), None), List(LookupPE(StringP(_, "y"), None)),true) => }
+    compile("x(y)") shouldHave { case FunctionCallPE(_,None,LookupPE(StringP(_, "x"), None), List(LookupPE(StringP(_, "y"), None)),true) => }
   }
 
   test("6") {
-    compile("not y") shouldHave { case FunctionCallPE(_,LookupPE(StringP(_, "not"), None), List(LookupPE(StringP(_, "y"), None)),true) => }
+    compile("not y") shouldHave { case FunctionCallPE(_,None,LookupPE(StringP(_, "not"), None), List(LookupPE(StringP(_, "y"), None)),true) => }
   }
 
   test("Lending result of function call") {
-    compile("&Muta()") shouldHave { case LendPE(FunctionCallPE(_,LookupPE(StringP(_, "Muta"), None), List(),true)) => }
+    compile("&Muta()") shouldHave { case LendPE(_,FunctionCallPE(_,None,LookupPE(StringP(_, "Muta"), None), List(),true)) => }
+  }
+
+  test("inline call") {
+    compile("inl Muta()") shouldHave { case FunctionCallPE(_,Some(UnitP(_)),LookupPE(StringP(_,"Muta"),None),List(),true) => }
   }
 
   test("Method call") {
@@ -67,9 +71,9 @@ class ExpressionTests extends FunSuite with Matchers with Collector {
 
   test("Templated function call") {
     compile("toArray<imm>(&result)") shouldHave {
-      case FunctionCallPE(_,
-        LookupPE(StringP(_, "toArray"),Some(TemplateArgsP(_, List(MutabilityPT(ImmutableP))))),
-        List(LendPE(LookupPE(StringP(_, "result"),None))),
+      case FunctionCallPE(_,None,
+      LookupPE(StringP(_, "toArray"),Some(TemplateArgsP(_, List(MutabilityPT(ImmutableP))))),
+        List(LendPE(_,LookupPE(StringP(_, "result"),None))),
         true) =>
     }
   }
@@ -82,15 +86,15 @@ class ExpressionTests extends FunSuite with Matchers with Collector {
 
   test("Custom binaries") {
     compile("not y florgle not x") shouldHave {
-      case FunctionCallPE(_,
-          LookupPE(StringP(_, "florgle"), None),
+      case FunctionCallPE(_,None,
+      LookupPE(StringP(_, "florgle"), None),
           List(
-            FunctionCallPE(_,
-              LookupPE(StringP(_, "not"), None),
+            FunctionCallPE(_,None,
+            LookupPE(StringP(_, "not"), None),
               List(LookupPE(StringP(_, "y"), None)),
               true),
-            FunctionCallPE(_,
-              LookupPE(StringP(_, "not"), None),
+            FunctionCallPE(_,None,
+            LookupPE(StringP(_, "not"), None),
               List(LookupPE(StringP(_, "x"), None)),
               true)),
           true) =>
@@ -99,15 +103,15 @@ class ExpressionTests extends FunSuite with Matchers with Collector {
 
   test("Custom with noncustom binaries") {
     compile("a + b florgle x * y") shouldHave {
-      case FunctionCallPE(_,
-          LookupPE(StringP(_, "florgle"), None),
+      case FunctionCallPE(_,None,
+        LookupPE(StringP(_, "florgle"), None),
           List(
-            FunctionCallPE(_,
-              LookupPE(StringP(_, "+"), None),
+            FunctionCallPE(_,None,
+            LookupPE(StringP(_, "+"), None),
               List(LookupPE(StringP(_, "a"), None), LookupPE(StringP(_, "b"), None)),
               true),
-            FunctionCallPE(_,
-              LookupPE(StringP(_, "*"), None),
+            FunctionCallPE(_,None,
+            LookupPE(StringP(_, "*"), None),
               List(LookupPE(StringP(_, "x"), None), LookupPE(StringP(_, "y"), None)),
               true)),
           true) =>
@@ -116,10 +120,10 @@ class ExpressionTests extends FunSuite with Matchers with Collector {
 
   test("Template calling") {
     compile("MyNone<Int>()") shouldHave {
-      case FunctionCallPE(_,LookupPE(StringP(_, "MyNone"), Some(TemplateArgsP(_, List(NameOrRunePT(StringP(_, "Int")))))),List(), true) =>
+      case FunctionCallPE(_,None,LookupPE(StringP(_, "MyNone"), Some(TemplateArgsP(_, List(NameOrRunePT(StringP(_, "Int")))))),List(), true) =>
     }
     compile("MySome<MyNone<Int>>()") shouldHave {
-      case FunctionCallPE(_,LookupPE(StringP(_, "MySome"), Some(TemplateArgsP(_, List(CallPT(NameOrRunePT(StringP(_, "MyNone")),List(NameOrRunePT(StringP(_, "Int")))))))),List(), true) =>
+      case FunctionCallPE(_,None,LookupPE(StringP(_, "MySome"), Some(TemplateArgsP(_, List(CallPT(NameOrRunePT(StringP(_, "MyNone")),List(NameOrRunePT(StringP(_, "Int")))))))),List(), true) =>
     }
   }
 
@@ -128,7 +132,7 @@ class ExpressionTests extends FunSuite with Matchers with Collector {
     // for + - * / < >) so it parsed as >(9, =) which was bad. We changed the infix operator parser to expect the
     // whitespace on both sides, so that it was forced to parse the entire thing.
     compile(VParser.expression,"9 >= 3") shouldHave {
-      case FunctionCallPE(_,LookupPE(StringP(_, ">="),None),List(IntLiteralPE(_, 9), IntLiteralPE(_, 3)),true) =>
+      case FunctionCallPE(_,None,LookupPE(StringP(_, ">="),None),List(IntLiteralPE(_, 9), IntLiteralPE(_, 3)),true) =>
     }
   }
 

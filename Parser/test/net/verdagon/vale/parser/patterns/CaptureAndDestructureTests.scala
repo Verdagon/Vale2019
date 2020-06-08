@@ -46,14 +46,14 @@ class CaptureAndDestructureTests extends FunSuite with Matchers with Collector {
           Some(
           DestructureP(_,
             List(
-              capturedWithType("a", NameOrRunePPT(StringP(_, "Int"))),
-              capturedWithType("b", NameOrRunePPT(StringP(_, "Bool")))))),
+              capturedWithType("a", NameOrRunePT(StringP(_, "Int"))),
+              capturedWithType("b", NameOrRunePT(StringP(_, "Bool")))))),
           None) =>
     }
   }
   test("capture with empty sequence type") {
     compile("a []") shouldHave {
-      case capturedWithType("a", ManualSequencePPT(List())) =>
+      case capturedWithType("a", ManualSequencePT(List())) =>
     }
   }
   test("empty destructure") {
@@ -72,7 +72,7 @@ class CaptureAndDestructureTests extends FunSuite with Matchers with Collector {
           None,
           Some(
           DestructureP(_,
-            List(capturedWithType("b", NameOrRunePPT(StringP(_, "Int")))))),
+            List(capturedWithType("b", NameOrRunePT(StringP(_, "Int")))))),
           None) =>
     }
   }

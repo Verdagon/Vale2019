@@ -31,9 +31,9 @@ class SignatureTests extends FunSuite with Matchers with Collector {
               List(
                 PatternPP(_,
                   Some(CaptureP(_,StringP(_, "this"),FinalP)),
-                  Some(NameOrRunePPT(StringP(_, "Marine"))),
+                  Some(NameOrRunePT(StringP(_, "Marine"))),
                   None,
-                  Some(OverrideP(NameOrRunePPT(StringP(_, "IUnit")))))))),
+                  Some(OverrideP(NameOrRunePT(StringP(_, "IUnit")))))))),
           None,
           Some(BlockPE(_, List(IntLiteralPE(_, 5))))) =>
     }
@@ -42,7 +42,7 @@ class SignatureTests extends FunSuite with Matchers with Collector {
   test("Param") {
     val program = compile(VParser.program, "fn call(f F){f()}")
     program shouldHave {
-      case PatternPP(_,Some(CaptureP(_,StringP(_, "f"),FinalP)),Some(NameOrRunePPT(StringP(_, "F"))),None,None) =>
+      case PatternPP(_,Some(CaptureP(_,StringP(_, "f"),FinalP)),Some(NameOrRunePT(StringP(_, "F"))),None,None) =>
     }
   }
 

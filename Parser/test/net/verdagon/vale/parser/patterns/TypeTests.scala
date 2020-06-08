@@ -40,42 +40,42 @@ class TypeTests extends FunSuite with Matchers with Collector {
   test("Ignoring name") {
     compile("_ Int") shouldHave { case fromEnv("Int") => }
   }
-  test("Callable type") {
-    compile("_ fn(T)Void") shouldHave {
-      case withType(
-          FunctionPPT(
-            None,
-            List(NameOrRunePPT(StringP(_, "T"))),
-            NameOrRunePPT(StringP(_, "Void")))) =>
-    }
-  }
+//  test("Callable type") {
+//    compile("_ fn(T)Void") shouldHave {
+//      case withType(
+//          FunctionPT(
+//            None,
+//            List(NameOrRunePT(StringP(_, "T"))),
+//            NameOrRunePT(StringP(_, "Void")))) =>
+//    }
+//  }
   test("15a") {
     compile("_ [3 * MutableStruct]") shouldHave {
       case withType(
-          RepeaterSequencePPT(
-              MutabilityPPT(MutableP),
-              IntPPT(3),
-              NameOrRunePPT(StringP(_, "MutableStruct")))) =>
+          RepeaterSequencePT(_,
+              MutabilityPT(MutableP),
+              IntPT(_,3),
+              NameOrRunePT(StringP(_, "MutableStruct")))) =>
     }
   }
 
   test("15b") {
     compile("_ [<imm> 3 * MutableStruct]") shouldHave {
       case withType(
-        RepeaterSequencePPT(
-          MutabilityPPT(ImmutableP),
-          IntPPT(3),
-          NameOrRunePPT(StringP(_, "MutableStruct")))) =>
+        RepeaterSequencePT(_,
+          MutabilityPT(ImmutableP),
+          IntPT(_,3),
+          NameOrRunePT(StringP(_, "MutableStruct")))) =>
     }
   }
 
   test("Sequence type") {
     compile("_ [Int, Bool]") shouldHave {
       case withType(
-          ManualSequencePPT(
+          ManualSequencePT(_,
             List(
-              NameOrRunePPT(StringP(_, "Int")),
-              NameOrRunePPT(StringP(_, "Bool"))))) =>
+              NameOrRunePT(StringP(_, "Int")),
+              NameOrRunePT(StringP(_, "Bool"))))) =>
     }
   }
   test("15") {
@@ -83,12 +83,12 @@ class TypeTests extends FunSuite with Matchers with Collector {
       case PatternPP(_,
         None,
         Some(
-          OwnershippedPPT(
+          OwnershippedPT(_,
             BorrowP,
-            RepeaterSequencePPT(
-              MutabilityPPT(MutableP),
-              IntPPT(3),
-              NameOrRunePPT(StringP(_, "MutableStruct"))))),
+            RepeaterSequencePT(_,
+              MutabilityPT(MutableP),
+              IntPT(_,3),
+              NameOrRunePT(StringP(_, "MutableStruct"))))),
         None,
         None) =>
     }
@@ -98,12 +98,12 @@ class TypeTests extends FunSuite with Matchers with Collector {
       case PatternPP(_,
         None,
         Some(
-          OwnershippedPPT(
+          OwnershippedPT(_,
             BorrowP,
-            RepeaterSequencePPT(
-              AnonymousRunePPT(),
-              IntPPT(3),
-              NameOrRunePPT(StringP(_, "MutableStruct"))))),
+            RepeaterSequencePT(_,
+              AnonymousRunePT(),
+              IntPT(_,3),
+              NameOrRunePT(StringP(_, "MutableStruct"))))),
         None,
         None) =>
     }
@@ -113,13 +113,13 @@ class TypeTests extends FunSuite with Matchers with Collector {
       case PatternPP(_,
         None,
         Some(
-          CallPPT(
-            NameOrRunePPT(StringP(_, "MyOption")),
+          CallPT(
+            NameOrRunePT(StringP(_, "MyOption")),
             List(
-              CallPPT(
-                NameOrRunePPT(StringP(_, "MyList")),
+              CallPT(
+                NameOrRunePT(StringP(_, "MyList")),
                 List(
-                  NameOrRunePPT(StringP(_, "Int"))))))),
+                  NameOrRunePT(StringP(_, "Int"))))))),
         None,
         None) =>
     }

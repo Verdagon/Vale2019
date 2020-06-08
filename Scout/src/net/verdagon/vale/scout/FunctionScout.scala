@@ -50,7 +50,7 @@ object FunctionScout {
       userSpecifiedIdentifyingRuneNames,
       templateRulesP,
       paramsP,
-      maybeRetPPT,
+      maybeRetPT,
       maybeBody0
     ) = functionP
     val codeLocation = Scout.evalPos(range.begin)
@@ -90,7 +90,7 @@ object FunctionScout {
       PatternScout.translateMaybeTypeIntoMaybeRune(
         userDeclaredRunes.toSet,
         rate,
-        maybeRetPPT,
+        maybeRetPT,
         CoordTypePR)
 
     val rulesS = userRulesS ++ implicitRulesFromPatterns ++ implicitRulesFromRet

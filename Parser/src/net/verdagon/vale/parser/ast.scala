@@ -46,8 +46,8 @@ case class ImplP(
   range: Range,
   identifyingRunes: Option[IdentifyingRunesP],
   rules: Option[TemplateRulesP],
-  struct: ITemplexPPT,
-  interface: ITemplexPPT)
+  struct: ITemplexPT,
+  interface: ITemplexPT)
 
 case class StructP(
   range: Range,
@@ -90,7 +90,7 @@ case class FunctionP(
   templateRules: Option[TemplateRulesP],
 
   params: Option[ParamsP],
-  ret: Option[ITemplexPPT],
+  ret: Option[ITemplexPT],
   body: Option[BlockPE]
 )
 

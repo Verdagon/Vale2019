@@ -68,7 +68,7 @@ object ExpressionScout {
 
         (noDeclarations, NormalResult(FunctionSE(function1)), noVariableUses, childMaybeUses)
       }
-      case LendPE(innerPE) => {
+      case LendPE(_, innerPE) => {
         val (declareds, inner1, innerSelfUses, innerChildUses) =
           scoutExpressionAndCoerce(stackFrame, innerPE, borrowIfLookupResult = true)
        (declareds, NormalResult(ExpressionLendSE(inner1)), innerSelfUses, innerChildUses)
@@ -89,10 +89,10 @@ object ExpressionScout {
       case FloatLiteralPE(_,value) => (noDeclarations, NormalResult(FloatLiteralSE(value)), noVariableUses, noVariableUses)
 
       case MethodCallPE(range, container, borrowCallable, memberLookup, methodArgs) => {
-        val maybeLendContainer = if (borrowCallable) LendPE(container) else container
+        val maybeLendContainer = if (borrowCallable) LendPE(Range(range.begin, range.begin), container) else container
         // Correct method calls like anExpr.bork(4) from FunctionCall(Dot(anExpr, bork), List(4))
         // to FunctionCall(bork, List(anExpr, 4))
-        val newExprP = FunctionCallPE(range, memberLookup, maybeLendContainer :: methodArgs, false)
+        val newExprP = FunctionCallPE(range, None, memberLookup, maybeLendContainer :: methodArgs, false)
         // Try again, with this new transformed expression.
         scoutExpression(stackFrame, newExprP)
       }
@@ -129,7 +129,7 @@ object ExpressionScout {
               templateArgs.map(TemplexScout.translateTemplex(stackFrame.parentEnv.allUserDeclaredRunes(), _))))
         (noDeclarations, result, noVariableUses, noVariableUses)
       }
-      case FunctionCallPE(_, callablePE, args, borrowCallable) => {
+      case FunctionCallPE(_, inline, callablePE, args, borrowCallable) => {
         val (callableDeclareds, callable1, callableSelfUses, callableChildUses) =
           scoutExpressionAndCoerce(stackFrame, callablePE, borrowCallable)
         val (argsDeclareds, args1, argsSelfUses, argsChildUses) =

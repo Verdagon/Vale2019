@@ -134,7 +134,7 @@ object PatternScout {
   def translateMaybeTypeIntoRune(
       declaredRunes: Set[IRuneS],
       rulesS: RuleStateBox,
-      maybeTypeP: Option[ITemplexPPT],
+      maybeTypeP: Option[ITemplexPT],
       runeType: ITypePR):
   (List[IRulexSR], IRuneS) = {
     maybeTypeP match {
@@ -143,7 +143,7 @@ object PatternScout {
         val newRule = TypedSR(rune, RuleScout.translateType(runeType))
         (List(newRule), rune)
       }
-      case Some(NameOrRunePPT(StringP(_, nameOrRune))) if declaredRunes.contains(CodeRuneS(nameOrRune)) => {
+      case Some(NameOrRunePT(StringP(_, nameOrRune))) if declaredRunes.contains(CodeRuneS(nameOrRune)) => {
         val rune = CodeRuneS(nameOrRune)
         val newRule = TypedSR(rune, RuleScout.translateType(runeType))
         (List(newRule), rune)
@@ -165,7 +165,7 @@ object PatternScout {
   def translateMaybeTypeIntoMaybeRune(
     declaredRunes: Set[IRuneS],
     rulesS: RuleStateBox,
-    maybeTypeP: Option[ITemplexPPT],
+    maybeTypeP: Option[ITemplexPT],
     runeType: ITypePR):
   (List[IRulexSR], Option[IRuneS]) = {
     if (maybeTypeP.isEmpty) {
@@ -178,7 +178,7 @@ object PatternScout {
     }
   }
 
-//  private def translatePatternTemplexes(rulesS: WorkingRulesAndRunes, templexesP: List[ITemplexPPT]):
+//  private def translatePatternTemplexes(rulesS: WorkingRulesAndRunes, templexesP: List[ITemplexPT]):
 //  (List[IRulexSR], List[ITemplexS]) = {
 //    templexesP match {
 //      case Nil => (rulesS, Nil)
@@ -193,7 +193,7 @@ object PatternScout {
   private def translatePatternTemplexes(
     declaredRunes: Set[IRuneS],
     rulesS: RuleStateBox,
-    templexesP: List[ITemplexPPT]):
+    templexesP: List[ITemplexPT]):
   (List[IRulexSR], List[ITemplexS]) = {
     templexesP match {
       case Nil => (Nil, Nil)
@@ -212,24 +212,24 @@ object PatternScout {
   def translatePatternTemplex(
       declaredRunes: Set[IRuneS],
       rulesS: RuleStateBox,
-      templexP: ITemplexPPT):
+      templexP: ITemplexPT):
   (List[IRulexSR], ITemplexS, Option[IRuneS]) = {
     templexP match {
-      case AnonymousRunePPT() => {
+      case AnonymousRunePT() => {
         val rune = rulesS.newImplicitRune()
         (List(), RuneST(rune), Some(rune))
       }
-      case IntPPT(value) => (List(), IntST(value), None)
-      case BoolPPT(value) => (List(), BoolST(value), None)
-      case NameOrRunePPT(StringP(_, nameOrRune)) => {
+      case IntPT(_,value) => (List(), IntST(value), None)
+      case BoolPT(value) => (List(), BoolST(value), None)
+      case NameOrRunePT(StringP(_, nameOrRune)) => {
         if (declaredRunes.contains(CodeRuneS(nameOrRune))) {
           (List(), RuneST(CodeRuneS(nameOrRune)), Some(CodeRuneS(nameOrRune)))
         } else {
           (List(), NameST(CodeTypeNameS(nameOrRune)), None)
         }
       }
-      case MutabilityPPT(mutability) => (List(), MutabilityST(mutability), None)
-      case OwnershippedPPT(BorrowP, NameOrRunePPT(StringP(_, ownedCoordRuneName))) if declaredRunes.contains(CodeRuneS(ownedCoordRuneName)) => {
+      case MutabilityPT(mutability) => (List(), MutabilityST(mutability), None)
+      case OwnershippedPT(_,BorrowP, NameOrRunePT(StringP(_, ownedCoordRuneName))) if declaredRunes.contains(CodeRuneS(ownedCoordRuneName)) => {
         vassert(declaredRunes.contains(CodeRuneS(ownedCoordRuneName)))
         val ownedCoordRune = CodeRuneS(ownedCoordRuneName)
         val kindRune = rulesS.newImplicitRune()
@@ -252,32 +252,32 @@ object PatternScout {
                 TemplexSR(RuneST(kindRune)))))
         (newRules, RuneST(borrowedCoordRune), Some(borrowedCoordRune))
       }
-      case OwnershippedPPT(ownership, innerP) => {
+      case OwnershippedPT(_,ownership, innerP) => {
         val (newRules, innerS, _) =
           translatePatternTemplex(declaredRunes, rulesS, innerP)
         (newRules, OwnershippedST(ownership, innerS), None)
       }
-      case CallPPT(maybeTemplateP, argsMaybeTemplexesP) => {
+      case CallPT(maybeTemplateP, argsMaybeTemplexesP) => {
         val (newRulesFromTemplate, maybeTemplateS, _) = translatePatternTemplex(declaredRunes, rulesS, maybeTemplateP)
         val (newRulesFromArgs, argsMaybeTemplexesS) = translatePatternTemplexes(declaredRunes, rulesS, argsMaybeTemplexesP)
         (newRulesFromTemplate ++ newRulesFromArgs, CallST(maybeTemplateS, argsMaybeTemplexesS), None)
       }
-      case RepeaterSequencePPT(mutabilityP, sizeP, elementP) => {
+      case RepeaterSequencePT(_,mutabilityP, sizeP, elementP) => {
         val (newRulesFromMutability, mutabilityS, _) = translatePatternTemplex(declaredRunes, rulesS, mutabilityP)
         val (newRulesFromSize, sizeS, _) = translatePatternTemplex(declaredRunes, rulesS, sizeP)
         val (newRulesFromElement, elementS, _) = translatePatternTemplex(declaredRunes, rulesS, elementP)
         (newRulesFromMutability ++ newRulesFromSize ++ newRulesFromElement, RepeaterSequenceST(mutabilityS, sizeS, elementS), None)
       }
-      case ManualSequencePPT(maybeMembersP) => {
+      case ManualSequencePT(maybeMembersP) => {
         val (newRules, maybeMembersS) = translatePatternTemplexes(declaredRunes, rulesS, maybeMembersP)
         (newRules, ManualSequenceST(maybeMembersS), None)
       }
-      case FunctionPPT(mutableP, paramsP, retP) => {
+//      case FunctionPT(mutableP, paramsP, retP) => {
 //        val (mutableS, _) = translatePatternMaybeTemplex(declaredRunes, rulesS, mutableP, None)
 //        val paramsS = translatePatternTemplexes(declaredRunes, rulesS, paramsP)
 //        val (retS, _) = translatePatternTemplex(declaredRunes, rulesS, retP)
 
-        vfail("impl!")
+//        vfail("impl!")
 //        CallST(
 //          NameST("IFunction"),
 //          List(
@@ -286,7 +286,7 @@ object PatternScout {
 //            retS))
 
 //        (rulesS, FunctionST(mutableS, PackST(paramsS), retS), None)
-      }
+//      }
       case _ => vwat()
     }
   }

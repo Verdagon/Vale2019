@@ -59,7 +59,7 @@ class StructTests extends FunSuite with Matchers with Collector {
       MutableP,
       Some(IdentifyingRunesP(_, List(StringP(_, "N")))),
       Some(TemplateRulesP(_, List(TypedPR(Some(StringP(_, "N")), IntTypePR)))),
-      StructMembersP(_, List(StructMemberP(_,StringP(_, "values"), FinalP, ArraySequencePT(MutabilityPT(MutableP), NameOrRunePT(StringP(_, "N")), NameOrRunePT(StringP(_, "Float")))))))) =>
+      StructMembersP(_, List(StructMemberP(_,StringP(_, "values"), FinalP, RepeaterSequencePT(_,MutabilityPT(MutableP), NameOrRunePT(StringP(_, "N")), NameOrRunePT(StringP(_, "Float")))))))) =>
     }
   }
 
@@ -81,7 +81,7 @@ class StructTests extends FunSuite with Matchers with Collector {
           MutableP,
           Some(IdentifyingRunesP(_, List(StringP(_, "N")))),
           Some(TemplateRulesP(_, List(TypedPR(Some(StringP(_, "N")),IntTypePR)))),
-          StructMembersP(_, List(StructMemberP(_,StringP(_, "values"),FinalP,ArraySequencePT(MutabilityPT(ImmutableP), NameOrRunePT(StringP(_, "N")), NameOrRunePT(StringP(_, "Float")))))))) =>
+          StructMembersP(_, List(StructMemberP(_,StringP(_, "values"),FinalP,RepeaterSequencePT(_,MutabilityPT(ImmutableP), NameOrRunePT(StringP(_, "N")), NameOrRunePT(StringP(_, "Float")))))))) =>
     }
   }
 }

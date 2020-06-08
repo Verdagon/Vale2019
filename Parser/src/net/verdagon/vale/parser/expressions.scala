@@ -8,7 +8,7 @@ trait IExpressionPE
 
 case class VoidPE(range: Range) extends IExpressionPE {}
 
-case class LendPE(expr: IExpressionPE) extends IExpressionPE
+case class LendPE(range: Range, expr: IExpressionPE) extends IExpressionPE
 
 case class AndPE(left: IExpressionPE, right: IExpressionPE) extends IExpressionPE
 
@@ -49,6 +49,7 @@ case class DotCallPE(range: Range, left: IExpressionPE, args: List[IExpressionPE
 
 case class FunctionCallPE(
   range: Range,
+  inline: Option[UnitP],
   callableExpr: IExpressionPE,
   argExprs: List[IExpressionPE],
   borrowCallable: Boolean

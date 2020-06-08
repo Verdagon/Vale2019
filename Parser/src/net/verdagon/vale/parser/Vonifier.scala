@@ -29,7 +29,7 @@ object Vonifier {
 //        VonMember("userSpecifiedIdentifyingRunes", VonArray(None, userSpecifiedIdentifyingRunes.map(VonStr).toVector)),
 //        VonMember("templateRules", VonArray(None, templateRules.map(vonifyRulexPR).toVector)),
 //        VonMember("params", VonArray(None, params.map(vonifyPattern).toVector)),
-//        VonMember("ret", vonifyOptional[ITemplexPPT](ret, vonifyTemplexPPT)),
+//        VonMember("ret", vonifyOptional[ITemplexPT](ret, vonifyTemplexPT)),
 //        VonMember("body", vonifyOptional[BlockPE](body, vonifyBlock))))
 //  }
 //
@@ -66,7 +66,7 @@ object Vonifier {
 //    vimpl()
 //  }
 //
-//  def vonifyTemplexPPT(templex: ITemplexPPT): IVonData = {
+//  def vonifyTemplexPT(templex: ITemplexPT): IVonData = {
 //    vimpl()
 //  }
 //

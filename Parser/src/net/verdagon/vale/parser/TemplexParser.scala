@@ -5,21 +5,29 @@ import scala.util.parsing.combinator.RegexParsers
 trait TemplexParser extends RegexParsers with ParserUtils {
 
   def repeaterSeqTemplex: Parser[ITemplexPT] = {
-    (("[" ~> optWhite ~> templex) ~ (optWhite ~> "*" ~> optWhite ~> templex <~ optWhite <~ "]") ^^ {
-      case numElements ~ elementType => {
-        ArraySequencePT(MutabilityPT(MutableP), numElements, elementType)
+    (pos ~ ("[" ~> optWhite ~> templex) ~ (white ~> "*" ~> white ~> templex <~ optWhite <~ "]") ~ pos ^^ {
+      case begin ~ numElements ~ elementType ~ end => {
+        RepeaterSequencePT(Range(begin, end), MutabilityPT(MutableP), numElements, elementType)
       }
     }) |
-    (("[<" ~> optWhite ~> unaryTemplex <~ optWhite <~ ">") ~ (optWhite ~> templex) ~ (optWhite ~> "*" ~> optWhite ~> templex <~ optWhite <~ "]") ^^ {
-      case mutability ~ numElements ~ elementType => {
-        ArraySequencePT(mutability, numElements, elementType)
+    (pos ~ ("[<" ~> optWhite ~> unaryTemplex <~ optWhite <~ ">") ~ (optWhite ~> templex) ~ (optWhite ~> "*" ~> optWhite ~> templex <~ optWhite <~ "]") ~ pos ^^ {
+      case begin ~  mutability ~ numElements ~ elementType ~ end => {
+        RepeaterSequencePT(Range(begin, end), mutability, numElements, elementType)
       }
     })
+  }
+
+  private[parser] def manualSeqTemplex: Parser[ITemplexPT] = {
+    pos ~ ("[" ~> optWhite ~> repsep(templex, optWhite ~> "," <~ optWhite) <~ optWhite <~ "]") ~ pos ^^ {
+      case begin ~ members ~ end => ManualSequencePT(Range(begin, end), members)
+    }
   }
 
   private[parser] def unaryTemplex: Parser[ITemplexPT] = {
     ("(" ~> optWhite ~> templex <~ optWhite <~ ")") |
     repeaterSeqTemplex |
+    manualSeqTemplex |
+    (pos ~ int ~ pos ^^ { case begin ~ value ~ end => IntPT(Range(begin, end), value) }) |
     "true" ^^^ BoolPT(true) |
     "false" ^^^ BoolPT(false) |
     "own" ^^^ OwnershipPT(OwnP) |
@@ -38,9 +46,10 @@ trait TemplexParser extends RegexParsers with ParserUtils {
 
   private[parser] def templex: Parser[ITemplexPT] = {
     ("?" ~> optWhite ~> templex ^^ NullablePT) |
-    ("&" ~> optWhite ~> templex ^^ BorrowPT) |
-    ("*" ~> optWhite ~> templex ^^ SharePT) |
-    ("^" ~> optWhite ~> templex ^^ OwnPT) |
+    (pos ~ (("&&"|"&"| ("'" ~ opt(exprIdentifier <~ optWhite) <~ "&")) ~> optWhite ~> templex) ~ pos) ^^ { case begin ~ inner ~ end => OwnershippedPT(Range(begin, end), BorrowP, inner) } |
+    (pos ~ ("^" ~> optWhite ~> templex) ~ pos) ^^ { case begin ~ inner ~ end => OwnershippedPT(Range(begin, end), OwnP, inner) } |
+    (pos ~ ("*" ~> optWhite ~> templex) ~ pos) ^^ { case begin ~ inner ~ end => OwnershippedPT(Range(begin, end), ShareP, inner) } |
+    (pos ~ ("inl" ~> white ~> templex) ~ pos) ^^ { case begin ~ inner ~ end => InlinePT(Range(begin, end), inner) } |
     (((unaryTemplex <~ optWhite) ~ ("<" ~> optWhite ~> repsep(templex, optWhite ~ "," ~ optWhite) <~ optWhite <~ ">")) ^^ {
       case template ~ args => CallPT(template, args)
     }) |

@@ -49,7 +49,7 @@ class DestructureParserTests extends FunSuite with Matchers with Collector {
   }
   test("One typed element destructure") {
     compile("( _ A )") shouldHave {
-      case withDestructure(List(withType(NameOrRunePPT(StringP(_, "A"))))) =>
+      case withDestructure(List(withType(NameOrRunePT(StringP(_, "A"))))) =>
     }
   }
   test("Only two-element destructure") {
@@ -78,7 +78,7 @@ class DestructureParserTests extends FunSuite with Matchers with Collector {
     compile("A(a, b)") shouldHave {
       case PatternPP(_,
         None,
-        Some(NameOrRunePPT(StringP(_, "A"))),
+        Some(NameOrRunePT(StringP(_, "A"))),
         Some(DestructureP(_,List(capture("a"), capture("b")))),
         None) =>
     }
@@ -87,7 +87,7 @@ class DestructureParserTests extends FunSuite with Matchers with Collector {
     compile("a A(x, y)") shouldHave {
       case PatternPP(_,
         Some(CaptureP(_,StringP(_, "a"),FinalP)),
-        Some(NameOrRunePPT(StringP(_, "A"))),
+        Some(NameOrRunePT(StringP(_, "A"))),
         Some(DestructureP(_,List(capture("x"), capture("y")))),
         None) =>
     }
@@ -105,8 +105,8 @@ class DestructureParserTests extends FunSuite with Matchers with Collector {
     compile("(a Int, b Bool)") shouldHave {
       case withDestructure(
       List(
-          capturedWithType("a", NameOrRunePPT(StringP(_, "Int"))),
-          capturedWithType("b", NameOrRunePPT(StringP(_, "Bool"))))) =>
+          capturedWithType("a", NameOrRunePT(StringP(_, "Int"))),
+          capturedWithType("b", NameOrRunePT(StringP(_, "Bool"))))) =>
     }
   }
   test("Nested destructures A") {
