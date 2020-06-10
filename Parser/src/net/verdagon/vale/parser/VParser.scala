@@ -80,27 +80,31 @@ object VParser
   }
 
   private[parser] def interface: Parser[InterfaceP] = {
-    pos ~ (("interface " ~> optWhite ~> exprIdentifier <~ optWhite) ~
+    pos ~
+        ("interface " ~> optWhite ~> exprIdentifier <~ optWhite) ~
         opt(identifyingRunesPR <~ optWhite) ~
+        existsMW("sealed") ~
         (opt("imm") <~ optWhite) ~
         (opt(templateRulesPR) <~ optWhite <~ "{" <~ optWhite) ~
-        repsep(topLevelFunction, optWhite) <~ (optWhite <~ "}")) ~ pos ^^ {
-      case begin ~ (name ~ maybeIdentifyingRunes ~ imm ~ maybeTemplateRules ~ members) ~ end => {
+        repsep(topLevelFunction, optWhite) ~
+        (optWhite ~> "}" ~> pos) ^^ {
+      case begin ~ name ~ maybeIdentifyingRunes ~ seealed ~ imm ~ maybeTemplateRules ~ members ~ end => {
         val mutability = if (imm == Some("imm")) ImmutableP else MutableP
-        InterfaceP(Range(begin, end), name, mutability, maybeIdentifyingRunes, maybeTemplateRules, members)
+        InterfaceP(Range(begin, end), name, seealed, mutability, maybeIdentifyingRunes, maybeTemplateRules, members)
       }
     }
   }
 
   def struct: Parser[StructP] = {
-    pos ~ (("struct" ~> optWhite ~> exprIdentifier <~ optWhite) ~
+    pos ~ ("struct" ~> optWhite ~> exprIdentifier <~ optWhite) ~
         opt(identifyingRunesPR <~ optWhite) ~
         (opt("export") <~ optWhite) ~
         (opt("imm") <~ optWhite) ~
         (opt(templateRulesPR) <~ optWhite) ~
         (pos <~ "{" <~ optWhite) ~
-        repsep(structMember, optWhite) <~ (optWhite <~ "}")) ~ pos ^^ {
-      case begin ~ (name ~ identifyingRunes ~ export ~ imm ~ maybeTemplateRules ~ membersBegin ~ members) ~ end => {
+        ("..." <~ optWhite ^^^ List() | repsep(structMember, optWhite)) ~
+        (optWhite ~> "}" ~> pos) ^^ {
+      case begin ~ name ~ identifyingRunes ~ export ~ imm ~ maybeTemplateRules ~ membersBegin ~ members ~ end => {
         val mutability = if (imm == Some("imm")) ImmutableP else MutableP
         StructP(Range(begin, end), name, export.nonEmpty, mutability, identifyingRunes, maybeTemplateRules, StructMembersP(Range(membersBegin, end), members))
       }

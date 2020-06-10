@@ -67,7 +67,11 @@ case class TemplateArgsP(range: Range, args: List[ITemplexPT])
 case class LookupPE(name: StringP, templateArgs: Option[TemplateArgsP]) extends IExpressionPE
 case class MagicParamLookupPE(range: Range) extends IExpressionPE
 
-case class LambdaPE(function: FunctionP) extends IExpressionPE
+case class LambdaPE(
+  // Just here for syntax highlighting so far
+  captures: Option[UnitP],
+  function: FunctionP
+) extends IExpressionPE
 
 case class BlockPE(range: Range, elements: List[IExpressionPE]) extends IExpressionPE {
   // Every element should have at least one expression, because a block will

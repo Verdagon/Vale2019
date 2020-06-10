@@ -15,6 +15,7 @@ case object StructName extends IClass
 case object Membs extends IClass
 case object Lend extends IClass
 case object Memb extends IClass
+case object Interface extends IClass
 case object MembName extends IClass
 case object Rules extends IClass
 case object Rune extends IClass
@@ -23,6 +24,7 @@ case object IdentRune extends IClass
 case object Params extends IClass
 case object Pat extends IClass
 case object Destructure extends IClass
+case object Impl extends IClass
 case object Capture extends IClass
 case object CaptureName extends IClass
 case object Block extends IClass
@@ -53,12 +55,31 @@ object Spanner {
     Span(
       Prog,
       Range(Pos(1, 1), Pos(Int.MaxValue, Int.MaxValue)),
-      program.topLevelThings.flatMap({
-        case TopLevelFunction(f) => List(forFunction(f))
-        case TopLevelInterface(_) => List()
-        case TopLevelStruct(s) => List(forStruct(s))
-        case TopLevelImpl(_) => List()
+      program.topLevelThings.map({
+        case TopLevelFunction(f) => forFunction(f)
+        case TopLevelInterface(i) => forInterface(i)
+        case TopLevelStruct(s) => forStruct(s)
+        case TopLevelImpl(i) => forImpl(i)
       }))
+  }
+
+  def forInterface(i: InterfaceP): Span = {
+    val InterfaceP(range, name, seealed, mutability, maybeIdentifyingRunes, templateRules, members) = i
+
+    Span(
+      Interface,
+      range,
+      Span(StructName, name.range, List()) ::
+      members.map(forFunction))
+  }
+
+  def forImpl(i: ImplP): Span = {
+    val ImplP(range, identifyingRunes, rules, struct, interface) = i
+    Span(
+      Impl,
+      range,
+      identifyingRunes.toList.map(forIdentifyingRunes) ++
+      List(forTemplex(struct), forTemplex(interface)))
   }
 
   def forStruct(struct: StructP): Span = {
@@ -120,7 +141,7 @@ object Spanner {
           range,
           List())
       }
-      case LambdaPE(FunctionP(range, None, _, _, _, _, params, _, body)) => {
+      case LambdaPE(captures, FunctionP(range, None, _, _, _, _, params, _, body)) => {
         Span(
           Lambda,
           range,
@@ -253,6 +274,12 @@ object Spanner {
           Num,
           range,
           List())
+      }
+      case CallPT(range, template, args) => {
+        Span(
+          TplArgs,
+          range,
+          forTemplex(template) :: args.map(forTemplex))
       }
       case other => vimpl(other.toString)
     }

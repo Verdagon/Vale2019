@@ -12,7 +12,7 @@ case class AnonymousRunePT() extends ITemplexPT
 case class NameOrRunePT(rune: StringP) extends ITemplexPT
 //case class SharePT(inner: ITemplexPT) extends ITemplexPT
 
-case class CallPT(template: ITemplexPT, args: List[ITemplexPT]) extends ITemplexPT
+case class CallPT(range: Range, template: ITemplexPT, args: List[ITemplexPT]) extends ITemplexPT
 //case class RepeaterSequencePT(mutability: ITemplexPT, size: ITemplexPT, element: ITemplexPT) extends ITemplexPT
 case class RepeaterSequencePT(range: Range, mutability: ITemplexPT, size: ITemplexPT, element: ITemplexPT) extends ITemplexPT
 case class ManualSequencePT(range: Range, members: List[ITemplexPT]) extends ITemplexPT

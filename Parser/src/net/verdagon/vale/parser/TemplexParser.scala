@@ -50,8 +50,8 @@ trait TemplexParser extends RegexParsers with ParserUtils {
     (pos ~ ("^" ~> optWhite ~> templex) ~ pos) ^^ { case begin ~ inner ~ end => OwnershippedPT(Range(begin, end), OwnP, inner) } |
     (pos ~ ("*" ~> optWhite ~> templex) ~ pos) ^^ { case begin ~ inner ~ end => OwnershippedPT(Range(begin, end), ShareP, inner) } |
     (pos ~ ("inl" ~> white ~> templex) ~ pos) ^^ { case begin ~ inner ~ end => InlinePT(Range(begin, end), inner) } |
-    (((unaryTemplex <~ optWhite) ~ ("<" ~> optWhite ~> repsep(templex, optWhite ~ "," ~ optWhite) <~ optWhite <~ ">")) ^^ {
-      case template ~ args => CallPT(template, args)
+    (pos ~ ((unaryTemplex <~ optWhite) ~ ("<" ~> optWhite ~> repsep(templex, optWhite ~ "," ~ optWhite) <~ optWhite <~ ">")) ~ pos ^^ {
+      case begin ~ (template ~ args) ~ end => CallPT(Range(begin, end), template, args)
     }) |
     unaryTemplex
   }

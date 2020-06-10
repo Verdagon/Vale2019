@@ -71,6 +71,7 @@ case class StructMemberP(
 case class InterfaceP(
     range: Range,
     name: StringP,
+    seealed: Option[UnitP],
     mutability: MutabilityP,
     maybeIdentifyingRunes: Option[IdentifyingRunesP],
     templateRules: Option[TemplateRulesP],
