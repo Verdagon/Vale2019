@@ -50,7 +50,7 @@ class PatternParserTests extends FunSuite with Matchers with Collector {
   }
   test("Name-only Capture") {
     compile(atomPattern,"a") match {
-      case PatternPP(_, Some(CaptureP(_,StringP(_, "a"), FinalP)), None, None, None) =>
+      case PatternPP(_, _,Some(CaptureP(_,LocalNameP(StringP(_, "a")), FinalP)), None, None, None) =>
     }
   }
   test("Empty pattern list") {
@@ -70,14 +70,14 @@ class PatternParserTests extends FunSuite with Matchers with Collector {
     checkFail(atomPattern, "a Int = m;")
   }
   test("Empty pattern") {
-    compile("_") match { case PatternPP(_, None,None,None,None) => }
+    compile("_") match { case PatternPP(_,_, None,None,None,None) => }
   }
 
   test("Capture with type with destructure") {
     compile("a Moo(a, b)") shouldHave {
       case PatternPP(
-          _,
-          Some(CaptureP(_,StringP(_, "a"),FinalP)),
+          _,_,
+          Some(CaptureP(_,LocalNameP(StringP(_, "a")),FinalP)),
           Some(NameOrRunePT(StringP(_, "Moo"))),
           Some(DestructureP(_,List(capture("a"),capture("b")))),
           None) =>
@@ -89,10 +89,10 @@ class PatternParserTests extends FunSuite with Matchers with Collector {
     // This tests us handling an ambiguity properly, see CSTODTS in docs.
     compile("moo T(a Int)") shouldHave {
       case PatternPP(
-          _,
-          Some(CaptureP(_,StringP(_, "moo"),FinalP)),
+          _,_,
+          Some(CaptureP(_,LocalNameP(StringP(_, "moo")),FinalP)),
           Some(NameOrRunePT(StringP(_, "T"))),
-          Some(DestructureP(_,List(PatternPP(_, Some(CaptureP(_,StringP(_, "a"),FinalP)),Some(NameOrRunePT(StringP(_, "Int"))),None,None)))),
+          Some(DestructureP(_,List(PatternPP(_,_, Some(CaptureP(_,LocalNameP(StringP(_, "a")),FinalP)),Some(NameOrRunePT(StringP(_, "Int"))),None,None)))),
           None) =>
     }
   }
@@ -100,10 +100,10 @@ class PatternParserTests extends FunSuite with Matchers with Collector {
   test("Capture with destructure with type outside") {
     compile("a [Int, Bool](a, b)") shouldHave {
       case PatternPP(
-          _,
-          Some(CaptureP(_,StringP(_, "a"),FinalP)),
+          _,_,
+          Some(CaptureP(_,LocalNameP(StringP(_, "a")),FinalP)),
           Some(
-            ManualSequencePT(
+            ManualSequencePT(_,
                   List(
                     NameOrRunePT(StringP(_, "Int")),
                     NameOrRunePT(StringP(_, "Bool"))))),
@@ -114,7 +114,7 @@ class PatternParserTests extends FunSuite with Matchers with Collector {
 
   test("Virtual function") {
     compile(VParser.atomPattern, "virtual this Car") shouldHave {
-      case PatternPP(_, Some(CaptureP(_,StringP(_, "this"),FinalP)),Some(NameOrRunePT(StringP(_, "Car"))),None,Some(AbstractP)) =>
+      case PatternPP(_, _,Some(CaptureP(_,LocalNameP(StringP(_, "this")),FinalP)),Some(NameOrRunePT(StringP(_, "Car"))),None,Some(AbstractP)) =>
     }
   }
 }

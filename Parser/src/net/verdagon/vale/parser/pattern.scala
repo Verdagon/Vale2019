@@ -11,6 +11,7 @@ case class OverrideP(tyype: ITemplexPT) extends IVirtualityP
 
 case class PatternPP(
     range: Range,
+    preBorrow: Option[UnitP],
     capture: Option[CaptureP],
 
 //    ownership: Option[OwnershipP],
@@ -35,9 +36,13 @@ case class DestructureP(
   range: Range,
   patterns: List[PatternPP])
 
+sealed trait ICaptureNameP
+case class LocalNameP(name: StringP) extends ICaptureNameP
+case class ConstructingMemberNameP(name: StringP) extends ICaptureNameP
+
 case class CaptureP(
     range: Range,
-    name: StringP,
+    name: ICaptureNameP,
     variability: VariabilityP)
 
 //sealed trait ITemplexPT
@@ -56,55 +61,35 @@ case class CaptureP(
 
 object Patterns {
   object capturedWithTypeRune {
-    def apply(name: String, kindRune: String): PatternPP = {
-      PatternPP(Range.zero, Some(CaptureP(Range.zero, StringP(Range.zero, name), FinalP)), Some(NameOrRunePT(StringP(Range.zero, kindRune))), None, None)
-    }
-
     def unapply(arg: PatternPP): Option[(String, String)] = {
       arg match {
-        case PatternPP(_, Some(CaptureP(_, StringP(_, name), FinalP)), Some(NameOrRunePT(StringP(_, kindRune))), None, None) => Some((name, kindRune))
+        case PatternPP(_, _, Some(CaptureP(_, LocalNameP(StringP(_, name)), FinalP)), Some(NameOrRunePT(StringP(_, kindRune))), None, None) => Some((name, kindRune))
         case _ => None
       }
     }
   }
   object withType {
-    def apply(kind: ITemplexPT): PatternPP = {
-      PatternPP(Range.zero, None, Some(kind), None, None)
-    }
     def unapply(arg: PatternPP): Option[ITemplexPT] = {
       arg.templex
     }
   }
-  def withTypeRune(rune: String): PatternPP = {
-    PatternPP(Range.zero, None, Some(NameOrRunePT(StringP(Range.zero, rune))), None, None)
-  }
   object capture {
-    def apply(name: String): PatternPP = {
-      PatternPP(Range.zero, Some(CaptureP(Range.zero, StringP(Range.zero, name), FinalP)), None, None, None)
-    }
-
     def unapply(arg: PatternPP): Option[String] = {
       arg match {
-        case PatternPP(_, Some(CaptureP(_, StringP(_, name), FinalP)), None, None, None) => Some(name)
+        case PatternPP(_, _, Some(CaptureP(_, LocalNameP(StringP(_, name)), FinalP)), None, None, None) => Some(name)
         case _ => None
       }
     }
   }
   object fromEnv {
-    def apply(kindName: String): PatternPP = {
-      PatternPP(Range.zero, None, Some(NameOrRunePT(StringP(Range.zero, kindName))), None, None)
-    }
     def unapply(arg: PatternPP): Option[String] = {
       arg match {
-        case PatternPP(_, None, Some(NameOrRunePT(StringP(_, kindName))), None, None) => Some(kindName)
+        case PatternPP(_, _, None, Some(NameOrRunePT(StringP(_, kindName))), None, None) => Some(kindName)
         case _ => None
       }
     }
   }
   object withDestructure {
-    def withDestructure(atoms: PatternPP*): PatternPP = {
-      PatternPP(Range.zero, None, None, Some(DestructureP(Range.zero, atoms.toList)), None)
-    }
     def unapply(arg: PatternPP): Option[List[PatternPP]] = {
       arg.destructure match {
         case None => None
@@ -113,12 +98,9 @@ object Patterns {
     }
   }
   object capturedWithType {
-    def apply(name: String, templex: ITemplexPT): PatternPP = {
-      PatternPP(Range.zero, Some(CaptureP(Range.zero, StringP(Range.zero, name), FinalP)), Some(templex), None, None)
-    }
     def unapply(arg: PatternPP): Option[(String, ITemplexPT)] = {
       arg match {
-        case PatternPP(_, Some(CaptureP(_, StringP(_, name), FinalP)), Some(templex), None, None) => Some((name, templex))
+        case PatternPP(_, _, Some(CaptureP(_, LocalNameP(StringP(_, name)), FinalP)), Some(templex), None, None) => Some((name, templex))
         case _ => None
       }
     }

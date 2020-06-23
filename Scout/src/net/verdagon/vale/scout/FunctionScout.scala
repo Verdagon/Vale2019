@@ -84,7 +84,7 @@ object FunctionScout {
       explicitParams1
         .map(explicitParam1 => VariableDeclarations(PatternScout.getParameterCaptures(explicitParam1.pattern)))
         .foldLeft(noDeclarations)(_ ++ _)
-    val myStackFrame = StackFrame(name, functionEnv, None, captureDeclarations)
+    val myStackFrame = StackFrame(name, functionEnv, None, noDeclarations)
 
     val (implicitRulesFromRet, maybeRetCoordRune) =
       PatternScout.translateMaybeTypeIntoMaybeRune(
@@ -105,6 +105,7 @@ object FunctionScout {
       } else {
         vassert(maybeBody0.nonEmpty)
         val (body1, _, List()) = scoutBody(myStackFrame, maybeBody0.get, captureDeclarations)
+        vassert(body1.closuredNames.isEmpty)
         CodeBody1(body1)
       }
 
@@ -224,17 +225,15 @@ object FunctionScout {
     val paramDeclarations =
       explicitParams1.map(_.pattern)
         .map(pattern1 => VariableDeclarations(PatternScout.getParameterCaptures(pattern1)))
-        .foldLeft(noDeclarations)(_ ++ _)
+        .foldLeft(closureDeclaration)(_ ++ _)
 
-    // Don't add the closure to the environment, we don't want the user to be able
-    // to access it.
-    val myStackFrame = StackFrame(lambdaName, parentStackFrame.parentEnv, Some(parentStackFrame), paramDeclarations)
+    val myStackFrame = StackFrame(lambdaName, parentStackFrame.parentEnv, Some(parentStackFrame), noDeclarations)
 
     val (body1, variableUses, lambdaMagicParamNames) =
       scoutBody(
         myStackFrame,
         body0,
-        closureDeclaration ++ paramDeclarations)
+        paramDeclarations)
 
     if (lambdaMagicParamNames.nonEmpty && (explicitParams1.nonEmpty)) {
       vfail("Cant have a lambda with _ and params");
@@ -371,8 +370,13 @@ object FunctionScout {
     // If we have a lone lookup node, like "m = Marine(); m;" then that
     // 'm' will be turned into an expression, which means that's how it's
     // destroyed. So, thats how we destroy things before their time.
-    val (NormalResult(block1WithoutParamLocals), selfUses, childUses) =
-      ExpressionScout.scoutBlock(stackFrame, body0)
+    val (NormalResult(block1), selfUses, childUses) =
+      ExpressionScout.scoutBlock(
+        stackFrame,
+        body0,
+        // Aren't making a new stack frame because we already had some nice params populated
+        // stackFrame.
+        paramDeclarations)
 
     vcurious(
       childUses.uses.map(_.name).collect({ case mpn @ MagicParamNameS(_) => mpn }).isEmpty)
@@ -380,8 +384,8 @@ object FunctionScout {
       selfUses.uses.map(_.name).collect({ case mpn @ MagicParamNameS(_) => mpn })
     val magicParamVars = magicParamNames.map(n => VariableDeclaration(n, FinalP))
 
-    val paramLocals =
-      (paramDeclarations.vars ++ magicParamVars).map({ declared =>
+    val magicParamLocals =
+      magicParamVars.map({ declared =>
         LocalVariable1(
           declared.name,
           declared.variability,
@@ -392,7 +396,7 @@ object FunctionScout {
           childUses.isMoved(declared.name),
           childUses.isMutated(declared.name))
       })
-    val block1WithParamLocals = BlockSE(block1WithoutParamLocals.locals ++ paramLocals, block1WithoutParamLocals.exprs)
+    val block1WithParamLocals = BlockSE(block1.locals ++ magicParamLocals, block1.exprs)
 
     val allUses =
       selfUses.combine(childUses, {
@@ -435,16 +439,8 @@ object FunctionScout {
         }
       })
 
-    (BodySE(usesOfParentVariables.map(_.name), block1WithParamLocals), VariableUses(usesOfParentVariables), magicParamNames)
-  }
-
-  def getContainingFunctionName(name: INameS): IFunctionDeclarationNameS = {
-    vimpl()
-//    val (functionNameStep, functionNameStepIndex) =
-//      vassertSome(name.steps.zipWithIndex.reverse.collectFirst({
-//        case (nameStep : IFunctionDeclarationNameS, nameStepIndex) => (nameStep, nameStepIndex)
-//      }))
-//    AbsoluteNameS(name.file, name.steps.slice(0, functionNameStepIndex), functionNameStep)
+    val bodySE = BodySE(usesOfParentVariables.map(_.name), block1WithParamLocals)
+    (bodySE, VariableUses(usesOfParentVariables), magicParamNames)
   }
 
   def scoutInterfaceMember(interfaceEnv: Environment, functionP: FunctionP): FunctionS = {

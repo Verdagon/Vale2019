@@ -79,7 +79,7 @@ object PatternScout {
     ruleState: RuleStateBox,
     patternPP: PatternPP):
   (List[IRulexSR], AtomSP) = {
-    val PatternPP(_,maybeCaptureP, maybeTypeP, maybeDestructureP, maybeVirtualityP) = patternPP
+    val PatternPP(_,_,maybeCaptureP, maybeTypeP, maybeDestructureP, maybeVirtualityP) = patternPP
 
     val declaredRunes = stackFrame.parentEnv.allUserDeclaredRunes()
 
@@ -122,8 +122,11 @@ object PatternScout {
           val codeLocation = CodeLocationS(patternPP.pos.line, patternPP.pos.column)
           CaptureS(UnnamedLocalNameS(codeLocation), FinalP)
         }
-        case Some(CaptureP(_,StringP(_, name), variability)) => {
+        case Some(CaptureP(_,LocalNameP(StringP(_, name)), variability)) => {
           CaptureS(CodeVarNameS(name), variability)
+        }
+        case Some(CaptureP(_,ConstructingMemberNameP(StringP(_, name)), variability)) => {
+          CaptureS(ConstructingMemberNameS(name), variability)
         }
       }
 
@@ -257,7 +260,7 @@ object PatternScout {
           translatePatternTemplex(declaredRunes, rulesS, innerP)
         (newRules, OwnershippedST(ownership, innerS), None)
       }
-      case CallPT(maybeTemplateP, argsMaybeTemplexesP) => {
+      case CallPT(_,maybeTemplateP, argsMaybeTemplexesP) => {
         val (newRulesFromTemplate, maybeTemplateS, _) = translatePatternTemplex(declaredRunes, rulesS, maybeTemplateP)
         val (newRulesFromArgs, argsMaybeTemplexesS) = translatePatternTemplexes(declaredRunes, rulesS, argsMaybeTemplexesP)
         (newRulesFromTemplate ++ newRulesFromArgs, CallST(maybeTemplateS, argsMaybeTemplexesS), None)
@@ -268,7 +271,7 @@ object PatternScout {
         val (newRulesFromElement, elementS, _) = translatePatternTemplex(declaredRunes, rulesS, elementP)
         (newRulesFromMutability ++ newRulesFromSize ++ newRulesFromElement, RepeaterSequenceST(mutabilityS, sizeS, elementS), None)
       }
-      case ManualSequencePT(maybeMembersP) => {
+      case ManualSequencePT(_,maybeMembersP) => {
         val (newRules, maybeMembersS) = translatePatternTemplexes(declaredRunes, rulesS, maybeMembersP)
         (newRules, ManualSequenceST(maybeMembersS), None)
       }

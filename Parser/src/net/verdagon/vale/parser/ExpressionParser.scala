@@ -48,16 +48,24 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
   }
 
   private[parser] def lend: Parser[IExpressionPE] = {
-    // TODO: split this out into weak and borrow and constraint
-    pos ~ (("&&"|"&"| ("'" ~ opt(exprIdentifier <~ optWhite) <~ "&")) ~> optWhite ~> postfixableExpressions) ~ pos ^^ {
+    // TODO: split this out into weak and borrow and constraint and region-calling
+    pos ~ (("&&"|"&"| ("'" ~ opt(exprIdentifier <~ optWhite) <~ "&") | ("'" ~ exprIdentifier)) ~> optWhite ~> postfixableExpressions) ~ pos ^^ {
       case begin ~ inner ~ end => LendPE(Range(begin, end), inner)
     }
   }
 
   private[parser] def not: Parser[IExpressionPE] = {
-    pos ~ (pstr("not") <~ optWhite) ~ postfixableExpressions ~ pos ^^ {
+    pos ~ (pstr("not") <~ white) ~ postfixableExpressions ~ pos ^^ {
       case begin ~ not ~ expr ~ end => {
         FunctionCallPE(Range(begin, end), None, LookupPE(not, None), List(expr), true)
+      }
+    }
+  }
+
+  private[parser] def destruct: Parser[IExpressionPE] = {
+    pos ~ (pstr("destruct") <~ white) ~ postfixableExpressions ~ pos ^^ {
+      case begin ~ destruct ~ expr ~ end => {
+        FunctionCallPE(Range(begin, end), None, LookupPE(destruct, None), List(expr), true)
       }
     }
   }
@@ -98,6 +106,17 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
     ("while" ~> optWhite ~> pos) ~ ("(" ~> optWhite ~> blockExprs <~ optWhite <~ ")") ~ (pos <~ optWhite) ~ bracedBlock ^^ {
       case condBegin ~ condExprs ~ condEnd ~ thenBlock => {
         WhilePE(BlockPE(Range(condBegin, condEnd), condExprs), thenBlock)
+      }
+    }
+  }
+
+  private[parser] def mat: Parser[MatchPE] = {
+    pos ~
+        ("mat" ~> white ~> postfixableExpressions <~ white) ~
+        ("{" ~> optWhite ~> repsep(caase, optWhite) <~ optWhite <~ "}") ~
+        pos ^^ {
+      case begin ~ condExpr ~ lambdas ~ end => {
+        MatchPE(Range(begin, end), condExpr, lambdas)
       }
     }
   }
@@ -144,7 +163,7 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
     // debt: "block" is here temporarily because we get ambiguities in this case:
     //   fn main() { {_ + _}(4 + 5) }
     // because it mistakenly successfully parses {_ + _} then dies on the next part.
-    (mutate <~ ";") | swap | let | whiile | eachOrEachI | ifLadder | (expression <~ ";") | ("block" ~> optWhite ~> bracedBlock)
+    (mutate <~ ";") | swap | let | mat | whiile | eachOrEachI | ifLadder | (expression <~ ";") | ("block" ~> optWhite ~> bracedBlock)
   }
 
   private[parser] def expressionElementLevel1: Parser[IExpressionPE] = {
@@ -227,7 +246,7 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
   // Parses expressions that can contain postfix operators, like function calling
   // or dots.
   private[parser] def postfixableExpressions: Parser[IExpressionPE] = {
-    ret | mutate | ifLadder | lend | not | expressionLevel9
+    ret | mutate | ifLadder | lend | not | destruct | expressionLevel9
   }
 
   // Binariable = can have binary operators in it
@@ -337,10 +356,10 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
   }
 
   def blockExprs: Parser[List[IExpressionPE]] = {
-    pos ~ ("..." ~> pos) ^^ { case begin ~ end => List(VoidPE(Range(begin, end))) } |
     multiStatementBlock |
       ((expression) ^^ { case e => List(e) }) |
-      (pos ^^ { case p => List(VoidPE(Range(p, p)))})
+      (pos ^^ { case p => List(VoidPE(Range(p, p)))}) |
+      (pos ~ ("..." ~> pos) ^^ { case begin ~ end => List(VoidPE(Range(begin, end))) })
   }
 
   private[parser] def tupleExpr: Parser[IExpressionPE] = {
@@ -399,6 +418,14 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
   def patternPrototypeParams: Parser[ParamsP] = {
     pos ~ ("(" ~> optWhite ~> repsep(optWhite ~> patternPrototypeParam, optWhite ~> ",") <~ optWhite <~ ")") ~ pos ^^ {
       case begin ~ params ~ end => ParamsP(Range(begin, end), params)
+    }
+  }
+
+  def caase: Parser[LambdaPE] = {
+    pos ~ patternPrototypeParam ~ (pos <~ optWhite) ~ bracedBlock ~ pos ^^ {
+      case begin ~ param ~ paramsEnd ~ body ~ end => {
+        LambdaPE(None, FunctionP(Range(begin, end), None, None, None, None, None, Some(ParamsP(Range(begin, paramsEnd), List(param))), None, Some(body)))
+      }
     }
   }
 }

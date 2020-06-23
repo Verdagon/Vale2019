@@ -174,74 +174,93 @@ class ScoutTests extends FunSuite with Matchers {
   }
 
 
-  def runTests() {
-//    check(1,
-//        "fn main(){3}",
-//        ProgramS(List(), List(), List(
-//            FunctionS("main",0,false,false,true, List(),List(),None,
-//                Some(BodySE(Set(),Set(),List(IntLiteral1(3))))))));
-//    check(3,
-//        "fn main(){4 - 3}",
-//        ProgramS(List(), List(), List(
-//            FunctionS("main",0,false,false,true,List(),List(),None,
-//              Some(BodySE(Set(),Set(),List(Scramble1(List(IntLiteral1(4), LookuSP("-"), IntLiteral1(3))))))))));
-//    check(4,
-//        "fn main(){(a: Int){ +(a,a)}(3)}",
-//        ProgramS(List(), List(), List(
-//            FunctionS("main",0,false,false,true,List(),List(),None,
-//              Some(BodySE(Set(),Set(),List(
-//                Scramble1(List(
-//                    FunctionS("main:lam1",1,false,false,true,List(),List(ParameterS(None,2, "a", CaptureSP("a", FinalP,Some(TypeOfSP(TypeName1("Int")))))),None,
-//                      Some(BodySE(Set(),Set(),List(
-//                        Scramble1(List(LookuSP("+"), scout.PackSE(List(LookuSP("a"), LookuSP("a"))))))))),
-//                  scout.PackSE(List(IntLiteral1(3))))))))))));
-//    check(5,"fn main(){(a){ a - 2}(3)}",
-//      ProgramS(List(), List(), List(
-//        FunctionS("main",0,false,false,true,List(),List(),None,
-//          Some(BodySE(Set(),Set(),List(Scramble1(List(
-//            FunctionS("main:lam1",1,false,false,true,List(),List(ParameterS(None,3,"a", CaptureSP("a", FinalP,Some(TypeOfSP(TypeName1("__T2")))))),None,
-//              Some(BodySE(Set(),Set(),List(Scramble1(List(LookuSP("a"), LookuSP("-"), IntLiteral1(2))))))),
-//            PackSE(List(IntLiteral1(3))))))))))))
-//    check(6,"fn main(){(_){ 2}(3)}",
-//      ProgramS(List(), List(), List(FunctionS("main",0,false,false,true,List(),List(),None,Some(BodySE(Set(),Set(),List(Scramble1(List(
-//        FunctionS("main:lam1",1,false,false,true,List(TemplateParameter1("__T2", ReferenceTemplataType1)),List(ParameterS(None,3,"__P2", CaptureSP("__P2", FinalP,Some(TypeOfSP(TypeName1("__T2")))))),None,
-//          Some(BodySE(Set(),Set(),List(IntLiteral1(2))))),
-//        PackSE(List(IntLiteral1(3))))))))))));
-//    check(7,
-//        "fn main(){let $a = 3; a! = 4;}",
-//        ProgramS(List(), List(), List(
-//            FunctionS("main",0,false,false,true,List(),List(),None,
-//              Some(BodySE(Set(),Set(),List(
-//                    Let1(1, "a", CaptureSP("a",true,None),IntLiteral1(3)),
-//                    LocalMutate1("a",IntLiteral1(4)),
-//                  scout.PackSE(List()))))))));
-//
-//    // Make sure it's in the lambda's capture list but not main's
-//    check(8,
-//        "fn main() { x = 4; { print x }() }",
-//        ProgramS(List(), List(), List(
-//          FunctionS("main",0,false,false,true,List(),List(),None,
-//            Some(BodySE(Set(),Set(),List(
-//              Let1(1,"x", CaptureSP("x", FinalP,None),IntLiteral1(4)),
-//              Scramble1(List(
-//                FunctionS("main<lam2>",2,false,false,true,List(),List(),None,
-//                  Some(BodySE(Set(),Set(),List(Scramble1(List(LookuSP("print"), LookuSP("x"))))))),
-//                scout.PackSE(List()))))))))))
-//
-//
-//    // Make sure the outer lambda only captures x, and main captures nothing
-//    check(9,
-//        "fn main() { x = 4; { y = 5; { x + y }() }() }",
-//        ProgramS(List(), List(), List(
-//          FunctionS("main",0,false,false,true,List(),List(),None,Some(BodySE(Set(),Set(),List(
-//            Let1(1,"x", CaptureSP("x", FinalP,None),IntLiteral1(4)),
-//            Scramble1(List(
-//              FunctionS("main<lam2>",1,false,false,true,List(),List(),None,Some(BodySE(Set(),Set(),List(
-//                Let1(3,"y", CaptureSP("y", FinalP,None),IntLiteral1(5)),
-//                Scramble1(List(
-//                  FunctionS("main<lam4>",2,false,false,true,List(),List(),None,
-//                    Some(BodySE(Set(),Set(),List(Scramble1(List(LookuSP("x"), LookuSP("+"), LookuSP("y"))))))),
-//                  scout.PackSE(List()))))))),
-//              scout.PackSE(List()))))))))))
+  test("Constructing members") {
+    val program1 = compile(
+      """fn MyStruct() {
+        |  this.x = 4;
+        |  this.y = true;
+        |}
+        |""".stripMargin)
+    val main = program1.lookupFunction("MyStruct")
+
+    val CodeBody1(BodySE(_, block)) = main.body
+    block match {
+      case BlockSE(
+        List(
+          LocalVariable1(ConstructingMemberNameS("x"),FinalP,NotUsed,Used,NotUsed,NotUsed,NotUsed,NotUsed),
+          LocalVariable1(ConstructingMemberNameS("y"),FinalP,NotUsed,Used,NotUsed,NotUsed,NotUsed,NotUsed)),
+        List(
+          LetSE(
+            _,
+            _,
+            _,
+            AtomSP(CaptureS(ConstructingMemberNameS("x"),FinalP),None,_,None),
+            IntLiteralSE(4)),
+          LetSE(
+            _,
+            _,
+            _,
+            AtomSP(CaptureS(ConstructingMemberNameS("y"),FinalP),None,_,None),
+            BoolLiteralSE(true)),
+          VoidSE(),
+          FunctionCallSE(
+            FunctionLoadSE(GlobalFunctionFamilyNameS("MyStruct")),
+            List(
+              LocalLoadSE(ConstructingMemberNameS("x"),false),
+              LocalLoadSE(ConstructingMemberNameS("y"),false))))) =>
+    }
+  }
+
+  test("Constructing members, borrowing another member") {
+    val program1 = compile(
+      """fn MyStruct() {
+        |  this.x = 4;
+        |  this.y = &this.x;
+        |}
+        |""".stripMargin)
+    val main = program1.lookupFunction("MyStruct")
+
+    val CodeBody1(BodySE(_, block)) = main.body
+    block match {
+      case BlockSE(
+        List(
+          LocalVariable1(ConstructingMemberNameS("x"),FinalP,Used,Used,NotUsed,NotUsed,NotUsed,NotUsed),
+          LocalVariable1(ConstructingMemberNameS("y"),FinalP,NotUsed,Used,NotUsed,NotUsed,NotUsed,NotUsed)),
+        List(
+          LetSE(_,_,_,
+            AtomSP(CaptureS(ConstructingMemberNameS("x"),FinalP),None,_,None),
+            IntLiteralSE(4)),
+          LetSE(_,_,_,
+            AtomSP(CaptureS(ConstructingMemberNameS("y"),FinalP),None,_,None),
+            ExpressionLendSE(LocalLoadSE(ConstructingMemberNameS("x"),true))),
+          VoidSE(),
+          FunctionCallSE(
+            FunctionLoadSE(GlobalFunctionFamilyNameS("MyStruct")),
+            List(
+              LocalLoadSE(ConstructingMemberNameS("x"),false),
+              LocalLoadSE(ConstructingMemberNameS("y"),false))))) =>
+    }
+
+  }
+
+  test("this isnt special if was explicit param") {
+    val program1 = compile(
+      """fn moo(this &MyStruct) {
+        |  println(this.x);
+        |}
+        |""".stripMargin)
+    val main = program1.lookupFunction("moo")
+    main.body match {
+      case CodeBody1(
+        BodySE(
+          List(),
+          BlockSE(
+            List(LocalVariable1(CodeVarNameS("this"),FinalP,Used,NotUsed,NotUsed,NotUsed,NotUsed,NotUsed)),
+            List(
+              FunctionCallSE(
+                FunctionLoadSE(GlobalFunctionFamilyNameS("println")),
+                List(DotSE(LocalLoadSE(CodeVarNameS("this"),true),"x",true))),
+              VoidSE())))) =>
+    }
   }
 }

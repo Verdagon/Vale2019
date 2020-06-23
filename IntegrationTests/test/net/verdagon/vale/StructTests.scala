@@ -18,6 +18,25 @@ class StructTests extends FunSuite with Matchers {
     compile.run(Vector())
   }
 
+  test("Constructor with this") {
+    val compile = new Compilation(
+      """
+        |struct Marine {
+        |  hp Int;
+        |  cool Bool;
+        |}
+        |fn Marine() {
+        |  this.hp = 10;
+        |  this.cool = true;
+        |}
+        |fn main() {
+        |  Marine().hp
+        |}
+      """.stripMargin)
+
+    compile.evalForReferend(Vector()) shouldEqual VonInt(10)
+  }
+
   test("Make struct") {
     val compile = new Compilation(
       """

@@ -60,13 +60,14 @@ case class StructP(
 
 case class StructMembersP(
   range: Range,
-  members: List[StructMemberP])
-
+  contents: List[IStructContent])
+sealed trait IStructContent
+case class StructMethodP(func: FunctionP) extends IStructContent
 case class StructMemberP(
   range: Range,
   name: StringP,
   variability: VariabilityP,
-  tyype: ITemplexPT)
+  tyype: ITemplexPT) extends IStructContent
 
 case class InterfaceP(
     range: Range,

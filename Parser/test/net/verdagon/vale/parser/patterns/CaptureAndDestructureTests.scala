@@ -40,8 +40,8 @@ class CaptureAndDestructureTests extends FunSuite with Matchers with Collector {
 
   test("Capture with destructure with type inside") {
     compile("a (a Int, b Bool)") shouldHave {
-      case PatternPP(_,
-          Some(CaptureP(_,StringP(_, "a"),FinalP)),
+      case PatternPP(_,_,
+          Some(CaptureP(_,LocalNameP(StringP(_, "a")),FinalP)),
           None,
           Some(
           DestructureP(_,
@@ -53,7 +53,7 @@ class CaptureAndDestructureTests extends FunSuite with Matchers with Collector {
   }
   test("capture with empty sequence type") {
     compile("a []") shouldHave {
-      case capturedWithType("a", ManualSequencePT(List())) =>
+      case capturedWithType("a", ManualSequencePT(_,List())) =>
     }
   }
   test("empty destructure") {
@@ -62,13 +62,13 @@ class CaptureAndDestructureTests extends FunSuite with Matchers with Collector {
   }
   test("capture with empty destructure") {
     compile("a ()") shouldHave {
-      case PatternPP(_,Some(CaptureP(_,StringP(_, "a"),FinalP)),None,Some(DestructureP(_,List())),None) =>
+      case PatternPP(_,_,Some(CaptureP(_,LocalNameP(StringP(_, "a")),FinalP)),None,Some(DestructureP(_,List())),None) =>
     }
   }
   test("Destructure with nested atom") {
     compile("a (b Int)") shouldHave {
-      case PatternPP(_,
-          Some(CaptureP(_,StringP(_, "a"), FinalP)),
+      case PatternPP(_,_,
+          Some(CaptureP(_,LocalNameP(StringP(_, "a")), FinalP)),
           None,
           Some(
           DestructureP(_,

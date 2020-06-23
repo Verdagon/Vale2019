@@ -22,27 +22,29 @@ trait PatternParser extends TemplexParser with RegexParsers with ParserUtils {
     (
       // The order here matters, we don't want the "a" rule to match "a A(_, _)" just because one starts with the other.
 
-      // First, the ones with destructuring:
+        // First, the ones with destructuring:
         // Yes capture, yes type, yes destructure:
-        underscoreOr(patternCapture) ~ (white ~> templex) ~ destructure ^^ { case capture ~ tyype ~ destructure => (capture, Some(tyype), Some(destructure)) } |
+        underscoreOr(patternCapture) ~ (white ~> templex) ~ destructure ^^ { case capture ~ tyype ~ destructure => (None, capture, Some(tyype), Some(destructure)) } |
         // Yes capture, no type, yes destructure:
-        underscoreOr(patternCapture) ~ (white ~> destructure) ^^ { case capture ~ destructure => (capture, None, Some(destructure)) } |
+        underscoreOr(patternCapture) ~ (white ~> destructure) ^^ { case capture ~ destructure => (None, capture, None, Some(destructure)) } |
         // No capture, yes type, yes destructure:
-        templex ~ destructure ^^ { case tyype ~ destructure => (None, Some(tyype), Some(destructure)) } |
+        templex ~ destructure ^^ { case tyype ~ destructure => (None, None, Some(tyype), Some(destructure)) } |
         // No capture, no type, yes destructure:
-        destructure ^^ { case destructure => (None, None, Some(destructure)) } |
+        destructure ^^ { case destructure => (None, None, None, Some(destructure)) } |
       // Now, the ones with types:
         // No capture, yes type, no destructure: impossible.
         // Yes capture, yes type, no destructure:
-        underscoreOr(patternCapture) ~ (white ~> templex) ^^ { case capture ~ tyype => (capture, Some(tyype), None) } |
+        underscoreOr(patternCapture) ~ (white ~> templex) ^^ { case capture ~ tyype => (None, capture, Some(tyype), None) } |
       // Now, a simple capture:
         // Yes capture, no type, no destructure:
-        underscoreOr(patternCapture) ^^ { case capture => (capture, None, None) }
+        underscoreOr(patternCapture) ^^ { case capture => (None, capture, None, None) } |
+        // Hacked in for highlighting, still need to incorporate into the above
+        existsMW("&") ~ underscoreOr(patternCapture) ^^ { case preBorrow ~ capture => (preBorrow, capture, None, None) }
     ) ~
     opt(white ~> "impl" ~> white ~> templex) ~
     pos ^^ {
-      case begin ~ maybeVirtual ~ maybeCaptureAndMaybeTypeAndMaybeDestructure ~ maybeInterface ~ end => {
-        val (maybeCapture, maybeType, maybeDestructure) = maybeCaptureAndMaybeTypeAndMaybeDestructure
+      case begin ~ maybeVirtual ~ maybePreBorrowAndMaybeCaptureAndMaybeTypeAndMaybeDestructure ~ maybeInterface ~ end => {
+        val (maybePreBorrow, maybeCapture, maybeType, maybeDestructure) = maybePreBorrowAndMaybeCaptureAndMaybeTypeAndMaybeDestructure
         val maybeVirtuality =
           (maybeVirtual, maybeInterface) match {
             case (None, None) => None
@@ -50,7 +52,7 @@ trait PatternParser extends TemplexParser with RegexParsers with ParserUtils {
             case (None, Some(interface)) => Some(OverrideP(interface))
             case (Some(_), Some(_)) => vfail()
           }
-        PatternPP(Range(begin, end), maybeCapture, maybeType, maybeDestructure, maybeVirtuality)
+        PatternPP(Range(begin, end), maybePreBorrow, maybeCapture, maybeType, maybeDestructure, maybeVirtuality)
       }
     }
   }
@@ -60,8 +62,9 @@ trait PatternParser extends TemplexParser with RegexParsers with ParserUtils {
   // Remember, for pattern parsers, something *must* be present, don't match empty.
   // Luckily, for this rule, we always have the expr identifier.
   private[parser] def patternCapture: Parser[CaptureP] = {
-    pos ~ exprIdentifier ~ opt("!") ~ pos ^^ {
-      case begin ~ name ~ maybeMutable ~ end => CaptureP(Range(begin, end), name, if (maybeMutable.nonEmpty) VaryingP else FinalP)
+    pos ~ existsMW("this.") ~ exprIdentifier ~ opt("!") ~ pos ^^ {
+      case begin ~ None ~ name ~ maybeMutable ~ end => CaptureP(Range(begin, end), LocalNameP(name), if (maybeMutable.nonEmpty) VaryingP else FinalP)
+      case begin ~ Some(thisdot) ~ name ~ maybeMutable ~ end => CaptureP(Range(begin, end), ConstructingMemberNameP(StringP(Range(begin, name.range.end), name.str)), if (maybeMutable.nonEmpty) VaryingP else FinalP)
     }
   }
 

@@ -66,6 +66,8 @@ case class BlockSE(
   // return the last expression's result as its result.
   // Even empty blocks aren't empty, they have a void() at the end.
   vassert(exprs.size >= 1)
+
+  vassert(locals == locals.distinct)
 }
 
 case class ArgLookupSE(index: Int) extends IExpressionSE

@@ -60,7 +60,8 @@ case class TemplarTemporaryVarName2(num: Int) extends IVarName2 { def order = 20
 case class TemplarPatternMemberName2(num: Int, memberIndex: Int) extends IVarName2 { def order = 23; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
 case class TemplarPatternDestructureeName2(num: Int) extends IVarName2 { def order = 23; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
 case class UnnamedLocalName2(codeLocation: CodeLocation2) extends IVarName2 { def order = 3; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) ++ codeLocation.all(func) } }
-case class ClosureParamName2() extends IVarName2 { def order = 4; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
+case class ClosureParamName2() extends IVarName2 { def order = 41; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
+case class ConstructingMemberName2(name: String) extends IVarName2 { def order = 4; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
 case class MagicParamName2(codeLocation2: CodeLocation2) extends IVarName2 { def order = 5; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
 case class CodeVarName2(name: String) extends IVarName2 { def order = 6; def all[T](func: PartialFunction[Queriable2, T]): List[T] = { List(this).collect(func) } }
 // We dont use CodeVarName2(0), CodeVarName2(1) etc because we dont want the user to address these members directly.

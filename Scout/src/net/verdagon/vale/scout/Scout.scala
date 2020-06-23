@@ -153,7 +153,7 @@ object Scout {
 
     val memberRunes = members.indices.map(index => MemberRuneS(index))
     val memberRules =
-      memberRunes.zip(members.map(_.tyype)).map({ case (memberRune, memberType) =>
+      memberRunes.zip(members.collect({ case m @ StructMemberP(_, _, _, _) => m }).map(_.tyype)).map({ case (memberRune, memberType) =>
         EqualsSR(
           TypedSR(memberRune, CoordTypeSR),
           TemplexSR(TemplexScout.translateTemplex(structEnv.allUserDeclaredRunes(), memberType)))
@@ -208,7 +208,7 @@ object Scout {
   }
 
   private def scoutInterface(file: String, headP: InterfaceP): InterfaceS = {
-    val InterfaceP(range, StringP(_, interfaceHumanName), mutability, maybeIdentifyingRunes, maybeRulesP, internalMethodsP) = headP
+    val InterfaceP(range, StringP(_, interfaceHumanName), seealed, mutability, maybeIdentifyingRunes, maybeRulesP, internalMethodsP) = headP
     val codeLocation = Scout.evalPos(range.begin)
     val interfaceFullName = TopLevelCitizenDeclarationNameS(interfaceHumanName, codeLocation)
     val rulesP = maybeRulesP.toList.flatMap(_.rules)

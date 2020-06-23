@@ -737,6 +737,13 @@ object VonHammer {
     name: IName2
   ): IVonData = {
     name match {
+      case ConstructingMemberName2(name) => {
+        VonObject(
+          "ConstructingMemberName",
+          None,
+          Vector(
+            VonMember("name", VonStr(name))))
+      }
       case ImplDeclareName2(codeLocation) => {
         VonObject(
           "ImplDeclareName",

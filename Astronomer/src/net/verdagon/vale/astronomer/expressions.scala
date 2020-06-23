@@ -60,6 +60,8 @@ case class BlockAE(
   // return the last expression's result as its result.
   // Even empty blocks aren't empty, they have a void() at the end.
   vassert(exprs.nonEmpty)
+
+  vassert(locals == locals.distinct)
 }
 
 //case class ConstructAE(

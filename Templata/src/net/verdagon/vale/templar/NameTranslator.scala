@@ -131,6 +131,7 @@ object NameTranslator {
       case UnnamedLocalNameA(codeLocation) => UnnamedLocalName2(translateCodeLocation(codeLocation))
       case ClosureParamNameA() => ClosureParamName2()
       case MagicParamNameA(codeLocation) => MagicParamName2(translateCodeLocation(codeLocation))
+      case ConstructingMemberNameA(n) => ConstructingMemberName2(n)
       case CodeVarNameA(name) => CodeVarName2(name)
       case AnonymousSubstructMemberNameA(index) => AnonymousSubstructMemberName2(index)
     }

@@ -98,9 +98,9 @@ class BiggerTests extends FunSuite with Matchers with Collector {
 
   test("Test templated lambda param") {
     val program = compile(VParser.program, "fn main(){(a){ a + a}(3)}")
-    program shouldHave { case FunctionCallPE(_, None, LambdaPE(_), List(IntLiteralPE(_, 3)),true) => }
+    program shouldHave { case FunctionCallPE(_, None, LambdaPE(_, _), List(IntLiteralPE(_, 3)),true) => }
     program shouldHave {
-      case PatternPP(_, Some(CaptureP(_,StringP(_, "a"),FinalP)),None,None,None) =>
+      case PatternPP(_,_, Some(CaptureP(_,LocalNameP(StringP(_, "a")),FinalP)),None,None,None) =>
     }
     program shouldHave {
       case FunctionCallPE(_, None, LookupPE(StringP(_, "+"), None),List(LookupPE(StringP(_, "a"), None), LookupPE(StringP(_, "a"), None)),true) =>
@@ -175,7 +175,7 @@ class BiggerTests extends FunSuite with Matchers with Collector {
         |= doThings(a);
       """.stripMargin) shouldHave {
       case List(
-          LetPE(_,List(), PatternPP(_, Some(CaptureP(_,StringP(_, "a"), FinalP)), None, None, None), IntLiteralPE(_, 2)),
+          LetPE(_,List(), PatternPP(_, _,Some(CaptureP(_,LocalNameP(StringP(_, "a")), FinalP)), None, None, None), IntLiteralPE(_, 2)),
             FunctionCallPE(_, None, LookupPE(StringP(_, "doThings"), None), List(LookupPE(StringP(_, "a"), None)), true)) =>
     }
   }
@@ -189,8 +189,8 @@ class BiggerTests extends FunSuite with Matchers with Collector {
       case ImplP(_,
       Some(IdentifyingRunesP(_, List(StringP(_, "T")))),
       None,
-      CallPT(NameOrRunePT(StringP(_, "SomeStruct")), List(NameOrRunePT(StringP(_, "T")))),
-      CallPT(NameOrRunePT(StringP(_, "MyInterface")), List(NameOrRunePT(StringP(_, "T"))))) =>
+      CallPT(_,NameOrRunePT(StringP(_, "SomeStruct")), List(NameOrRunePT(StringP(_, "T")))),
+      CallPT(_,NameOrRunePT(StringP(_, "MyInterface")), List(NameOrRunePT(StringP(_, "T"))))) =>
     }
   }
 
@@ -204,7 +204,7 @@ class BiggerTests extends FunSuite with Matchers with Collector {
       None,
       None,
       NameOrRunePT(StringP(_, "MyIntIdentity")),
-      CallPT(NameOrRunePT(StringP(_, "IFunction1")), List(MutabilityPT(MutableP), NameOrRunePT(StringP(_, "Int")), NameOrRunePT(StringP(_, "Int"))))) =>
+      CallPT(_,NameOrRunePT(StringP(_, "IFunction1")), List(MutabilityPT(MutableP), NameOrRunePT(StringP(_, "Int")), NameOrRunePT(StringP(_, "Int"))))) =>
     }
   }
 
@@ -218,7 +218,7 @@ class BiggerTests extends FunSuite with Matchers with Collector {
       case FunctionP(
         _,
         Some(StringP(_, "doCivicDance")), None, None, None, None,
-        Some(ParamsP(_, List(PatternPP(_, Some(CaptureP(_,StringP(_, "this"), FinalP)), Some(NameOrRunePT(StringP(_, "Car"))), None, Some(AbstractP))))),
+        Some(ParamsP(_, List(PatternPP(_, _,Some(CaptureP(_,LocalNameP(StringP(_, "this")), FinalP)), Some(NameOrRunePT(StringP(_, "Car"))), None, Some(AbstractP))))),
         Some(NameOrRunePT(StringP(_, "Int"))), None) =>
     }
   }
@@ -228,7 +228,7 @@ class BiggerTests extends FunSuite with Matchers with Collector {
     compile(
       VParser.structMember,
       "a *ListNode<T>;") shouldHave {
-      case StructMemberP(_, StringP(_, "a"), FinalP, OwnershippedPT(_,ShareP,CallPT(NameOrRunePT(StringP(_, "ListNode")), List(NameOrRunePT(StringP(_, "T")))))) =>
+      case StructMemberP(_, StringP(_, "a"), FinalP, OwnershippedPT(_,ShareP,CallPT(_,NameOrRunePT(StringP(_, "ListNode")), List(NameOrRunePT(StringP(_, "T")))))) =>
     }
   }
 
@@ -236,7 +236,7 @@ class BiggerTests extends FunSuite with Matchers with Collector {
     compile(
       VParser.structMember,
       "a Array<imm, T>;") shouldHave {
-      case StructMemberP(_, StringP(_, "a"), FinalP, CallPT(NameOrRunePT(StringP(_, "Array")), List(MutabilityPT(ImmutableP), NameOrRunePT(StringP(_, "T"))))) =>
+      case StructMemberP(_, StringP(_, "a"), FinalP, CallPT(_,NameOrRunePT(StringP(_, "Array")), List(MutabilityPT(ImmutableP), NameOrRunePT(StringP(_, "T"))))) =>
     }
   }
 
@@ -245,7 +245,7 @@ class BiggerTests extends FunSuite with Matchers with Collector {
       "newLen = if (num == 0) { 1 } else { 2 };") shouldHave {
       case LetPE(_,
       List(),
-      PatternPP(_, Some(CaptureP(_,StringP(_, "newLen"), FinalP)), None, None, None),
+      PatternPP(_, _,Some(CaptureP(_,LocalNameP(StringP(_, "newLen")), FinalP)), None, None, None),
       IfPE(_,
       BlockPE(_, List(FunctionCallPE(_, None, LookupPE(StringP(_, "=="), None), List(LookupPE(StringP(_, "num"), None), IntLiteralPE(_, 0)), true))),
       BlockPE(_, List(IntLiteralPE(_, 1))),

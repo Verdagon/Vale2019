@@ -46,6 +46,7 @@ case class UnnamedLocalNameS(codeLocation: CodeLocationS) extends IVarNameS
 case class ClosureParamNameS() extends IVarNameS
 case class MagicParamNameS(codeLocation: CodeLocationS) extends IVarNameS
 case class CodeVarNameS(name: String) extends IVarNameS
+case class ConstructingMemberNameS(name: String) extends IVarNameS
 // We differentiate rune names from regular names, we scout out what's actually
 // a rune so we can inform the templar. The templar wants to know so it can know
 // how to handle this thing; if it's a name, we expect it to exist in the

@@ -579,6 +579,7 @@ object Astronomer {
     name match {
       case UnnamedLocalNameS(codeLocation) => UnnamedLocalNameA(codeLocation)
       case ClosureParamNameS() => ClosureParamNameA()
+      case ConstructingMemberNameS(n) => ConstructingMemberNameA(n)
       case MagicParamNameS(magicParamNumber) => MagicParamNameA(magicParamNumber)
       case CodeVarNameS(name) => CodeVarNameA(name)
     }

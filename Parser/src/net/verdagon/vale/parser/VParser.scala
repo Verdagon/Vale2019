@@ -1,8 +1,8 @@
 package net.verdagon.vale.parser
 
-import net.verdagon.vale.parser.patterns.{PatternParser}
+import net.verdagon.vale.parser.patterns.PatternParser
 import net.verdagon.vale.parser.rules._
-import net.verdagon.vale.vassert
+import net.verdagon.vale.{vassert, vfail}
 
 import scala.util.parsing.combinator.RegexParsers
 
@@ -79,6 +79,10 @@ object VParser
     }
   }
 
+  def structContent: Parser[IStructContent] = {
+    structMember | (topLevelFunction ^^ StructMethodP)
+  }
+
   private[parser] def interface: Parser[InterfaceP] = {
     pos ~
         ("interface " ~> optWhite ~> exprIdentifier <~ optWhite) ~
@@ -102,7 +106,7 @@ object VParser
         (opt("imm") <~ optWhite) ~
         (opt(templateRulesPR) <~ optWhite) ~
         (pos <~ "{" <~ optWhite) ~
-        ("..." <~ optWhite ^^^ List() | repsep(structMember, optWhite)) ~
+        ("..." <~ optWhite ^^^ List() | repsep(structContent, optWhite)) ~
         (optWhite ~> "}" ~> pos) ^^ {
       case begin ~ name ~ identifyingRunes ~ export ~ imm ~ maybeTemplateRules ~ membersBegin ~ members ~ end => {
         val mutability = if (imm == Some("imm")) ImmutableP else MutableP
@@ -153,9 +157,12 @@ object VParser
     VParser.parse(VParser.program, code.toCharArray) match {
       case VParser.NoSuccess(msg, next) => VParser.Failure(msg, next)
       case VParser.Success(program0, rest) => {
-        vassert(rest.atEnd)
-        vassert(rest.offset == code.length)
-        VParser.Success((program0, commentRanges), rest)
+        if (!rest.atEnd) {
+          vfail("Unexpected at: " + rest.source)
+        } else {
+          vassert(rest.offset == code.length)
+          VParser.Success((program0, commentRanges), rest)
+        }
       }
     }
   }

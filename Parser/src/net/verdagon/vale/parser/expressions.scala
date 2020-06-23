@@ -18,6 +18,7 @@ case class MutablePE(expr: IExpressionPE) extends IExpressionPE
 
 case class IfPE(range: Range, condition: BlockPE, thenBody: BlockPE, elseBody: BlockPE) extends IExpressionPE
 case class WhilePE(condition: BlockPE, body: BlockPE) extends IExpressionPE
+case class MatchPE(range: Range, condition: IExpressionPE, lambdas: List[LambdaPE]) extends IExpressionPE
 case class MutatePE(range: Range, mutatee: IExpressionPE, expr: IExpressionPE) extends IExpressionPE
 case class ReturnPE(range: Range, expr: IExpressionPE) extends IExpressionPE
 case class SwapPE(exprA: IExpressionPE, exprB: IExpressionPE) extends IExpressionPE

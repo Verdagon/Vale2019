@@ -37,7 +37,7 @@ class StructTests extends FunSuite with Matchers with Collector {
               StructMembersP(_,
                 List(
                   StructMemberP(_,StringP(_, "value"),FinalP,NameOrRunePT(StringP(_, "E"))),
-                  StructMemberP(_,StringP(_, "next"),FinalP,CallPT(NameOrRunePT(StringP(_, "ListNode")),List(NameOrRunePT(StringP(_, "E"))))))))) =>
+                  StructMemberP(_,StringP(_, "next"),FinalP,CallPT(_,NameOrRunePT(StringP(_, "ListNode")),List(NameOrRunePT(StringP(_, "E"))))))))) =>
     }
   }
 

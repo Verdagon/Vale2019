@@ -115,31 +115,31 @@ object HashMap {
       |  = panic("findIndexOfKey went past end of table! len " + Str(table.len()) + " and i " + Str(i));
       |}
       |
-      |fn get<K, V, H, E>(this &HashMap<K, V, H, E>, key K) Opt<&V> {
-      |  if (this.table.len() == 0) {
+      |fn get<K, V, H, E>(self &HashMap<K, V, H, E>, key K) Opt<&V> {
+      |  if (self.table.len() == 0) {
       |    ret None<&V>();
       |  }
-      |  hash = (this.hasher)(key);
-      |  startIndex = abs(hash mod this.table.len());
-      |  index? = findIndexOfKey(this.table, this.equator, startIndex, key);
+      |  hash = (self.hasher)(key);
+      |  startIndex = abs(hash mod self.table.len());
+      |  index? = findIndexOfKey(self.table, self.equator, startIndex, key);
       |  if (index?.empty?()) {
       |    opt Opt<&V> = None<&V>();
       |    ret opt;
       |  }
-      |  node = this.table[index?.get()].get();
+      |  node = self.table[index?.get()].get();
       |  opt Opt<&V> = Some<&V>(node.value);
       |  ret opt;
       |}
       |
-      |fn has<K, V, H, E>(this &HashMap<K, V, H, E>, key K) Bool {
-      |  not(this.get(key).empty?())
+      |fn has<K, V, H, E>(self &HashMap<K, V, H, E>, key K) Bool {
+      |  not(self.get(key).empty?())
       |}
       |
-      |fn keys<K, V, H, E>(this &HashMap<K, V, H, E>) Array<imm, K> {
+      |fn keys<K, V, H, E>(self &HashMap<K, V, H, E>) Array<imm, K> {
       |  list = List<K>();
       |  index = 0;
-      |  while (index < this.table.len()) {
-      |    node? = this.table[index];
+      |  while (index < self.table.len()) {
+      |    node? = self.table[index];
       |    if (not(node?.empty?())) {
       |      list.add(node?.get().key);
       |    }

@@ -47,6 +47,7 @@ case object MagicParam extends IClass
 case object TplArgs extends IClass
 case object Comment extends IClass
 case object Ownership extends IClass
+case object Match extends IClass
 
 case class Span(classs: IClass, range: Range, children: List[Span] = List())
 
@@ -95,7 +96,14 @@ object Spanner {
         Span(
           Membs,
           membersRange,
-          members.map(forMember))))
+          members.map(forStructContent))))
+  }
+
+  def forStructContent(c: IStructContent): Span = {
+    c match {
+      case m @ StructMemberP(_, _, _, _) => forMember(m)
+      case StructMethodP(f) => forFunction(f)
+    }
   }
 
   def forMember(member: StructMemberP): Span = {
@@ -109,14 +117,14 @@ object Spanner {
   }
 
   def forFunction(function: FunctionP): Span = {
-    val FunctionP(range, Some(name), isExtern, isAbstract, maybeUserSpecifiedIdentifyingRunes, templateRules, params, ret, body) = function
+    val FunctionP(range, maybeName, isExtern, isAbstract, maybeUserSpecifiedIdentifyingRunes, templateRules, params, ret, body) = function
 
     Span(
       Fn,
       range,
       isExtern.toList.map(e => Span(Ext, e.range)) ++
       isAbstract.toList.map(e => Span(Abst, e.range)) ++
-      List(Span(FnName, name.range)) ++
+      maybeName.toList.map(n => Span(FnName, n.range)) ++
       maybeUserSpecifiedIdentifyingRunes.toList.map(forIdentifyingRunes) ++
       templateRules.toList.map(forTemplateRules) ++
       params.toList.map(forParams) ++
@@ -213,6 +221,12 @@ object Spanner {
           range,
           exprs.map(forExpression))
       }
+      case MatchPE(range, condExpr, lambdas) => {
+        Span(
+          Match,
+          range,
+          forExpression(condExpr) :: lambdas.map(l => forFunction(l.function)))
+      }
       case IfPE(range, condition, thenBody, elseBody) => {
         Span(
           If,
@@ -229,11 +243,14 @@ object Spanner {
   }
 
   def forPattern(p: PatternPP): Span = {
-    val PatternPP(range, capture, templex, maybeDestructure, virtuality) = p
+    val PatternPP(range, maybePreBorrow, capture, templex, maybeDestructure, virtuality) = p
     Span(
       Pat,
       range,
-      capture.toList.map(forCapture) ++ templex.toList.map(forTemplex) ++ maybeDestructure.toList.map(forDestructure))
+      maybePreBorrow.toList.map(b => Span(Lend, b.range, List())) ++
+      capture.toList.map(forCapture) ++
+      templex.toList.map(forTemplex) ++
+      maybeDestructure.toList.map(forDestructure))
   }
 
   def forDestructure(d: DestructureP): Span = {
@@ -245,11 +262,20 @@ object Spanner {
   }
 
   def forCapture(c: CaptureP): Span = {
-    val CaptureP(range, StringP(nameRange, _), _) = c
+    val CaptureP(range, name, _) = c
+    val nameSpan =
+      name match {
+        case LocalNameP(StringP(nameRange, _)) => {
+          Span(CaptureName, nameRange, List())
+        }
+        case ConstructingMemberNameP(StringP(nameRange, _)) => {
+          Span(CaptureName, nameRange, List())
+        }
+      }
     Span(
       Capture,
       range,
-      List(Span(CaptureName, nameRange, List())))
+      List(nameSpan))
   }
 
   def forTemplex(t: ITemplexPT): Span = {
