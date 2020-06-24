@@ -69,9 +69,9 @@ class StatementTests extends FunSuite with Matchers with Collector {
     }
   }
 
-  test("Test swap") {
-    compile("exch x, y;") shouldHave {
-      case SwapPE(LookupPE(StringP(_, "x"),None),LookupPE(StringP(_, "y"),None)) =>
+  test("Test destruct") {
+    compile("destruct x;") shouldHave {
+      case DestructPE(_,LookupPE(StringP(_,"x"),None)) =>
     }
   }
 

@@ -11,7 +11,7 @@ import net.verdagon.vale.templar.citizen.StructTemplar
 import net.verdagon.vale.templar.env._
 import net.verdagon.vale.templar.function.{DestructorTemplar, FunctionTemplar}
 import net.verdagon.vale.templar.templata.TemplataTemplar
-import net.verdagon.vale.{vassert, vassertSome, vfail, vimpl, vwat}
+import net.verdagon.vale.{vassert, vassertSome, vcheck, vfail, vimpl, vwat}
 
 import scala.collection.immutable.{List, Map, Nil, Set}
 
@@ -744,6 +744,30 @@ object ExpressionTemplar {
           evaluateAndCoerceToReferenceExpression(temputs, fate, arrayExprA);
         (ArrayLength2(arrayExpr2), returnsFromArrayExpr)
       }
+      case DestructAE(innerAE) => {
+        val (innerExpr2, returnsFromArrayExpr) =
+          evaluateAndCoerceToReferenceExpression(temputs, fate, innerAE);
+
+        // should just ignore others, TODO impl
+        vcheck(innerExpr2.resultRegister.reference.ownership == Own, "can only destruct own")
+
+        val destructure2 =
+          innerExpr2.referend match {
+            case structRef @ StructRef2(_) => {
+              val structDef = temputs.lookupStruct(structRef)
+              Destructure2(
+                innerExpr2,
+                structRef,
+                structDef.members.map(_.tyype).map({ case ReferenceMemberType2(reference) =>
+                  val rlv = makeTemporaryLocal(temputs, fate, reference)
+                  rlv
+                case _ => vfail()
+              }))
+            }
+            case _ => vfail()
+          }
+        (destructure2, returnsFromArrayExpr)
+      }
       case ReturnAE(innerExprA) => {
         val (uncastedInnerExpr2, returnsFromInnerExpr) =
           evaluateAndCoerceToReferenceExpression(temputs, fate, innerExprA);
@@ -826,15 +850,24 @@ object ExpressionTemplar {
   }
 
   def makeTemporaryLocal(
+    temputs: TemputsBox,
+    fate: FunctionEnvironmentBox,
+    coord: Coord):
+  ReferenceLocalVariable2 = {
+    val varNameCounter = fate.nextVarCounter()
+    val varId = fate.functionEnvironment.fullName.addStep(TemplarTemporaryVarName2(varNameCounter))
+    val rlv = ReferenceLocalVariable2(varId, Final, coord)
+    fate.addVariable(rlv)
+    rlv
+  }
+
+  def makeTemporaryLocal(
       temputs: TemputsBox,
       fate: FunctionEnvironmentBox,
       r: ReferenceExpression2):
   (Defer2) = {
-    val varNameCounter = fate.nextVarCounter()
-    val varId = fate.functionEnvironment.fullName.addStep(TemplarTemporaryVarName2(varNameCounter))
-    val rlv = ReferenceLocalVariable2(varId, Final, r.resultRegister.reference)
+    val rlv = makeTemporaryLocal(temputs, fate, r.resultRegister.reference)
     val letExpr2 = LetAndLend2(rlv, r)
-    fate.addVariable(rlv)
 
     val unlet = ExpressionTemplar.unletLocal(fate, rlv)
     val destructExpr2 =

@@ -76,6 +76,40 @@ class StructTests extends FunSuite with Matchers {
     compile.evalForReferend(Vector()) shouldEqual VonInt(4)
   }
 
+  test("Normal destructure") {
+    val compile = new Compilation(
+      """
+        |struct Marine {
+        |  hp Int;
+        |  ammo Int;
+        |}
+        |fn main() {
+        |  m = Marine(4, 7);
+        |  Marine(hp, ammo) = m;
+        |  = ammo;
+        |}
+      """.stripMargin)
+
+    compile.evalForReferend(Vector()) shouldEqual VonInt(7)
+  }
+
+  test("Sugar destructure") {
+    val compile = new Compilation(
+      """
+        |struct Marine {
+        |  hp Int;
+        |  ammo Int;
+        |}
+        |fn main() {
+        |  m = Marine(4, 7);
+        |  destruct m;
+        |  = 9;
+        |}
+      """.stripMargin)
+
+    compile.evalForReferend(Vector()) shouldEqual VonInt(9)
+  }
+
   test("Destroy members at right times") {
     val compile = new Compilation(
       """

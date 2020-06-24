@@ -49,6 +49,10 @@ object ExpressionAstronomer {
         val bodyA = translateBlock(env, astrouts, bodyS)
         WhileAE(conditionA, bodyA)
       }
+      case DestructSE(innerS) => {
+        val exprA = translateExpression(env, astrouts, innerS)
+        DestructAE(exprA)
+      }
       case ExprMutateSE(mutateeS, exprS) => {
         val conditionA = translateExpression(env, astrouts, mutateeS)
         val bodyA = translateExpression(env, astrouts, exprS)

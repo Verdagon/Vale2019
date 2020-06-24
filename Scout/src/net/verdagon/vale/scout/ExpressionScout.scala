@@ -165,6 +165,11 @@ object ExpressionScout {
           }
         (stackFrame0, lookup, noVariableUses, noVariableUses)
       }
+      case DestructPE(_, innerPE) => {
+        val (stackFrame1, inner1, innerSelfUses, innerChildUses) =
+          scoutExpressionAndCoerce(stackFrame0, innerPE, borrowIfLookupResult = false)
+        (stackFrame1, NormalResult(DestructSE(inner1)), innerSelfUses, innerChildUses)
+      }
       case LookupPE(StringP(_, templateName), Some(TemplateArgsP(_, templateArgs))) => {
         val result =
           NormalResult(

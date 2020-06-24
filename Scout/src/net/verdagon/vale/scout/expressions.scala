@@ -112,6 +112,8 @@ case class StrLiteralSE(value: String) extends IExpressionSE
 
 case class FloatLiteralSE(value: Float) extends IExpressionSE
 
+case class DestructSE(inner: IExpressionSE) extends IExpressionSE
+
 case class FunctionSE(function: FunctionS) extends IExpressionSE
 
 case class DotSE(left: IExpressionSE, member: String, borrowContainer: Boolean) extends IExpressionSE

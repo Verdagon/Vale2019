@@ -63,9 +63,9 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
   }
 
   private[parser] def destruct: Parser[IExpressionPE] = {
-    pos ~ (pstr("destruct") <~ white) ~ postfixableExpressions ~ pos ^^ {
-      case begin ~ destruct ~ expr ~ end => {
-        FunctionCallPE(Range(begin, end), None, LookupPE(destruct, None), List(expr), true)
+    (pos <~ "destruct" <~ white) ~ expression ~ pos ^^ {
+      case begin ~ inner ~ end => {
+        DestructPE(Range(begin, end), inner)
       }
     }
   }
@@ -163,7 +163,7 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
     // debt: "block" is here temporarily because we get ambiguities in this case:
     //   fn main() { {_ + _}(4 + 5) }
     // because it mistakenly successfully parses {_ + _} then dies on the next part.
-    (mutate <~ ";") | swap | let | mat | whiile | eachOrEachI | ifLadder | (expression <~ ";") | ("block" ~> optWhite ~> bracedBlock)
+    (mutate <~ optWhite <~ ";") | swap | let | mat | (destruct <~ optWhite <~ ";") | whiile | eachOrEachI | ifLadder | (expression <~ ";") | ("block" ~> optWhite ~> bracedBlock)
   }
 
   private[parser] def expressionElementLevel1: Parser[IExpressionPE] = {
@@ -246,7 +246,7 @@ trait ExpressionParser extends RegexParsers with ParserUtils {
   // Parses expressions that can contain postfix operators, like function calling
   // or dots.
   private[parser] def postfixableExpressions: Parser[IExpressionPE] = {
-    ret | mutate | ifLadder | lend | not | destruct | expressionLevel9
+    ret | mutate | ifLadder | lend | not | expressionLevel9
   }
 
   // Binariable = can have binary operators in it

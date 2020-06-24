@@ -15,6 +15,8 @@ case class LetAE(
     pattern: AtomAP,
     expr: IExpressionAE) extends IExpressionAE
 
+case class DestructAE(inner: IExpressionAE) extends IExpressionAE
+
 case class IfAE(condition: BlockAE, thenBody: BlockAE, elseBody: BlockAE) extends IExpressionAE
 
 case class WhileAE(condition: BlockAE, body: BlockAE) extends IExpressionAE
