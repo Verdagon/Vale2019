@@ -439,7 +439,7 @@ case class IfH(
 // A while loop. Continuously runs bodyBlock until it returns false.
 case class WhileH(
   // The block to run until it returns false.
-  bodyBlock: BlockH
+  bodyBlock: ExpressionH[BoolH]
 ) extends ExpressionH[StructRefH] {
   override def resultType: ReferenceH[StructRefH] = ReferenceH(ShareH, ProgramH.emptyTupleStructRef)
 }

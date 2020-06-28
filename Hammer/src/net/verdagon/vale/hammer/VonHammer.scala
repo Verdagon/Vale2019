@@ -522,7 +522,8 @@ object VonHammer {
           Vector(
             VonMember("conditionBlock", vonifyNode(conditionBlock)),
             VonMember("thenBlock", vonifyNode(thenBlock)),
-            VonMember("elseBlock", vonifyNode(elseBlock))))
+            VonMember("elseBlock", vonifyNode(elseBlock)),
+            VonMember("commonSupertype", vonifyCoord(commonSupertype))))
       }
       case WhileH(bodyBlock) => {
         VonObject(

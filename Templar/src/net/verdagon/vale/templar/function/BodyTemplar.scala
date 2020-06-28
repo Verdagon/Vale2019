@@ -29,23 +29,20 @@ object BodyTemplar {
     function1.maybeRetCoordRune match {
       case None => {
         val banner = FunctionBanner2(Some(function1), functionFullName, params2)
-        val (body2, returnsFromRets) =
+        val (body2, returns) =
           evaluateFunctionBody(
-            funcOuterEnv, temputs, bfunction1.origin.params, params2, bfunction1.body, isDestructor);
-
-        val returns = returnsFromRets + body2.resultRegister.reference
-
-        val returnsWithoutNever =
-          if (returns.size > 1 && returns.contains(Coord(Share, Never2()))) {
-            returns - Coord(Share, Never2())
-          } else {
-            returns
+              funcOuterEnv, temputs, bfunction1.origin.params, params2, bfunction1.body, isDestructor, None) match {
+            case Failure(ResultTypeMismatchError(expectedType, actualType)) => {
+              vfail("Function " + function1.name + "(:" + params2.mkString(", :") + ")\nreturn type:\n" + expectedType + "\ndoesn't match body's result:\n" + actualType)
+            }
+            case Success((body, returns)) => (body, returns)
           }
-        vassert(returnsWithoutNever.nonEmpty)
-        if (returnsWithoutNever.size > 1) {
-          vfail("Can't infer return type because " + returnsWithoutNever.size + " types are returned:" + returnsWithoutNever.map("\n" + _))
+
+        vassert(returns.nonEmpty)
+        if (returns.size > 1) {
+          vfail("Can't infer return type because " + returns.size + " types are returned:" + returns.map("\n" + _))
         }
-        val returnType2 = returnsWithoutNever.head
+        val returnType2 = returns.head
 
         temputs.declareFunctionReturnType(banner.toSignature, returnType2)
         val header = FunctionHeader2(functionFullName, false, function1.isUserFunction, params2, returnType2, Some(function1));
@@ -64,46 +61,27 @@ object BodyTemplar {
         funcOuterEnv.setReturnType(Some(expectedRetCoord))
 
         val funcOuterEnvSnapshot = funcOuterEnv.snapshot
-        val (unconvertedBody2, returnsFromRets) =
+        val (body2, returns) =
           evaluateFunctionBody(
-            funcOuterEnv,
-            temputs,
-            bfunction1.origin.params,
-            params2,
-            bfunction1.body,
-            isDestructor);
-
-        val body2 =
-          TemplataTemplar.isTypeTriviallyConvertible(temputs, unconvertedBody2.resultRegister.reference, expectedRetCoord) match {
-            case (false) => {
-              vfail("Function " + function1.name + "(:" + params2.mkString(", :") + ")\nreturn type:\n" + expectedRetCoord + "\ndoesn't match body's result:\n" + unconvertedBody2.resultRegister.reference)
+              funcOuterEnv,
+              temputs,
+              bfunction1.origin.params,
+              params2,
+              bfunction1.body,
+              isDestructor,
+              Some(expectedRetCoord)) match {
+            case Failure(ResultTypeMismatchError(expectedType, actualType)) => {
+              vfail("Function " + function1.name + "(:" + params2.mkString(", :") + ")\nreturn type:\n" + expectedType + "\ndoesn't match body's result:\n" + actualType)
             }
-            case (true) => {
-              if (unconvertedBody2.referend == Never2()) {
-                unconvertedBody2
-              } else {
-                val convertedBodyExpr2 =
-                  TypeTemplar.convert(funcOuterEnv.snapshot, temputs, unconvertedBody2, expectedRetCoord);
-                (Block2(List(convertedBodyExpr2)))
-              }
-            }
+            case Success((body, returns)) => (body, returns)
           }
 
-        val returns = returnsFromRets + body2.resultRegister.reference
-
-        val returnsWithoutNever =
-          if (returns.size > 1 && returns.contains(Coord(Share, Never2()))) {
-            returns - Coord(Share, Never2())
-          } else {
-            returns
-          }
-
-        if (returnsWithoutNever == Set(expectedRetCoord)) {
+        if (returns == Set(expectedRetCoord)) {
           // Let it through, it returns the expected type.
-        } else if (returnsWithoutNever == Set(Coord(Share, Never2()))) {
+        } else if (returns == Set(Coord(Share, Never2()))) {
           // Let it through, it returns a never but we expect something else, that's fine
         } else {
-          vfail("In function " + header + ":\nExpected return type " + expectedRetCoord + " but was " + returnsWithoutNever)
+          vfail("In function " + header + ":\nExpected return type " + expectedRetCoord + " but was " + returns)
         }
 
         (header, body2)
@@ -111,14 +89,21 @@ object BodyTemplar {
     }
   }
 
+  sealed trait Result[T, E]
+  case class Success[T, E](t: T) extends Result[T, E]
+  case class Failure[T, E](e: E) extends Result[T, E]
+
+  case class ResultTypeMismatchError(expectedType: Coord, actualType: Coord)
+
   private def evaluateFunctionBody(
       funcOuterEnv: FunctionEnvironmentBox,
       temputs: TemputsBox,
       params1: List[ParameterA],
       params2: List[Parameter2],
       body1: BodyAE,
-      isDestructor: Boolean):
-  (Block2, Set[Coord]) = {
+      isDestructor: Boolean,
+      maybeExpectedResultType: Option[Coord]):
+  Result[(Block2, Set[Coord]), ResultTypeMismatchError] = {
     val startingFuncOuterEnv = funcOuterEnv.functionEnvironment
 
     funcOuterEnv.addScoutedLocals(body1.block.locals)
@@ -126,10 +111,50 @@ object BodyTemplar {
     val letExprs2 =
       evaluateLets(funcOuterEnv, temputs, params1, params2);
 
-    val (statementsFromBlock, returnsFromInside) =
+    val (statementsFromBlock, returnsFromInsideMaybeWithNever) =
       BlockTemplar.evaluateBlockStatements(temputs, startingFuncOuterEnv, funcOuterEnv, body1.block.exprs);
 
-    val letsAndExpressionsWithResult = letExprs2 ++ statementsFromBlock
+    vassert(statementsFromBlock.nonEmpty)
+
+    val letsAndExpressionsUnconvertedWithoutReturn = letExprs2 ++ statementsFromBlock
+    val initExprs = letsAndExpressionsUnconvertedWithoutReturn.init
+    val lastUnconvertedUnreturnedExpr = letsAndExpressionsUnconvertedWithoutReturn.last
+
+
+    val lastUnreturnedExpr =
+      maybeExpectedResultType match {
+        case None => lastUnconvertedUnreturnedExpr
+        case Some(expectedResultType) => {
+          TemplataTemplar.isTypeTriviallyConvertible(temputs, lastUnconvertedUnreturnedExpr.resultRegister.reference, expectedResultType) match {
+            case (false) => {
+              return Failure(ResultTypeMismatchError(expectedResultType, lastUnconvertedUnreturnedExpr.resultRegister.reference))
+            }
+            case (true) => {
+              if (lastUnconvertedUnreturnedExpr.referend == Never2()) {
+                lastUnconvertedUnreturnedExpr
+              } else {
+                TypeTemplar.convert(funcOuterEnv.snapshot, temputs, lastUnconvertedUnreturnedExpr, expectedResultType);
+              }
+            }
+          }
+        }
+      }
+
+
+    // If the function doesn't end in a ret, then add one for it.
+    val lastExpr = if (lastUnreturnedExpr.referend == Never2()) lastUnreturnedExpr else Return2(lastUnreturnedExpr)
+    // Add that result type to the returns, since we just added a Return for it.
+    val returnsMaybeWithNever = returnsFromInsideMaybeWithNever + lastUnreturnedExpr.resultRegister.reference
+    // If we already had a return, then the above will add a Never to the returns, but that's fine, it will be filtered
+    // out below.
+
+    val returns =
+      if (returnsMaybeWithNever.size > 1 && returnsMaybeWithNever.contains(Coord(Share, Never2()))) {
+        returnsMaybeWithNever - Coord(Share, Never2())
+      } else {
+        returnsMaybeWithNever
+      }
+
 
     if (isDestructor) {
       // If it's a destructor, make sure that we've actually destroyed/moved/unlet'd
@@ -143,9 +168,9 @@ object BodyTemplar {
       }
     }
 
-    val block2 = Block2(letsAndExpressionsWithResult)
+    val block2 = Block2(initExprs :+ lastExpr)
 
-    (block2, returnsFromInside)
+    Success((block2, returns))
   }
 
   // Produce the lets at the start of a function.

@@ -1,5 +1,6 @@
 package net.verdagon.vale.hammer
 
+import net.verdagon.vale.hammer.ExpressionHammer.translateDeferreds
 import net.verdagon.vale.hinputs.Hinputs
 import net.verdagon.vale.{vassert, vassertSome, vcurious, vfail, vwat, metal => m}
 import net.verdagon.vale.metal.{ShareH => _, _}
@@ -219,11 +220,14 @@ object CallHammer {
 
     val While2(bodyExpr2) = while2
 
-    val bodyBlockH =
-      BlockHammer.translateBlock(
-        hinputs, hamuts, locals.snapshot, bodyExpr2);
+    val (exprWithoutDeferreds, deferreds) =
+      ExpressionHammer.translate(hinputs, hamuts, locals, bodyExpr2);
+    val expr =
+      translateDeferreds(hinputs, hamuts, locals, exprWithoutDeferreds, deferreds)
 
-    val whileCallNode = WhileH(bodyBlockH)
+    val boolExpr = expr.expectBoolAccess()
+
+    val whileCallNode = WhileH(boolExpr)
     whileCallNode
   }
 
