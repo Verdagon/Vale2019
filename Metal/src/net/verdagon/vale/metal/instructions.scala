@@ -595,7 +595,7 @@ case object RegisterRefCount extends RefCountCategory
 // we consistently discard all registers that were created, in the exact reverse
 // order they were created.
 case class DiscardH(
-                     sourceRegister: ExpressionH[ReferendH],
+  sourceRegister: ExpressionH[ReferendH],
 ) extends ExpressionH[StructRefH] {
   override def resultType: ReferenceH[StructRefH] = ReferenceH(ShareH, ProgramH.emptyTupleStructRef)
 }

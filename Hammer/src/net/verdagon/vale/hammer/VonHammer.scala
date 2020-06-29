@@ -290,7 +290,8 @@ object VonHammer {
           "Discard",
           None,
           Vector(
-            VonMember("sourceExpr", vonifyNode(sourceExpr))))
+            VonMember("sourceExpr", vonifyNode(sourceExpr)),
+            VonMember("sourceResultType", vonifyCoord(sourceExpr.resultType))))
       }
       case ArgumentH(resultReference, argumentIndex) => {
         VonObject(
@@ -435,6 +436,7 @@ object VonHammer {
           None,
           Vector(
             VonMember("structExpr", vonifyNode(structExpr)),
+            VonMember("structId", vonifyStructRef(structExpr.resultType.kind)),
             VonMember("memberIndex", VonInt(memberIndex)),
             VonMember("targetOwnership", vonifyOwnership(targetOwnership)),
             VonMember("expectedMemberType", vonifyCoord(expectedMemberType)),
